@@ -4,6 +4,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
 import { login, googleAuth } from "../../services/authService";
+import apiClient from "../../services/apiClient";
 import logo from "../../assets/logo.avif";
 import VideoReel from "../../components/shared/VideoReel";
 
@@ -24,7 +25,7 @@ export default function Login() {
   useEffect(() => {
     const particles = [];
     const particleCount = 15;
-    
+
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         id: i,
@@ -35,7 +36,7 @@ export default function Login() {
         delay: Math.random() * 5,
       });
     }
-    
+
     particlesRef.current = particles;
   }, []);
 
@@ -55,65 +56,60 @@ export default function Login() {
     setError(null);
 
     try {
-      const response = await login({
+      // Login with Supabase
+      await login({
         email: formData.email,
         password: formData.password,
       });
 
-      // Login successful - navigate based on user role
-      const user = response.data.user || response.data;
-      const role = user.role?.toLowerCase();
+      // Fetch user profile from backend to get role
+      try {
+        const profileResponse = await apiClient.get('/users/me');
+        const user = profileResponse.data.data || profileResponse.data;
 
-      // Navigate based on role
-      if (role === 'startup') {
-        navigate('/startup');
-      } else if (role === 'investor') {
-        navigate('/investor');
-      } else if (role === 'incubator') {
-        navigate('/incubator');
-      } else {
-        navigate('/viewer');
+        // Navigate based on role
+        if (!user.role || user.role === 'VIEWER') {
+          // No role selected, go to choice-role
+          navigate('/choice-role');
+        } else {
+          // Navigate based on role
+          const role = user.role.toLowerCase();
+          navigate(`/${role}`);
+        }
+      } catch (profileError) {
+        console.error('Error fetching profile:', profileError);
+        // If profile fetch fails, default to choice-role
+        navigate('/choice-role');
       }
     } catch (err) {
-      // Handle different error types
+      // Handle different error types with specific messages
       let errorMessage = 'An error occurred. Please try again.';
-      
-      // Log full error details for debugging
-      console.error('Login error details:', {
-        status: err.status,
-        message: err.message,
-        data: err.data,
-        fullError: err
-      });
-      
-      if (err.status === 500) {
-        // Show server error message if available, otherwise generic message
-        if (err.data && (err.data.message || err.data.error || typeof err.data === 'string')) {
-          const serverMessage = err.data.message || err.data.error || err.data;
-          // If it's just a generic "Internal server error", provide more context
-          if (serverMessage === 'Internal server error' || serverMessage === 'Internal server error.') {
-            errorMessage = 'Server error occurred. This might be a temporary issue. Please:\n' +
-                          '1. Check your email and password are correct\n' +
-                          '2. Try again in a few moments\n' +
-                          '3. Contact support if the issue persists';
-          } else {
-            errorMessage = `Server error: ${serverMessage}`;
-          }
-        } else if (err.message && err.message !== 'Request failed') {
-          errorMessage = `Server error: ${err.message}`;
+
+      console.error('Login error:', err);
+
+      // Check for specific error messages
+      if (err.message) {
+        const msg = err.message.toLowerCase();
+
+        if (msg.includes('email not confirmed') || msg.includes('confirm your email')) {
+          errorMessage = '📧 Please verify your email before logging in. Check your inbox for the confirmation link.';
+        } else if (msg.includes('invalid login credentials') || msg.includes('invalid email or password')) {
+          errorMessage = '❌ Invalid email or password. Please check your credentials and try again.';
+        } else if (msg.includes('email link is invalid') || msg.includes('token')) {
+          errorMessage = '⏰ This login link has expired. Please request a new one.';
+        } else if (msg.includes('too many requests')) {
+          errorMessage = '⚠️ Too many login attempts. Please wait a few minutes and try again.';
         } else {
-          errorMessage = 'Server error. Please check the console for details or try again later.';
+          errorMessage = err.message;
         }
-      } else if (err.status === 401) {
-        errorMessage = 'Invalid email or password. Please check your credentials.';
       } else if (err.status === 400) {
-        errorMessage = err.message || 'Invalid request. Please check your input.';
-      } else if (err.status === 404) {
-        errorMessage = 'API endpoint not found. Please contact support.';
-      } else if (err.message) {
-        errorMessage = err.message;
+        errorMessage = '❌ Invalid email or password format.';
+      } else if (err.status === 401) {
+        errorMessage = '❌ Invalid email or password. Please check your credentials.';
+      } else if (err.status === 429) {
+        errorMessage = '⚠️ Too many login attempts. Please wait a few minutes.';
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -125,51 +121,25 @@ export default function Login() {
     setError(null);
 
     try {
-      // Note: In a real implementation, you would get the idToken from Google OAuth
-      // This is a placeholder - you'll need to integrate Google OAuth SDK
-      const idToken = await getGoogleIdToken(); // Implement this function
-      
-      const response = await googleAuth({ idToken });
-      
-      // Navigate based on user role
-      const user = response.data.user || response.data;
-      const role = user.role?.toLowerCase();
-
-      if (role === 'startup') {
-        navigate('/startup');
-      } else if (role === 'investor') {
-        navigate('/investor');
-      } else if (role === 'incubator') {
-        navigate('/incubator');
-      } else {
-        navigate('/viewer');
-      }
+      // Trigger Google OAuth - this will redirect to Google
+      await googleAuth();
+      // User will be redirected to Google, then back to /auth/callback
     } catch (err) {
       setError(err.message || 'Google authentication failed. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
 
-  // Placeholder for Google OAuth integration
-  const getGoogleIdToken = async () => {
-    // TODO: Implement Google OAuth integration
-    // This should use Google Sign-In SDK to get the idToken
-    throw new Error('Google OAuth not implemented yet');
-  };
-
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 relative overflow-hidden ${
-      isDark ? 'bg-black' : 'bg-white'
-    }`}>
+    <div className={`min-h-screen flex transition-colors duration-300 relative overflow-hidden ${isDark ? 'bg-black' : 'bg-white'
+      }`}>
       {/* Floating Particles Background Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {particlesRef.current.map((particle) => (
           <div
             key={particle.id}
-            className={`absolute rounded-full ${
-              isDark ? 'bg-[#00B8A9]/20' : 'bg-[#00B8A9]/10'
-            }`}
+            className={`absolute rounded-full ${isDark ? 'bg-[#00B8A9]/20' : 'bg-[#00B8A9]/10'
+              }`}
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
@@ -185,10 +155,9 @@ export default function Login() {
       {/* Floating Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Floating circles */}
-        <div 
-          className={`absolute rounded-full blur-xl ${
-            isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
-          }`}
+        <div
+          className={`absolute rounded-full blur-xl ${isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
+            }`}
           style={{
             width: '300px',
             height: '300px',
@@ -197,10 +166,9 @@ export default function Login() {
             animation: 'floatSlow 20s ease-in-out infinite',
           }}
         />
-        <div 
-          className={`absolute rounded-full blur-xl ${
-            isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
-          }`}
+        <div
+          className={`absolute rounded-full blur-xl ${isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
+            }`}
           style={{
             width: '200px',
             height: '200px',
@@ -224,49 +192,43 @@ export default function Login() {
           <div className="mb-6 sm:mb-8 text-center animate-fadeInUp">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="relative">
-                <img 
-                  src={logo} 
-                  alt="EVO-A Logo" 
+                <img
+                  src={logo}
+                  alt="EVO-A Logo"
                   className="h-10 w-10 sm:h-12 sm:w-12 object-contain animate-pulseGlow"
                 />
                 {/* Glow effect */}
-                <div className={`absolute inset-0 rounded-full blur-md opacity-50 ${
-                  isDark ? 'bg-[#00B8A9]' : 'bg-[#00B8A9]/30'
-                } animate-pulseGlow`} style={{ zIndex: -1 }} />
+                <div className={`absolute inset-0 rounded-full blur-md opacity-50 ${isDark ? 'bg-[#00B8A9]' : 'bg-[#00B8A9]/30'
+                  } animate-pulseGlow`} style={{ zIndex: -1 }} />
               </div>
-              <span className={`text-2xl sm:text-3xl font-bold tracking-wide animate-slideInRight ${
-                isDark ? 'text-white' : 'text-black'
-              }`}>EVO-A</span>
+              <span className={`text-2xl sm:text-3xl font-bold tracking-wide animate-slideInRight ${isDark ? 'text-white' : 'text-black'
+                }`}>EVO-A</span>
             </div>
-            <h1 className={`text-xl sm:text-2xl font-semibold mb-1 animate-fadeInUp ${
-              isDark ? 'text-white' : 'text-black'
-            }`} style={{ animationDelay: '0.1s' }}>
+            <h1 className={`text-xl sm:text-2xl font-semibold mb-1 animate-fadeInUp ${isDark ? 'text-white' : 'text-black'
+              }`} style={{ animationDelay: '0.1s' }}>
               Hey, Login Now!
             </h1>
-            <p className={`text-xs sm:text-sm animate-fadeInUp ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`} style={{ animationDelay: '0.2s' }}>
+            <p className={`text-xs sm:text-sm animate-fadeInUp ${isDark ? 'text-white/60' : 'text-black/60'
+              }`} style={{ animationDelay: '0.2s' }}>
               Sign in to continue to your account
             </p>
           </div>
 
           {/* Form Container with Animation */}
-          <div className={`rounded-3xl p-5 sm:p-6 animate-fadeInUp ${
-            isDark 
-              ? 'bg-black/50 border border-white/10 backdrop-blur-sm' 
-              : 'bg-white/90 border border-black/10 backdrop-blur-sm'
-          }`} style={{ animationDelay: '0.3s' }}>
-            <form 
+          <div className={`rounded-3xl p-5 sm:p-6 animate-fadeInUp ${isDark
+            ? 'bg-black/50 border border-white/10 backdrop-blur-sm'
+            : 'bg-white/90 border border-black/10 backdrop-blur-sm'
+            }`} style={{ animationDelay: '0.3s' }}>
+            <form
               className="space-y-3"
               onSubmit={handleSubmit}
             >
               {/* Error Message with Animation */}
               {error && (
-                <div className={`p-3 text-sm border rounded-xl animate-shake ${
-                  isDark 
-                    ? 'bg-red-500/10 border-red-500/30 text-red-400' 
-                    : 'bg-red-50 border-red-200 text-red-600'
-                }`}>
+                <div className={`p-3 text-sm border rounded-xl animate-shake ${isDark
+                  ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                  : 'bg-red-50 border-red-200 text-red-600'
+                  }`}>
                   {error}
                 </div>
               )}
@@ -281,11 +243,10 @@ export default function Login() {
                   placeholder="Email"
                   required
                   disabled={loading}
-                  className={`w-full px-4 py-2.5 sm:py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] focus:scale-[1.02] ${
-                    isDark 
-                      ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' 
-                      : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-                  }`}
+                  className={`w-full px-4 py-2.5 sm:py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] focus:scale-[1.02] ${isDark
+                    ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+                    : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+                    }`}
                 />
               </div>
 
@@ -300,17 +261,15 @@ export default function Login() {
                     placeholder="Password"
                     required
                     disabled={loading}
-                    className={`w-full px-4 py-2.5 sm:py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 pr-12 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] focus:scale-[1.02] ${
-                      isDark 
-                        ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' 
-                        : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-                    }`}
+                    className={`w-full px-4 py-2.5 sm:py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 pr-12 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] focus:scale-[1.02] ${isDark
+                      ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+                      : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+                      }`}
                   />
                   <button
                     type="button"
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-all duration-300 p-1.5 hover:scale-110 ${
-                      isDark ? 'text-white/50 hover:text-white' : 'text-black/50 hover:text-black'
-                    }`}
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-all duration-300 p-1.5 hover:scale-110 ${isDark ? 'text-white/50 hover:text-white' : 'text-black/50 hover:text-black'
+                      }`}
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex={-1}
                   >
@@ -334,15 +293,12 @@ export default function Login() {
 
               {/* Divider with Animation */}
               <div className="flex items-center my-4 animate-fadeInUp" style={{ animationDelay: '0.7s' }}>
-                <div className={`flex-1 h-px transition-all duration-500 ${
-                  isDark ? 'bg-white/20' : 'bg-black/20'
-                }`}></div>
-                <span className={`px-4 text-xs font-medium ${
-                  isDark ? 'text-white/60' : 'text-black/60'
-                }`}>OR</span>
-                <div className={`flex-1 h-px transition-all duration-500 ${
-                  isDark ? 'bg-white/20' : 'bg-black/20'
-                }`}></div>
+                <div className={`flex-1 h-px transition-all duration-500 ${isDark ? 'bg-white/20' : 'bg-black/20'
+                  }`}></div>
+                <span className={`px-4 text-xs font-medium ${isDark ? 'text-white/60' : 'text-black/60'
+                  }`}>OR</span>
+                <div className={`flex-1 h-px transition-all duration-500 ${isDark ? 'bg-white/20' : 'bg-black/20'
+                  }`}></div>
               </div>
 
               {/* Google Login with Enhanced Animation */}
@@ -351,11 +307,10 @@ export default function Login() {
                   type="button"
                   onClick={handleGoogleLogin}
                   disabled={loading}
-                  className={`w-full py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] group ${
-                    isDark 
-                      ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:border-white/30' 
-                      : 'bg-black/5 text-black border border-black/20 hover:bg-black/10 hover:border-black/30'
-                  }`}
+                  className={`w-full py-2.5 text-sm font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] group ${isDark
+                    ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:border-white/30'
+                    : 'bg-black/5 text-black border border-black/20 hover:bg-black/10 hover:border-black/30'
+                    }`}
                 >
                   <FaGoogle size={18} className="transition-transform duration-300 group-hover:rotate-12" />
                   {loading ? 'Authenticating...' : 'Login with Google'}
@@ -364,8 +319,8 @@ export default function Login() {
 
               {/* Forgot Password with Animation */}
               <div className="text-center mt-4 animate-fadeInUp" style={{ animationDelay: '0.9s' }}>
-                <Link 
-                  to="/forget-password" 
+                <Link
+                  to="/forget-password"
                   className="text-xs transition-all duration-300 text-[#00B8A9] hover:text-[#00A89A] font-medium inline-block transform hover:scale-105"
                 >
                   Forgot password?
@@ -375,17 +330,15 @@ export default function Login() {
           </div>
 
           {/* Sign Up Link with Animation */}
-          <div className={`mt-4 text-center py-4 rounded-3xl animate-fadeInUp ${
-            isDark 
-              ? 'bg-black/50 border border-white/10 backdrop-blur-sm' 
-              : 'bg-white/90 border border-black/10 backdrop-blur-sm'
-          }`} style={{ animationDelay: '1s' }}>
-            <p className={`text-sm ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`}>
+          <div className={`mt-4 text-center py-4 rounded-3xl animate-fadeInUp ${isDark
+            ? 'bg-black/50 border border-white/10 backdrop-blur-sm'
+            : 'bg-white/90 border border-black/10 backdrop-blur-sm'
+            }`} style={{ animationDelay: '1s' }}>
+            <p className={`text-sm ${isDark ? 'text-white/60' : 'text-black/60'
+              }`}>
               Don't have an account?{' '}
-              <Link 
-                to="/register" 
+              <Link
+                to="/register"
                 className="font-semibold transition-all duration-300 text-[#00B8A9] hover:text-[#00A89A] inline-block transform hover:scale-105"
               >
                 Sign up

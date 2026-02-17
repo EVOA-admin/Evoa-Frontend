@@ -31,7 +31,7 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
   }
 
   const headers = { 'Content-Type': 'application/json' };
-  
+
   if (needsAuth) {
     const token = localStorage.getItem('authToken');
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -48,7 +48,7 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, config);
-    
+
     let data;
     try {
       data = await response.json();
@@ -57,6 +57,14 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
     }
 
     if (!response.ok) {
+      // Handle 401 Unauthorized - redirect to login
+      if (response.status === 401) {
+        clearAuthData();
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+
       throw {
         error: true,
         status: response.status,

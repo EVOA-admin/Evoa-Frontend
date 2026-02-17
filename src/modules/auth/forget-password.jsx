@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
+import { forgotPassword } from "../../services/authService";
 import logo from "../../assets/logo.avif";
 import VideoReel from "../../components/shared/VideoReel";
 
 export default function ForgetPassword() {
   const [email, setEmail] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const particlesRef = useRef([]);
@@ -15,7 +18,7 @@ export default function ForgetPassword() {
   useEffect(() => {
     const particles = [];
     const particleCount = 15;
-    
+
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         id: i,
@@ -26,27 +29,66 @@ export default function ForgetPassword() {
         delay: Math.random() * 5,
       });
     }
-    
+
     particlesRef.current = particles;
   }, []);
 
-  const handleSendOTP = () => {
-    // Navigate to verify OTP page
-    navigate("/verify-otp");
+  const handleSendResetEmail = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      await forgotPassword({ email }); // Pass as object with email property
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  if (success) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-black' : 'bg-white'}`}>
+        <div className="text-center max-w-md px-4">
+          <div className="mb-6">
+            <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+          </div>
+          <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
+            Check Your Email
+          </h2>
+          <p className={`mb-6 ${isDark ? 'text-white/60' : 'text-black/60'}`}>
+            We've sent a password reset link to <strong className={isDark ? 'text-white' : 'text-black'}>{email}</strong>
+          </p>
+          <p className={`text-sm mb-6 ${isDark ? 'text-white/60' : 'text-black/60'}`}>
+            Click the link in the email to reset your password. The link will expire in 1 hour.
+          </p>
+          <Link
+            to="/login"
+            className="inline-block px-6 py-3 bg-[#00B8A9] text-white rounded-xl hover:bg-[#00A89A] transition-colors"
+          >
+            Back to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 relative overflow-hidden ${
-      isDark ? 'bg-black' : 'bg-white'
-    }`}>
+    <div className={`min-h-screen flex transition-colors duration-300 relative overflow-hidden ${isDark ? 'bg-black' : 'bg-white'
+      }`}>
       {/* Floating Particles Background Animation */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {particlesRef.current.map((particle) => (
           <div
             key={particle.id}
-            className={`absolute rounded-full ${
-              isDark ? 'bg-[#00B8A9]/20' : 'bg-[#00B8A9]/10'
-            }`}
+            className={`absolute rounded-full ${isDark ? 'bg-[#00B8A9]/20' : 'bg-[#00B8A9]/10'
+              }`}
             style={{
               left: `${particle.x}%`,
               top: `${particle.y}%`,
@@ -62,10 +104,9 @@ export default function ForgetPassword() {
       {/* Floating Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         {/* Floating circles */}
-        <div 
-          className={`absolute rounded-full blur-xl ${
-            isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
-          }`}
+        <div
+          className={`absolute rounded-full blur-xl ${isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
+            }`}
           style={{
             width: '300px',
             height: '300px',
@@ -74,10 +115,9 @@ export default function ForgetPassword() {
             animation: 'floatSlow 20s ease-in-out infinite',
           }}
         />
-        <div 
-          className={`absolute rounded-full blur-xl ${
-            isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
-          }`}
+        <div
+          className={`absolute rounded-full blur-xl ${isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
+            }`}
           style={{
             width: '200px',
             height: '200px',
@@ -101,39 +141,44 @@ export default function ForgetPassword() {
           <div className="mb-6 sm:mb-8 text-center animate-fadeInUp">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="relative">
-                <img 
-                  src={logo} 
-                  alt="EVO-A Logo" 
+                <img
+                  src={logo}
+                  alt="EVO-A Logo"
                   className="h-10 w-10 sm:h-12 sm:w-12 object-contain animate-pulseGlow"
                 />
                 {/* Glow effect */}
-                <div className={`absolute inset-0 rounded-full blur-md opacity-50 ${
-                  isDark ? 'bg-[#00B8A9]' : 'bg-[#00B8A9]/30'
-                } animate-pulseGlow`} style={{ zIndex: -1 }} />
+                <div className={`absolute inset-0 rounded-full blur-md opacity-50 ${isDark ? 'bg-[#00B8A9]' : 'bg-[#00B8A9]/30'
+                  } animate-pulseGlow`} style={{ zIndex: -1 }} />
               </div>
-              <span className={`text-2xl sm:text-3xl font-bold tracking-wide animate-slideInRight ${
-                isDark ? 'text-white' : 'text-black'
-              }`}>EVO-A</span>
+              <span className={`text-2xl sm:text-3xl font-bold tracking-wide animate-slideInRight ${isDark ? 'text-white' : 'text-black'
+                }`}>EVO-A</span>
             </div>
-            <h1 className={`text-xl sm:text-2xl font-semibold mb-1 animate-fadeInUp ${
-              isDark ? 'text-white' : 'text-black'
-            }`} style={{ animationDelay: '0.1s' }}>
+            <h1 className={`text-xl sm:text-2xl font-semibold mb-1 animate-fadeInUp ${isDark ? 'text-white' : 'text-black'
+              }`} style={{ animationDelay: '0.1s' }}>
               Forgot Password?
             </h1>
-            <p className={`text-xs sm:text-sm animate-fadeInUp ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`} style={{ animationDelay: '0.2s' }}>
-              No worries! Enter your email and we'll send you an OTP code to reset your password.
+            <p className={`text-xs sm:text-sm animate-fadeInUp ${isDark ? 'text-white/60' : 'text-black/60'
+              }`} style={{ animationDelay: '0.2s' }}>
+              No worries! Enter your email and we'll send you a reset link.
             </p>
           </div>
 
           {/* Form Container with Animation */}
-          <div className={`rounded-3xl p-5 sm:p-6 animate-fadeInUp ${
-            isDark 
-              ? 'bg-black/50 border border-white/10 backdrop-blur-sm' 
-              : 'bg-white/90 border border-black/10 backdrop-blur-sm'
-          }`} style={{ animationDelay: '0.3s' }}>
-            <form className="space-y-3">
+          <div className={`rounded-3xl p-5 sm:p-6 animate-fadeInUp ${isDark
+            ? 'bg-black/50 border border-white/10 backdrop-blur-sm'
+            : 'bg-white/90 border border-black/10 backdrop-blur-sm'
+            }`} style={{ animationDelay: '0.3s' }}>
+            <form className="space-y-3" onSubmit={handleSendResetEmail}>
+              {/* Error Message */}
+              {error && (
+                <div className={`p-3 text-sm border rounded-xl ${isDark
+                  ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                  : 'bg-red-50 border-red-200 text-red-600'
+                  }`}>
+                  {error}
+                </div>
+              )}
+
               {/* Email Input with Animation */}
               <div className="animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
                 <input
@@ -141,22 +186,23 @@ export default function ForgetPassword() {
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-2.5 sm:py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 transform hover:scale-[1.02] focus:scale-[1.02] ${
-                    isDark 
-                      ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' 
-                      : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-                  }`}
+                  required
+                  disabled={loading}
+                  className={`w-full px-4 py-2.5 sm:py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 disabled:opacity-50 transform hover:scale-[1.02] focus:scale-[1.02] ${isDark
+                    ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+                    : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+                    }`}
                 />
               </div>
 
-              {/* Send OTP Button with Enhanced Animation */}
+              {/* Send Reset Link Button with Enhanced Animation */}
               <div className="animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
                 <button
-                  type="button"
-                  onClick={handleSendOTP}
-                  className="w-full py-2.5 sm:py-3 text-sm font-semibold rounded-xl transition-all duration-300 bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] relative overflow-hidden group"
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 sm:py-3 text-sm font-semibold rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] relative overflow-hidden group"
                 >
-                  <span className="relative z-10">Send OTP Code</span>
+                  <span className="relative z-10">{loading ? 'Sending...' : 'Send Reset Link'}</span>
                   {/* Shimmer effect */}
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                 </button>
@@ -165,17 +211,15 @@ export default function ForgetPassword() {
           </div>
 
           {/* Sign In Link with Animation */}
-          <div className={`mt-4 text-center py-4 rounded-3xl animate-fadeInUp ${
-            isDark 
-              ? 'bg-black/50 border border-white/10 backdrop-blur-sm' 
-              : 'bg-white/90 border border-black/10 backdrop-blur-sm'
-          }`} style={{ animationDelay: '0.6s' }}>
-            <p className={`text-sm ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`}>
+          <div className={`mt-4 text-center py-4 rounded-3xl animate-fadeInUp ${isDark
+            ? 'bg-black/50 border border-white/10 backdrop-blur-sm'
+            : 'bg-white/90 border border-black/10 backdrop-blur-sm'
+            }`} style={{ animationDelay: '0.6s' }}>
+            <p className={`text-sm ${isDark ? 'text-white/60' : 'text-black/60'
+              }`}>
               Remember your password?{' '}
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="font-semibold transition-all duration-300 text-[#00B8A9] hover:text-[#00A89A] inline-block transform hover:scale-105"
               >
                 Sign in

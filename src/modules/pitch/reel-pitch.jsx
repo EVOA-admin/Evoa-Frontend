@@ -1,17 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { 
-  FaHeart, 
-  FaRegHeart, 
-  FaRegComment, 
-  FaRegPaperPlane, 
+import {
+  FaHeart,
+  FaRegHeart,
+  FaRegComment,
+  FaRegPaperPlane,
   FaBookmark,
   FaRegBookmark,
   FaVolumeUp,
   FaVolumeMute,
   FaArrowLeft
 } from "react-icons/fa";
+import reelsService from "../../services/reelsService";
 
 export default function ReelPitch() {
   const { theme } = useTheme();
@@ -22,116 +23,72 @@ export default function ReelPitch() {
   const videoRefs = useRef({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reelStates, setReelStates] = useState({});
+  const [pitches, setPitches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
 
-  // Multiple pitch reels data
-  const pitches = [
-    {
-      id: 1,
-      name: 'Peter Quil',
-      username: 'peterquil',
-      profilePhoto: 'https://i.pravatar.cc/150?img=12',
-      video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      hashtag: '#Climateimpact',
-      category: 'HealthTech',
-      description: 'Introducing our new payment platform. #healthTech',
-      likes: 12450,
-      comments: 342,
-      shares: 89,
-      teamSize: 5,
-      dealInfo: {
-        ask: '₹50L',
-        equity: '10%',
-        revenue: '₹1.2Cr'
-      }
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      username: 'sarahj',
-      profilePhoto: 'https://i.pravatar.cc/150?img=5',
-      video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      hashtag: '#FinTech',
-      category: 'FinTech',
-      description: 'Revolutionizing digital payments with AI. Join us! 🚀',
-      likes: 18900,
-      comments: 456,
-      shares: 123,
-      teamSize: 8,
-      dealInfo: {
-        ask: '₹1Cr',
-        equity: '15%',
-        revenue: '₹2.5Cr'
-      }
-    },
-    {
-      id: 3,
-      name: 'Alex Chen',
-      username: 'alexchen',
-      profilePhoto: 'https://i.pravatar.cc/150?img=8',
-      video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      hashtag: '#EdTech',
-      category: 'EdTech',
-      description: 'Making education accessible to everyone. Learn more! 📚',
-      likes: 23400,
-      comments: 678,
-      shares: 234,
-      teamSize: 12,
-      dealInfo: {
-        ask: '₹75L',
-        equity: '12%',
-        revenue: '₹1.8Cr'
-      }
-    },
-    {
-      id: 4,
-      name: 'Maria Garcia',
-      username: 'mariag',
-      profilePhoto: 'https://i.pravatar.cc/150?img=15',
-      video: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-      hashtag: '#GreenTech',
-      category: 'GreenTech',
-      description: 'Sustainable solutions for a better tomorrow. 🌱',
-      likes: 15600,
-      comments: 389,
-      shares: 145,
-      teamSize: 6,
-      dealInfo: {
-        ask: '₹60L',
-        equity: '8%',
-        revenue: '₹1.5Cr'
-      }
-    }
-  ];
-
-  const currentPitch = pitches[currentIndex] || pitches[0];
-
-  // Initialize reel states
+  // Fetch reels from backend
   useEffect(() => {
-    const initialState = {};
-    pitches.forEach((pitch) => {
-      initialState[pitch.id] = {
-        isLiked: false,
-        isSaved: false,
-        isPlaying: false,
-        isMuted: true
-      };
-    });
-    setReelStates(initialState);
+    fetchReels();
   }, []);
+
+  const fetchReels = async () => {
+    try {
+      setLoading(true);
+      const response = await reelsService.getFeed({
+        type: 'for_you',
+        cursor: nextCursor,
+        limit: 20
+      });
+
+      const newReels = response.data.reels || [];
+      setPitches(prev => nextCursor ? [...prev, ...newReels] : newReels);
+      setNextCursor(response.data.nextCursor);
+      setHasMore(response.data.hasMore);
+
+      // Initialize reel states for new reels
+      const initialState = {};
+      newReels.forEach((reel) => {
+        initialState[reel.id] = {
+          isLiked: reel.isLiked || false,
+          isSaved: reel.isSaved || false,
+          isPlaying: false,
+          isMuted: true
+        };
+      });
+      setReelStates(prev => ({ ...prev, ...initialState }));
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch reels:', err);
+      setError('Failed to load reels. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentPitch = pitches[currentIndex] || null;
 
   // Handle scroll and play/pause videos
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || pitches.length === 0) return;
 
     const handleScroll = () => {
       const scrollTop = container.scrollTop;
       const windowHeight = window.innerHeight;
       const newIndex = Math.round(scrollTop / windowHeight);
-      
+
       if (newIndex !== currentIndex && newIndex >= 0 && newIndex < pitches.length) {
         setCurrentIndex(newIndex);
-        
+
+        // Track view for new reel
+        const newReel = pitches[newIndex];
+        if (newReel) {
+          reelsService.trackView(newReel.id);
+        }
+
         // Pause all videos
         Object.values(videoRefs.current).forEach((video) => {
           if (video) video.pause();
@@ -150,7 +107,7 @@ export default function ReelPitch() {
         const currentVideo = videoRefs.current[pitches[newIndex].id];
         if (currentVideo) {
           currentVideo.muted = reelStates[pitches[newIndex].id]?.isMuted ?? true;
-          currentVideo.play().catch(() => {});
+          currentVideo.play().catch(() => { });
           setReelStates((prev) => ({
             ...prev,
             [pitches[newIndex].id]: {
@@ -164,20 +121,25 @@ export default function ReelPitch() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [currentIndex, reelStates]);
+  }, [currentIndex, reelStates, pitches]);
 
-  // Play first video on mount
+  // Play first video on mount and track view
   useEffect(() => {
-    const firstVideo = videoRefs.current[pitches[0].id];
-    if (firstVideo && reelStates[pitches[0].id]) {
-      firstVideo.muted = reelStates[pitches[0].id].isMuted;
-      firstVideo.play().catch(() => {});
-      setReelStates((prev) => ({
-        ...prev,
-        [pitches[0].id]: { ...prev[pitches[0].id], isPlaying: true }
-      }));
+    if (pitches.length > 0 && videoRefs.current[pitches[0].id]) {
+      const firstVideo = videoRefs.current[pitches[0].id];
+      if (firstVideo && reelStates[pitches[0].id]) {
+        firstVideo.muted = reelStates[pitches[0].id].isMuted;
+        firstVideo.play().catch(() => { });
+        setReelStates((prev) => ({
+          ...prev,
+          [pitches[0].id]: { ...prev[pitches[0].id], isPlaying: true }
+        }));
+
+        // Track view for first reel
+        reelsService.trackView(pitches[0].id);
+      }
     }
-  }, [reelStates]);
+  }, [pitches.length]);
 
   const togglePlay = (pitchId) => {
     const video = videoRefs.current[pitchId];
@@ -211,18 +173,67 @@ export default function ReelPitch() {
     }
   };
 
-  const handleLike = (pitchId) => {
+  const handleLike = async (pitchId) => {
+    const currentState = reelStates[pitchId];
+    const wasLiked = currentState?.isLiked;
+
+    // Optimistic update
     setReelStates((prev) => ({
       ...prev,
-      [pitchId]: { ...prev[pitchId], isLiked: !prev[pitchId].isLiked }
+      [pitchId]: { ...prev[pitchId], isLiked: !wasLiked }
     }));
+
+    setPitches(prev => prev.map(p =>
+      p.id === pitchId
+        ? { ...p, likeCount: p.likeCount + (wasLiked ? -1 : 1) }
+        : p
+    ));
+
+    try {
+      if (wasLiked) {
+        await reelsService.unlikeReel(pitchId);
+      } else {
+        await reelsService.likeReel(pitchId);
+      }
+    } catch (error) {
+      // Revert on error
+      console.error('Failed to like/unlike:', error);
+      setReelStates((prev) => ({
+        ...prev,
+        [pitchId]: { ...prev[pitchId], isLiked: wasLiked }
+      }));
+      setPitches(prev => prev.map(p =>
+        p.id === pitchId
+          ? { ...p, likeCount: p.likeCount + (wasLiked ? 1 : -1) }
+          : p
+      ));
+    }
   };
 
-  const handleSave = (pitchId) => {
+  const handleSave = async (pitchId) => {
+    const currentState = reelStates[pitchId];
+    const wasSaved = currentState?.isSaved;
+
+    // Optimistic update
     setReelStates((prev) => ({
       ...prev,
-      [pitchId]: { ...prev[pitchId], isSaved: !prev[pitchId].isSaved }
+      [pitchId]: { ...prev[pitchId], isSaved: !wasSaved }
     }));
+
+    try {
+      if (wasSaved) {
+        await reelsService.unsaveReel(pitchId);
+      } else {
+        await reelsService.saveReel(pitchId);
+      }
+    } catch (error) {
+      // Revert on error
+      console.error('Failed to save/unsave:', error);
+      setReelStates((prev) => ({
+        ...prev,
+        [pitchId]: { ...prev[pitchId], isSaved: wasSaved }
+      }));
+    }
   };
 
   const handleComment = (pitchId) => {
@@ -230,9 +241,17 @@ export default function ReelPitch() {
     console.log('Open comments', pitchId);
   };
 
-  const handleShare = (pitchId) => {
-    // Share functionality
-    console.log('Share pitch', pitchId);
+  const handleShare = async (pitchId) => {
+    try {
+      await reelsService.shareReel(pitchId, 'other');
+      setPitches(prev => prev.map(p =>
+        p.id === pitchId
+          ? { ...p, shareCount: (p.shareCount || 0) + 1 }
+          : p
+      ));
+    } catch (error) {
+      console.error('Failed to share:', error);
+    }
   };
 
   const handleSupport = (pitchId) => {
@@ -242,7 +261,7 @@ export default function ReelPitch() {
 
   const renderReel = (pitch, index) => {
     const state = reelStates[pitch.id] || { isLiked: false, isSaved: false, isPlaying: false, isMuted: true };
-    
+
     return (
       <div key={pitch.id} className="w-full h-screen flex-shrink-0 relative overflow-hidden">
         {/* Video/Image Container */}
@@ -267,11 +286,10 @@ export default function ReelPitch() {
 
           {/* Category Tag - Top Left */}
           <div className="absolute top-11 sm:top-14 md:top-16 left-2 sm:left-3 md:left-4 z-10">
-            <div className={`px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-1 md:py-1.5 rounded-full text-[9px] sm:text-[10px] md:text-xs font-semibold ${
-              isDark 
-                ? 'bg-black/60 backdrop-blur-sm text-white border border-white/20' 
-                : 'bg-white/80 backdrop-blur-sm text-gray-900 border border-gray-200'
-            }`}>
+            <div className={`px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-1 md:py-1.5 rounded-full text-[9px] sm:text-[10px] md:text-xs font-semibold ${isDark
+              ? 'bg-black/60 backdrop-blur-sm text-white border border-white/20'
+              : 'bg-white/80 backdrop-blur-sm text-gray-900 border border-gray-200'
+              }`}>
               {pitch.category}
             </div>
           </div>
@@ -279,11 +297,10 @@ export default function ReelPitch() {
           {/* Volume Icon - Top Right */}
           <button
             onClick={() => toggleMute(pitch.id)}
-            className={`absolute top-11 sm:top-14 md:top-16 right-2 sm:right-3 md:right-4 z-10 p-1.5 sm:p-1.5 md:p-2 rounded-full transition-all active:scale-95 ${
-              isDark 
-                ? 'bg-black/60 backdrop-blur-sm text-white hover:bg-black/80' 
-                : 'bg-white/80 backdrop-blur-sm text-gray-900 hover:bg-white'
-            }`}
+            className={`absolute top-11 sm:top-14 md:top-16 right-2 sm:right-3 md:right-4 z-10 p-1.5 sm:p-1.5 md:p-2 rounded-full transition-all active:scale-95 ${isDark
+              ? 'bg-black/60 backdrop-blur-sm text-white hover:bg-black/80'
+              : 'bg-white/80 backdrop-blur-sm text-gray-900 hover:bg-white'
+              }`}
           >
             {state.isMuted ? (
               <>
@@ -341,7 +358,7 @@ export default function ReelPitch() {
                   <FaRegHeart size={28} className="hidden md:block text-white drop-shadow-lg" />
                 </>
               )}
-              <span className="text-[9px] sm:text-[10px] md:text-xs font-semibold text-white drop-shadow-md">{pitch.likes.toLocaleString()}</span>
+              <span className="text-[9px] sm:text-[10px] md:text-xs font-semibold text-white drop-shadow-md">{(pitch.likeCount || 0).toLocaleString()}</span>
             </button>
 
             {/* Comment Button */}
@@ -352,7 +369,7 @@ export default function ReelPitch() {
               <FaRegComment size={20} className="sm:hidden text-white drop-shadow-lg" />
               <FaRegComment size={24} className="hidden sm:block md:hidden text-white drop-shadow-lg" />
               <FaRegComment size={28} className="hidden md:block text-white drop-shadow-lg" />
-              <span className="text-[9px] sm:text-[10px] md:text-xs font-semibold text-white drop-shadow-md">{pitch.comments}</span>
+              <span className="text-[9px] sm:text-[10px] md:text-xs font-semibold text-white drop-shadow-md">{pitch.commentCount || 0}</span>
             </button>
 
             {/* Share Button */}
@@ -363,7 +380,7 @@ export default function ReelPitch() {
               <FaRegPaperPlane size={20} className="sm:hidden text-white drop-shadow-lg" />
               <FaRegPaperPlane size={24} className="hidden sm:block md:hidden text-white drop-shadow-lg" />
               <FaRegPaperPlane size={28} className="hidden md:block text-white drop-shadow-lg" />
-              <span className="text-[9px] sm:text-[10px] md:text-xs font-semibold text-white drop-shadow-md">{pitch.shares}</span>
+              <span className="text-[9px] sm:text-[10px] md:text-xs font-semibold text-white drop-shadow-md">{pitch.shareCount || 0}</span>
             </button>
 
             {/* Bookmark Button */}
@@ -382,7 +399,7 @@ export default function ReelPitch() {
                   <FaRegBookmark size={20} className="sm:hidden text-white drop-shadow-lg" />
                   <FaRegBookmark size={24} className="hidden sm:block md:hidden text-white drop-shadow-lg" />
                   <FaRegBookmark size={28} className="hidden md:block text-white drop-shadow-lg" />
-              </>
+                </>
               )}
             </button>
           </div>
@@ -390,9 +407,8 @@ export default function ReelPitch() {
           {/* Bottom Section */}
           <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none max-w-full overflow-hidden">
             {/* Gradient Overlay */}
-            <div className={`h-40 sm:h-52 md:h-64 bg-gradient-to-t pointer-events-none ${
-              isDark ? 'from-black via-black/85 to-transparent' : 'from-white via-white/85 to-transparent'
-            }`}></div>
+            <div className={`h-40 sm:h-52 md:h-64 bg-gradient-to-t pointer-events-none ${isDark ? 'from-black via-black/85 to-transparent' : 'from-white via-white/85 to-transparent'
+              }`}></div>
 
             {/* Content */}
             <div className={`absolute bottom-0 left-0 right-0 p-2.5 sm:p-3 md:p-5 pointer-events-auto max-w-full overflow-hidden ${isDark ? 'text-white' : 'text-black'}`}>
@@ -414,30 +430,27 @@ export default function ReelPitch() {
               {/* Support Button */}
               <button
                 onClick={() => handleSupport(pitch.id)}
-                className={`w-full py-2 sm:py-2 md:py-3 rounded-lg text-[10px] sm:text-xs md:text-base font-semibold mb-2 sm:mb-2.5 md:mb-4 transition-all active:scale-95 ${
-                  isDark 
-                    ? 'bg-gray-800 text-white hover:bg-gray-700' 
-                    : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-                }`}
+                className={`w-full py-2 sm:py-2 md:py-3 rounded-lg text-[10px] sm:text-xs md:text-base font-semibold mb-2 sm:mb-2.5 md:mb-4 transition-all active:scale-95 ${isDark
+                  ? 'bg-gray-800 text-white hover:bg-gray-700'
+                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+                  }`}
               >
                 Support this startup
               </button>
 
               {/* Financial Details */}
               <div className="flex gap-1.5 sm:gap-2 md:gap-3 mb-1.5 sm:mb-2 md:mb-3">
-                <div className={`flex-1 px-2 sm:px-2.5 md:px-4 py-1.5 sm:py-2 md:py-3 rounded-lg transition-all min-w-0 ${
-                  isDark 
-                    ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black hover:shadow-[0_0_20px_rgba(176,255,250,0.5)]' 
-                    : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white hover:shadow-[0_0_20px_rgba(0,184,169,0.4)]'
-                }`}>
+                <div className={`flex-1 px-2 sm:px-2.5 md:px-4 py-1.5 sm:py-2 md:py-3 rounded-lg transition-all min-w-0 ${isDark
+                  ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black hover:shadow-[0_0_20px_rgba(176,255,250,0.5)]'
+                  : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white hover:shadow-[0_0_20px_rgba(0,184,169,0.4)]'
+                  }`}>
                   <p className="text-[8px] sm:text-[9px] md:text-xs opacity-90 mb-0.5 sm:mb-1">Ask</p>
                   <p className="font-bold text-[9px] sm:text-[10px] md:text-sm leading-tight break-words">{pitch.dealInfo.ask} for {pitch.dealInfo.equity}</p>
                 </div>
-                <div className={`flex-1 px-2 sm:px-2.5 md:px-4 py-1.5 sm:py-2 md:py-3 rounded-lg transition-all min-w-0 ${
-                  isDark 
-                    ? 'bg-gradient-to-r from-[#80E5FF] to-[#B0FFFA] text-black hover:shadow-[0_0_20px_rgba(128,229,255,0.5)]' 
-                    : 'bg-gradient-to-r from-[#008C81] to-[#00B8A9] text-white hover:shadow-[0_0_20px_rgba(0,140,129,0.4)]'
-                }`}>
+                <div className={`flex-1 px-2 sm:px-2.5 md:px-4 py-1.5 sm:py-2 md:py-3 rounded-lg transition-all min-w-0 ${isDark
+                  ? 'bg-gradient-to-r from-[#80E5FF] to-[#B0FFFA] text-black hover:shadow-[0_0_20px_rgba(128,229,255,0.5)]'
+                  : 'bg-gradient-to-r from-[#008C81] to-[#00B8A9] text-white hover:shadow-[0_0_20px_rgba(0,140,129,0.4)]'
+                  }`}>
                   <p className="text-[8px] sm:text-[9px] md:text-xs opacity-90 mb-0.5 sm:mb-1">Revenue</p>
                   <p className="font-bold text-[9px] sm:text-[10px] md:text-sm leading-tight break-words">{pitch.dealInfo.revenue} Revenue</p>
                 </div>
@@ -464,14 +477,12 @@ export default function ReelPitch() {
       {/* Container with max-width for larger screens */}
       <div className="w-full h-full max-w-md mx-auto relative shadow-2xl overflow-hidden max-h-screen">
         {/* Header - Fixed */}
-        <div className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 ${
-          isDark ? 'bg-gradient-to-b from-black/80 to-transparent' : 'bg-gradient-to-b from-white/80 to-transparent'
-        }`}>
+        <div className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 ${isDark ? 'bg-gradient-to-b from-black/80 to-transparent' : 'bg-gradient-to-b from-white/80 to-transparent'
+          }`}>
           <button
             onClick={() => navigate(-1)}
-            className={`p-1.5 sm:p-2 rounded-full transition-all flex-shrink-0 ${
-              isDark ? 'bg-black/50 text-white hover:bg-black/70' : 'bg-white/50 text-black hover:bg-white/70'
-            }`}
+            className={`p-1.5 sm:p-2 rounded-full transition-all flex-shrink-0 ${isDark ? 'bg-black/50 text-white hover:bg-black/70' : 'bg-white/50 text-black hover:bg-white/70'
+              }`}
           >
             <FaArrowLeft size={16} className="sm:hidden" />
             <FaArrowLeft size={18} className="hidden sm:block" />
@@ -482,18 +493,42 @@ export default function ReelPitch() {
           <div className="w-8 sm:w-10"></div> {/* Spacer for centering */}
         </div>
 
-        {/* Scrollable Reels Container */}
-        <div 
-          ref={containerRef}
-          className="w-full h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide max-h-screen"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {pitches.map((pitch, index) => (
-            <div key={pitch.id} className="snap-start">
-              {renderReel(pitch, index)}
+        {/* Loading State */}
+        {loading && pitches.length === 0 && (
+          <div className="flex items-center justify-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && pitches.length === 0 && (
+          <div className="flex items-center justify-center h-full p-4">
+            <div className={`text-center ${isDark ? 'text-white' : 'text-black'}`}>
+              <p className="mb-4">{error}</p>
+              <button
+                onClick={fetchReels}
+                className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+              >
+                Retry
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* Scrollable Reels Container */}
+        {!loading && !error && pitches.length > 0 && (
+          <div
+            ref={containerRef}
+            className="w-full h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide max-h-screen"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {pitches.map((pitch, index) => (
+              <div key={pitch.id} className="snap-start">
+                {renderReel(pitch, index)}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

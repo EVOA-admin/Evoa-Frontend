@@ -1,11 +1,13 @@
 import { Routes, Route } from 'react-router-dom';
 import Layout from '../components/layout/layout';
+import ProtectedRoute from '../components/shared/ProtectedRoute';
 import Landing from '../modules/landing/landingpage';
 import Login from '../modules/auth/login';
 import Register from '../modules/auth/register';
 import ForgetPassword from '../modules/auth/forget-password';
-import VerifyOTP from '../modules/auth/verify-otp';
-import CreateNewPassword from '../modules/auth/create-new-password';
+import ResetPassword from '../modules/auth/reset-password';
+import OAuthCallback from '../modules/auth/OAuthCallback';
+// Removed: VerifyOTP and CreateNewPassword (obsolete with Supabase email link flow)
 import ChoiceRole from '../modules/auth/choice-role';
 import StartupRegistration from '../modules/auth/startup-registration';
 import InvestorRegistration from '../modules/auth/investor-registration';
@@ -30,6 +32,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
+        {/* Public routes */}
         <Route index element={<Landing />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
@@ -39,22 +42,25 @@ export default function AppRoutes() {
         <Route path="register/viewer" element={<ViewerRegistration />} />
         <Route path="choice-role" element={<ChoiceRole />} />
         <Route path="forget-password" element={<ForgetPassword />} />
-        <Route path="verify-otp" element={<VerifyOTP />} />
-        <Route path="create-new-password" element={<CreateNewPassword />} />
-        <Route path="startup" element={<Startup />} />
-        <Route path="investor" element={<Investor />} />
-        <Route path="incubator" element={<Incubator />} />
-        <Route path="viewer" element={<Viewer />} />
-        <Route path="explore" element={<Explore />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="pitch/:id" element={<ReelPitch />} />
+        <Route path="reset-password" element={<ResetPassword />} />
+        <Route path="auth/callback" element={<OAuthCallback />} />
+        {/* Removed: verify-otp and create-new-password routes (obsolete with Supabase) */}
         <Route path="blog" element={<Blog />} />
         <Route path="pitch-us" element={<PitchUs />} />
         <Route path="portfolio" element={<Portfolio />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
+
+        {/* Protected routes - require authentication */}
+        <Route path="startup" element={<ProtectedRoute><Startup /></ProtectedRoute>} />
+        <Route path="investor" element={<ProtectedRoute><Investor /></ProtectedRoute>} />
+        <Route path="incubator" element={<ProtectedRoute><Incubator /></ProtectedRoute>} />
+        <Route path="viewer" element={<ProtectedRoute><Viewer /></ProtectedRoute>} />
+        <Route path="explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+        <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="pitch/:id" element={<ProtectedRoute><ReelPitch /></ProtectedRoute>} />
       </Route>
     </Routes>
   );
