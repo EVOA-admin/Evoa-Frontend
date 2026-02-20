@@ -1,14 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { FaBell, FaFire, FaDollarSign, FaRocket, FaCog, FaArrowLeft } from "react-icons/fa";
+import { FaBell, FaFire, FaDollarSign, FaRocket, FaCog, FaArrowLeft, FaCheck } from "react-icons/fa";
 import logo from "../../assets/logo.avif";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from "../../services/notificationsService";
 
 export default function Notifications() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('all');
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [markingAll, setMarkingAll] = useState(false);
 
   const tabs = [
     { id: 'all', label: 'All', icon: FaBell },
@@ -18,38 +26,77 @@ export default function Notifications() {
     { id: 'system', label: 'System', icon: FaCog }
   ];
 
-  const notifications = {
-    all: [
-      { id: 1, type: 'trending', message: 'Your startup is now trending!', time: '2 hours ago', read: false },
-      { id: 2, type: 'offer', message: 'Investor made you an offer', time: '5 hours ago', read: false },
-      { id: 3, type: 'battleground', message: 'New battleground event starting soon', time: '1 day ago', read: true }
-    ],
-    battleground: [
-      { id: 1, type: 'battleground', message: 'New battleground event starting soon', time: '1 day ago', read: true },
-      { id: 2, type: 'battleground', message: 'You have been selected for pitch battle', time: '2 days ago', read: false }
-    ],
-    investor: [
-      { id: 1, type: 'offer', message: 'Investor made you an offer', time: '5 hours ago', read: false },
-      { id: 2, type: 'interest', message: '3 investors viewed your pitch', time: '1 day ago', read: true }
-    ],
-    pitch: [
-      { id: 1, type: 'trending', message: 'Your startup is now trending!', time: '2 hours ago', read: false },
-      { id: 2, type: 'views', message: 'Your pitch got 500 new views', time: '3 days ago', read: true }
-    ],
-    system: [
-      { id: 1, type: 'system', message: 'Profile verification completed', time: '1 week ago', read: true },
-      { id: 2, type: 'system', message: 'Welcome to EVO-A!', time: '2 weeks ago', read: true }
-    ]
+  // Fetch notifications when tab changes
+  useEffect(() => {
+    fetchNotifications();
+  }, [activeTab]);
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    try {
+      const type = activeTab === 'all' ? undefined : activeTab;
+      const res = await getNotifications({ type });
+      const data = res?.data?.data || res?.data || [];
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleNotificationClick = (notification) => {
-    if (notification.type === 'offer') {
-      navigate('/offer-detail');
+  const handleNotificationClick = async (notification) => {
+    // Mark as read
+    if (!notification.isRead) {
+      try {
+        await markNotificationAsRead(notification.id);
+        setNotifications((prev) =>
+          prev.map((n) => n.id === notification.id ? { ...n, isRead: true } : n)
+        );
+      } catch (err) {
+        console.error('Failed to mark as read:', err);
+      }
+    }
+
+    // Navigate based on notification link or type
+    if (notification.link) {
+      navigate(notification.link);
     } else if (notification.type === 'battleground') {
       navigate('/battleground');
-    } else if (notification.type === 'trending' || notification.type === 'pitch') {
-      navigate('/pitch/1');
+    } else if (notification.type === 'pitch' || notification.type === 'investor') {
+      // If there's a reelId in link, use it, otherwise go to explore
+      navigate('/explore');
     }
+  };
+
+  const handleMarkAllRead = async () => {
+    setMarkingAll(true);
+    try {
+      await markAllNotificationsAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    } finally {
+      setMarkingAll(false);
+    }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
   };
 
   return (
@@ -58,37 +105,57 @@ export default function Notifications() {
         <div className="max-w-3xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           {/* Header */}
           <div className="mb-4 sm:mb-6">
-            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-              <button
-                onClick={() => navigate(-1)}
-                className={`p-2 rounded-xl transition-all ${
-                  isDark 
-                    ? 'text-white/70 hover:text-white hover:bg-white/10' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                <FaArrowLeft size={18} />
-              </button>
-              <img src={logo} alt="EVO-A" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
-              <h1 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>Notifications</h1>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                  onClick={() => navigate(-1)}
+                  className={`p-2 rounded-xl transition-all ${isDark
+                      ? 'text-white/70 hover:text-white hover:bg-white/10'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    }`}
+                >
+                  <FaArrowLeft size={18} />
+                </button>
+                <img src={logo} alt="EVO-A" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
+                <h1 className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
+                  Notifications
+                </h1>
+                {unreadCount > 0 && (
+                  <span className="bg-[#00B8A9] text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  disabled={markingAll}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${isDark
+                      ? 'text-[#00B8A9] hover:bg-white/10'
+                      : 'text-[#00B8A9] hover:bg-[#00B8A9]/10'
+                    }`}
+                >
+                  <FaCheck size={10} />
+                  Mark all read
+                </button>
+              )}
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 mb-6 overflow-x-auto">
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                    activeTab === tab.id
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id
                       ? 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30'
                       : isDark
                         ? 'bg-white/10 text-white hover:bg-white/20 hover:text-[#00B8A9]'
                         : 'bg-black/10 text-black hover:bg-black/20 hover:text-[#00B8A9]'
-                  }`}
+                    }`}
                 >
                   <Icon size={16} />
                   {tab.label}
@@ -98,42 +165,59 @@ export default function Notifications() {
           </div>
 
           {/* Notifications List */}
-          <div className="space-y-2">
-            {notifications[activeTab]?.map((notification) => (
-              <div
-                key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={`p-4 rounded-lg cursor-pointer transition-all ${
-                  notification.read
-                    ? isDark
-                      ? 'bg-black/30 border border-white/5'
-                      : 'bg-white border border-gray-200'
-                    : isDark
-                      ? 'bg-[#00B8A9]/10 border border-[#00B8A9]/30'
-                      : 'bg-[#00B8A9]/5 border border-[#00B8A9]/30'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className={`text-sm font-medium mb-1 ${isDark ? 'text-white' : 'text-black'}`}>
-                      {notification.message}
-                    </p>
-                    <p className={`text-xs ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-                      {notification.time}
-                    </p>
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className={`p-4 rounded-lg animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`}
+                  style={{ height: '72px' }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`p-4 rounded-lg cursor-pointer transition-all ${notification.isRead
+                      ? isDark
+                        ? 'bg-black/30 border border-white/5'
+                        : 'bg-white border border-gray-200'
+                      : isDark
+                        ? 'bg-[#00B8A9]/10 border border-[#00B8A9]/30'
+                        : 'bg-[#00B8A9]/5 border border-[#00B8A9]/30'
+                    }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      {notification.title && (
+                        <p className={`text-sm font-semibold mb-0.5 ${isDark ? 'text-white' : 'text-black'}`}>
+                          {notification.title}
+                        </p>
+                      )}
+                      <p className={`text-sm ${isDark ? 'text-white/80' : 'text-black/80'}`}>
+                        {notification.message}
+                      </p>
+                      <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-black/50'}`}>
+                        {formatTime(notification.createdAt)}
+                      </p>
+                    </div>
+                    {!notification.isRead && (
+                      <div className="w-2 h-2 rounded-full bg-[#00B8A9] flex-shrink-0 mt-1.5" />
+                    )}
                   </div>
-                  {!notification.read && (
-                    <div className="w-2 h-2 rounded-full bg-[#00B8A9]" />
-                  )}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {(!notifications[activeTab] || notifications[activeTab].length === 0) && (
+          {!loading && notifications.length === 0 && (
             <div className={`text-center py-12 ${isDark ? 'text-white/60' : 'text-black/60'}`}>
               <FaBell size={48} className="mx-auto mb-4 opacity-50" />
-              <p>No notifications in this category</p>
+              <p className="font-medium">No notifications</p>
+              <p className="text-sm mt-1 opacity-70">You're all caught up!</p>
             </div>
           )}
         </div>
@@ -141,4 +225,3 @@ export default function Notifications() {
     </div>
   );
 }
-

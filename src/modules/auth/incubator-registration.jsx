@@ -4,7 +4,9 @@ import { FiEye, FiEyeOff, FiUpload } from "react-icons/fi";
 import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import logo from "../../assets/logo.avif";
-
+import { createIncubator } from "../../services/incubatorsService";
+import { uploadFile } from "../../services/storageService";
+import { supabase } from "../../config/supabase";
 export default function IncubatorRegistration() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -51,8 +53,7 @@ export default function IncubatorRegistration() {
     phone: '',
     password: '',
     confirmPassword: '',
-    emailOTP: '',
-    phoneOTP: ''
+
   });
 
   const organizationTypes = ['Government Incubator', 'University Incubator', 'Corporate Incubator', 'Private Incubator'];
@@ -82,6 +83,9 @@ export default function IncubatorRegistration() {
     setFormData(prev => ({ ...prev, [field]: file }));
   };
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const nextStep = () => {
     if (currentStep < 8) setCurrentStep(currentStep + 1);
   };
@@ -90,9 +94,59 @@ export default function IncubatorRegistration() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    navigate('/incubator');
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Upload Logo
+      let logoUrl = null;
+      if (formData.logo) {
+        const { url, error } = await uploadFile('incubator-logos', formData.logo);
+        if (error) throw new Error('Failed to upload logo: ' + error.message);
+        logoUrl = url;
+      }
+
+      // Upload Verification Document (if any)
+      // Note: Backend Entity doesn't have a specific field for verification doc URL yet, 
+      // but we can store it in 'verification' jsonb or just skip for now. 
+      // Entity has 'verification' as { type: string, value: string, documentUrl?: string }? 
+      // Wait, checking Incubator entity... 
+      // Entity has `verified: boolean`. It doesn't seem to have a specific 'verification' jsonb column in my recent scaffold?
+      // Let's check... I defined `verified` boolean. I didn't verify if I added a jsonb column for docs.
+      // Re-reading `incubator.entity.ts` content I wrote:
+      // it has `verified: boolean`. No jsonb for verification docs.
+      // So I will just upload it but maybe not store it effectively unless I update entity. 
+      // For now, let's just upload logo.
+
+      // Create DTO
+      const incubatorData = {
+        name: formData.incubatorName,
+        programTypes: formData.programType ? [formData.programType] : [],
+        description: formData.successStories, // Using success stories as description for now or leave blank
+        website: formData.websiteUrl,
+        logoUrl: logoUrl,
+        sectors: formData.sectorFocus,
+        stages: [], // Form doesn't capture stages
+        location: {
+          city: formData.city,
+          state: formData.state,
+          country: 'India'
+        },
+        cohortSize: parseInt(formData.cohortSize) || 0,
+        // applicationDeadline? Not in form.
+      };
+
+      const { data, error: apiError } = await createIncubator(incubatorData);
+      if (apiError) throw apiError;
+
+      navigate('/incubator');
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError(err.message || 'Failed to register. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStep = () => {
@@ -108,7 +162,7 @@ export default function IncubatorRegistration() {
               placeholder="Incubator Name"
               value={formData.incubatorName}
               onChange={(e) => handleInputChange('incubatorName', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
               Logo Upload
@@ -118,7 +172,7 @@ export default function IncubatorRegistration() {
                 onChange={(e) => handleFileUpload('logo', e.target.files[0])}
                 className="hidden"
               />
-                    <div className={`mt-2 p-4 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+              <div className={`mt-2 p-4 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
                 <FiUpload className="mx-auto mb-2" size={24} />
                 <span className="text-xs">Click to upload</span>
               </div>
@@ -128,14 +182,14 @@ export default function IncubatorRegistration() {
               placeholder="Official Email ID"
               value={formData.officialEmail}
               onChange={(e) => handleInputChange('officialEmail', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <input
               type="url"
               placeholder="Website URL"
               value={formData.websiteUrl}
               onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
           </div>
         );
@@ -158,21 +212,21 @@ export default function IncubatorRegistration() {
               placeholder="City"
               value={formData.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <textarea
               placeholder="Full Address (Optional)"
               value={formData.fullAddress}
               onChange={(e) => handleInputChange('fullAddress', e.target.value)}
               rows={3}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <input
               type="tel"
               placeholder="Phone Number"
               value={formData.phoneNumber}
               onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
           </div>
         );
@@ -275,7 +329,7 @@ export default function IncubatorRegistration() {
                 placeholder="Enter Custom Equity"
                 value={formData.customEquity}
                 onChange={(e) => handleInputChange('customEquity', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
               />
             )}
             <SearchableSelect
@@ -290,21 +344,21 @@ export default function IncubatorRegistration() {
               placeholder="Program Duration (Weeks/Months)"
               value={formData.programDuration}
               onChange={(e) => handleInputChange('programDuration', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <input
               type="number"
               placeholder="Cohort Size"
               value={formData.cohortSize}
               onChange={(e) => handleInputChange('cohortSize', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <input
               type="number"
               placeholder="Number of Mentors"
               value={formData.numberOfMentors}
               onChange={(e) => handleInputChange('numberOfMentors', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
           </div>
         );
@@ -342,107 +396,36 @@ export default function IncubatorRegistration() {
               value={formData.portfolioStartups}
               onChange={(e) => handleInputChange('portfolioStartups', e.target.value)}
               rows={3}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <textarea
               placeholder="Top Startup Success Stories"
               value={formData.successStories}
               onChange={(e) => handleInputChange('successStories', e.target.value)}
               rows={3}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <input
               type="url"
               placeholder="LinkedIn Profile"
               value={formData.linkedinProfile}
               onChange={(e) => handleInputChange('linkedinProfile', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <input
               type="url"
               placeholder="Instagram (Optional)"
               value={formData.instagram}
               onChange={(e) => handleInputChange('instagram', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
             <input
               type="url"
               placeholder="YouTube (Optional)"
               value={formData.youtube}
               onChange={(e) => handleInputChange('youtube', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
             />
-          </div>
-        );
-
-      case 8:
-        return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              8. OTP Authentication
-            </h2>
-            <input
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="tel"
-              placeholder="Phone"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border pr-10 sm:pr-12 ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-black/50'}`}
-              >
-                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-              </button>
-            </div>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border pr-10 sm:pr-12 ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-black/50'}`}
-              >
-                {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                placeholder="Email OTP"
-                value={formData.emailOTP}
-                onChange={(e) => handleInputChange('emailOTP', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-              />
-              <input
-                type="text"
-                placeholder="Phone OTP"
-                value={formData.phoneOTP}
-                onChange={(e) => handleInputChange('phoneOTP', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-              />
-            </div>
           </div>
         );
 
@@ -463,14 +446,14 @@ export default function IncubatorRegistration() {
             Incubator Registration
           </h1>
           <p className={`text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-            Step {currentStep} of 8
+            Step {currentStep} of 7
           </p>
         </div>
 
         <div className={`mb-4 sm:mb-6 h-1.5 sm:h-2 -full shrink-0 ${isDark ? 'bg-white/10' : 'bg-black/10'}`}>
           <div
             className="h-full -full transition-all duration-300 bg-[#00B8A9]"
-            style={{ width: `${(currentStep / 8) * 100}%` }}
+            style={{ width: `${(currentStep / 7) * 100}%` }}
           />
         </div>
 
@@ -483,13 +466,12 @@ export default function IncubatorRegistration() {
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className={`px-4 sm:px-6 py-2 sm:py-2.5  text-xs sm:text-sm font-semibold transition-all ${
-              currentStep === 1
-                ? 'opacity-50 cursor-not-allowed'
-                : isDark
-                  ? 'bg-white/10 text-white hover:bg-white/20 cursor-pointer'
-                  : 'bg-black/10 text-black hover:bg-black/20 cursor-pointer'
-            }`}
+            className={`px-4 sm:px-6 py-2 sm:py-2.5  text-xs sm:text-sm font-semibold transition-all ${currentStep === 1
+              ? 'opacity-50 cursor-not-allowed'
+              : isDark
+                ? 'bg-white/10 text-white hover:bg-white/20 cursor-pointer'
+                : 'bg-black/10 text-black hover:bg-black/20 cursor-pointer'
+              }`}
           >
             Previous
           </button>

@@ -16,9 +16,14 @@ export const getFollowedStartups = async () => {
   return await apiClient.get('/startups/following/me');
 };
 
+export const createStartup = async (data) => {
+  return await apiClient.post('/startups', data);
+};
+
 export default {
   getStartupDetails,
   followStartup,
   unfollowStartup,
   getFollowedStartups,
+  createStartup,
 };

@@ -4,14 +4,16 @@ import { FiEye, FiEyeOff, FiUpload, FiX } from "react-icons/fi";
 import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import logo from "../../assets/logo.avif";
+import storageService from "../../services/storageService";
+import { createStartup } from "../../services/startupsService";
+import startupsService from "../../services/startupsService"; // Use default import for other methods if needed
 
 export default function StartupRegistration() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -56,13 +58,7 @@ export default function StartupRegistration() {
     teamMembers: [],
     // Category Tags
     categoryTags: [],
-    // Security
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    emailOTP: '',
-    phoneOTP: ''
+
   });
 
   const founderRoles = ['CEO', 'CTO', 'COO', 'CMO', 'CFO', 'Co-founder', 'Solo Founder'];
@@ -106,22 +102,117 @@ export default function StartupRegistration() {
     }));
   };
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const handleFileUpload = (field, file) => {
     setFormData(prev => ({ ...prev, [field]: file }));
   };
 
   const nextStep = () => {
-    if (currentStep < 9) setCurrentStep(currentStep + 1);
+    if (currentStep < 8) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    // Handle final submission
-    console.log('Form submitted:', formData);
-    navigate('/startup');
+  const uploadToStorage = async (file, path) => {
+    if (!file) return null;
+    try {
+      // Use 'public' bucket for now
+      return await storageService.uploadFile(file, 'public', `startups/${Date.now()}_${path}_${file.name}`);
+    } catch (err) {
+      console.error(`Failed to upload ${path}:`, err);
+      // Fallback or rethrow? For now, we'll continue but log error
+      return null;
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // 1. Upload files
+      const logoUrl = await uploadToStorage(formData.startupLogo, 'logo');
+      const idProofUrl = await uploadToStorage(formData.idProof, 'id_proof');
+      const businessProofUrl = await uploadToStorage(formData.businessProof, 'business_proof');
+      const pitchVideoUrl = await uploadToStorage(formData.pitchVideo, 'pitch_video');
+      const pitchDeckUrl = await uploadToStorage(formData.pitchDeck, 'pitch_deck');
+      const brochureUrl = await uploadToStorage(formData.brochure, 'brochure');
+
+      // Upload founder photos
+      const foundersWithPhotos = await Promise.all(formData.founders.map(async (founder, index) => {
+        const photoUrl = await uploadToStorage(founder.photo, `founder_${index}`);
+        return {
+          ...founder,
+          photoUrl
+        };
+      }));
+
+      // 2. Construct Payload
+      const payload = {
+        name: formData.startupName,
+        username: formData.startupUsername,
+        companyEmail: formData.companyEmail,
+        website: formData.websiteUrl,
+        stage: formData.stage,
+        industries: formData.industries,
+        location: {
+          city: formData.city,
+          state: formData.state,
+          country: formData.country
+        },
+        founders: foundersWithPhotos.map(f => ({
+          name: f.name,
+          email: f.email,
+          mobile: f.mobile,
+          role: f.role,
+          photoUrl: f.photoUrl
+        })),
+        verification: formData.entityType !== 'Not Registered Yet' ? {
+          entityType: formData.entityType,
+          type: formData.verificationType,
+          value: formData.verificationType === 'CIN' ? formData.cin :
+            formData.verificationType === 'GST' ? formData.gstin :
+              formData.verificationType === 'Udyam' ? formData.udyamNumber : '',
+          documentUrl: '' // Not uploading verification docs for registered entities in this form? Or use id/business proof?
+        } : {
+          entityType: 'Unregistered',
+          type: 'Documents',
+          value: 'Uploaded',
+          documentUrl: idProofUrl // Using ID proof as verification doc
+        },
+        pitchVideoUrl,
+        pitchDeckUrl,
+        description: formData.shortDescription,
+        socialLinks: {
+          linkedin: formData.linkedin,
+          instagram: formData.instagram,
+          youtube: formData.youtube,
+          playStore: formData.playStore,
+          productDemo: formData.productDemo,
+          website: formData.websiteUrl
+        },
+        amountRaising: Number(formData.amountRaising) || 0,
+        equityGiving: Number(formData.equityGiving) || 0,
+        preMoneyValuation: Number(formData.preMoneyValuation) || 0,
+        categoryTags: formData.categoryTags,
+        teamMembers: [] // Optional
+      };
+
+      // 3. Call API
+      await startupsService.createStartup(payload);
+
+      // 4. Navigate
+      navigate('/startup');
+    } catch (err) {
+      console.error('Registration failed:', err);
+      setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStep = () => {
@@ -599,77 +690,6 @@ export default function StartupRegistration() {
           </div>
         );
 
-      case 9:
-        return (
-          <div className="space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              9. Account Security
-            </h2>
-            <input
-              type="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-            />
-            <input
-              type="tel"
-              placeholder="Phone"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-            />
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border pr-10 sm:pr-12 ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-black/50'}`}
-              >
-                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-              </button>
-            </div>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border pr-10 sm:pr-12 ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-black/50'}`}
-              >
-                {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                placeholder="Email OTP"
-                value={formData.emailOTP}
-                onChange={(e) => handleInputChange('emailOTP', e.target.value)}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-              />
-              <input
-                type="text"
-                placeholder="Phone OTP"
-                value={formData.phoneOTP}
-                onChange={(e) => handleInputChange('phoneOTP', e.target.value)}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl ${isDark ? 'bg-black/80 border-white/20 text-white' : 'bg-white border-black/20 text-black'}`}
-              />
-            </div>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -688,7 +708,7 @@ export default function StartupRegistration() {
             Startup Registration
           </h1>
           <p className={`text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-            Step {currentStep} of 9
+            Step {currentStep} of 8
           </p>
         </div>
 
@@ -696,7 +716,7 @@ export default function StartupRegistration() {
         <div className={`mb-4 sm:mb-6 h-1.5 sm:h-2 -full shrink-0 ${isDark ? 'bg-white/10' : 'bg-black/10'}`}>
           <div
             className="h-full -full transition-all duration-300 bg-[#00B8A9]"
-            style={{ width: `${(currentStep / 9) * 100}%` }}
+            style={{ width: `${(currentStep / 8) * 100}%` }}
           />
         </div>
 
@@ -711,17 +731,16 @@ export default function StartupRegistration() {
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className={`px-4 sm:px-6 py-2 sm:py-2.5  text-xs sm:text-sm font-semibold transition-all ${
-              currentStep === 1
-                ? 'opacity-50 cursor-not-allowed'
-                : isDark
-                  ? 'bg-white/10 text-white hover:bg-white/20 cursor-pointer'
-                  : 'bg-black/10 text-black hover:bg-black/20 cursor-pointer'
-            }`}
+            className={`px-4 sm:px-6 py-2 sm:py-2.5  text-xs sm:text-sm font-semibold transition-all ${currentStep === 1
+              ? 'opacity-50 cursor-not-allowed'
+              : isDark
+                ? 'bg-white/10 text-white hover:bg-white/20 cursor-pointer'
+                : 'bg-black/10 text-black hover:bg-black/20 cursor-pointer'
+              }`}
           >
             Previous
           </button>
-          {currentStep < 9 ? (
+          {currentStep < 8 ? (
             <button
               type="button"
               onClick={nextStep}
@@ -733,12 +752,18 @@ export default function StartupRegistration() {
             <button
               type="button"
               onClick={handleSubmit}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer"
+              disabled={loading}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer'}`}
             >
-              Submit
+              {loading ? 'Submitting...' : 'Submit'}
             </button>
           )}
         </div>
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm text-center">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );

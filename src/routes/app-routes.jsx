@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/layout';
 import Landing from '../modules/landing/landingpage';
 import Login from '../modules/auth/login';
@@ -25,36 +25,50 @@ import Portfolio from '../modules/pages/portfolio';
 import About from '../modules/pages/about';
 import Contact from '../modules/pages/contact';
 import PrivacyPolicy from '../modules/pages/privacy-policy';
+import ProtectedRoute from './protected-route';
+import PublicRoute from './public-route';
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Landing />} />
-        <Route path="login" element={<Login />} />
-        <Route path="register" element={<Register />} />
-        <Route path="register/startup" element={<StartupRegistration />} />
-        <Route path="register/investor" element={<InvestorRegistration />} />
-        <Route path="register/incubator" element={<IncubatorRegistration />} />
-        <Route path="register/viewer" element={<ViewerRegistration />} />
-        <Route path="choice-role" element={<ChoiceRole />} />
-        <Route path="forget-password" element={<ForgetPassword />} />
-        <Route path="verify-otp" element={<VerifyOTP />} />
-        <Route path="create-new-password" element={<CreateNewPassword />} />
-        <Route path="startup" element={<Startup />} />
-        <Route path="investor" element={<Investor />} />
-        <Route path="incubator" element={<Incubator />} />
-        <Route path="viewer" element={<Viewer />} />
-        <Route path="explore" element={<Explore />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="pitch/:id" element={<ReelPitch />} />
+        {/* Public Routes - Accessible only when NOT logged in */}
+        <Route index element={<PublicRoute><Landing /></PublicRoute>} />
+        <Route path="login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="register" element={<PublicRoute><Register /></PublicRoute>} />
+        <Route path="forget-password" element={<PublicRoute><ForgetPassword /></PublicRoute>} />
+        <Route path="verify-otp" element={<PublicRoute><VerifyOTP /></PublicRoute>} />
+        <Route path="create-new-password" element={<PublicRoute><CreateNewPassword /></PublicRoute>} />
+
+        {/* Onboarding Routes - Require Authentication */}
+        <Route path="choice-role" element={<ProtectedRoute><ChoiceRole /></ProtectedRoute>} />
+        <Route path="register/startup" element={<ProtectedRoute><StartupRegistration /></ProtectedRoute>} />
+        <Route path="register/investor" element={<ProtectedRoute><InvestorRegistration /></ProtectedRoute>} />
+        <Route path="register/incubator" element={<ProtectedRoute><IncubatorRegistration /></ProtectedRoute>} />
+        <Route path="register/viewer" element={<ProtectedRoute><ViewerRegistration /></ProtectedRoute>} />
+
+        {/* Dashboard Routes - Role Protected */}
+        <Route path="startup" element={<ProtectedRoute allowedRoles={['startup']}><Startup /></ProtectedRoute>} />
+        <Route path="investor" element={<ProtectedRoute allowedRoles={['investor']}><Investor /></ProtectedRoute>} />
+        <Route path="incubator" element={<ProtectedRoute allowedRoles={['incubator']}><Incubator /></ProtectedRoute>} />
+        <Route path="viewer" element={<ProtectedRoute allowedRoles={['viewer']}><Viewer /></ProtectedRoute>} />
+
+        {/* Feature Routes - Require Authentication */}
+        <Route path="explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+        <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="pitch/:id" element={<ProtectedRoute><ReelPitch /></ProtectedRoute>} />
+
+        {/* Public Pages - Accessible by everyone */}
         <Route path="blog" element={<Blog />} />
         <Route path="pitch-us" element={<PitchUs />} />
         <Route path="portfolio" element={<Portfolio />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
+
+        {/* Catch all - Redirect to home */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   );

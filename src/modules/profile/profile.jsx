@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { 
-  FaBell, 
-  FaSearch, 
-  FaEdit, 
-  FaCamera, 
+import {
+  FaBell,
+  FaSearch,
+  FaEdit,
+  FaCamera,
   FaMapMarkerAlt,
   FaLink,
   FaCalendarAlt,
@@ -29,80 +29,107 @@ import {
 import { MdVerified } from "react-icons/md";
 import logo from "../../assets/logo.avif";
 
+import { getCurrentUserProfile } from "../../services/usersService";
+import { getStartupDetails } from "../../services/startupsService";
+import { useAuth } from "../../contexts/AuthContext";
+
 export default function Profile() {
   const { theme } = useTheme();
+  const { user: authUser } = useAuth();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
 
-  // Mock user data - in real app, this would come from API/context
-  const [user] = useState({
-    id: 1,
-    username: 'techstartup',
-    displayName: 'Quantum Flow AI',
-    bio: 'Revolutionizing data analytics with AI! Building the future of intelligent business decisions. 🚀',
-    profilePhoto: 'https://i.pravatar.cc/150?img=1',
-    coverPhoto: 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    isVerified: true,
-    role: 'startup',
-    location: 'Bangalore, India',
-    website: 'https://quantumflow.ai',
-    joinedDate: 'January 2023',
-    email: 'contact@quantumflow.ai',
-    phone: '+91 98765 43210',
-    education: 'IIT Delhi',
-    experience: '5+ years in AI/ML',
-    followers: 12450,
-    following: 342,
-    posts: 89,
-    links: {
-      linkedin: 'https://linkedin.com/company/quantumflow',
-      twitter: 'https://twitter.com/quantumflow',
-      instagram: 'https://instagram.com/quantumflow'
-    }
-  });
-
-  const [posts] = useState([
-    {
-      id: 1,
-      image: 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800',
-      caption: 'Revolutionizing data analytics with AI! 🚀 Our platform helps businesses make smarter decisions.',
-      tags: ['#AI', '#SaaS', '#Fintech'],
-      likes: 12450,
-      comments: 342,
-      shares: 89,
-      timeAgo: '2h',
-      liked: false,
-      saved: false
-    },
-    {
-      id: 2,
-      image: 'https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800',
-      caption: 'Building the future, one line of code at a time. Join us on this journey! 🌟',
-      tags: ['#Tech', '#StartupLife'],
-      likes: 8920,
-      comments: 156,
-      shares: 34,
-      timeAgo: '5h',
-      liked: true,
-      saved: false
-    },
-    {
-      id: 3,
-      image: 'https://images.pexels.com/photos/1181476/pexels-photo-1181476.jpeg?auto=compress&cs=tinysrgb&w=800',
-      caption: 'Excited to announce our Series A funding! 🎉',
-      tags: ['#Funding', '#Growth'],
-      likes: 15670,
-      comments: 423,
-      shares: 127,
-      timeAgo: '1d',
-      liked: false,
-      saved: true
-    }
-  ]);
-
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('posts');
 
+  useEffect(() => {
+    fetchProfileData();
+  }, [authUser]);
+
+  const fetchProfileData = async () => {
+    try {
+      setLoading(true);
+      // 1. Get User Profile (if not already in authUser, or to get fresh data)
+      const userData = await getCurrentUserProfile(); // Returns { ...user, startups: [...] }
+
+      let profileData = {
+        id: userData.data.id,
+        username: userData.data.username || userData.data.email.split('@')[0],
+        displayName: userData.data.fullName,
+        bio: userData.data.bio || 'No bio yet.',
+        profilePhoto: userData.data.avatarUrl || 'https://i.pravatar.cc/150?img=1',
+        coverPhoto: 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=1200', // Default cover
+        isVerified: false,
+        role: userData.data.role,
+        location: userData.data.location || '',
+        website: userData.data.website || '',
+        joinedDate: new Date(userData.data.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        email: userData.data.email,
+        phone: '', // Not in User entity?
+        education: '',
+        experience: '',
+        followers: 0,
+        following: 0,
+        posts: 0,
+        links: {}
+      };
+
+      // 2. If user has startup(s), fetch startup details to populate profile
+      // For now, if role is 'startup', use the first startup
+      if (userData.data.startups && userData.data.startups.length > 0) {
+        const startupId = userData.data.startups[0].id;
+        const startupData = await getStartupDetails(startupId);
+        const startup = startupData.data;
+
+        profileData = {
+          ...profileData,
+          displayName: startup.name,
+          username: startup.username || profileData.username,
+          bio: startup.description || startup.tagline || profileData.bio,
+          profilePhoto: startup.logoUrl || profileData.profilePhoto,
+          isVerified: true, // Startups are verified?
+          location: startup.location ? `${startup.location.city}, ${startup.location.country}` : profileData.location,
+          website: startup.website || profileData.website,
+          followers: startup.followerCount || 0,
+          following: 0, // Startup doesn't follow?
+          posts: startup.reels ? startup.reels.length : 0,
+          links: startup.socialLinks || {},
+          // Additional startup fields
+          education: '', // Startups don't have education
+          experience: '',
+        };
+
+        // Map reels to posts
+        if (startup.reels) {
+          const mappedPosts = startup.reels.map(reel => ({
+            id: reel.id,
+            image: reel.thumbnailUrl || reel.videoUrl, // Use video as image if no thumb?
+            caption: reel.description,
+            tags: reel.hashtags || [],
+            likes: reel.likeCount,
+            comments: reel.commentCount,
+            shares: reel.shareCount,
+            timeAgo: new Date(reel.createdAt).toLocaleDateString(), // TODO: relative time
+            liked: false, // Default
+            saved: false
+          }));
+          setPosts(mappedPosts);
+        }
+      }
+
+      setUser(profileData);
+    } catch (err) {
+      console.error("Failed to fetch profile data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const formatNumber = (num) => {
+    if (!num) return '0';
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toString();
@@ -116,6 +143,15 @@ export default function Profile() {
     console.log('Toggle save:', postId);
   };
 
+  if (loading) {
+    return <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>Loading...</div>;
+  }
+
+  if (!user) {
+    return <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-black text-white' : 'bg-white text-black'}`}>User not found</div>;
+  }
+
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
       {/* Top Bar */}
@@ -124,9 +160,8 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className={`p-2 rounded-full transition-all ${
-                isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'
-              }`}
+              className={`p-2 rounded-full transition-all ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'
+                }`}
             >
               <FaArrowLeft size={18} className={isDark ? 'text-white' : 'text-black'} />
             </button>
@@ -157,9 +192,8 @@ export default function Profile() {
               className="w-full h-full object-cover"
             />
             <button
-              className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all ${
-                isDark ? 'bg-black/50 text-white hover:bg-black/70' : 'bg-white/50 text-black hover:bg-white/70'
-              }`}
+              className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all ${isDark ? 'bg-black/50 text-white hover:bg-black/70' : 'bg-white/50 text-black hover:bg-white/70'
+                }`}
             >
               <FaCamera size={16} />
             </button>
@@ -177,9 +211,8 @@ export default function Profile() {
                     className="w-full h-full object-cover"
                   />
                   <button
-                    className={`absolute bottom-0 right-0 p-1.5 rounded-full backdrop-blur-md transition-all ${
-                      isDark ? 'bg-black/50 text-white hover:bg-black/70' : 'bg-white/50 text-black hover:bg-white/70'
-                    }`}
+                    className={`absolute bottom-0 right-0 p-1.5 rounded-full backdrop-blur-md transition-all ${isDark ? 'bg-black/50 text-white hover:bg-black/70' : 'bg-white/50 text-black hover:bg-white/70'
+                      }`}
                   >
                     <FaCamera size={12} />
                   </button>
@@ -195,11 +228,10 @@ export default function Profile() {
                     <MdVerified className="text-[#00B8A9]" size={24} />
                   )}
                   <button
-                    className={`ml-auto sm:ml-0 px-4 py-2.5 rounded-xl font-semibold transition-all ${
-                      isDark
-                        ? 'bg-white/5 text-white hover:bg-white/10'
-                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                    }`}
+                    className={`ml-auto sm:ml-0 px-4 py-2.5 rounded-xl font-semibold transition-all ${isDark
+                      ? 'bg-white/5 text-white hover:bg-white/10'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                      }`}
                   >
                     <FaEdit size={14} className="inline mr-2" />
                     Edit Profile
@@ -236,9 +268,8 @@ export default function Profile() {
             </div>
 
             {/* Stats */}
-            <div className={`rounded-2xl p-4 sm:p-5 mb-6 ${
-              isDark ? 'bg-white/5' : 'bg-gray-100'
-            }`}>
+            <div className={`rounded-2xl p-4 sm:p-5 mb-6 ${isDark ? 'bg-white/5' : 'bg-gray-100'
+              }`}>
               <div className="flex items-center justify-around gap-4">
                 <div className="text-center">
                   <p className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -264,14 +295,12 @@ export default function Profile() {
             {/* Additional Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               {user.education && (
-                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${
-                  isDark 
-                    ? 'bg-white/5 hover:bg-white/10' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}>
-                  <div className={`p-2.5 rounded-lg ${
-                    isDark ? 'bg-white/10' : 'bg-white'
+                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${isDark
+                  ? 'bg-white/5 hover:bg-white/10'
+                  : 'bg-gray-100 hover:bg-gray-200'
                   }`}>
+                  <div className={`p-2.5 rounded-lg ${isDark ? 'bg-white/10' : 'bg-white'
+                    }`}>
                     <FaGraduationCap className={isDark ? 'text-white' : 'text-gray-700'} size={18} />
                   </div>
                   <div className="flex-1">
@@ -281,14 +310,12 @@ export default function Profile() {
                 </div>
               )}
               {user.experience && (
-                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${
-                  isDark 
-                    ? 'bg-white/5 hover:bg-white/10' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}>
-                  <div className={`p-2.5 rounded-lg ${
-                    isDark ? 'bg-white/10' : 'bg-white'
+                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${isDark
+                  ? 'bg-white/5 hover:bg-white/10'
+                  : 'bg-gray-100 hover:bg-gray-200'
                   }`}>
+                  <div className={`p-2.5 rounded-lg ${isDark ? 'bg-white/10' : 'bg-white'
+                    }`}>
                     <FaBriefcase className={isDark ? 'text-white' : 'text-gray-700'} size={18} />
                   </div>
                   <div className="flex-1">
@@ -298,14 +325,12 @@ export default function Profile() {
                 </div>
               )}
               {user.email && (
-                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${
-                  isDark 
-                    ? 'bg-white/5 hover:bg-white/10' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}>
-                  <div className={`p-2.5 rounded-lg ${
-                    isDark ? 'bg-white/10' : 'bg-white'
+                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${isDark
+                  ? 'bg-white/5 hover:bg-white/10'
+                  : 'bg-gray-100 hover:bg-gray-200'
                   }`}>
+                  <div className={`p-2.5 rounded-lg ${isDark ? 'bg-white/10' : 'bg-white'
+                    }`}>
                     <FaEnvelope className={isDark ? 'text-white' : 'text-gray-700'} size={18} />
                   </div>
                   <div className="flex-1">
@@ -315,14 +340,12 @@ export default function Profile() {
                 </div>
               )}
               {user.phone && (
-                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${
-                  isDark 
-                    ? 'bg-white/5 hover:bg-white/10' 
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}>
-                  <div className={`p-2.5 rounded-lg ${
-                    isDark ? 'bg-white/10' : 'bg-white'
+                <div className={`flex items-center gap-3 p-4 rounded-xl transition-all cursor-pointer ${isDark
+                  ? 'bg-white/5 hover:bg-white/10'
+                  : 'bg-gray-100 hover:bg-gray-200'
                   }`}>
+                  <div className={`p-2.5 rounded-lg ${isDark ? 'bg-white/10' : 'bg-white'
+                    }`}>
                     <FaPhone className={isDark ? 'text-white' : 'text-gray-700'} size={18} />
                   </div>
                   <div className="flex-1">
@@ -335,20 +358,18 @@ export default function Profile() {
 
             {/* Social Links */}
             {(user.links.linkedin || user.links.twitter || user.links.instagram) && (
-              <div className={`p-4 rounded-xl mb-6 ${
-                isDark ? 'bg-white/5' : 'bg-gray-100'
-              }`}>
+              <div className={`p-4 rounded-xl mb-6 ${isDark ? 'bg-white/5' : 'bg-gray-100'
+                }`}>
                 <div className="flex items-center gap-3">
                   {user.links.linkedin && (
                     <a
                       href={user.links.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${
-                        isDark 
-                          ? 'bg-white/5 text-white hover:bg-white/10' 
-                          : 'bg-white text-gray-900 hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${isDark
+                        ? 'bg-white/5 text-white hover:bg-white/10'
+                        : 'bg-white text-gray-900 hover:bg-gray-50'
+                        }`}
                     >
                       <FaLinkedin size={18} />
                       <span className="text-sm font-semibold">LinkedIn</span>
@@ -359,11 +380,10 @@ export default function Profile() {
                       href={user.links.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${
-                        isDark 
-                          ? 'bg-white/5 text-white hover:bg-white/10' 
-                          : 'bg-white text-gray-900 hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${isDark
+                        ? 'bg-white/5 text-white hover:bg-white/10'
+                        : 'bg-white text-gray-900 hover:bg-gray-50'
+                        }`}
                     >
                       <FaTwitter size={18} />
                       <span className="text-sm font-semibold">Twitter</span>
@@ -374,11 +394,10 @@ export default function Profile() {
                       href={user.links.instagram}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${
-                        isDark 
-                          ? 'bg-white/5 text-white hover:bg-white/10' 
-                          : 'bg-white text-gray-900 hover:bg-gray-50'
-                      }`}
+                      className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${isDark
+                        ? 'bg-white/5 text-white hover:bg-white/10'
+                        : 'bg-white text-gray-900 hover:bg-gray-50'
+                        }`}
                     >
                       <FaInstagram size={18} />
                       <span className="text-sm font-semibold">Instagram</span>
@@ -394,15 +413,14 @@ export default function Profile() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-3 text-sm font-semibold capitalize transition-all border-b-2 ${
-                    activeTab === tab
-                      ? isDark
-                        ? 'text-white border-[#00B8A9]'
-                        : 'text-black border-[#00B8A9]'
-                      : isDark
+                  className={`px-4 py-3 text-sm font-semibold capitalize transition-all border-b-2 ${activeTab === tab
+                    ? isDark
+                      ? 'text-white border-[#00B8A9]'
+                      : 'text-black border-[#00B8A9]'
+                    : isDark
                       ? 'text-white/60 border-transparent hover:text-white'
                       : 'text-gray-500 border-transparent hover:text-black'
-                  }`}
+                    }`}
                 >
                   {tab}
                 </button>
@@ -414,9 +432,8 @@ export default function Profile() {
               {posts.map((post) => (
                 <div
                   key={post.id}
-                  className={`rounded-2xl overflow-hidden transition-all ${
-                    isDark ? 'bg-white/5' : 'bg-gray-100'
-                  } hover:opacity-90`}
+                  className={`rounded-2xl overflow-hidden transition-all ${isDark ? 'bg-white/5' : 'bg-gray-100'
+                    } hover:opacity-90`}
                 >
                   <div className="relative aspect-square">
                     <img
@@ -428,11 +445,11 @@ export default function Profile() {
                       <div className="flex items-center gap-4 text-white">
                         <div className="flex items-center gap-2">
                           <FaHeart size={18} />
-                          <span className="font-semibold">{formatNumber(post.likes)}</span>
+                          <span className="font-semibold">{formatNumber(post.likeCount)}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <FaRegComment size={18} />
-                          <span className="font-semibold">{formatNumber(post.comments)}</span>
+                          <span className="font-semibold">{formatNumber(post.commentCount)}</span>
                         </div>
                       </div>
                     </div>
