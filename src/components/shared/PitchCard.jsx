@@ -1,26 +1,23 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FaHeart, FaRegHeart, FaRegComment, FaRegPaperPlane,
-  FaBookmark, FaRegBookmark, FaExternalLinkAlt
+  FaHandshake, FaRegComment, FaRegPaperPlane, FaExternalLinkAlt
 } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
+import ensureUrl from "../../utils/ensureUrl";
 
 export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, onFollow }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-  const [isLiked, setIsLiked] = useState(pitch.liked || false);
-  const [isSaved, setIsSaved] = useState(pitch.saved || false);
+  const [isSupported, setIsSupported] = useState(pitch.liked || false);
+  const [likesCount, setLikesCount] = useState(pitch.likes || 0);
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
+  const handleSupport = () => {
+    const newState = !isSupported;
+    setIsSupported(newState);
+    setLikesCount(prev => newState ? prev + 1 : Math.max(0, prev - 1));
     if (onLike) onLike(pitch.id);
-  };
-
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-    if (onSave) onSave(pitch.id);
   };
 
   const handleComment = () => {
@@ -101,8 +98,10 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
       <div className="px-4 py-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
-            <button onClick={handleLike} className={`transition-colors ${isLiked ? 'text-red-500' : isDark ? 'text-white' : 'text-black'}`}>
-              {isLiked ? <FaHeart size={20} /> : <FaRegHeart size={20} />}
+            {/* Support (handshake) button */}
+            <button onClick={handleSupport} className={`flex items-center gap-1.5 transition-colors ${isSupported ? 'text-[#00B8A9]' : isDark ? 'text-white' : 'text-black'}`}>
+              <FaHandshake size={22} />
+              <span className="text-xs font-semibold">{isSupported ? 'Supported' : 'Support'}</span>
             </button>
             <button onClick={handleComment} className={isDark ? 'text-white' : 'text-black'}>
               <FaRegComment size={20} />
@@ -111,15 +110,12 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
               <FaRegPaperPlane size={20} />
             </button>
           </div>
-          <button onClick={handleSave} className={`transition-colors ${isSaved ? 'text-yellow-500' : isDark ? 'text-white' : 'text-black'}`}>
-            {isSaved ? <FaBookmark size={20} /> : <FaRegBookmark size={20} />}
-          </button>
         </div>
 
         {/* Metrics */}
         <div className="flex items-center gap-4 mb-2 text-xs">
           <span className={isDark ? 'text-white/60' : 'text-black/60'}>
-            {pitch.likes || 0} likes
+            {likesCount} {likesCount === 1 ? 'support' : 'supports'}
           </span>
           <span className={isDark ? 'text-white/60' : 'text-black/60'}>
             {pitch.views || 0} views
@@ -183,7 +179,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
           <div className="flex flex-wrap gap-2 mb-2">
             {pitch.links.website && (
               <a
-                href={pitch.links.website}
+                href={ensureUrl(pitch.links.website)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${isDark ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
@@ -193,7 +189,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
             )}
             {pitch.links.linkedin && (
               <a
-                href={pitch.links.linkedin}
+                href={ensureUrl(pitch.links.linkedin)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${isDark ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}
@@ -203,7 +199,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
             )}
             {pitch.links.instagram && (
               <a
-                href={pitch.links.instagram}
+                href={ensureUrl(pitch.links.instagram)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${isDark ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}

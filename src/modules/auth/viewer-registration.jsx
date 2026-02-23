@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUpload, FiUser } from "react-icons/fi";
+import { FiUpload, FiUser, FiArrowLeft } from "react-icons/fi";
 import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import logo from "../../assets/logo.avif";
@@ -140,9 +140,20 @@ export default function ViewerRegistration() {
     <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
       <div className="h-screen flex flex-col max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="mb-4 sm:mb-6 shrink-0">
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
-            <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
-            <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
+              <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/choice-role')}
+              className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl transition-all ${isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-black/60 hover:text-black hover:bg-black/10'
+                }`}
+            >
+              <FiArrowLeft size={15} />
+              Back
+            </button>
           </div>
           <h1 className={`text-lg sm:text-2xl font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
             Viewer Registration

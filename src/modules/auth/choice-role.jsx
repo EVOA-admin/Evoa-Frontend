@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { supabase } from "../../config/supabase";
 import {
   IoRocketSharp,
   IoTrendingUp,
@@ -12,11 +13,20 @@ import {
 } from "react-icons/io5";
 import logo from "../../assets/logo.avif";
 
+// Dashboard routes for each role
+const DASHBOARDS = {
+  startup: '/startup',
+  investor: '/investor',
+  incubator: '/incubator',
+  viewer: '/viewer',
+};
+
+// Where to go after role selection (registration forms, or dashboard for viewer)
 const ROUTES = {
   startup: '/register/startup',
   investor: '/register/investor',
   incubator: '/register/incubator',
-  viewer: '/register/viewer',
+  viewer: '/viewer',
 };
 
 export default function ChoiceRole() {
@@ -27,7 +37,15 @@ export default function ChoiceRole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-  const { updateUserRole } = useAuth();
+  const { updateUserRole, userRole, loading, roleSelected, registrationCompleted, syncing } = useAuth();
+
+  // Redirect users who have already selected a role and completed registration
+  useEffect(() => {
+    if (!loading && !syncing && roleSelected && registrationCompleted && userRole) {
+      const dashboard = DASHBOARDS[userRole] || '/viewer';
+      navigate(dashboard, { replace: true });
+    }
+  }, [roleSelected, registrationCompleted, userRole, loading, syncing, navigate]);
 
   const roles = [
     {
@@ -72,22 +90,40 @@ export default function ChoiceRole() {
     setError('');
 
     try {
-      // ProtectedRoute guarantees the user is already authenticated here,
-      // so we can call the backend directly without any session polling.
+      // Step 1: Always get a fresh Supabase session token before calling the backend.
+      // This is critical for Google OAuth users where the redirect may have just completed.
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData?.session?.access_token) {
+        setError('Could not verify your session. Please try logging in again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Sync the fresh token to localStorage so apiClient picks it up
+      localStorage.setItem('authToken', sessionData.session.access_token);
+
+      // Step 2: Save the role to the backend
       await updateUserRole(selectedRole);
+
+      // Step 3: Navigate to registration or dashboard
       navigate(ROUTES[selectedRole] || '/');
     } catch (err) {
-      console.error('Failed to save role:', err);
+      console.error('[choice-role] Failed to save role:', err);
       const status = err?.status;
-      const msg = err?.message || err?.data?.message || '';
+      const msg = Array.isArray(err?.data?.message)
+        ? err.data.message.join('. ')
+        : err?.data?.message || err?.message || '';
 
-      if (status === 401 || msg.toLowerCase().includes('unauthorized')) {
-        setError('Your session expired. Please log in again.');
-        setTimeout(() => navigate('/login'), 1500);
-      } else if (status === 400) {
+      if (status === 400) {
         setError('Invalid role selected. Please try again.');
+      } else if (status === 401) {
+        setError('Session expired. Please log in again.');
+        setTimeout(() => navigate('/login'), 2000);
+      } else if (msg) {
+        setError(msg);
       } else {
-        setError('Failed to save your role. Please try again.');
+        setError('Something went wrong. Please try again.');
       }
       setIsSubmitting(false);
     }

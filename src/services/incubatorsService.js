@@ -8,7 +8,12 @@ export const getMyIncubatorProfile = async () => {
     return await apiClient.get('/incubators/my');
 };
 
+export const updateIncubatorProfile = async (data) => {
+    return await apiClient.patch('/incubators/my', data);
+};
+
 export default {
     createIncubator,
-    getMyIncubatorProfile
+    getMyIncubatorProfile,
+    updateIncubatorProfile
 };

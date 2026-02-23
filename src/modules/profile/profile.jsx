@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
+import ensureUrl from "../../utils/ensureUrl";
 import {
   FaBell,
   FaSearch,
@@ -247,7 +248,7 @@ export default function Profile() {
                   )}
                   {user.website && (
                     <a
-                      href={user.website}
+                      href={ensureUrl(user.website)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-[#00B8A9] hover:underline"
@@ -363,7 +364,7 @@ export default function Profile() {
                 <div className="flex items-center gap-3">
                   {user.links.linkedin && (
                     <a
-                      href={user.links.linkedin}
+                      href={ensureUrl(user.links.linkedin)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${isDark
@@ -377,7 +378,7 @@ export default function Profile() {
                   )}
                   {user.links.twitter && (
                     <a
-                      href={user.links.twitter}
+                      href={ensureUrl(user.links.twitter)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${isDark
@@ -391,7 +392,7 @@ export default function Profile() {
                   )}
                   {user.links.instagram && (
                     <a
-                      href={user.links.instagram}
+                      href={ensureUrl(user.links.instagram)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg transition-all flex-1 ${isDark

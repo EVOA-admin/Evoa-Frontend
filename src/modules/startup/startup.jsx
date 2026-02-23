@@ -18,14 +18,22 @@ import {
   FaUserPlus,
   FaGlobeAmericas,
   FaUser,
-  FaRegNewspaper
+  FaRegNewspaper,
+  FaPlus,
+  FaTimes,
+  FaVideo,
+  FaSpinner,
+  FaCheckCircle,
 } from "react-icons/fa";
+import { FiUploadCloud } from "react-icons/fi";
 import EmptyState from "../../components/shared/EmptyState";
-import { HiSun, HiMoon } from "react-icons/hi"; // Theme toggle icons
+import { HiSun, HiMoon } from "react-icons/hi";
 import { MdVerified } from "react-icons/md";
 import logo from "../../assets/logo.avif";
 import reelsService from "../../services/reelsService";
+import storageService from "../../services/storageService";
 import { getNotifications } from "../../services/notificationsService";
+import { publishPitchReel } from "../../services/startupsService";
 
 export default function Startup() {
   const { theme, toggleTheme } = useTheme();
@@ -39,7 +47,18 @@ export default function Startup() {
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [publishStatus, setPublishStatus] = useState(null);
   const videoRefs = useRef({});
+
+  // Upload reel modal state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadVideo, setUploadVideo] = useState(null);
+  const [uploadPreview, setUploadPreview] = useState(null);
+  const [uploadDesc, setUploadDesc] = useState('');
+  const [uploadHashtags, setUploadHashtags] = useState('');
+  const [uploadState, setUploadState] = useState('idle'); // idle | uploading | success | error
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     fetchFeed();
@@ -49,13 +68,40 @@ export default function Startup() {
   const fetchFeed = async () => {
     try {
       setLoading(true);
-      // Use cursor-based pagination to match backend API
-      const { data, error } = await reelsService.getFeed('foryou', cursor);
-      if (error) throw error;
+      const res = await reelsService.getFeed('for_you', cursor);
+      // apiClient returns { error, status, data }
+      const raw = res?.data;
+      const reelsArr = raw?.reels || (Array.isArray(raw) ? raw : []);
+      const nextCursor = raw?.nextCursor || null;
+      const more = raw?.hasMore ?? false;
 
-      const feedData = data?.reels || data || [];
-      const nextCursor = data?.nextCursor || null;
-      const more = data?.hasMore ?? false;
+      // Normalize API reel shape to what this component renders
+      const feedData = reelsArr.map(reel => ({
+        id: reel.id,
+        type: 'reel',
+        displayName: reel.startup?.name || 'Unknown Startup',
+        username: reel.startup?.username || reel.startup?.name || 'startup',
+        userAvatar: reel.startup?.logoUrl ||
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(reel.startup?.name || 'S')}&background=00B8A9&color=fff`,
+        isVerified: false,
+        timeAgo: reel.createdAt
+          ? new Date(reel.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+          : '',
+        caption: reel.description || reel.title || '',
+        tags: Array.isArray(reel.hashtags)
+          ? reel.hashtags.map(h => `#${h}`)
+          : [],
+        video: reel.videoUrl,
+        image: null,
+        likeCount: reel.likeCount || 0,
+        commentCount: reel.commentCount || 0,
+        shares: reel.shareCount || 0,
+        views: reel.viewCount || 0,
+        isLiked: reel.isLiked || false,
+        isSaved: reel.isSaved || false,
+        isSupporting: false,
+        isPlaying: false,
+      }));
 
       if (!cursor) {
         setPosts(feedData);
@@ -172,6 +218,74 @@ export default function Startup() {
     return num.toString();
   };
 
+  const handlePublishPitch = async () => {
+    setPublishStatus('loading');
+    try {
+      await publishPitchReel();
+      setPublishStatus('success');
+      setTimeout(() => setPublishStatus(null), 3000);
+    } catch (err) {
+      console.error('Failed to publish pitch:', err);
+      setPublishStatus('error');
+      setTimeout(() => setPublishStatus(null), 4000);
+    }
+  };
+
+  const handleVideoFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadVideo(file);
+    setUploadPreview(URL.createObjectURL(file));
+    setUploadState('idle');
+    setUploadError('');
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
+    setUploadVideo(null);
+    setUploadPreview(null);
+    setUploadDesc('');
+    setUploadHashtags('');
+    setUploadState('idle');
+    setUploadError('');
+  };
+
+  const handleUploadReel = async () => {
+    if (!uploadVideo) { setUploadError('Please select a video file.'); return; }
+    setUploadState('uploading');
+    setUploadError('');
+    try {
+      // Upload video to Supabase storage
+      let videoUrl = null;
+      try {
+        videoUrl = await storageService.uploadFile(uploadVideo, 'evoa-media', `reels/${Date.now()}_${uploadVideo.name}`);
+      } catch {
+        videoUrl = await storageService.uploadFile(uploadVideo, 'public', `reels/${Date.now()}_${uploadVideo.name}`);
+      }
+      if (!videoUrl) throw new Error('Upload returned no URL');
+
+      // Publish as reel
+      const hashtags = uploadHashtags
+        .split(/[\s,]+/)
+        .filter(Boolean)
+        .map(t => t.replace(/^#/, ''));
+
+      await reelsService.createReel({
+        videoUrl,
+        title: uploadDesc || 'Pitch Reel',
+        description: uploadDesc,
+        hashtags,
+      });
+
+      setUploadState('success');
+      setTimeout(() => { closeUploadModal(); fetchFeed(); }, 2000);
+    } catch (err) {
+      console.error('Upload reel failed:', err);
+      setUploadError(err.message || 'Upload failed. Please try again.');
+      setUploadState('error');
+    }
+  };
+
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#000000]' : 'bg-[#f7f9fa]'
       }`}>
@@ -194,23 +308,25 @@ export default function Startup() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Pitch Button */}
             <button
-              onClick={() => {
-                // Navigate to pitch view of first reel in feed
-                const firstReel = posts[0];
-                if (firstReel?.id) {
-                  navigate(`/pitch/${firstReel.id}`);
-                } else {
-                  navigate('/explore');
-                }
-              }}
+              onClick={() => navigate('/pitch/hashtag')}
               className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all duration-200 active:scale-95 ${isDark
                 ? 'text-white/70 hover:text-[#00B8A9] hover:bg-white/10'
                 : 'text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100'
                 }`}
-              title="View Pitch"
+              title="View Pitch Reels"
             >
               <FaPlay size={18} className="sm:hidden" />
               <FaPlay size={20} className="hidden sm:block" />
+            </button>
+
+            {/* ➕ Add Pitch Reel */}
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white shadow-lg shadow-[#00B8A9]/30 hover:shadow-[#00B8A9]/50 hover:scale-105 transition-all duration-200 active:scale-95"
+              title="Add Pitch Reel"
+            >
+              <FaPlus size={18} className="sm:hidden" />
+              <FaPlus size={20} className="hidden sm:block" />
             </button>
 
             {/* Search Button */}
@@ -267,7 +383,7 @@ export default function Startup() {
 
             {/* Profile Button */}
             <button
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/startup/profile')}
               className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all duration-200 active:scale-95 ${isDark
                 ? 'text-white/70 hover:text-[#00B8A9] hover:bg-white/10'
                 : 'text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100'
@@ -516,6 +632,122 @@ export default function Startup() {
         </div>
       </main>
 
+
+      {/* ── Upload Pitch Reel Modal ─────────────────────────────────────── */}
+      {showUploadModal && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm"
+            onClick={closeUploadModal}
+          />
+
+          {/* Modal Sheet */}
+          <div className={`fixed inset-x-0 bottom-0 z-[70] rounded-t-3xl shadow-2xl max-w-lg mx-auto transition-all duration-300 ${isDark ? 'bg-[#0d0d0d] border-t border-white/10' : 'bg-white border-t border-gray-200'}`}>
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className={`w-10 h-1 rounded-full ${isDark ? 'bg-white/20' : 'bg-gray-300'}`} />
+            </div>
+
+            <div className="px-5 pb-8 pt-2">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-gray-900'}`}>Add Pitch Reel</h2>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Upload a video to appear in Pitch Reels feed</p>
+                </div>
+                <button onClick={closeUploadModal} className={`w-9 h-9 flex items-center justify-center rounded-full ${isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                  <FaTimes size={14} />
+                </button>
+              </div>
+
+              {/* Video Picker / Preview */}
+              <div
+                onClick={() => uploadState !== 'uploading' && fileInputRef.current?.click()}
+                className={`relative w-full rounded-2xl overflow-hidden mb-4 cursor-pointer transition-all duration-200 ${uploadPreview ? 'aspect-[9/5]' : 'aspect-[16/7]'} ${!uploadPreview ? (isDark ? 'border-2 border-dashed border-white/20 bg-white/5 hover:border-[#00B8A9]/60 hover:bg-white/8' : 'border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#00B8A9] hover:bg-gray-100') : ''}`}
+              >
+                {uploadPreview ? (
+                  <video
+                    src={uploadPreview}
+                    className="w-full h-full object-cover"
+                    controls={false}
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-2 py-6">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}>
+                      <FiUploadCloud size={28} className={isDark ? 'text-white/50' : 'text-gray-400'} />
+                    </div>
+                    <p className={`text-sm font-semibold ${isDark ? 'text-white/60' : 'text-gray-500'}`}>Tap to select video</p>
+                    <p className={`text-xs ${isDark ? 'text-white/30' : 'text-gray-400'}`}>MP4, MOV, WebM supported</p>
+                  </div>
+                )}
+                {uploadPreview && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <span className="text-white text-xs font-semibold bg-black/60 px-3 py-1.5 rounded-full">Change video</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="video/*"
+                className="hidden"
+                onChange={handleVideoFileChange}
+              />
+
+              {/* Description */}
+              <textarea
+                value={uploadDesc}
+                onChange={e => setUploadDesc(e.target.value)}
+                placeholder="Describe your pitch (optional)"
+                rows={2}
+                disabled={uploadState === 'uploading'}
+                className={`w-full rounded-xl px-4 py-3 text-sm resize-none outline-none transition-all mb-3 ${isDark
+                  ? 'bg-white/5 text-white placeholder-white/30 border border-white/10 focus:border-[#00B8A9]'
+                  : 'bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 focus:border-[#00B8A9]'}`}
+              />
+
+              {/* Hashtags */}
+              <input
+                value={uploadHashtags}
+                onChange={e => setUploadHashtags(e.target.value)}
+                placeholder="#fintech #startup #pitch (space or comma separated)"
+                disabled={uploadState === 'uploading'}
+                className={`w-full rounded-xl px-4 py-3 text-sm outline-none transition-all mb-4 ${isDark
+                  ? 'bg-white/5 text-white placeholder-white/30 border border-white/10 focus:border-[#00B8A9]'
+                  : 'bg-gray-50 text-gray-900 placeholder-gray-400 border border-gray-200 focus:border-[#00B8A9]'}`}
+              />
+
+              {/* Error */}
+              {uploadError && (
+                <p className="text-xs text-red-400 mb-3 font-medium">{uploadError}</p>
+              )}
+
+              {/* Submit */}
+              <button
+                onClick={handleUploadReel}
+                disabled={uploadState === 'uploading' || uploadState === 'success' || !uploadVideo}
+                className={`w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2.5 transition-all duration-200 ${uploadState === 'success'
+                    ? 'bg-green-500 text-white'
+                    : uploadState === 'uploading'
+                      ? 'bg-[#00B8A9]/60 text-white cursor-not-allowed'
+                      : !uploadVideo
+                        ? isDark ? 'bg-white/10 text-white/30 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white shadow-lg shadow-[#00B8A9]/30 hover:shadow-[#00B8A9]/50 hover:scale-[1.02] active:scale-[0.98]'
+                  }`}
+              >
+                {uploadState === 'uploading' && <FaSpinner className="animate-spin" size={16} />}
+                {uploadState === 'success' && <FaCheckCircle size={16} />}
+                {uploadState === 'uploading' ? 'Uploading…' : uploadState === 'success' ? 'Published! 🎉' : 'Publish Pitch Reel'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
     </div>
   );

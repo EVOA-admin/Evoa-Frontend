@@ -27,6 +27,10 @@ import Contact from '../modules/pages/contact';
 import PrivacyPolicy from '../modules/pages/privacy-policy';
 import ProtectedRoute from './protected-route';
 import PublicRoute from './public-route';
+import ViewerProfile from '../modules/viewer/viewer-profile';
+import StartupProfile from '../modules/startup/startup-profile';
+import InvestorProfile from '../modules/investor/investor-profile';
+import IncubatorProfile from '../modules/incubator/incubator-profile';
 
 export default function AppRoutes() {
   return (
@@ -58,6 +62,7 @@ export default function AppRoutes() {
         <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="pitch/:id" element={<ProtectedRoute><ReelPitch /></ProtectedRoute>} />
+        <Route path="pitch/hashtag" element={<ProtectedRoute><ReelPitch /></ProtectedRoute>} />
 
         {/* Public Pages - Accessible by everyone */}
         <Route path="blog" element={<Blog />} />
@@ -70,6 +75,12 @@ export default function AppRoutes() {
         {/* Catch all - Redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+
+      {/* Full-screen routes — rendered WITHOUT the global Layout header */}
+      <Route path="/viewer/profile" element={<ProtectedRoute allowedRoles={['viewer']}><ViewerProfile /></ProtectedRoute>} />
+      <Route path="/startup/profile" element={<ProtectedRoute allowedRoles={['startup']}><StartupProfile /></ProtectedRoute>} />
+      <Route path="/investor/profile" element={<ProtectedRoute allowedRoles={['investor']}><InvestorProfile /></ProtectedRoute>} />
+      <Route path="/incubator/profile" element={<ProtectedRoute allowedRoles={['incubator']}><IncubatorProfile /></ProtectedRoute>} />
     </Routes>
   );
 }

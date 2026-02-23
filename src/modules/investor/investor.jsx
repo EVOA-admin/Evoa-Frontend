@@ -208,14 +208,7 @@ export default function Investor() {
           <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Pitch Button */}
             <button
-              onClick={() => {
-                const firstPitch = pitches[0];
-                if (firstPitch?.id) {
-                  navigate(`/pitch/${firstPitch.id}`);
-                } else {
-                  navigate('/explore');
-                }
-              }}
+              onClick={() => navigate('/pitch/hashtag')}
               className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all duration-200 active:scale-95 ${isDark
                 ? 'text-white/70 hover:text-[#00B8A9] hover:bg-white/10'
                 : 'text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100'
@@ -280,7 +273,7 @@ export default function Investor() {
 
             {/* Profile Button */}
             <button
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/investor/profile')}
               className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all duration-200 active:scale-95 ${isDark
                 ? 'text-white/70 hover:text-[#00B8A9] hover:bg-white/10'
                 : 'text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100'

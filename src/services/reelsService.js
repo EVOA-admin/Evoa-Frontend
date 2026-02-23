@@ -46,7 +46,19 @@ export const reelsService = {
   // Track a view
   trackView: async (reelId) => {
     return await apiClient.post(`/reels/${reelId}/view`);
-  }
+  },
+
+  // Get reels by hashtag
+  getReelsByHashtag: async (hashtag, cursor = null, limit = 20) => {
+    const params = new URLSearchParams({ hashtag, limit });
+    if (cursor) params.append('cursor', cursor);
+    return await apiClient.get(`/reels?${params.toString()}`);
+  },
+
+  // Create / publish a reel from a pitch video URL
+  createReel: async ({ videoUrl, title, description, hashtags }) => {
+    return await apiClient.post('/reels', { videoUrl, title, description, hashtags });
+  },
 };
 
 export default reelsService;

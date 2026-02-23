@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiEye, FiEyeOff, FiUpload, FiX } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiUpload, FiX, FiArrowLeft } from "react-icons/fi";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import logo from "../../assets/logo.avif";
 import storageService from "../../services/storageService";
 import { createStartup } from "../../services/startupsService";
-import startupsService from "../../services/startupsService"; // Use default import for other methods if needed
+import startupsService from "../../services/startupsService";
+import reelsService from "../../services/reelsService";
 
 export default function StartupRegistration() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const { completeRegistration } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
 
 
@@ -104,9 +107,22 @@ export default function StartupRegistration() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [filePreviews, setFilePreviews] = useState({}); // key -> preview URL/filename
 
-  const handleFileUpload = (field, file) => {
+  const handleFileUpload = (field, file, previewKey = null) => {
+    if (!file) return;
     setFormData(prev => ({ ...prev, [field]: file }));
+    // Generate preview
+    const key = previewKey || field;
+    if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      setFilePreviews(prev => ({ ...prev, [key]: { type: 'image', url } }));
+    } else if (file.type.startsWith('video/')) {
+      const url = URL.createObjectURL(file);
+      setFilePreviews(prev => ({ ...prev, [key]: { type: 'video', url } }));
+    } else {
+      setFilePreviews(prev => ({ ...prev, [key]: { type: 'file', name: file.name } }));
+    }
   };
 
   const nextStep = () => {
@@ -117,14 +133,20 @@ export default function StartupRegistration() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const uploadToStorage = async (file, path) => {
+  const uploadToStorage = async (file, path, required = false) => {
     if (!file) return null;
     try {
-      // Use 'public' bucket for now
-      return await storageService.uploadFile(file, 'public', `startups/${Date.now()}_${path}_${file.name}`);
+      // Try 'evoa-media' bucket first, then fallback to 'public'
+      let url = null;
+      try {
+        url = await storageService.uploadFile(file, 'evoa-media', `startups/${Date.now()}_${path}_${file.name}`);
+      } catch {
+        url = await storageService.uploadFile(file, 'public', `startups/${Date.now()}_${path}_${file.name}`);
+      }
+      return url;
     } catch (err) {
       console.error(`Failed to upload ${path}:`, err);
-      // Fallback or rethrow? For now, we'll continue but log error
+      if (required) throw new Error(`Upload failed for ${path}: ${err.message}`);
       return null;
     }
   };
@@ -195,9 +217,10 @@ export default function StartupRegistration() {
           productDemo: formData.productDemo,
           website: formData.websiteUrl
         },
-        amountRaising: Number(formData.amountRaising) || 0,
-        equityGiving: Number(formData.equityGiving) || 0,
+        raisingAmount: Number(formData.amountRaising) || 0,
+        equityPercentage: Number(formData.equityGiving) || 0,
         preMoneyValuation: Number(formData.preMoneyValuation) || 0,
+        hashtags: formData.hashtags,
         categoryTags: formData.categoryTags,
         teamMembers: [] // Optional
       };
@@ -205,7 +228,26 @@ export default function StartupRegistration() {
       // 3. Call API
       await startupsService.createStartup(payload);
 
-      // 4. Navigate
+      // 4. Explicitly publish pitch video to reel feed (bulletproof fallback)
+      //    Backend also auto-creates it, but this call ensures it's always visible.
+      if (pitchVideoUrl) {
+        try {
+          await reelsService.createReel({
+            videoUrl: pitchVideoUrl,
+            title: formData.startupName,
+            description: formData.shortDescription,
+            hashtags: typeof formData.hashtags === 'string'
+              ? formData.hashtags.split(/[\s,]+/).filter(Boolean).map(t => t.replace(/^#/, ''))
+              : formData.hashtags || [],
+          });
+        } catch (reelErr) {
+          // Non-critical: reel creation failure should not block registration
+          console.warn('Reel auto-publish failed (non-critical):', reelErr);
+        }
+      }
+
+      // 4. Mark registration complete + navigate
+      await completeRegistration();
       navigate('/startup');
     } catch (err) {
       console.error('Registration failed:', err);
@@ -290,15 +332,31 @@ export default function StartupRegistration() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => {
+                        const file = e.target.files[0];
                         const newFounders = [...formData.founders];
-                        newFounders[index].photo = e.target.files[0];
+                        newFounders[index].photo = file;
                         setFormData(prev => ({ ...prev, founders: newFounders }));
+                        if (file) {
+                          const url = URL.createObjectURL(file);
+                          setFilePreviews(prev => ({ ...prev, [`founder_${index}`]: { type: 'image', url } }));
+                        }
                       }}
                       className="hidden"
                     />
-                    <div className={`mt-2 p-4 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
-                      <FiUpload className="mx-auto mb-2" size={24} />
-                      <span className="text-xs">Click to upload</span>
+                    <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+                      {filePreviews[`founder_${index}`]?.type === 'image' ? (
+                        <div className="relative">
+                          <img src={filePreviews[`founder_${index}`].url} alt="Preview" className="w-full h-28 object-cover" />
+                          <div className={`absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity ${isDark ? 'bg-black/50' : 'bg-white/50'}`}>
+                            <span className="text-xs font-medium">Click to change</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center">
+                          <FiUpload className="mx-auto mb-2" size={24} />
+                          <span className="text-xs">Click to upload</span>
+                        </div>
+                      )}
                     </div>
                   </label>
                 </div>
@@ -342,9 +400,20 @@ export default function StartupRegistration() {
                 onChange={(e) => handleFileUpload('startupLogo', e.target.files[0])}
                 className="hidden"
               />
-              <div className={`mt-2 p-4 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-white/40' : 'border-black/20 hover:border-black/40'}`}>
-                <FiUpload className="mx-auto mb-2" size={24} />
-                <span className="text-xs">Click to upload logo</span>
+              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden transition-all ${isDark ? 'border-white/20 hover:border-white/40' : 'border-black/20 hover:border-black/40'}`}>
+                {filePreviews.startupLogo?.type === 'image' ? (
+                  <div className="relative">
+                    <img src={filePreviews.startupLogo.url} alt="Logo Preview" className="w-full h-32 object-contain bg-gray-50" />
+                    <div className={`absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity ${isDark ? 'bg-black/50' : 'bg-white/50'}`}>
+                      <span className="text-xs font-medium">Click to change</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center">
+                    <FiUpload className="mx-auto mb-2" size={24} />
+                    <span className="text-xs">Click to upload logo</span>
+                  </div>
+                )}
               </div>
             </label>
             <input
@@ -534,9 +603,18 @@ export default function StartupRegistration() {
                 onChange={(e) => handleFileUpload('pitchVideo', e.target.files[0])}
                 className="hidden"
               />
-              <div className={`mt-2 p-4 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-white/40' : 'border-black/20 hover:border-black/40'}`}>
-                <FiUpload className="mx-auto mb-2" size={24} />
-                <span className="text-xs">Click to upload video</span>
+              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden transition-all ${isDark ? 'border-white/20 hover:border-white/40' : 'border-black/20 hover:border-black/40'}`}>
+                {filePreviews.pitchVideo?.type === 'video' ? (
+                  <div>
+                    <video src={filePreviews.pitchVideo.url} controls className="w-full max-h-48 object-cover" />
+                    <p className={`text-xs text-center py-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>✓ Video selected — click to change</p>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center">
+                    <FiUpload className="mx-auto mb-2" size={24} />
+                    <span className="text-xs">Click to upload video</span>
+                  </div>
+                )}
               </div>
             </label>
             <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
@@ -547,9 +625,19 @@ export default function StartupRegistration() {
                 onChange={(e) => handleFileUpload('pitchDeck', e.target.files[0])}
                 className="hidden"
               />
-              <div className={`mt-2 p-4 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-white/40' : 'border-black/20 hover:border-black/40'}`}>
-                <FiUpload className="mx-auto mb-2" size={24} />
-                <span className="text-xs">Click to upload PDF</span>
+              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden transition-all ${isDark ? 'border-white/20 hover:border-white/40' : 'border-black/20 hover:border-black/40'}`}>
+                {filePreviews.pitchDeck?.type === 'file' ? (
+                  <div className={`p-3 flex items-center gap-2 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <span className="text-2xl">📄</span>
+                    <span className={`text-xs truncate flex-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{filePreviews.pitchDeck.name}</span>
+                    <span className={`text-xs ${isDark ? 'text-[#00B8A9]' : 'text-[#00B8A9]'}`}>✓</span>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center">
+                    <FiUpload className="mx-auto mb-2" size={24} />
+                    <span className="text-xs">Click to upload PDF</span>
+                  </div>
+                )}
               </div>
             </label>
             <textarea
@@ -700,9 +788,20 @@ export default function StartupRegistration() {
       <div className="h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Header - Fixed */}
         <div className="mb-4 sm:mb-6 shrink-0">
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
-            <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
-            <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
+              <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/choice-role')}
+              className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl transition-all ${isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-black/60 hover:text-black hover:bg-black/10'
+                }`}
+            >
+              <FiArrowLeft size={15} />
+              Back
+            </button>
           </div>
           <h1 className={`text-lg sm:text-2xl font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
             Startup Registration

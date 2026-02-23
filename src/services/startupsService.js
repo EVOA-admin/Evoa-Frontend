@@ -20,10 +20,25 @@ export const createStartup = async (data) => {
   return await apiClient.post('/startups', data);
 };
 
+export const getMyStartup = async () => {
+  return await apiClient.get('/startups/my');
+};
+
+export const updateStartup = async (startupId, data) => {
+  return await apiClient.patch(`/startups/${startupId}`, data);
+};
+
+export const publishPitchReel = async () => {
+  return await apiClient.post('/startups/my/publish-reel');
+};
+
 export default {
   getStartupDetails,
   followStartup,
   unfollowStartup,
   getFollowedStartups,
   createStartup,
+  getMyStartup,
+  updateStartup,
+  publishPitchReel,
 };

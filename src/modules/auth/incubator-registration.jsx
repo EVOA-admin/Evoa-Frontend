@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiEye, FiEyeOff, FiUpload } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiUpload, FiArrowLeft } from "react-icons/fi";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import logo from "../../assets/logo.avif";
 import { createIncubator } from "../../services/incubatorsService";
@@ -11,6 +12,7 @@ export default function IncubatorRegistration() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const { completeRegistration } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -79,8 +81,16 @@ export default function IncubatorRegistration() {
     }));
   };
 
+  const [previews, setPreviews] = useState({});
+
   const handleFileUpload = (field, file) => {
+    if (!file) return;
     setFormData(prev => ({ ...prev, [field]: file }));
+    if (file.type.startsWith('image/')) {
+      setPreviews(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
+    } else {
+      setPreviews(prev => ({ ...prev, [field]: file.name }));
+    }
   };
 
   const [loading, setLoading] = useState(false);
@@ -94,60 +104,70 @@ export default function IncubatorRegistration() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
+
+  const uploadToStorage = async (file, folder) => {
+    if (!file) return null;
+    const ext = file.name.split('.').pop();
+    const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    try {
+      return await uploadFile(file, 'evoa-media', path);
+    } catch (err) {
+      console.warn('Upload to evoa-media failed, trying public bucket:', err.message);
+      return await uploadFile(file, 'public', path);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       setLoading(true);
       setError('');
 
-      // Upload Logo
-      let logoUrl = null;
-      if (formData.logo) {
-        const { url, error } = await uploadFile('incubator-logos', formData.logo);
-        if (error) throw new Error('Failed to upload logo: ' + error.message);
-        logoUrl = url;
-      }
+      // Upload logo and verification doc in parallel
+      const [logoUrl, verificationDocUrl] = await Promise.all([
+        uploadToStorage(formData.logo, 'incubators/logos'),
+        uploadToStorage(formData.verificationDocument, 'incubators/documents'),
+      ]);
 
-      // Upload Verification Document (if any)
-      // Note: Backend Entity doesn't have a specific field for verification doc URL yet, 
-      // but we can store it in 'verification' jsonb or just skip for now. 
-      // Entity has 'verification' as { type: string, value: string, documentUrl?: string }? 
-      // Wait, checking Incubator entity... 
-      // Entity has `verified: boolean`. It doesn't seem to have a specific 'verification' jsonb column in my recent scaffold?
-      // Let's check... I defined `verified` boolean. I didn't verify if I added a jsonb column for docs.
-      // Re-reading `incubator.entity.ts` content I wrote:
-      // it has `verified: boolean`. No jsonb for verification docs.
-      // So I will just upload it but maybe not store it effectively unless I update entity. 
-      // For now, let's just upload logo.
-
-      // Create DTO
+      // Create DTO — only include fields in CreateIncubatorDto
       const incubatorData = {
         name: formData.incubatorName,
-        programTypes: formData.programType ? [formData.programType] : [],
-        description: formData.successStories, // Using success stories as description for now or leave blank
-        website: formData.websiteUrl,
-        logoUrl: logoUrl,
-        sectors: formData.sectorFocus,
-        stages: [], // Form doesn't capture stages
-        location: {
-          city: formData.city,
-          state: formData.state,
-          country: 'India'
-        },
-        cohortSize: parseInt(formData.cohortSize) || 0,
-        // applicationDeadline? Not in form.
+        programTypes: formData.programType ? [formData.programType] : undefined,
+        description: formData.successStories || undefined,
+        website: formData.websiteUrl || undefined,
+        logoUrl: logoUrl || undefined,
+        sectors: formData.sectorFocus.length > 0 ? formData.sectorFocus : undefined,
+        location: (formData.city || formData.state)
+          ? { city: formData.city, state: formData.state, country: 'India' }
+          : undefined,
+        cohortSize: parseInt(formData.cohortSize) || undefined,
+        facilities: formData.facilities.length > 0 ? formData.facilities : undefined,
+        socialLinks: (formData.linkedinProfile || formData.instagram || formData.youtube)
+          ? {
+            linkedin: formData.linkedinProfile || undefined,
+            instagram: formData.instagram || undefined,
+            youtube: formData.youtube || undefined,
+          }
+          : undefined,
       };
 
-      const { data, error: apiError } = await createIncubator(incubatorData);
-      if (apiError) throw apiError;
+      // Strip undefined so ValidationPipe doesn't reject them
+      Object.keys(incubatorData).forEach(k => {
+        if (incubatorData[k] === undefined) delete incubatorData[k];
+      });
 
+      const response = await createIncubator(incubatorData);
+      // createIncubator throws on backend error via apiClient
+
+      await completeRegistration();
       navigate('/incubator');
     } catch (err) {
-      console.error("Registration error:", err);
+      console.error('Registration error:', err);
       setError(err.message || 'Failed to register. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
 
   const renderStep = () => {
     switch (currentStep) {
@@ -172,9 +192,20 @@ export default function IncubatorRegistration() {
                 onChange={(e) => handleFileUpload('logo', e.target.files[0])}
                 className="hidden"
               />
-              <div className={`mt-2 p-4 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
-                <FiUpload className="mx-auto mb-2" size={24} />
-                <span className="text-xs">Click to upload</span>
+              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+                {previews.logo ? (
+                  <div className="relative group">
+                    <img src={previews.logo} alt="Logo preview" className="w-full h-40 object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-white text-xs font-semibold">Click to change</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4">
+                    <FiUpload className="mx-auto mb-2" size={24} />
+                    <span className="text-xs">Click to upload</span>
+                  </div>
+                )}
               </div>
             </label>
             <input
@@ -276,9 +307,16 @@ export default function IncubatorRegistration() {
                   onChange={(e) => handleFileUpload('verificationDocument', e.target.files[0])}
                   className="hidden"
                 />
-                <div className={`mt-2 p-3 sm:p-4 border-2 border-dashed  cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-white/40' : 'border-black/20 hover:border-black/40'}`}>
-                  <FiUpload className="mx-auto mb-1 sm:mb-2" size={20} />
-                  <span className="text-xs">Click to upload</span>
+                <div className={`mt-2 p-3 sm:p-4 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'} ${previews.verificationDocument ? (isDark ? 'border-[#00B8A9]/40 bg-[#00B8A9]/10' : 'border-[#00B8A9]/40 bg-[#00B8A9]/5') : ''}`}>
+                  {previews.verificationDocument ? (
+                    typeof previews.verificationDocument === 'string' && previews.verificationDocument.startsWith('blob:') ? (
+                      <img src={previews.verificationDocument} alt="Document" className="h-24 mx-auto object-contain rounded" />
+                    ) : (
+                      <><span className="text-[#00B8A9] text-sm">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.verificationDocument}</span></>
+                    )
+                  ) : (
+                    <><FiUpload className="mx-auto mb-1 sm:mb-2" size={20} /><span className="text-xs">Click to upload</span></>
+                  )}
                 </div>
               </label>
             )}
@@ -438,9 +476,20 @@ export default function IncubatorRegistration() {
     <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
       <div className="h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="mb-4 sm:mb-6 shrink-0">
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-4">
-            <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
-            <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
+              <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/choice-role')}
+              className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl transition-all ${isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-black/60 hover:text-black hover:bg-black/10'
+                }`}
+            >
+              <FiArrowLeft size={15} />
+              Back
+            </button>
           </div>
           <h1 className={`text-lg sm:text-2xl font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
             Incubator Registration
@@ -487,12 +536,21 @@ export default function IncubatorRegistration() {
             <button
               type="button"
               onClick={handleSubmit}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer"
+              disabled={loading}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all ${loading
+                  ? 'bg-gray-400 cursor-not-allowed text-white'
+                  : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer'
+                }`}
             >
-              Submit
+              {loading ? 'Submitting...' : 'Submit'}
             </button>
           )}
         </div>
+        {error && (
+          <div className="mt-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm text-center">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );

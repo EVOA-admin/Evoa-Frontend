@@ -12,34 +12,34 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [syncing, setSyncing] = useState(false);
     const [userRole, setUserRole] = useState(null);
+    const [roleSelected, setRoleSelected] = useState(false);
+    const [registrationCompleted, setRegistrationCompleted] = useState(false);
+
+    // Backward compat: onboardingCompleted is true only when BOTH flags are true
+    const onboardingCompleted = roleSelected && registrationCompleted;
 
     useEffect(() => {
-        /**
-         * Use ONLY onAuthStateChange as the single source of truth for session state.
-         * Supabase V2 guarantees it fires INITIAL_SESSION immediately on subscribe,
-         * even with no session. This avoids the double-sync race condition between
-         * getSession() and onAuthStateChange firing concurrently.
-         */
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
 
             if (session?.user) {
-                // ALWAYS keep localStorage in sync on every auth event.
-                // This is critical for TOKEN_REFRESHED — if we skip it,
-                // localStorage holds a stale expired token → all future API calls fail with 401.
                 localStorage.setItem('authToken', session.access_token);
 
-                // Only re-sync backend profile on meaningful login events
                 if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+                    setSyncing(true);
                     await syncAndFetchProfile(session);
+                    setSyncing(false);
                 }
-                // TOKEN_REFRESHED: token is already updated in localStorage above — nothing else needed
             } else {
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userData');
                 setUserRole(null);
+                setRoleSelected(false);
+                setRegistrationCompleted(false);
+                setSyncing(false);
                 setLoading(false);
             }
         });
@@ -47,10 +47,6 @@ export function AuthProvider({ children }) {
         return () => subscription.unsubscribe();
     }, []);
 
-    /**
-     * Sync user with backend and fetch their profile (role etc.).
-     * Has a 6-second timeout so a slow/down backend never blocks the UI indefinitely.
-     */
     const syncAndFetchProfile = async (session) => {
         let timeoutId;
         const timeoutPromise = new Promise((_, reject) => {
@@ -69,11 +65,31 @@ export function AuthProvider({ children }) {
 
             if (syncResponse?.data) {
                 const userData = syncResponse.data?.data || syncResponse.data;
-                setUserRole(userData.role || null);
+                const role = userData.role || null;
+                setUserRole(role);
+
+                // --- New two-flag system ---
+                // roleSelected: user explicitly picked a role (default false for brand new users)
+                let roleSel = userData.roleSelected;
+                // registrationCompleted: user finished the role-specific form
+                let regComp = userData.registrationCompleted;
+
+                // Backward-compat: if old DB has onboarding_completed column but not new ones,
+                // infer from existing role — non-viewer users who existed before this migration
+                // are treated as fully onboarded.
+                if (roleSel === undefined || roleSel === null) {
+                    roleSel = role && role !== 'viewer'; // existing non-viewer users are done
+                }
+                if (regComp === undefined || regComp === null) {
+                    regComp = role && role !== 'viewer';
+                }
+
+                setRoleSelected(!!roleSel);
+                setRegistrationCompleted(!!regComp);
+
                 setUser(prev => ({
                     ...prev,
                     ...userData,
-                    // Always preserve Supabase identity
                     email: session.user.email,
                     id: session.user.id,
                     avatarUrl: userData.avatarUrl || session.user.user_metadata?.avatar_url || prev?.avatarUrl,
@@ -85,7 +101,6 @@ export function AuthProvider({ children }) {
             } else {
                 console.error('Error syncing user with backend:', err);
             }
-            // Never block the user — loading must always become false
         } finally {
             clearTimeout(timeoutId);
             setLoading(false);
@@ -108,7 +123,7 @@ export function AuthProvider({ children }) {
         return await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/choice-role`,
+                redirectTo: `${window.location.origin}/`,
                 queryParams: { access_type: 'offline', prompt: 'consent' },
             },
         });
@@ -119,6 +134,8 @@ export function AuthProvider({ children }) {
         localStorage.removeItem('userData');
         setUserRole(null);
         setUser(null);
+        setRoleSelected(false);
+        setRegistrationCompleted(false);
         return await supabase.auth.signOut();
     };
 
@@ -141,8 +158,8 @@ export function AuthProvider({ children }) {
     };
 
     /**
-     * Persist the selected role to the backend database.
-     * Called from choice-role after user selects their role.
+     * Step 1: User picks a role on the choice-role page.
+     * Sets roleSelected=true. For viewer, also sets registrationCompleted=true.
      */
     const updateUserRole = async (role) => {
         const response = await apiClient.post('/users/role', { role });
@@ -150,9 +167,28 @@ export function AuthProvider({ children }) {
             const userData = response.data?.data || response.data;
             const newRole = userData.role || role;
             setUserRole(newRole);
-            setUser(prev => ({ ...prev, role: newRole }));
+            setRoleSelected(true);
+            // Viewer has no form, so registration is also immediately complete
+            if (newRole === 'viewer') {
+                setRegistrationCompleted(true);
+            }
+            setUser(prev => ({ ...prev, role: newRole, roleSelected: true }));
         }
         return { success: true };
+    };
+
+    /**
+     * Step 2: User completes the role-specific registration form.
+     * Called by startup, investor, and incubator registration forms on success.
+     */
+    const completeRegistration = async () => {
+        try {
+            await apiClient.post('/users/complete-registration');
+        } catch (err) {
+            console.warn('completeRegistration API call failed (non-blocking):', err?.message);
+        }
+        setRegistrationCompleted(true);
+        setUser(prev => ({ ...prev, registrationCompleted: true }));
     };
 
     const value = {
@@ -160,12 +196,20 @@ export function AuthProvider({ children }) {
         session,
         userRole,
         loading,
+        syncing,
+        // New flags
+        roleSelected,
+        registrationCompleted,
+        // Computed alias for backward compat
+        onboardingCompleted,
+        // Methods
         signUp,
         signIn,
         signInWithGoogle,
         signOut,
         updateProfile,
         updateUserRole,
+        completeRegistration,
         isAuthenticated: !!user,
     };
 

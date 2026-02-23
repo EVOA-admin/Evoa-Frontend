@@ -104,8 +104,8 @@ export default function Explore() {
                 <button
                   onClick={() => navigate(-1)}
                   className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all active:scale-95 ${isDark
-                      ? 'text-white/70 hover:text-white hover:bg-white/10'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'text-white/70 hover:text-white hover:bg-white/10'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                   title="Go Back"
                 >
@@ -121,8 +121,8 @@ export default function Explore() {
               <button
                 onClick={toggleTheme}
                 className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all duration-200 active:scale-95 hover:scale-110 flex-shrink-0 ml-2 ${isDark
-                    ? 'text-white/70 hover:text-[#B0FFFA] hover:bg-white/10 border border-[#B0FFFA]/20'
-                    : 'text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100 border border-[#00B8A9]/20'
+                  ? 'text-white/70 hover:text-[#B0FFFA] hover:bg-white/10 border border-[#B0FFFA]/20'
+                  : 'text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100 border border-[#00B8A9]/20'
                   }`}
                 title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -150,8 +150,8 @@ export default function Explore() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full pl-12 pr-4 py-3.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-1 ${isDark
-                    ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 focus:bg-white/10'
-                    : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 focus:shadow-md'
+                  ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 focus:bg-white/10'
+                  : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 focus:shadow-md'
                   }`}
               />
               {searchLoading && (
@@ -213,10 +213,13 @@ export default function Explore() {
                   ).map((tag, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setSearchQuery(tag)}
+                      onClick={() => {
+                        const raw = tag.replace(/^#/, '');
+                        navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(raw)}`);
+                      }}
                       className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${isDark
-                          ? 'bg-white/10 text-white hover:bg-[#00B8A9]/20 hover:text-[#00B8A9] hover:border hover:border-[#00B8A9]/30 hover:scale-105'
-                          : 'bg-gray-100 text-gray-700 hover:bg-[#00B8A9]/10 hover:text-[#00B8A9] hover:border hover:border-[#00B8A9]/30 hover:scale-105'
+                        ? 'bg-white/10 text-white hover:bg-[#00B8A9]/20 hover:text-[#00B8A9] hover:border hover:border-[#00B8A9]/30 hover:scale-105'
+                        : 'bg-gray-100 text-gray-700 hover:bg-[#00B8A9]/10 hover:text-[#00B8A9] hover:border hover:border-[#00B8A9]/30 hover:scale-105'
                         }`}
                     >
                       {tag}
@@ -248,8 +251,8 @@ export default function Explore() {
                         key={pitch.id}
                         onClick={() => navigate(`/pitch/${pitch.id}`)}
                         className={`rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl ${isDark
-                            ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
-                            : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-md'
+                          ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
+                          : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-md'
                           }`}
                       >
                         <div className="relative h-56">
@@ -302,8 +305,8 @@ export default function Explore() {
                         key={startup.id}
                         onClick={() => navigate(`/profile/${startup.id}`)}
                         className={`rounded-xl p-5 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${isDark
-                            ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
-                            : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
+                          ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
+                          : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
                           }`}
                       >
                         <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-3 ring-2 ring-offset-2 ring-offset-transparent ring-gray-300/20 bg-gradient-to-br from-[#00B8A9] to-[#00A89A]">
@@ -346,8 +349,8 @@ export default function Explore() {
                       <div
                         key={investor.id}
                         className={`rounded-xl p-6 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${isDark
-                            ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
-                            : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
+                          ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
+                          : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
                           }`}
                       >
                         <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 ring-2 ring-offset-2 ring-offset-transparent ring-gray-300/20">
@@ -385,8 +388,8 @@ export default function Explore() {
                   </h2>
                 </div>
                 <div className={`rounded-2xl p-8 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-xl ${isDark
-                    ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-500/40'
-                    : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
+                  ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-500/40'
+                  : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
                   }`}>
                   <h3 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     Live Pitch Battle

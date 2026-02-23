@@ -8,7 +8,12 @@ export const getMyInvestorProfile = async () => {
     return await apiClient.get('/investors/my');
 };
 
+export const updateInvestorProfile = async (data) => {
+    return await apiClient.patch('/investors/my', data);
+};
+
 export default {
     createInvestor,
-    getMyInvestorProfile
+    getMyInvestorProfile,
+    updateInvestorProfile
 };
