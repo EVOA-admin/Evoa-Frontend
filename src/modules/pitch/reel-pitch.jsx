@@ -4,7 +4,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import reelsService from "../../services/reelsService";
 import {
-  FaHandshake, FaRegComment, FaRegPaperPlane,
+  FaHandshake, FaRegComment, FaComment, FaRegPaperPlane,
   FaVolumeUp, FaVolumeMute, FaArrowLeft, FaVideo,
   FaRobot, FaTimes, FaPaperPlane, FaSpinner
 } from "react-icons/fa";
@@ -33,7 +33,7 @@ export default function ReelPitch() {
   const hashtagFilter = searchParams.get('hashtag'); // set from explore page
   const containerRef = useRef(null);
   const videoRefs = useRef({});
-  const { userRole } = useAuth();
+  const { userRole, user: currentUser } = useAuth();
 
   const [pitches, setPitches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +46,15 @@ export default function ReelPitch() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Comment sheet state
+  const [commentSheetOpen, setCommentSheetOpen] = useState(false);
+  const [commentPitch, setCommentPitch] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [commentPosting, setCommentPosting] = useState(false);
+  const commentInputRef = useRef(null);
 
   const canSeeInvestorFeatures = userRole === 'investor' || userRole === 'incubator';
 
@@ -81,6 +90,7 @@ export default function ReelPitch() {
             revenue: formatMoney(reel.startup?.revenue),
           },
           startupId: reel.startupId,
+          founderId: reel.startup?.founder?.id || reel.startup?.founderId,
         }));
 
         setPitches(mapped);
@@ -190,6 +200,78 @@ export default function ReelPitch() {
     } catch (_) { }
   };
 
+  // ── Comment handlers ─────────────────────────────────────────────────────
+  const openComments = async (pitch) => {
+    setCommentPitch(pitch);
+    setCommentSheetOpen(true);
+    setComments([]);
+    setCommentsLoading(true);
+    // pause the video while comments are open
+    const vid = videoRefs.current[pitch.id];
+    if (vid) vid.pause();
+    try {
+      const res = await reelsService.getComments(pitch.id);
+      const data = res?.data?.data || res?.data || res || [];
+      setComments(Array.isArray(data) ? data : []);
+    } catch (_) {
+      setComments([]);
+    } finally {
+      setCommentsLoading(false);
+      setTimeout(() => commentInputRef.current?.focus(), 200);
+    }
+  };
+
+  const closeComments = () => {
+    setCommentSheetOpen(false);
+    setCommentPitch(null);
+    setComments([]);
+    setCommentText('');
+    // resume video
+    if (commentPitch) {
+      const vid = videoRefs.current[commentPitch.id];
+      if (vid) vid.play().catch(() => { });
+    }
+  };
+
+  const postComment = async () => {
+    if (!commentText.trim() || commentPosting || !commentPitch) return;
+    const text = commentText.trim();
+    setCommentPosting(true);
+    // Optimistic UI — use real user data from auth context
+    const myName = currentUser?.fullName || currentUser?.full_name || currentUser?.name
+      || currentUser?.email?.split('@')[0] || 'You';
+    const myAvatar = currentUser?.avatarUrl || currentUser?.avatar_url
+      || currentUser?.user_metadata?.avatar_url || null;
+    const optimistic = {
+      id: `tmp-${Date.now()}`,
+      content: text,
+      userId: 'me',
+      createdAt: new Date().toISOString(),
+      user: { fullName: myName, avatarUrl: myAvatar },
+    };
+    setComments(prev => [...prev, optimistic]);
+    setCommentText('');
+    // Update comment count on pitch
+    setPitches(prev => prev.map(p =>
+      p.id === commentPitch.id ? { ...p, comments: p.comments + 1 } : p
+    ));
+    try {
+      await reelsService.commentOnReel(commentPitch.id, text);
+    } catch (_) {
+      // rollback
+      setComments(prev => prev.filter(c => c.id !== optimistic.id));
+      setPitches(prev => prev.map(p =>
+        p.id === commentPitch.id ? { ...p, comments: Math.max(0, p.comments - 1) } : p
+      ));
+    } finally {
+      setCommentPosting(false);
+    }
+  };
+
+  const handleCommentKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment(); }
+  };
+
   const handleAIClick = (pitch) => {
     setCurrentPitchForAI(pitch);
     setMessages([{
@@ -269,17 +351,11 @@ export default function ReelPitch() {
 
         {/* ══ RIGHT SIDE BUTTONS (bottom-right, Instagram style) ══ */}
         <div className="absolute right-3 bottom-24 z-30 flex flex-col items-center gap-5">
-          <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-[#00B8A9] shadow-xl">
-            {pitch.profilePhoto
-              ? <img src={pitch.profilePhoto} alt={pitch.name} className="w-full h-full object-cover" />
-              : <div className="w-full h-full bg-gray-700 flex items-center justify-center text-white text-sm font-bold">{pitch.name?.[0] || '?'}</div>
-            }
-          </div>
           <button onClick={() => handleSupport(pitch.id)} className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
             <FaHandshake size={28} className={state.isLiked ? 'text-[#00B8A9] drop-shadow-lg' : 'text-white drop-shadow-lg'} />
             <span className="text-[11px] font-semibold text-white drop-shadow-md">{formatNum(pitch.likes)}</span>
           </button>
-          <button className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
+          <button onClick={() => openComments(pitch)} className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
             <FaRegComment size={28} className="text-white drop-shadow-lg" />
             <span className="text-[11px] font-semibold text-white drop-shadow-md">{formatNum(pitch.comments)}</span>
           </button>
@@ -313,7 +389,13 @@ export default function ReelPitch() {
           </div>
 
           {/* Startup name + handle */}
-          <div className="flex items-center gap-2 mb-1.5">
+          <div
+            className="flex items-center gap-2 mb-1.5 cursor-pointer hover:bg-white/10 p-1.5 -ml-1.5 rounded-xl transition-colors active:scale-95"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (pitch.founderId) navigate(`/u/${pitch.founderId}`);
+            }}
+          >
             <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-[#00B8A9] flex-shrink-0">
               {pitch.profilePhoto
                 ? <img src={pitch.profilePhoto} alt="" className="w-full h-full object-cover" />
@@ -434,6 +516,111 @@ export default function ReelPitch() {
                 </button>
               </div>
               <p className={`text-xs mt-2 text-center ${isDark ? 'text-white/40' : 'text-gray-400'}`}>AI-powered pitch insights</p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ══ COMMENT BOTTOM SHEET ══ */}
+      {commentSheetOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+            onClick={closeComments}
+          />
+          {/* Sheet */}
+          <div
+            className="fixed bottom-0 left-0 right-0 z-[70] max-w-md mx-auto rounded-t-3xl flex flex-col"
+            style={{ maxHeight: '75vh', background: '#0e0e0e' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-white/30" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+              <h3 className="text-white font-bold text-base">
+                {commentPitch?.name} — Comments
+              </h3>
+              <button onClick={closeComments} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10">
+                <FaTimes size={16} className="text-white/70" />
+              </button>
+            </div>
+
+            {/* Comments list */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4" style={{ minHeight: 0 }}>
+              {commentsLoading ? (
+                <div className="flex justify-center py-8">
+                  <FaSpinner className="animate-spin text-[#00B8A9]" size={24} />
+                </div>
+              ) : comments.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 text-white/40 gap-2">
+                  <FaRegComment size={36} className="opacity-40" />
+                  <p className="text-sm">No comments yet. Be the first!</p>
+                </div>
+              ) : (
+                comments.map((c, i) => (
+                  <div key={c.id || i} className="flex gap-3">
+                    <button
+                      onClick={() => c.userId && c.userId !== 'me' && navigate(`/u/${c.userId}`)}
+                      className="flex-shrink-0 focus:outline-none"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+                        {c.user?.avatarUrl
+                          ? <img src={c.user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                          : (
+                            <span>
+                              {(c.user?.fullName?.[0] || c.user?.email?.[0] || '?').toUpperCase()}
+                            </span>
+                          )
+                        }
+                      </div>
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <button
+                        onClick={() => c.userId && c.userId !== 'me' && navigate(`/u/${c.userId}`)}
+                        className="text-xs font-semibold text-white/80 hover:text-[#00B8A9] transition-colors text-left"
+                      >
+                        {c.user?.fullName || c.user?.email?.split('@')[0] || 'User'}
+                      </button>
+                      <p className="text-sm text-white/90 leading-relaxed mt-0.5">{c.content}</p>
+                      <p className="text-[10px] text-white/40 mt-1">
+                        {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Input bar */}
+            <div className="px-4 py-3 border-t border-white/10 flex items-center gap-3 bg-[#0e0e0e]">
+              <input
+                ref={commentInputRef}
+                type="text"
+                value={commentText}
+                onChange={e => setCommentText(e.target.value)}
+                onKeyDown={handleCommentKey}
+                placeholder="Add a comment..."
+                className="flex-1 bg-white/8 border border-white/15 rounded-full px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-[#00B8A9] transition-colors"
+                style={{ background: 'rgba(255,255,255,0.06)' }}
+              />
+              <button
+                onClick={postComment}
+                disabled={!commentText.trim() || commentPosting}
+                className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all ${commentText.trim() && !commentPosting
+                  ? 'bg-[#00B8A9] text-white active:scale-90'
+                  : 'bg-white/10 text-white/30'
+                  }`}
+              >
+                {commentPosting
+                  ? <FaSpinner size={14} className="animate-spin" />
+                  : <FaPaperPlane size={14} />
+                }
+              </button>
             </div>
           </div>
         </>

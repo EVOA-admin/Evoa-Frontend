@@ -4,20 +4,45 @@ import {
   FaHandshake, FaRegComment, FaRegPaperPlane, FaExternalLinkAlt
 } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import ensureUrl from "../../utils/ensureUrl";
+import reelsService from "../../services/reelsService";
 
 export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, onFollow }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [isSupported, setIsSupported] = useState(pitch.liked || false);
   const [likesCount, setLikesCount] = useState(pitch.likes || 0);
+  const [commentText, setCommentText] = useState('');
+  const [commentPosting, setCommentPosting] = useState(false);
+  const [commentCount, setCommentCount] = useState(pitch.comments || 0);
 
   const handleSupport = () => {
     const newState = !isSupported;
     setIsSupported(newState);
     setLikesCount(prev => newState ? prev + 1 : Math.max(0, prev - 1));
     if (onLike) onLike(pitch.id);
+  };
+
+  const handlePostComment = async () => {
+    const text = commentText.trim();
+    if (!text || commentPosting) return;
+    setCommentPosting(true);
+    setCommentText('');
+    setCommentCount(prev => prev + 1);
+    try {
+      await reelsService.commentOnReel(pitch.id, text);
+    } catch (_) {
+      setCommentCount(prev => Math.max(0, prev - 1));
+    } finally {
+      setCommentPosting(false);
+    }
+  };
+
+  const handleCommentKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePostComment(); }
   };
 
   const handleComment = () => {
@@ -116,6 +141,9 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
         <div className="flex items-center gap-4 mb-2 text-xs">
           <span className={isDark ? 'text-white/60' : 'text-black/60'}>
             {likesCount} {likesCount === 1 ? 'support' : 'supports'}
+          </span>
+          <span className={isDark ? 'text-white/60' : 'text-black/60'}>
+            {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
           </span>
           <span className={isDark ? 'text-white/60' : 'text-black/60'}>
             {pitch.views || 0} views
@@ -243,21 +271,35 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
 
         {/* Comment Input */}
         <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-          <div className="w-8 h-8 rounded-full overflow-hidden">
-            <img
-              src="https://i.pravatar.cc/150?img=5"
-              alt="Your avatar"
-              className="w-full h-full object-cover"
-            />
+          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-700 flex items-center justify-center">
+            {currentUser?.avatarUrl || currentUser?.avatar_url
+              ? <img
+                src={currentUser.avatarUrl || currentUser.avatar_url}
+                alt="You"
+                className="w-full h-full object-cover"
+              />
+              : <span className="text-white text-xs font-bold">
+                {(currentUser?.fullName?.[0] || currentUser?.email?.[0] || '?').toUpperCase()}
+              </span>
+            }
           </div>
           <input
             type="text"
+            value={commentText}
+            onChange={e => setCommentText(e.target.value)}
+            onKeyDown={handleCommentKey}
             placeholder="Add a comment..."
-            className={`flex-1 bg-transparent border-none outline-none text-sm py-1 ${isDark ? 'text-white placeholder-white/40' : 'text-black placeholder-gray-400'
-              }`}
+            className={`flex-1 bg-transparent border-none outline-none text-sm py-1 ${isDark ? 'text-white placeholder-white/40' : 'text-black placeholder-gray-400'}`}
           />
-          <button className={`text-sm font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-            Post
+          <button
+            onClick={handlePostComment}
+            disabled={!commentText.trim() || commentPosting}
+            className={`text-sm font-semibold transition-opacity ${commentText.trim() && !commentPosting
+              ? (isDark ? 'text-[#00B8A9]' : 'text-[#00B8A9]')
+              : 'opacity-30 cursor-not-allowed'
+              } ${isDark ? '' : 'text-blue-600'}`}
+          >
+            {commentPosting ? '...' : 'Post'}
           </button>
         </div>
       </div>

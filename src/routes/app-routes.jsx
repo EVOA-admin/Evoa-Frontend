@@ -31,6 +31,7 @@ import ViewerProfile from '../modules/viewer/viewer-profile';
 import StartupProfile from '../modules/startup/startup-profile';
 import InvestorProfile from '../modules/investor/investor-profile';
 import IncubatorProfile from '../modules/incubator/incubator-profile';
+import UserPublicProfile from '../modules/profile/user-public-profile';
 
 export default function AppRoutes() {
   return (
@@ -81,6 +82,7 @@ export default function AppRoutes() {
       <Route path="/startup/profile" element={<ProtectedRoute allowedRoles={['startup']}><StartupProfile /></ProtectedRoute>} />
       <Route path="/investor/profile" element={<ProtectedRoute allowedRoles={['investor']}><InvestorProfile /></ProtectedRoute>} />
       <Route path="/incubator/profile" element={<ProtectedRoute allowedRoles={['incubator']}><IncubatorProfile /></ProtectedRoute>} />
+      <Route path="/u/:userId" element={<ProtectedRoute><UserPublicProfile /></ProtectedRoute>} />
     </Routes>
   );
 }

@@ -80,12 +80,17 @@ export default function Explore() {
     const doSearch = async () => {
       setSearchLoading(true);
       try {
-        const res = await exploreService.search({ q: debouncedSearch, type: 'startups' });
-        const results = res?.data?.data || res?.data || [];
-        setSearchResults(Array.isArray(results) ? results : []);
+        const res = await exploreService.search({ q: debouncedSearch });
+        const data = res?.data?.data || res?.data || {};
+        // Backend returns { startups: [], reels: [], hashtags: [] }
+        setSearchResults(
+          data && (data.startups || data.reels || data.hashtags)
+            ? data
+            : { startups: Array.isArray(data) ? data : [], reels: [], hashtags: [] }
+        );
       } catch (err) {
         console.error('Search error:', err);
-        setSearchResults([]);
+        setSearchResults({ startups: [], reels: [], hashtags: [] });
       } finally {
         setSearchLoading(false);
       }
@@ -162,39 +167,117 @@ export default function Explore() {
 
           {/* Search Results */}
           {searchQuery.trim() && (
-            <div className="mb-10">
-              <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <div className="mb-10 space-y-6">
+              <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Search Results
               </h2>
+
               {searchLoading ? (
                 <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>Searching...</div>
-              ) : searchResults && searchResults.length === 0 ? (
-                <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No results for "{searchQuery}"</div>
+              ) : searchResults && !searchResults.startups?.length && !searchResults.reels?.length && !searchResults.hashtags?.length ? (
+                <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                  No results for &ldquo;{searchQuery}&rdquo; — try a different keyword or hashtag
+                </div>
               ) : searchResults ? (
-                <div className="space-y-3">
-                  {searchResults.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => navigate(`/profile/${item.id}`)}
-                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'
-                        }`}
-                    >
-                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-                        {item.logoUrl ? (
-                          <img src={item.logoUrl} alt={item.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">
-                            {(item.name || 'U')[0].toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <p className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
-                        {item.tagline && <p className={`text-xs ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
+                <>
+                  {/* ── Hashtag Pills ── */}
+                  {searchResults.hashtags?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Hashtags</p>
+                      <div className="flex flex-wrap gap-2">
+                        {searchResults.hashtags.map((tag, i) => (
+                          <button
+                            key={i}
+                            onClick={() => navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(tag)}`)}
+                            className="px-4 py-1.5 rounded-full text-sm font-medium bg-[#00B8A9]/20 text-[#00B8A9] hover:bg-[#00B8A9]/30 transition-colors"
+                          >
+                            #{tag}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  )}
+
+                  {/* ── Reel / Pitch Results ── */}
+                  {searchResults.reels?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Pitch Reels</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {searchResults.reels.map((reel) => (
+                          <div
+                            key={reel.id}
+                            onClick={() => navigate(`/pitch/${reel.id}`)}
+                            className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${isDark ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30' : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
+                              }`}
+                          >
+                            {/* Thumbnail */}
+                            <div className="relative h-36 bg-gray-800">
+                              {reel.thumbnailUrl
+                                ? <img src={reel.thumbnailUrl} alt={reel.title} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9]/30 to-gray-800 flex items-center justify-center"><FaPlay className="text-white/40" size={28} /></div>
+                              }
+                              <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1.5">
+                                <FaPlay className="text-white" size={10} />
+                              </div>
+                            </div>
+                            {/* Info */}
+                            <div className="p-3">
+                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{reel.title}</p>
+                              <p className={`text-xs truncate mt-0.5 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{reel.startup?.name || '—'}</p>
+                              {/* Hashtag chips */}
+                              {reel.hashtags?.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {reel.hashtags.slice(0, 3).map((h, i) => (
+                                    <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-[#00B8A9]/15 text-[#00B8A9]">
+                                      #{h}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1 mt-2">
+                                <FaEye size={10} className={isDark ? 'text-white/40' : 'text-gray-400'} />
+                                <span className={`text-[10px] ${isDark ? 'text-white/40' : 'text-gray-400'}`}>{(reel.viewCount || 0).toLocaleString()} views</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Startup Results ── */}
+                  {searchResults.startups?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Startups</p>
+                      <div className="space-y-2">
+                        {searchResults.startups.map((item) => (
+                          <div
+                            key={item.id}
+                            onClick={() => navigate(`/u/${item.founder?.id || item.id}`)}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'
+                              }`}
+                          >
+                            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                              {item.logoUrl
+                                ? <img src={item.logoUrl} alt={item.name} className="w-full h-full object-cover" />
+                                : (
+                                  <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">
+                                    {(item.name || 'U')[0].toUpperCase()}
+                                  </div>
+                                )
+                              }
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
+                              {item.tagline && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
+                              {item.industry && <p className={`text-xs truncate mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>{item.industry}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : null}
             </div>
           )}
