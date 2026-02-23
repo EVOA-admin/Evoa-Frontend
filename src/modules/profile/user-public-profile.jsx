@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import {
     FaArrowLeft, FaSpinner, FaGlobe, FaLinkedin, FaInstagram,
-    FaYoutube, FaMapMarkerAlt, FaBuilding, FaUser, FaHandshake,
-    FaPlay, FaRocket, FaChartLine, FaUsers, FaTrophy, FaUserTie,
-    FaStar, FaEnvelope, FaCheck, FaLink, FaTwitter, FaFilePdf,
+    FaYoutube, FaMapMarkerAlt, FaUser, FaHandshake,
+    FaRocket, FaChartLine, FaUsers, FaTrophy, FaUserTie,
+    FaStar, FaEnvelope, FaCheck, FaTwitter, FaFilePdf,
 } from "react-icons/fa";
-import { HiLightningBolt } from "react-icons/hi";
 import apiClient from "../../services/apiClient";
 import startupService from "../../services/startupService";
+import AppShell from "../../components/layout/AppShell";
+import AppHeader from "../../components/layout/AppHeader";
 
 const fmt = (n) => {
     if (!n) return "0";
@@ -57,7 +58,6 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
     const [followCount, setFollowCount] = useState(startup?.followerCount || 0);
 
     useEffect(() => {
-        console.log("currentUser role:", currentUser?.role || userRole, "startup pitchDeckUrl:", startup?.pitchDeckUrl);
         if (!startup?.id || isOwner) { setFollowLoading(false); return; }
         startupService.getFollowStatus(startup.id)
             .then(res => {
@@ -66,7 +66,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
             })
             .catch(() => { })
             .finally(() => setFollowLoading(false));
-    }, [startup?.id]);
+    }, [startup?.id, isOwner]);
 
     const toggleFollow = async () => {
         if (!startup?.id || followLoading) return;
@@ -92,7 +92,6 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
         <div className="space-y-5">
             {/* Hero card */}
             <div className={`rounded-2xl p-5 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-gray-200 shadow-sm"}`}>
-                {/* Logo + name + Support btn */}
                 <div className="flex items-start gap-4 mb-4">
                     <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-700">
                         {startup?.logoUrl
@@ -153,7 +152,6 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                     ))}
                 </div>
 
-                {/* Description */}
                 {startup?.description && (
                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? "text-white/75" : "text-gray-700"}`}>{startup.description}</p>
                 )}
@@ -195,7 +193,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                 {socialLinks.youtube && <InfoRow icon={FaYoutube} label="YouTube" isDark={isDark} value="Channel" href={socialLinks.youtube} />}
             </div>
 
-            {/* Industries / Category */}
+            {/* Focus Areas */}
             {(startup?.industries?.length > 0 || startup?.categoryTags?.length > 0) && (
                 <div className={`rounded-2xl p-5 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-gray-200 shadow-sm"}`}>
                     <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? "text-white/40" : "text-gray-400"}`}>Focus Areas</p>
@@ -272,21 +270,59 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
 function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
     const role = profile?.role;
     const data = role === "investor" ? profile?.investors?.[0] : profile?.incubators?.[0];
-    const canConnect = ["investor", "incubator", "startup"].includes(currentUser?.role);
     const isOwnProfile = currentUser?.id === profile?.id;
+
+    const [isConnected, setIsConnected] = useState(false);
+    const [connectLoading, setConnectLoading] = useState(true);
+    const [connectionCount, setConnectionCount] = useState(profile?.connectionCount ?? 0);
+
+    // Fetch initial connection status
+    useEffect(() => {
+        if (isOwnProfile || !profile?.id) { setConnectLoading(false); return; }
+        apiClient.get(`/users/${profile.id}/connection-status`)
+            .then(res => {
+                const d = res?.data?.data ?? res?.data ?? res ?? {};
+                setIsConnected(!!d.connected);
+                setConnectionCount(d.connectionCount ?? profile?.connectionCount ?? 0);
+            })
+            .catch(() => { })
+            .finally(() => setConnectLoading(false));
+    }, [profile?.id, isOwnProfile]);
+
+    const handleConnect = async () => {
+        if (connectLoading) return;
+        const prevConnected = isConnected;
+        const prevCount = connectionCount;
+        // Optimistic update
+        setIsConnected(!prevConnected);
+        setConnectionCount(n => prevConnected ? Math.max(0, n - 1) : n + 1);
+        setConnectLoading(true);
+        try {
+            const res = await apiClient.post(`/users/${profile.id}/connect`);
+            const d = res?.data?.data ?? res?.data ?? res ?? {};
+            setIsConnected(!!d.connected);
+            setConnectionCount(d.connectionCount ?? connectionCount);
+        } catch {
+            // Rollback on error
+            setIsConnected(prevConnected);
+            setConnectionCount(prevCount);
+        } finally {
+            setConnectLoading(false);
+        }
+    };
 
     const loc = data?.location;
     const socialLinks = data?.socialLinks || {};
 
     const statsItems = role === "investor"
         ? [
+            { label: "Connections", value: connectionCount },
             { label: "Startups Backed", value: data?.stats?.startupsBacked },
             { label: "Capital Deployed", value: data?.stats?.capitalDeployed },
-            { label: "Exits", value: data?.stats?.exits },
         ]
         : [
+            { label: "Connections", value: connectionCount },
             { label: "Startups Incubated", value: data?.stats?.startupsIncubated },
-            { label: "Funds Raised", value: data?.stats?.fundsRaised },
             { label: "Mentors", value: data?.stats?.mentorsCount },
         ];
 
@@ -314,31 +350,37 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                             </span>
                         )}
                     </div>
-                    {!isOwnProfile && canConnect && (
+                    {/* Connect / Connected toggle — hidden on own profile */}
+                    {!isOwnProfile && (
                         <button
-                            onClick={() => {
-                                apiClient.post(`/users/${profile.id}/connect-click`).catch(() => { });
-                                const href = data?.linkedin || (data?.officialEmail ? `mailto:${data.officialEmail}` : null);
-                                if (href) window.open(href, "_blank", "noopener,noreferrer");
-                            }}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30 transition-all flex-shrink-0"
+                            onClick={handleConnect}
+                            disabled={connectLoading}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${isConnected
+                                ? isDark
+                                    ? "bg-white/10 text-white border border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30"
+                                    : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                                : "bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30"
+                                }`}
                         >
-                            <FaHandshake size={12} /> Connect
+                            {connectLoading
+                                ? <FaSpinner size={12} className="animate-spin" />
+                                : isConnected
+                                    ? <><FaCheck size={12} /> Connected</>
+                                    : <><FaHandshake size={12} /> Connect</>
+                            }
                         </button>
                     )}
                 </div>
 
-                {/* Stats */}
-                {statsItems.some(s => s.value) && (
-                    <div className={`grid grid-cols-3 gap-2 py-3 border-t border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
-                        {statsItems.map((s) => s.value ? (
-                            <div key={s.label} className="text-center">
-                                <p className={`text-base font-bold ${isDark ? "text-white" : "text-black"}`}>{s.value}</p>
-                                <p className={`text-[10px] uppercase tracking-wide ${isDark ? "text-white/40" : "text-gray-400"}`}>{s.label}</p>
-                            </div>
-                        ) : null)}
-                    </div>
-                )}
+                {/* Stats row */}
+                <div className={`grid grid-cols-3 gap-2 py-3 border-t border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                    {statsItems.map((s, idx) => (
+                        <div key={idx} className="text-center">
+                            <p className={`text-base font-bold ${isDark ? "text-white" : "text-black"}`}>{s.value ?? "—"}</p>
+                            <p className={`text-[10px] uppercase tracking-wide ${isDark ? "text-white/40" : "text-gray-400"}`}>{s.label}</p>
+                        </div>
+                    ))}
+                </div>
 
                 {data?.description && (
                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? "text-white/75" : "text-gray-700"}`}>{data.description}</p>
@@ -397,8 +439,9 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                 <InfoRow icon={FaGlobe} label="Website" isDark={isDark} value={data?.website} href={data?.website?.startsWith("http") ? data.website : data?.website ? `https://${data.website}` : null} />
                 {data?.linkedin && <InfoRow icon={FaLinkedin} label="LinkedIn" isDark={isDark} value="View Profile" href={data.linkedin} />}
                 {data?.officialEmail && <InfoRow icon={FaEnvelope} label="Email" isDark={isDark} value={data.officialEmail} href={`mailto:${data.officialEmail}`} />}
-                {socialLinks.instagram && <InfoRow icon={FaInstagram} label="Instagram" isDark={isDark} value="@instagram" href={socialLinks.instagram} />}
-                {socialLinks.twitter && <InfoRow icon={FaTwitter} label="Twitter" isDark={isDark} value="@twitter" href={socialLinks.twitter} />}
+                {socialLinks?.instagram && <InfoRow icon={FaInstagram} label="Instagram" isDark={isDark} value="View Profile" href={socialLinks.instagram} />}
+                {socialLinks?.youtube && <InfoRow icon={FaYoutube} label="YouTube" isDark={isDark} value="View Channel" href={socialLinks.youtube} />}
+                {socialLinks?.twitter && <InfoRow icon={FaTwitter} label="Twitter" isDark={isDark} value="View Profile" href={socialLinks.twitter} />}
             </div>
 
             {/* Sectors & Stages */}
@@ -501,19 +544,12 @@ export default function UserPublicProfile() {
     const role = profile?.role;
     const startup = profile?.startups?.[0];
 
-    return (
-        <div className={`min-h-screen transition-colors ${isDark ? "bg-black" : "bg-gray-50"}`}>
-            {/* Header */}
-            <div className={`sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b ${isDark ? "bg-black/95 border-white/10 backdrop-blur-lg" : "bg-white border-gray-200"}`}>
-                <button onClick={() => navigate(-1)} className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${isDark ? "text-white hover:bg-white/10" : "text-black hover:bg-gray-100"}`}>
-                    <FaArrowLeft size={18} />
-                </button>
-                <h1 className={`text-base font-bold truncate ${isDark ? "text-white" : "text-black"}`}>
-                    {loading ? "Profile" : (role === "startup" ? startup?.name : profile?.fullName) || "User Profile"}
-                </h1>
-            </div>
+    const pageTitle = loading ? "Profile" : (role === "startup" ? startup?.name : profile?.fullName) || "Profile";
 
-            <div className="max-w-lg mx-auto px-4 py-5">
+    return (
+        <AppShell>
+            <AppHeader title={pageTitle} />
+            <div className="px-4 py-5 pb-6">
                 {loading ? (
                     <div className="flex justify-center py-20"><FaSpinner className="animate-spin text-[#00B8A9]" size={32} /></div>
                 ) : error ? (
@@ -525,7 +561,7 @@ export default function UserPublicProfile() {
                 ) : role === "startup" ? (
                     <StartupProfile profile={profile} startup={startup} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} />
                 ) : (role === "investor" || role === "incubator") ? (
-                    <InvestorIncubatorProfile profile={profile} isDark={isDark} currentUser={currentUser} navigate={navigate} />
+                    <InvestorIncubatorProfile profile={profile} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} />
                 ) : (
                     /* Viewer profile — minimal */
                     <div className="flex flex-col items-center py-8 gap-3">
@@ -546,6 +582,6 @@ export default function UserPublicProfile() {
                     </div>
                 )}
             </div>
-        </div>
+        </AppShell>
     );
 }

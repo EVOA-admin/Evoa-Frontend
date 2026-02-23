@@ -84,6 +84,13 @@ export function AuthProvider({ children }) {
                     regComp = role && role !== 'viewer';
                 }
 
+                // Additional safety: if user has a non-viewer role and roleSelected is true,
+                // they must have completed registration at some point — treat as complete.
+                // This handles cases where DB has registrationCompleted=false but user is active.
+                if (roleSel && role && role !== 'viewer' && !regComp) {
+                    regComp = true;
+                }
+
                 setRoleSelected(!!roleSel);
                 setRegistrationCompleted(!!regComp);
 

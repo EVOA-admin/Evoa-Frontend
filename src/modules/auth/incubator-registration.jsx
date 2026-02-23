@@ -148,6 +148,15 @@ export default function IncubatorRegistration() {
             youtube: formData.youtube || undefined,
           }
           : undefined,
+        organizationType: formData.organizationType || undefined,
+        affiliationType: formData.affiliationType || undefined,
+        equityPolicy: formData.equityPolicy === 'Custom Equity' ? formData.customEquity : formData.equityPolicy || undefined,
+        fundingSupport: formData.fundingSupport || undefined,
+        programDuration: formData.programDuration || undefined,
+        numberOfMentors: parseInt(formData.numberOfMentors) || undefined,
+        portfolioStartups: formData.portfolioStartups || undefined,
+        phoneNumber: formData.phoneNumber || undefined,
+        fullAddress: formData.fullAddress || undefined,
       };
 
       // Strip undefined so ValidationPipe doesn't reject them
@@ -538,8 +547,8 @@ export default function IncubatorRegistration() {
               onClick={handleSubmit}
               disabled={loading}
               className={`px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all ${loading
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer'
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer'
                 }`}
             >
               {loading ? 'Submitting...' : 'Submit'}

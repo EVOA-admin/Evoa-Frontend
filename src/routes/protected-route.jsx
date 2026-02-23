@@ -14,6 +14,14 @@ const DASHBOARD_ROUTES = {
     viewer: '/viewer',
 };
 
+// Profile paths that should bypass the registrationCompleted check
+const PROFILE_PATHS = [
+    '/startup/profile',
+    '/investor/profile',
+    '/incubator/profile',
+    '/viewer/profile',
+];
+
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
     const { user, loading, syncing, userRole, roleSelected, registrationCompleted } = useAuth();
     const location = useLocation();
@@ -32,6 +40,7 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     }
 
     const isOnboardingPath = location.pathname === '/choice-role' || location.pathname.startsWith('/register/');
+    const isProfilePath = PROFILE_PATHS.includes(location.pathname);
 
     // Step 1: No role selected yet → choice-role (unless already there)
     if (!roleSelected && !isOnboardingPath) {
@@ -44,12 +53,12 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     }
 
     // Step 3: Role selected but registration not complete → registration form
-    // (Only block if they're not already on an onboarding path)
-    if (roleSelected && !registrationCompleted && userRole !== 'viewer' && !isOnboardingPath) {
+    // Skip this check for profile pages — if user has a role they can always see their profile
+    if (roleSelected && !registrationCompleted && userRole !== 'viewer' && !isOnboardingPath && !isProfilePath) {
         return <Navigate to={REGISTRATION_ROUTES[userRole] || '/choice-role'} replace />;
     }
 
-    // Step 3: Role-based access control — wrong role → their dashboard
+    // Step 4: Role-based access control — wrong role → their dashboard
     if (allowedRoles.length > 0 && userRole && !allowedRoles.includes(userRole)) {
         return <Navigate to={DASHBOARD_ROUTES[userRole] || '/viewer'} replace />;
     }

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay, FaArrowLeft } from "react-icons/fa";
-import { HiSun, HiMoon } from "react-icons/hi";
-import logo from "../../assets/logo.avif";
+import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay } from "react-icons/fa";
+import AppShell from "../../components/layout/AppShell";
+import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
 
 // Debounce helper — avoids API call on every keystroke
@@ -17,7 +17,7 @@ function useDebounce(value, delay) {
 }
 
 export default function Explore() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
 
@@ -81,16 +81,20 @@ export default function Explore() {
       setSearchLoading(true);
       try {
         const res = await exploreService.search({ q: debouncedSearch });
-        const data = res?.data?.data || res?.data || {};
-        // Backend returns { startups: [], reels: [], hashtags: [] }
-        setSearchResults(
-          data && (data.startups || data.reels || data.hashtags)
-            ? data
-            : { startups: Array.isArray(data) ? data : [], reels: [], hashtags: [] }
-        );
+        const body = res?.data ?? {};
+        const data = (body?.users !== undefined || body?.startups !== undefined) ? body : (body?.data ?? body);
+        const normalized = {
+          users: Array.isArray(data.users) ? data.users : [],
+          startups: Array.isArray(data.startups) ? data.startups : [],
+          investors: Array.isArray(data.investors) ? data.investors : [],
+          incubators: Array.isArray(data.incubators) ? data.incubators : [],
+          reels: Array.isArray(data.reels) ? data.reels : [],
+          hashtags: Array.isArray(data.hashtags) ? data.hashtags : [],
+        };
+        setSearchResults(normalized);
       } catch (err) {
         console.error('Search error:', err);
-        setSearchResults({ startups: [], reels: [], hashtags: [] });
+        setSearchResults({ users: [], startups: [], investors: [], incubators: [], reels: [], hashtags: [] });
       } finally {
         setSearchLoading(false);
       }
@@ -99,400 +103,415 @@ export default function Explore() {
   }, [debouncedSearch]);
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-gray-50'}`}>
-      <div className="pt-4 sm:pt-6">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <button
-                  onClick={() => navigate(-1)}
-                  className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all active:scale-95 ${isDark
-                    ? 'text-white/70 hover:text-white hover:bg-white/10'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  title="Go Back"
-                >
-                  <FaArrowLeft size={18} className="sm:hidden" />
-                  <FaArrowLeft size={20} className="hidden sm:block" />
-                </button>
-                <img src={logo} alt="EVO-A" className="h-9 w-9 sm:h-10 sm:w-10 object-contain rounded-xl flex-shrink-0" />
-                <h1 className={`text-xl sm:text-2xl md:text-3xl font-bold truncate ${isDark ? 'text-white' : 'text-black'}`}>
-                  Explore
-                </h1>
+    <AppShell>
+      <AppHeader title="Explore" />
+      <div className="px-3 py-4">
+
+        {/* Search Bar */}
+        <div className="relative mb-5">
+          <FaSearch className={`absolute left-4 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-gray-500'}`} size={15} />
+          <input
+            type="text"
+            placeholder="Search investors, startups, hashtags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`w-full pl-11 pr-4 py-3 rounded-xl text-sm border transition-all focus:outline-none focus:ring-1 ${isDark
+              ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+              : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 shadow-sm'
+              }`}
+          />
+          {searchLoading && (
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
+
+        {/* Search Results */}
+        {searchQuery.trim() && (
+          <div className="mb-8 space-y-5">
+            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Search Results
+            </h2>
+
+            {searchLoading ? (
+              <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>Searching...</div>
+            ) : searchResults && !searchResults.users?.length && !searchResults.startups?.length && !searchResults.investors?.length && !searchResults.incubators?.length && !searchResults.reels?.length && !searchResults.hashtags?.length ? (
+              <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                No results for &ldquo;{searchQuery}&rdquo;
               </div>
-
-              <button
-                onClick={toggleTheme}
-                className={`min-w-[40px] min-h-[40px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center p-2 rounded-xl transition-all duration-200 active:scale-95 hover:scale-110 flex-shrink-0 ml-2 ${isDark
-                  ? 'text-white/70 hover:text-[#B0FFFA] hover:bg-white/10 border border-[#B0FFFA]/20'
-                  : 'text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100 border border-[#00B8A9]/20'
-                  }`}
-                title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              >
-                {isDark ? (
-                  <>
-                    <HiSun size={20} className="sm:hidden" style={{ animation: 'spin-slow 3s linear infinite' }} />
-                    <HiSun size={22} className="hidden sm:block" style={{ animation: 'spin-slow 3s linear infinite' }} />
-                  </>
-                ) : (
-                  <>
-                    <HiMoon size={20} className="sm:hidden" />
-                    <HiMoon size={22} className="hidden sm:block" />
-                  </>
+            ) : searchResults ? (
+              <>
+                {/* Hashtag Pills */}
+                {searchResults.hashtags?.length > 0 && (
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Hashtags</p>
+                    <div className="flex flex-wrap gap-2">
+                      {searchResults.hashtags.map((tag, i) => (
+                        <button
+                          key={i}
+                          onClick={() => navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(tag)}`)}
+                          className="px-4 py-1.5 rounded-full text-sm font-medium bg-[#00B8A9]/20 text-[#00B8A9] hover:bg-[#00B8A9]/30 transition-colors"
+                        >
+                          #{tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </button>
-            </div>
 
-            {/* Search Bar */}
-            <div className="relative">
-              <FaSearch className={`absolute left-4 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-gray-500'}`} size={18} />
-              <input
-                type="text"
-                placeholder="Search investors, startups, hashtags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full pl-12 pr-4 py-3.5 rounded-xl text-sm border transition-all focus:outline-none focus:ring-1 ${isDark
-                  ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 focus:bg-white/10'
-                  : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 focus:shadow-md'
-                  }`}
-              />
-              {searchLoading && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
-              )}
-            </div>
-          </div>
-
-          {/* Search Results */}
-          {searchQuery.trim() && (
-            <div className="mb-10 space-y-6">
-              <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Search Results
-              </h2>
-
-              {searchLoading ? (
-                <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>Searching...</div>
-              ) : searchResults && !searchResults.startups?.length && !searchResults.reels?.length && !searchResults.hashtags?.length ? (
-                <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-                  No results for &ldquo;{searchQuery}&rdquo; — try a different keyword or hashtag
-                </div>
-              ) : searchResults ? (
-                <>
-                  {/* ── Hashtag Pills ── */}
-                  {searchResults.hashtags?.length > 0 && (
-                    <div>
-                      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Hashtags</p>
-                      <div className="flex flex-wrap gap-2">
-                        {searchResults.hashtags.map((tag, i) => (
-                          <button
-                            key={i}
-                            onClick={() => navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(tag)}`)}
-                            className="px-4 py-1.5 rounded-full text-sm font-medium bg-[#00B8A9]/20 text-[#00B8A9] hover:bg-[#00B8A9]/30 transition-colors"
-                          >
-                            #{tag}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ── Reel / Pitch Results ── */}
-                  {searchResults.reels?.length > 0 && (
-                    <div>
-                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Pitch Reels</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {searchResults.reels.map((reel) => (
-                          <div
-                            key={reel.id}
-                            onClick={() => navigate(`/pitch/${reel.id}`)}
-                            className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] hover:shadow-lg ${isDark ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30' : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
-                              }`}
-                          >
-                            {/* Thumbnail */}
-                            <div className="relative h-36 bg-gray-800">
-                              {reel.thumbnailUrl
-                                ? <img src={reel.thumbnailUrl} alt={reel.title} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9]/30 to-gray-800 flex items-center justify-center"><FaPlay className="text-white/40" size={28} /></div>
-                              }
-                              <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1.5">
-                                <FaPlay className="text-white" size={10} />
-                              </div>
-                            </div>
-                            {/* Info */}
-                            <div className="p-3">
-                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{reel.title}</p>
-                              <p className={`text-xs truncate mt-0.5 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{reel.startup?.name || '—'}</p>
-                              {/* Hashtag chips */}
-                              {reel.hashtags?.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                  {reel.hashtags.slice(0, 3).map((h, i) => (
-                                    <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-[#00B8A9]/15 text-[#00B8A9]">
-                                      #{h}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              <div className="flex items-center gap-1 mt-2">
-                                <FaEye size={10} className={isDark ? 'text-white/40' : 'text-gray-400'} />
-                                <span className={`text-[10px] ${isDark ? 'text-white/40' : 'text-gray-400'}`}>{(reel.viewCount || 0).toLocaleString()} views</span>
-                              </div>
-                            </div>
+                {/* Reels */}
+                {searchResults.reels?.length > 0 && (
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Pitch Reels</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {searchResults.reels.map((reel) => (
+                        <div
+                          key={reel.id}
+                          onClick={() => navigate(`/pitch/${reel.id}`)}
+                          className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}
+                        >
+                          <div className="relative h-28 bg-gray-800">
+                            {reel.thumbnailUrl
+                              ? <img src={reel.thumbnailUrl} alt={reel.title} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9]/30 to-gray-800 flex items-center justify-center"><FaPlay className="text-white/40" size={22} /></div>
+                            }
                           </div>
-                        ))}
-                      </div>
+                          <div className="p-2.5">
+                            <p className={`font-semibold text-xs truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{reel.title}</p>
+                            <p className={`text-[10px] truncate mt-0.5 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{reel.startup?.name || '—'}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* ── Startup Results ── */}
-                  {searchResults.startups?.length > 0 && (
-                    <div>
-                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Startups</p>
-                      <div className="space-y-2">
-                        {searchResults.startups.map((item) => (
+                {/* Startups */}
+                {searchResults.startups?.length > 0 && (
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Startups</p>
+                    <div className="space-y-2">
+                      {searchResults.startups.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => navigate(`/u/${item.founder?.id || item.id}`)}
+                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                        >
+                          <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                            {item.logoUrl
+                              ? <img src={item.logoUrl} alt={item.name} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{(item.name || 'U')[0].toUpperCase()}</div>
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
+                            {item.tagline && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Investors */}
+                {searchResults.investors?.length > 0 && (
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Investors</p>
+                    <div className="space-y-2">
+                      {searchResults.investors.map((item) => {
+                        const avatarSrc = item.logoUrl || item.user?.avatarUrl;
+                        const displayName = item.name || item.user?.fullName || 'Investor';
+                        return (
                           <div
                             key={item.id}
-                            onClick={() => navigate(`/u/${item.founder?.id || item.id}`)}
-                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'
-                              }`}
+                            onClick={() => navigate(`/u/${item.userId || item.user?.id || item.id}`)}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                           >
-                            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-                              {item.logoUrl
-                                ? <img src={item.logoUrl} alt={item.name} className="w-full h-full object-cover" />
-                                : (
-                                  <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">
-                                    {(item.name || 'U')[0].toUpperCase()}
-                                  </div>
-                                )
+                            <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                              {avatarSrc
+                                ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
                               }
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
-                              {item.tagline && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
-                              {item.industry && <p className={`text-xs truncate mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>{item.industry}</p>}
+                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+                              {item.companyName && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.companyName}</p>}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </>
-              ) : null}
-            </div>
-          )}
+                  </div>
+                )}
 
-          {/* Trending Hash Tags */}
-          {!searchQuery.trim() && (
-            <>
-              <div className="mb-10">
-                <h2 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Trending Tags
+                {/* Incubators */}
+                {searchResults.incubators?.length > 0 && (
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Incubators</p>
+                    <div className="space-y-2">
+                      {searchResults.incubators.map((item) => {
+                        const displayName = item.user?.fullName || item.organizationType || 'Incubator';
+                        const avatarSrc = item.logoUrl || item.user?.avatarUrl;
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => navigate(`/u/${item.userId || item.user?.id || item.id}`)}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                          >
+                            <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                              {avatarSrc
+                                ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
+                              }
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+                              {item.tagline && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* People */}
+                {searchResults.users?.length > 0 && (
+                  <div>
+                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>People</p>
+                    <div className="space-y-2">
+                      {searchResults.users.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => navigate(`/u/${item.id}`)}
+                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                        >
+                          <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                            {item.avatarUrl
+                              ? <img src={item.avatarUrl} alt={item.fullName} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{(item.fullName || 'U')[0].toUpperCase()}</div>
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.fullName}</p>
+                            <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                              <span className="capitalize">{item.role || 'User'}</span>
+                              {item.company && ` at ${item.company}`}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : null}
+          </div>
+        )}
+
+        {/* Trending section — shown when not searching */}
+        {!searchQuery.trim() && (
+          <>
+            {/* Trending Tags */}
+            <div className="mb-8">
+              <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Trending Tags
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {(trendingHashtags.length > 0
+                  ? trendingHashtags.map((t) => typeof t === 'string' ? t : `#${t.tag || t.name}`)
+                  : ['#AI', '#HealthTech', '#BharatFirst', '#FinTech', '#EdTech', '#GreenTech']
+                ).map((tag, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      const raw = tag.replace(/^#/, '');
+                      navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(raw)}`);
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isDark
+                      ? 'bg-white/10 text-white hover:bg-[#00B8A9]/20 hover:text-[#00B8A9]'
+                      : 'bg-gray-100 text-gray-700 hover:bg-[#00B8A9]/10 hover:text-[#00B8A9]'
+                      }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Performing Pitches */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <FaTrophy className={isDark ? 'text-yellow-400' : 'text-yellow-600'} size={16} />
+                <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Top Performing Pitch
                 </h2>
-                <div className="flex flex-wrap gap-3">
-                  {(trendingHashtags.length > 0
-                    ? trendingHashtags.map((t) => typeof t === 'string' ? t : `#${t.tag || t.name}`)
-                    : ['#AI', '#HealthTech', '#BharatFirst', '#FinTech', '#EdTech', '#GreenTech']
-                  ).map((tag, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        const raw = tag.replace(/^#/, '');
-                        navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(raw)}`);
-                      }}
-                      className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${isDark
-                        ? 'bg-white/10 text-white hover:bg-[#00B8A9]/20 hover:text-[#00B8A9] hover:border hover:border-[#00B8A9]/30 hover:scale-105'
-                        : 'bg-gray-100 text-gray-700 hover:bg-[#00B8A9]/10 hover:text-[#00B8A9] hover:border hover:border-[#00B8A9]/30 hover:scale-105'
-                        }`}
-                    >
-                      {tag}
-                    </button>
+              </div>
+              {loadingData ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {[1, 2].map((i) => (
+                    <div key={i} className={`rounded-2xl h-44 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
                   ))}
                 </div>
-              </div>
-
-              {/* Top Performing Pitches */}
-              <div className="mb-10">
-                <div className="flex items-center gap-2 mb-5">
-                  <FaTrophy className={isDark ? 'text-yellow-400' : 'text-yellow-600'} size={20} />
-                  <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Top Performing Pitch
-                  </h2>
+              ) : topPitches.length === 0 ? (
+                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No top pitches yet.</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {topPitches.map((pitch) => (
+                    <div
+                      key={pitch.id}
+                      onClick={() => navigate(`/pitch/${pitch.id}`)}
+                      className={`rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.01] ${isDark
+                        ? 'bg-white/5 border border-white/10'
+                        : 'bg-white border border-gray-200 shadow-md'
+                        }`}
+                    >
+                      <div className="relative h-44">
+                        <img
+                          src={pitch.thumbnailUrl || pitch.image || 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800'}
+                          alt={pitch.title || pitch.name}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end p-4">
+                          <div className="w-full">
+                            <h3 className="text-white font-bold text-base mb-0.5">{pitch.title || pitch.name}</h3>
+                            <p className="text-white/80 text-xs">{pitch.startup?.name || pitch.company}</p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <FaEye className="text-white/70" size={11} />
+                              <span className="text-white/70 text-xs">{(pitch.viewCount || pitch.views || 0).toLocaleString()} views</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="absolute top-3 right-3">
+                          <div className="bg-black/50 backdrop-blur-sm rounded-full p-2">
+                            <FaPlay className="text-white" size={12} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {loadingData ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {[1, 2].map((i) => (
-                      <div key={i} className={`rounded-2xl h-56 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
-                    ))}
-                  </div>
-                ) : topPitches.length === 0 ? (
-                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No top pitches yet.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {topPitches.map((pitch) => (
-                      <div
-                        key={pitch.id}
-                        onClick={() => navigate(`/pitch/${pitch.id}`)}
-                        className={`rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl ${isDark
-                          ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
-                          : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-md'
-                          }`}
-                      >
-                        <div className="relative h-56">
-                          <img
-                            src={pitch.thumbnailUrl || pitch.image || 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                            alt={pitch.title || pitch.name}
-                            className="w-full h-full object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end p-5">
-                            <div className="w-full">
-                              <h3 className="text-white font-bold text-lg mb-1">{pitch.title || pitch.name}</h3>
-                              <p className="text-white/90 text-sm mb-2">{pitch.startup?.name || pitch.company}</p>
-                              <div className="flex items-center gap-2">
-                                <FaEye className="text-white/70" size={14} />
-                                <span className="text-white/70 text-xs font-medium">
-                                  {(pitch.viewCount || pitch.views || 0).toLocaleString()} views
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="absolute top-4 right-4">
-                            <div className="bg-black/50 backdrop-blur-sm rounded-full p-2">
-                              <FaPlay className="text-white" size={16} />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              )}
+            </div>
 
-              {/* Startups of the Week */}
-              <div className="mb-10">
-                <h2 className={`text-xl font-bold mb-5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Startups of the Week
-                </h2>
-                {loadingData ? (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className={`rounded-xl h-32 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
-                    ))}
-                  </div>
-                ) : startupsOfWeek.length === 0 ? (
-                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No featured startups this week.</p>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {startupsOfWeek.map((startup) => (
-                      <div
-                        key={startup.id}
-                        onClick={() => navigate(`/profile/${startup.id}`)}
-                        className={`rounded-xl p-5 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${isDark
-                          ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
-                          : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
-                          }`}
-                      >
-                        <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-3 ring-2 ring-offset-2 ring-offset-transparent ring-gray-300/20 bg-gradient-to-br from-[#00B8A9] to-[#00A89A]">
-                          {startup.logoUrl ? (
-                            <img src={startup.logoUrl} alt={startup.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white font-bold text-xl">
-                              {(startup.name || 'S')[0].toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <h3 className={`text-center font-bold text-sm mb-1 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {startup.name}
-                        </h3>
-                        <p className={`text-center text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
-                          {startup.sector || startup.industry}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Investor Spotlight */}
-              <div className="mb-10">
-                <h2 className={`text-xl font-bold mb-5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Investor Spotlight
-                </h2>
-                {loadingData ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className={`rounded-xl h-40 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
-                    ))}
-                  </div>
-                ) : investorSpotlight.length === 0 ? (
-                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No investor spotlight this week.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {investorSpotlight.map((investor) => (
-                      <div
-                        key={investor.id}
-                        className={`rounded-xl p-6 cursor-pointer transition-all hover:scale-105 hover:shadow-lg ${isDark
-                          ? 'bg-white/5 border border-white/10 hover:border-[#00B8A9]/30'
-                          : 'bg-white border border-gray-200 hover:border-[#00B8A9]/30 shadow-sm'
-                          }`}
-                      >
-                        <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 ring-2 ring-offset-2 ring-offset-transparent ring-gray-300/20">
-                          {investor.avatarUrl ? (
-                            <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-2xl">
-                              {(investor.fullName || 'I')[0].toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <h3 className={`text-center font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {investor.fullName}
-                        </h3>
-                        <p className={`text-center text-sm mb-2 ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
-                          {investor.investorProfile?.investorType || 'Investor'}
-                        </p>
-                        {investor.investorProfile?.totalInvestments > 0 && (
-                          <p className={`text-center text-xs font-medium ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-                            {investor.investorProfile.totalInvestments} Investments
-                          </p>
+            {/* Startups of the Week */}
+            <div className="mb-8">
+              <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Startups of the Week
+              </h2>
+              {loadingData ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className={`rounded-xl h-28 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+                  ))}
+                </div>
+              ) : startupsOfWeek.length === 0 ? (
+                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No featured startups this week.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {startupsOfWeek.map((startup) => (
+                    <div
+                      key={startup.id}
+                      onClick={() => navigate(`/profile/${startup.id}`)}
+                      className={`rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${isDark
+                        ? 'bg-white/5 border border-white/10'
+                        : 'bg-white border border-gray-200 shadow-sm'
+                        }`}
+                    >
+                      <div className="w-12 h-12 rounded-full overflow-hidden mx-auto mb-2 bg-gradient-to-br from-[#00B8A9] to-[#00A89A]">
+                        {startup.logoUrl ? (
+                          <img src={startup.logoUrl} alt={startup.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                            {(startup.name || 'S')[0].toUpperCase()}
+                          </div>
                         )}
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {startup.name}
+                      </h3>
+                      <p className={`text-center text-[10px] truncate ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
+                        {startup.sector || startup.industry}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              {/* Battleground Spotlight */}
-              <div className="mb-10">
-                <div className="flex items-center gap-2 mb-5">
-                  <FaFire className={isDark ? 'text-orange-400' : 'text-orange-600'} size={20} />
-                  <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Battleground Spotlight
-                  </h2>
+            {/* Investor Spotlight */}
+            <div className="mb-8">
+              <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Investor Spotlight
+              </h2>
+              {loadingData ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className={`rounded-xl h-36 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+                  ))}
                 </div>
-                <div className={`rounded-2xl p-8 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-xl ${isDark
-                  ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-500/40'
-                  : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
-                  }`}>
-                  <h3 className={`text-2xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Live Pitch Battle
-                  </h3>
-                  <p className={`text-base mb-6 ${isDark ? 'text-white/80' : 'text-gray-700'}`}>
-                    Watch startups compete for investment in real-time
-                  </p>
-                  <button
-                    onClick={() => navigate('/battleground')}
-                    className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-105 hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-95"
-                  >
-                    <FaPlay size={16} />
-                    Watch Live
-                  </button>
+              ) : investorSpotlight.length === 0 ? (
+                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No investor spotlight this week.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  {investorSpotlight.map((investor) => (
+                    <div
+                      key={investor.id}
+                      className={`rounded-xl p-4 transition-all ${isDark
+                        ? 'bg-white/5 border border-white/10'
+                        : 'bg-white border border-gray-200 shadow-sm'
+                        }`}
+                    >
+                      <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
+                        {investor.avatarUrl ? (
+                          <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-xl">
+                            {(investor.fullName || 'I')[0].toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {investor.fullName}
+                      </h3>
+                      <p className={`text-center text-[10px] ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                        {investor.investorProfile?.investorType || 'Investor'}
+                      </p>
+                    </div>
+                  ))}
                 </div>
+              )}
+            </div>
+
+            {/* Battleground Spotlight */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <FaFire className={isDark ? 'text-orange-400' : 'text-orange-600'} size={16} />
+                <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Battleground Spotlight
+                </h2>
               </div>
-            </>
-          )}
-        </div>
+              <div className={`rounded-2xl p-6 cursor-pointer transition-all ${isDark
+                ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-500/40'
+                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
+                }`}>
+                <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Live Pitch Battle
+                </h3>
+                <p className={`text-sm mb-4 ${isDark ? 'text-white/80' : 'text-gray-700'}`}>
+                  Watch startups compete for investment in real-time
+                </p>
+                <button
+                  onClick={() => navigate('/battleground')}
+                  className="px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all bg-[#00B8A9] text-white hover:bg-[#00A89A] text-sm"
+                >
+                  <FaPlay size={12} />
+                  Watch Live
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
-    </div>
+    </AppShell>
   );
 }

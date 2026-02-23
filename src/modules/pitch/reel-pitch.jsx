@@ -435,8 +435,9 @@ export default function ReelPitch() {
 
   return (
     <>
-      <div className={`fixed inset-0 z-50 ${isDark ? 'bg-black' : 'bg-gray-900'} overflow-hidden`}>
-        <div className="w-full h-full max-w-md mx-auto relative shadow-2xl overflow-hidden">
+      {/* Outer gutter wrapper — matches AppShell aesthetic */}
+      <div className={`fixed inset-0 z-50 flex justify-center ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#e8e8e8]'}`}>
+        <div className="relative w-full h-full overflow-hidden" style={{ maxWidth: '430px' }}>
           {/* Header */}
           <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 min-h-[56px] bg-gradient-to-b from-black/80 to-transparent">
             <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-95">

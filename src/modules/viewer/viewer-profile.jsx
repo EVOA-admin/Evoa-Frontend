@@ -22,6 +22,8 @@ import {
     IoLogOutOutline,
 } from "react-icons/io5";
 import { FiUser } from "react-icons/fi";
+import AppShell from "../../components/layout/AppShell";
+import AppHeader from "../../components/layout/AppHeader";
 
 // Parse occupation from bio string (format: "Occupation: X\nInterests: Y")
 function parseOccupation(bio) {
@@ -178,28 +180,8 @@ export default function ViewerProfile() {
     }));
 
     return (
-        <div className={`min-h-screen ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
-            {/* Header */}
-            <div className={`sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b ${isDark ? "bg-gray-950 border-white/10" : "bg-white border-gray-200"}`}>
-                <button
-                    onClick={() => navigate(-1)}
-                    className={`p-2 rounded-full transition-colors ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
-                >
-                    <IoArrowBack size={22} className={isDark ? "text-white" : "text-gray-800"} />
-                </button>
-                <span className={`text-base font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
-                    Evo-A
-                </span>
-                <button
-                    onClick={() => navigate("/notifications")}
-                    className={`relative p-2 rounded-full transition-colors ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
-                >
-                    <IoNotificationsOutline size={22} className={isDark ? "text-white" : "text-gray-800"} />
-                    {unreadCount > 0 && (
-                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#00B8A9]" />
-                    )}
-                </button>
-            </div>
+        <AppShell>
+            <AppHeader title="My Profile" />
 
             {/* Loading */}
             {loading ? (
@@ -415,7 +397,7 @@ export default function ViewerProfile() {
                     </div>
                 </div>
             )}
-        </div>
+        </AppShell>
     );
 }
 

@@ -20,7 +20,16 @@ export default function EditIncubatorModal({ isOpen, onClose, profile, onSuccess
         programTypes: [],
         facilities: [],
         location: { city: "", state: "", country: "India" },
-        socialLinks: { linkedin: "", instagram: "", youtube: "", twitter: "" }
+        socialLinks: { linkedin: "", instagram: "", youtube: "", twitter: "" },
+        organizationType: "",
+        affiliationType: "",
+        equityPolicy: "",
+        fundingSupport: "",
+        programDuration: "",
+        numberOfMentors: 0,
+        portfolioStartups: "",
+        phoneNumber: "",
+        fullAddress: ""
     });
 
     useEffect(() => {
@@ -36,7 +45,16 @@ export default function EditIncubatorModal({ isOpen, onClose, profile, onSuccess
                 programTypes: profile.programTypes || [],
                 facilities: profile.facilities || [],
                 location: profile.location || { city: "", state: "", country: "India" },
-                socialLinks: profile.socialLinks || { linkedin: "", instagram: "", youtube: "", twitter: "" }
+                socialLinks: profile.socialLinks || { linkedin: "", instagram: "", youtube: "", twitter: "" },
+                organizationType: profile.organizationType || "",
+                affiliationType: profile.affiliationType || "",
+                equityPolicy: profile.equityPolicy || "",
+                fundingSupport: profile.fundingSupport || "",
+                programDuration: profile.programDuration || "",
+                numberOfMentors: profile.numberOfMentors || 0,
+                portfolioStartups: profile.portfolioStartups || "",
+                phoneNumber: profile.phoneNumber || "",
+                fullAddress: profile.fullAddress || ""
             });
         }
     }, [profile, isOpen]);
@@ -117,10 +135,23 @@ export default function EditIncubatorModal({ isOpen, onClose, profile, onSuccess
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <InputField label="Incubator Name" value={formData.name} onChange={v => handleInputChange('name', v)} isDark={isDark} />
                             <InputField label="Official Email" value={formData.officialEmail} onChange={v => handleInputChange('officialEmail', v)} isDark={isDark} />
+                            <InputField label="Phone Number" value={formData.phoneNumber} onChange={v => handleInputChange('phoneNumber', v)} isDark={isDark} />
+                            <InputField label="Website" value={formData.website} placeholder="https://..." onChange={v => handleInputChange('website', v)} isDark={isDark} />
                         </div>
                         <InputField label="Tagline" value={formData.tagline} placeholder="Supporting startup growth..." onChange={v => handleInputChange('tagline', v)} isDark={isDark} />
                         <TextAreaField label="About Us" value={formData.description} onChange={v => handleInputChange('description', v)} isDark={isDark} />
-                        <InputField label="Website" value={formData.website} placeholder="https://..." onChange={v => handleInputChange('website', v)} isDark={isDark} />
+                        <TextAreaField label="Full Address" value={formData.fullAddress} onChange={v => handleInputChange('fullAddress', v)} isDark={isDark} />
+                    </div>
+
+                    {/* Organization Details */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-black uppercase tracking-widest opacity-40">Organization</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <InputField label="Organization Type" placeholder="e.g. University, Private" value={formData.organizationType} onChange={v => handleInputChange('organizationType', v)} isDark={isDark} />
+                            <InputField label="Affiliation Type" placeholder="e.g. AICTE, DST" value={formData.affiliationType} onChange={v => handleInputChange('affiliationType', v)} isDark={isDark} />
+                            <InputField label="Funding Support" value={formData.fundingSupport} onChange={v => handleInputChange('fundingSupport', v)} isDark={isDark} />
+                            <InputField label="Equity Policy" value={formData.equityPolicy} onChange={v => handleInputChange('equityPolicy', v)} isDark={isDark} />
+                        </div>
                     </div>
 
                     {/* Program Details */}
@@ -134,8 +165,8 @@ export default function EditIncubatorModal({ isOpen, onClose, profile, onSuccess
                                         key={item}
                                         onClick={() => handleArrayChange('programTypes', item)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${formData.programTypes.includes(item)
-                                                ? "bg-[#00B8A9] border-[#00B8A9] text-white"
-                                                : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
+                                            ? "bg-[#00B8A9] border-[#00B8A9] text-white"
+                                            : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
                                             }`}
                                     >
                                         {item}
@@ -143,7 +174,12 @@ export default function EditIncubatorModal({ isOpen, onClose, profile, onSuccess
                                 ))}
                             </div>
                         </div>
-                        <InputField label="Cohort Size" type="number" value={formData.cohortSize} onChange={v => handleInputChange('cohortSize', parseInt(v) || 0)} isDark={isDark} />
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <InputField label="Cohort Size" type="number" value={formData.cohortSize} onChange={v => handleInputChange('cohortSize', parseInt(v) || 0)} isDark={isDark} />
+                            <InputField label="Mentors" type="number" value={formData.numberOfMentors} onChange={v => handleInputChange('numberOfMentors', parseInt(v) || 0)} isDark={isDark} />
+                            <InputField label="Duration" placeholder="e.g. 12 Weeks" value={formData.programDuration} onChange={v => handleInputChange('programDuration', v)} isDark={isDark} />
+                        </div>
+                        <TextAreaField label="Portfolio Startups & Success Stories" value={formData.portfolioStartups} onChange={v => handleInputChange('portfolioStartups', v)} isDark={isDark} />
                     </div>
 
                     {/* Facilities */}
@@ -155,8 +191,8 @@ export default function EditIncubatorModal({ isOpen, onClose, profile, onSuccess
                                     key={item}
                                     onClick={() => handleArrayChange('facilities', item)}
                                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${formData.facilities.includes(item)
-                                            ? "bg-blue-600 border-blue-600 text-white"
-                                            : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
+                                        ? "bg-blue-600 border-blue-600 text-white"
+                                        : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
                                         }`}
                                 >
                                     {item}
