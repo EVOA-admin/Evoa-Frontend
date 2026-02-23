@@ -6,7 +6,7 @@ import {
     FaArrowLeft, FaSpinner, FaGlobe, FaLinkedin, FaInstagram,
     FaYoutube, FaMapMarkerAlt, FaBuilding, FaUser, FaHandshake,
     FaPlay, FaRocket, FaChartLine, FaUsers, FaTrophy, FaUserTie,
-    FaStar, FaEnvelope, FaCheck, FaLink, FaTwitter,
+    FaStar, FaEnvelope, FaCheck, FaLink, FaTwitter, FaFilePdf,
 } from "react-icons/fa";
 import { HiLightningBolt } from "react-icons/hi";
 import apiClient from "../../services/apiClient";
@@ -50,13 +50,14 @@ const InfoRow = ({ icon: Icon, label, value, isDark, href }) => {
 };
 
 // ─────────────────────────────────────────────────────────── STARTUP PROFILE
-function StartupProfile({ profile, startup, isDark, currentUser, navigate }) {
+function StartupProfile({ profile, startup, isDark, currentUser, userRole, navigate }) {
     const isOwner = currentUser?.id === startup?.founderId || currentUser?.id === profile?.id;
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(true);
     const [followCount, setFollowCount] = useState(startup?.followerCount || 0);
 
     useEffect(() => {
+        console.log("currentUser role:", currentUser?.role || userRole, "startup pitchDeckUrl:", startup?.pitchDeckUrl);
         if (!startup?.id || isOwner) { setFollowLoading(false); return; }
         startupService.getFollowStatus(startup.id)
             .then(res => {
@@ -109,21 +110,33 @@ function StartupProfile({ profile, startup, isDark, currentUser, navigate }) {
                             {startup?.industry && <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{startup.industry}</span>}
                         </div>
                     </div>
-                    {!isOwner && (
-                        <button
-                            onClick={toggleFollow}
-                            disabled={followLoading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${isFollowing
-                                ? isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"
-                                : "bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30"
-                                }`}
-                        >
-                            {followLoading
-                                ? <FaSpinner size={12} className="animate-spin" />
-                                : isFollowing ? <><FaCheck size={12} /> Supported</> : <><FaHandshake size={12} /> Support</>
-                            }
-                        </button>
-                    )}
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                        {!isOwner && (
+                            <button
+                                onClick={toggleFollow}
+                                disabled={followLoading}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isFollowing
+                                    ? isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"
+                                    : "bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30"
+                                    }`}
+                            >
+                                {followLoading
+                                    ? <FaSpinner size={12} className="animate-spin" />
+                                    : isFollowing ? <><FaCheck size={12} /> Supported</> : <><FaHandshake size={12} /> Support</>
+                                }
+                            </button>
+                        )}
+                        {startup?.pitchDeckUrl && (isOwner || ["investor", "incubator"].includes(currentUser?.role || userRole)) && (
+                            <a
+                                href={startup.pitchDeckUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-800 hover:bg-gray-50"}`}
+                            >
+                                <FaFilePdf size={12} className="text-red-500" /> Pitchdeck
+                            </a>
+                        )}
+                    </div>
                 </div>
 
                 {/* Stats */}
@@ -464,13 +477,12 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────── MAIN COMPONENT
 export default function UserPublicProfile() {
     const { userId } = useParams();
     const { theme } = useTheme();
     const isDark = theme === "dark";
     const navigate = useNavigate();
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, userRole } = useAuth();
 
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -511,7 +523,7 @@ export default function UserPublicProfile() {
                         <button onClick={() => navigate(-1)} className="text-sm text-[#00B8A9] hover:underline">Go back</button>
                     </div>
                 ) : role === "startup" ? (
-                    <StartupProfile profile={profile} startup={startup} isDark={isDark} currentUser={currentUser} navigate={navigate} />
+                    <StartupProfile profile={profile} startup={startup} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} />
                 ) : (role === "investor" || role === "incubator") ? (
                     <InvestorIncubatorProfile profile={profile} isDark={isDark} currentUser={currentUser} navigate={navigate} />
                 ) : (

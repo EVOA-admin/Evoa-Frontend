@@ -40,7 +40,9 @@ export default function StartupProfile() {
     const [editForm, setEditForm] = useState({});
     const [newLogo, setNewLogo] = useState(null);
     const [logoPreview, setLogoPreview] = useState(null);
+    const [newPitchDeck, setNewPitchDeck] = useState(null);
     const logoInputRef = useRef();
+    const pitchDeckInputRef = useRef();
 
     useEffect(() => {
         fetchStartup();
@@ -83,9 +85,11 @@ export default function StartupProfile() {
             socialLinks: startup.socialLinks || {},
             founders: startup.founders ? JSON.parse(JSON.stringify(startup.founders)) : [],
             teamMembers: startup.teamMembers ? JSON.parse(JSON.stringify(startup.teamMembers)) : [],
+            pitchDeckUrl: startup.pitchDeckUrl || "",
         });
         setNewLogo(null);
         setLogoPreview(null);
+        setNewPitchDeck(null);
         setEditError("");
         setEditOpen(true);
     };
@@ -99,20 +103,40 @@ export default function StartupProfile() {
         reader.readAsDataURL(file);
     };
 
+    const uploadToStorage = async (file, folder) => {
+        if (!file) return undefined;
+        const ext = file.name.split('.').pop() || '';
+        const safeName = file.name.replace(/\s+/g, '_').replace(`.${ext}`, '');
+        const path = `${folder}/${Date.now()}_${safeName}.${ext}`;
+        try {
+            return await storageService.uploadFile(file, 'evoa-media', path);
+        } catch (err) {
+            console.warn(`Upload to evoa-media failed for ${folder}, trying public:`, err.message);
+            try {
+                return await storageService.uploadFile(file, 'public', path);
+            } catch (fallbackErr) {
+                console.warn(`Fallback upload to public failed for ${folder}:`, fallbackErr.message);
+                return undefined;
+            }
+        }
+    };
+
     const handleEditSave = async () => {
         setEditLoading(true);
         setEditError("");
         try {
-            let logoUrl = undefined;
-            if (newLogo) {
-                try {
-                    const fileName = `logos/${Date.now()}_${newLogo.name.replace(/\s+/g, "_")}`;
-                    logoUrl = await storageService.uploadFile(newLogo, "public", fileName);
-                } catch (e) { console.warn("Logo upload failed:", e.message); }
-            }
+            let logoUrl = await uploadToStorage(newLogo, 'logos');
+            let pitchDeckUrl = await uploadToStorage(newPitchDeck, 'pitch-decks');
 
             const updates = { ...editForm };
             if (logoUrl) updates.logoUrl = logoUrl;
+
+            if (pitchDeckUrl) {
+                updates.pitchDeckUrl = pitchDeckUrl;
+            } else if (updates.pitchDeckUrl === "") {
+                delete updates.pitchDeckUrl; // Don't overwrite existing URL with empty string
+            }
+
             if (updates.raisingAmount) updates.raisingAmount = parseFloat(updates.raisingAmount) || null;
             if (updates.equityPercentage) updates.equityPercentage = parseFloat(updates.equityPercentage) || null;
 
@@ -434,6 +458,41 @@ export default function StartupProfile() {
                             <EditSection title="Fundraising" isDark={isDark}>
                                 <EditField label="Amount Raising (₹)" value={editForm.raisingAmount} onChange={v => setEditForm(f => ({ ...f, raisingAmount: v }))} placeholder="e.g. 2500000" isDark={isDark} />
                                 <EditField label="Equity % Offering" value={editForm.equityPercentage} onChange={v => setEditForm(f => ({ ...f, equityPercentage: v }))} placeholder="e.g. 10" isDark={isDark} />
+                            </EditSection>
+
+                            {/* Pitch Files */}
+                            <EditSection title="Pitch Files" isDark={isDark}>
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className={`text-sm mb-1 font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>Pitch Deck (PDF)</p>
+                                        <div className="flex gap-2 items-center">
+                                            <button
+                                                onClick={() => pitchDeckInputRef.current?.click()}
+                                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+                                            >
+                                                Upload PDF
+                                            </button>
+                                            <input
+                                                ref={pitchDeckInputRef}
+                                                type="file"
+                                                accept="application/pdf"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) setNewPitchDeck(f);
+                                                }}
+                                            />
+                                            {newPitchDeck ? (
+                                                <span className={`text-xs ${isDark ? "text-[#00B8A9]" : "text-gray-600"}`}>{newPitchDeck.name}</span>
+                                            ) : editForm.pitchDeckUrl ? (
+                                                <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"} line-clamp-1`}>Existing PDF uploaded</span>
+                                            ) : (
+                                                <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>No file chosen</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <EditField label="Pitch Video URL (YouTube/Vimeo)" value={editForm.pitchVideoUrl || ""} onChange={v => setEditForm(f => ({ ...f, pitchVideoUrl: v }))} isDark={isDark} />
+                                </div>
                             </EditSection>
 
                             {/* Social Links */}
