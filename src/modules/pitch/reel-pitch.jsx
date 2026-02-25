@@ -117,36 +117,56 @@ export default function ReelPitch() {
     fetchReels();
   }, [id, hashtagFilter]);
 
-  // ── Scroll & auto-play logic ──────────────────────────────────────────────
+  // ── Scroll & auto-play logic (IntersectionObserver — each slide fills viewport) ──
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container || pitches.length === 0) return;
+    if (pitches.length === 0) return;
 
-    const handleScroll = () => {
-      const scrollTop = container.scrollTop;
-      const windowHeight = window.innerHeight;
-      const newIndex = Math.round(scrollTop / windowHeight);
+    const observers = [];
 
-      if (newIndex !== currentIndex && newIndex >= 0 && newIndex < pitches.length) {
-        setCurrentIndex(newIndex);
-        Object.values(videoRefs.current).forEach((v) => { if (v) v.pause(); });
-        setReelStates((prev) => {
-          const updated = { ...prev };
-          Object.keys(updated).forEach((rid) => { updated[rid] = { ...updated[rid], isPlaying: false }; });
-          return updated;
-        });
-        const vid = videoRefs.current[pitches[newIndex].id];
-        if (vid) {
-          vid.muted = reelStates[pitches[newIndex].id]?.isMuted ?? true;
-          vid.play().catch(() => { });
-          setReelStates((prev) => ({ ...prev, [pitches[newIndex].id]: { ...prev[pitches[newIndex].id], isPlaying: true } }));
-        }
-      }
-    };
+    pitches.forEach((pitch, idx) => {
+      const el = document.getElementById(`reel-slide-${pitch.id}`);
+      if (!el) return;
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [currentIndex, pitches, reelStates]);
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+
+          // Update current index
+          setCurrentIndex(idx);
+
+          // Pause all videos, play the visible one
+          Object.entries(videoRefs.current).forEach(([rid, v]) => {
+            if (!v) return;
+            if (rid === pitch.id) {
+              v.muted = reelStates[pitch.id]?.isMuted ?? true;
+              v.play().catch(() => { });
+              setReelStates(prev => ({ ...prev, [pitch.id]: { ...prev[pitch.id], isPlaying: true } }));
+            } else {
+              v.pause();
+              setReelStates(prev => ({ ...prev, [rid]: { ...prev[rid], isPlaying: false } }));
+            }
+          });
+
+          // LOOP: if this is the last slide, after a short delay scroll back to top
+          if (idx === pitches.length - 1) {
+            setTimeout(() => {
+              const container = containerRef.current;
+              if (container) {
+                container.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }, 1800);
+          }
+        },
+        { threshold: 0.7 }
+      );
+
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach(o => o.disconnect());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pitches]);
 
   // Auto-play first video when loaded
   useEffect(() => {
@@ -309,7 +329,7 @@ export default function ReelPitch() {
   const renderReel = (pitch) => {
     const state = reelStates[pitch.id] || { isLiked: false, isSaved: false, isPlaying: false, isMuted: true };
     return (
-      <div key={pitch.id} className="w-full h-screen relative overflow-hidden bg-black">
+      <div key={pitch.id} id={`reel-slide-${pitch.id}`} className="w-full h-screen relative overflow-hidden bg-black">
 
         {/* ── Video ── */}
         {pitch.video ? (

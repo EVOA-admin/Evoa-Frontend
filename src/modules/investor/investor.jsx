@@ -10,6 +10,10 @@ import AppHeader from "../../components/layout/AppHeader";
 import reelsService from "../../services/reelsService";
 import { getStartupDetails, followStartup, unfollowStartup } from "../../services/startupsService";
 import { getNotifications } from "../../services/notificationsService";
+import CreateContentModal from "../../components/shared/CreateContentModal";
+import UserPostCard from "../../components/shared/UserPostCard";
+import postsService from "../../services/postsService";
+import { FaPlus } from "react-icons/fa";
 
 export default function Investor() {
   const { theme } = useTheme();
@@ -20,11 +24,36 @@ export default function Investor() {
   const [loading, setLoading] = useState(true);
   const [cursor, setCursor] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showModal, setShowModal] = useState(false);
+  const [userPosts, setUserPosts] = useState([]);
 
   useEffect(() => {
     fetchFeed();
     fetchUnreadCount();
+    fetchPosts();
   }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const res = await postsService.getAllPosts();
+      const data = res?.data?.data || res?.data || [];
+      setUserPosts(Array.isArray(data) ? data.map(p => ({
+        id: p.id,
+        authorId: p.userId || p.user?.id,
+        authorName: p.user?.fullName || 'User',
+        authorAvatar: p.user?.avatarUrl || null,
+        authorRole: p.user?.role || 'viewer',
+        timeAgo: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '',
+        imageUrl: p.imageUrl,
+        caption: p.caption,
+        hashtags: p.hashtags || [],
+        isLiked: p.isLiked ?? false,
+        isSaved: false,
+        likeCount: p.likeCount || 0,
+        commentCount: p.commentCount || 0,
+      })) : []);
+    } catch (_) { }
+  };
 
   const fetchFeed = async () => {
     try {
@@ -171,16 +200,24 @@ export default function Investor() {
     reelsService.shareReel(pitchId).catch(console.error);
   };
 
+  const plusAction = (
+    <button
+      onClick={() => setShowModal(true)}
+      className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#00B8A9] to-[#007a73] text-white shadow-md active:scale-90 transition-all"
+      title="Create Post"
+    >
+      <FaPlus size={14} />
+    </button>
+  );
+
   return (
     <AppShell>
-      <AppHeader />
+      <AppHeader actions={plusAction} />
       <main>
         <div className="px-0 pb-4">
-          <div className="mb-4 px-3">
-            <StatusComponent />
-          </div>
+          <StatusComponent />
           <div className="space-y-4 px-3">
-            {!loading && pitches.length === 0 && (
+            {!loading && pitches.length === 0 && userPosts.length === 0 && (
               <EmptyState
                 icon={FaRegNewspaper}
                 title="No Pitches Yet"
@@ -202,7 +239,33 @@ export default function Investor() {
             ))}
           </div>
         </div>
+        {/* ── User Posts Feed ────────────────────────────────── */}
+        {userPosts.length > 0 && (
+          <div className="px-3 mt-4 space-y-4 pb-4">
+            {userPosts.map(post => (
+              <UserPostCard
+                key={post.id}
+                post={post}
+                isDark={isDark}
+                onLike={() => {
+                  setUserPosts(prev => prev.map(p =>
+                    p.id === post.id
+                      ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
+                      : p
+                  ));
+                  post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                }}
+              />
+            ))}
+          </div>
+        )}
       </main>
+      <CreateContentModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        canUploadReel={false}
+        onCreated={() => { }}
+      />
     </AppShell>
   );
 }
