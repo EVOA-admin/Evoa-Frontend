@@ -5,6 +5,7 @@ import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay } from "react-icons/fa";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
+import VideoThumbnail from "../../components/shared/VideoThumbnail";
 
 // Debounce helper — avoids API call on every keystroke
 function useDebounce(value, delay) {
@@ -40,7 +41,7 @@ export default function Explore() {
       try {
         const [hashtagsRes, topRes, weekRes, spotlightRes] = await Promise.allSettled([
           exploreService.getTrendingHashtags(),
-          exploreService.getTopStartups(),
+          exploreService.getTopPitches(),
           exploreService.getStartupsOfWeek(),
           exploreService.getInvestorSpotlight(),
         ]);
@@ -347,44 +348,54 @@ export default function Explore() {
                 </h2>
               </div>
               {loadingData ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {[1, 2].map((i) => (
-                    <div key={i} className={`rounded-2xl h-44 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+                <div className="grid grid-cols-3 gap-2">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className={`rounded-xl aspect-[9/16] animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
                   ))}
                 </div>
               ) : topPitches.length === 0 ? (
                 <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No top pitches yet.</p>
               ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-3 gap-2">
                   {topPitches.map((pitch) => (
                     <div
                       key={pitch.id}
                       onClick={() => navigate(`/pitch/${pitch.id}`)}
-                      className={`rounded-2xl overflow-hidden cursor-pointer transition-all hover:scale-[1.01] ${isDark
+                      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] aspect-[9/16] ${isDark
                         ? 'bg-white/5 border border-white/10'
-                        : 'bg-white border border-gray-200 shadow-md'
+                        : 'bg-white border border-gray-200 shadow-sm'
                         }`}
                     >
-                      <div className="relative h-44">
-                        <img
-                          src={pitch.thumbnailUrl || pitch.image || 'https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                          alt={pitch.title || pitch.name}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex items-end p-4">
-                          <div className="w-full">
-                            <h3 className="text-white font-bold text-base mb-0.5">{pitch.title || pitch.name}</h3>
-                            <p className="text-white/80 text-xs">{pitch.startup?.name || pitch.company}</p>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <FaEye className="text-white/70" size={11} />
-                              <span className="text-white/70 text-xs">{(pitch.viewCount || pitch.views || 0).toLocaleString()} views</span>
-                            </div>
+                      <div className="absolute inset-0">
+                        {pitch.thumbnailUrl || pitch.image ? (
+                          <img
+                            src={pitch.thumbnailUrl || pitch.image}
+                            alt={pitch.title || pitch.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : pitch.videoUrl ? (
+                          <VideoThumbnail
+                            videoUrl={pitch.videoUrl}
+                            alt={pitch.title || pitch.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-800" />
+                        )}
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-2 pb-2.5">
+                        <div className="w-full">
+                          <h3 className="text-white font-bold text-[11px] leading-tight line-clamp-2 mb-0.5">{pitch.title || pitch.name}</h3>
+                          <p className="text-white/80 text-[9px] truncate">{pitch.startup?.name || pitch.company}</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <FaEye className="text-white/70" size={9} />
+                            <span className="text-white/70 text-[9px] font-medium">{(pitch.viewCount || pitch.views || 0).toLocaleString()} views</span>
                           </div>
                         </div>
-                        <div className="absolute top-3 right-3">
-                          <div className="bg-black/50 backdrop-blur-sm rounded-full p-2">
-                            <FaPlay className="text-white" size={12} />
-                          </div>
+                      </div>
+                      <div className="absolute top-1.5 right-1.5">
+                        <div className="bg-black/50 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
+                          <FaPlay className="text-white" size={12} />
                         </div>
                       </div>
                     </div>
@@ -512,6 +523,6 @@ export default function Explore() {
           </>
         )}
       </div>
-    </AppShell>
+    </AppShell >
   );
 }

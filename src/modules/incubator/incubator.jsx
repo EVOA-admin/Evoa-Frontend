@@ -12,6 +12,7 @@ import { followStartup, unfollowStartup } from "../../services/startupsService";
 import { getNotifications } from "../../services/notificationsService";
 import CreateContentModal from "../../components/shared/CreateContentModal";
 import UserPostCard from "../../components/shared/UserPostCard";
+import StartupPostCard from "../../components/shared/StartupPostCard";
 import postsService from "../../services/postsService";
 import { FaPlus } from "react-icons/fa";
 
@@ -37,21 +38,34 @@ export default function Incubator() {
     try {
       const res = await postsService.getAllPosts();
       const data = res?.data?.data || res?.data || [];
-      setUserPosts(Array.isArray(data) ? data.map(p => ({
-        id: p.id,
-        authorId: p.userId || p.user?.id,
-        authorName: p.user?.fullName || 'User',
-        authorAvatar: p.user?.avatarUrl || null,
-        authorRole: p.user?.role || 'viewer',
-        timeAgo: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '',
-        imageUrl: p.imageUrl,
-        caption: p.caption,
-        hashtags: p.hashtags || [],
-        isLiked: p.isLiked ?? false,
-        isSaved: false,
-        likeCount: p.likeCount || 0,
-        commentCount: p.commentCount || 0,
-      })) : []);
+      setUserPosts(Array.isArray(data) ? data.map(p => {
+        const isStartup = !!(p.startupId || p.user?.role === 'startup');
+        const timeAgo = p.createdAt
+          ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+          : '';
+        if (isStartup) {
+          return {
+            _type: 'startup', id: p.id, authorId: p.userId || p.user?.id,
+            startupName: p.startupName || p.user?.fullName || 'Startup',
+            startupLogo: p.startupLogo || p.user?.avatarUrl || null,
+            tagline: p.tagline || p.caption || '', website: p.website || null,
+            sectors: p.sectors || p.hashtags || [], imageUrl: p.imageUrl, timeAgo,
+            pitchViews: p.pitchViews ?? 0, supporters: p.supporters ?? 0,
+            clickThrough: p.clickThrough ?? p.clickThroughCount ?? 0,
+            investorThoughts: p.investorThoughts || [],
+            isLiked: p.isLiked ?? false, isSaved: false,
+            likeCount: p.likeCount || 0, commentCount: p.commentCount || 0,
+          };
+        }
+        return {
+          _type: 'user', id: p.id, authorId: p.userId || p.user?.id,
+          authorName: p.user?.fullName || 'User', authorAvatar: p.user?.avatarUrl || null,
+          authorRole: p.user?.role || 'viewer', timeAgo, imageUrl: p.imageUrl,
+          caption: p.caption, hashtags: p.hashtags || [],
+          isLiked: p.isLiked ?? false, isSaved: false,
+          likeCount: p.likeCount || 0, commentCount: p.commentCount || 0,
+        };
+      }) : []);
     } catch (_) { }
   };
 
@@ -242,21 +256,20 @@ export default function Incubator() {
         {/* ── User Posts Feed ── */}
         {userPosts.length > 0 && (
           <div className="px-3 mt-4 space-y-4 pb-4">
-            {userPosts.map(post => (
-              <UserPostCard
-                key={post.id}
-                post={post}
-                isDark={isDark}
-                onLike={() => {
-                  setUserPosts(prev => prev.map(p =>
-                    p.id === post.id
-                      ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
-                      : p
-                  ));
-                  post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
-                }}
-              />
-            ))}
+            {userPosts.map(post => {
+              const handleLike = () => {
+                setUserPosts(prev => prev.map(p =>
+                  p.id === post.id
+                    ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
+                    : p
+                ));
+                post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+              };
+              if (post._type === 'startup') {
+                return <StartupPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} />;
+              }
+              return <UserPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} />;
+            })}
           </div>
         )}
       </main>

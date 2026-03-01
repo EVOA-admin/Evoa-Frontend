@@ -15,6 +15,10 @@ export const getTopStartups = async () => {
   return await apiClient.get('/explore/startups/top');
 };
 
+export const getTopPitches = async () => {
+  return await apiClient.get('/explore/pitches/top');
+};
+
 export const getStartupsOfWeek = async () => {
   return await apiClient.get('/explore/startups/week');
 };
@@ -31,6 +35,7 @@ export default {
   search,
   getTrendingHashtags,
   getTopStartups,
+  getTopPitches,
   getStartupsOfWeek,
   getInvestorSpotlight,
   getLiveBattleground,

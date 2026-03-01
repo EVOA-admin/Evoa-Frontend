@@ -8,6 +8,9 @@ import {
   FaVolumeUp, FaVolumeMute, FaArrowLeft, FaVideo,
   FaRobot, FaTimes, FaPaperPlane, FaSpinner
 } from "react-icons/fa";
+import { IoChatbubbleOutline, IoPaperPlaneOutline } from "react-icons/io5";
+import { FiCalendar, FiVolume2, FiVolumeX } from "react-icons/fi";
+import O21Icon from "../../components/shared/O21Icon";
 
 const formatNum = (n) => {
   if (!n) return '0';
@@ -370,43 +373,53 @@ export default function ReelPitch() {
         <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10 pointer-events-none" />
 
         {/* ══ RIGHT SIDE BUTTONS (bottom-right, Instagram style) ══ */}
-        <div className="absolute right-3 bottom-24 z-30 flex flex-col items-center gap-5">
+        <div className="absolute right-3 bottom-24 z-30 flex flex-col items-center gap-3">
           <button onClick={() => handleSupport(pitch.id)} className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
-            <FaHandshake size={28} className={state.isLiked ? 'text-[#00B8A9] drop-shadow-lg' : 'text-white drop-shadow-lg'} />
-            <span className="text-[11px] font-semibold text-white drop-shadow-md">{formatNum(pitch.likes)}</span>
+            <FaHandshake size={26} className={state.isLiked ? 'text-[#00B8A9] drop-shadow-lg' : 'text-white drop-shadow-lg'} />
+            <span className="text-[10px] font-semibold text-white drop-shadow-md">{formatNum(pitch.likes)}</span>
           </button>
-          <button onClick={() => openComments(pitch)} className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
-            <FaRegComment size={28} className="text-white drop-shadow-lg" />
-            <span className="text-[11px] font-semibold text-white drop-shadow-md">{formatNum(pitch.comments)}</span>
+
+          {/* Controls: calendar, bot, mute */}
+          <div className="flex flex-col items-center gap-2">
+            {canSeeInvestorFeatures && (
+              <button
+                onClick={(e) => { e.stopPropagation(); window.open('https://meet.new', '_blank'); }}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white active:scale-90 transition-transform drop-shadow-lg"
+              >
+                <FiCalendar size={20} strokeWidth={2.5} />
+              </button>
+            )}
+
+            {canSeeInvestorFeatures && (
+              <button
+                onClick={(e) => { e.stopPropagation(); handleAIClick(pitch); }}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-90 transition-transform drop-shadow-lg"
+              >
+                <O21Icon size={24} color="#ffffff" />
+              </button>
+            )}
+
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleMute(pitch.id); }}
+              className={`w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-90 transition-transform drop-shadow-lg text-white ${state.isMuted ? 'opacity-80' : 'opacity-100'
+                }`}
+            >
+              {state.isMuted ? <FiVolumeX size={22} strokeWidth={2.5} /> : <FiVolume2 size={22} strokeWidth={2.5} />}
+            </button>
+          </div>
+
+          <button onClick={() => openComments(pitch)} className="flex flex-col items-center gap-0.5 mt-0.5 active:scale-90 transition-transform">
+            <IoChatbubbleOutline size={22} className="text-white drop-shadow-lg outline-none" style={{ strokeWidth: "32px", transform: "scaleX(-1)" }} />
+            <span className="text-[10px] font-semibold text-white drop-shadow-md">{formatNum(pitch.comments)}</span>
           </button>
           <button className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
-            <FaRegPaperPlane size={26} className="text-white drop-shadow-lg" />
-            <span className="text-[11px] font-semibold text-white drop-shadow-md">{formatNum(pitch.shares)}</span>
+            <IoPaperPlaneOutline size={22} className="text-white drop-shadow-lg -ml-1 pr-1" style={{ strokeWidth: "32px" }} />
+            <span className="text-[10px] font-semibold text-white drop-shadow-md">{formatNum(pitch.shares)}</span>
           </button>
         </div>
 
-        {/* ══ BOTTOM-LEFT INFO + CONTROLS ══ */}
+        {/* ══ BOTTOM-LEFT INFO ══ */}
         <div className="absolute bottom-0 left-0 right-20 z-30 px-4 pb-6">
-          {/* Controls row: camera · bot · mute */}
-          <div className="flex items-center gap-2.5 mb-3">
-            {canSeeInvestorFeatures && (
-              <button onClick={() => window.open('https://meet.new', '_blank')}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm text-white border border-white/20 active:scale-90 transition-transform shadow-lg">
-                <FaVideo size={15} />
-              </button>
-            )}
-            {canSeeInvestorFeatures && (
-              <button onClick={() => handleAIClick(pitch)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white active:scale-90 transition-transform shadow-lg">
-                <FaRobot size={15} />
-              </button>
-            )}
-            <button onClick={() => toggleMute(pitch.id)}
-              className={`w-10 h-10 flex items-center justify-center rounded-full backdrop-blur-sm border active:scale-90 transition-transform shadow-lg ${state.isMuted ? 'bg-black/60 text-white border-white/20' : 'bg-[#00B8A9] text-white border-[#00B8A9]'
-                }`}>
-              {state.isMuted ? <FaVolumeMute size={15} /> : <FaVolumeUp size={15} />}
-            </button>
-          </div>
 
           {/* Startup name + handle */}
           <div
