@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import reelsService from "../../services/reelsService";
+import startupsService from "../../services/startupsService";
 import {
   FaHandshake, FaRegComment, FaComment, FaRegPaperPlane,
   FaVolumeUp, FaVolumeMute, FaArrowLeft, FaVideo,
@@ -25,6 +26,120 @@ const formatMoney = (val) => {
   if (num >= 10000000) return `₹${(num / 10000000).toFixed(1)}Cr`;
   if (num >= 100000) return `₹${(num / 100000).toFixed(1)}L`;
   return `₹${num.toLocaleString()}`;
+};
+
+const ReelProgressBar = ({ pitchId }) => {
+  const [progress, setProgress] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const hideTimeout = useRef(null);
+  const containerRef = useRef(null);
+
+  const getVideo = () => document.getElementById(`video-${pitchId}`);
+
+  useEffect(() => {
+    const video = getVideo();
+    if (!video) return;
+
+    const handleTimeUpdate = () => {
+      if (!isScrubbing && video.duration) {
+        setProgress((video.currentTime / video.duration) * 100);
+      }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
+  }, [pitchId, isScrubbing]);
+
+  const showBar = () => {
+    setIsVisible(true);
+    if (hideTimeout.current) clearTimeout(hideTimeout.current);
+    hideTimeout.current = setTimeout(() => {
+      if (!isScrubbing) setIsVisible(false);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    const video = getVideo();
+    if (!video) return;
+
+    video.addEventListener('play', showBar);
+    video.addEventListener('pause', showBar);
+    video.addEventListener('click', showBar);
+    video.addEventListener('touchstart', showBar);
+
+    return () => {
+      video.removeEventListener('play', showBar);
+      video.removeEventListener('pause', showBar);
+      video.removeEventListener('click', showBar);
+      video.removeEventListener('touchstart', showBar);
+    };
+  }, [pitchId, isScrubbing]);
+
+  const handleScrub = (e) => {
+    e.stopPropagation();
+    const video = getVideo();
+    if (!video || !video.duration) return;
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    let newProgress = ((clientX - rect.left) / rect.width) * 100;
+    newProgress = Math.max(0, Math.min(newProgress, 100));
+
+    setProgress(newProgress);
+    video.currentTime = (newProgress / 100) * video.duration;
+    showBar();
+  };
+
+  const handleDragStart = (e) => {
+    e.stopPropagation();
+    setIsScrubbing(true);
+    handleScrub(e);
+
+    const onMove = (moveEvent) => {
+      if (moveEvent.cancelable) moveEvent.preventDefault();
+      handleScrub(moveEvent);
+    };
+
+    const onUp = (upEvent) => {
+      handleScrub(upEvent);
+      setIsScrubbing(false);
+      showBar();
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+    };
+
+    document.addEventListener('mousemove', onMove, { passive: false });
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onUp);
+  };
+
+  return (
+    <div
+      className={`absolute bottom-0 left-0 right-0 z-40 pb-0.5 pt-4 flex items-end transition-opacity duration-300 ${isVisible || isScrubbing ? 'opacity-100' : 'opacity-0'}`}
+      onMouseEnter={showBar}
+      onMouseDown={handleDragStart}
+      onTouchStart={handleDragStart}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div
+        ref={containerRef}
+        className={`w-full bg-white/20 relative transition-all duration-200 cursor-pointer ${isScrubbing ? 'h-1.5' : 'h-1'}`}
+      >
+        <div
+          className="absolute top-0 left-0 bottom-0 bg-white"
+          style={{ width: `${progress}%` }}
+        />
+        <div
+          className={`absolute top-1/2 w-3 h-3 bg-white rounded-full shadow-md transition-transform duration-200`}
+          style={{ left: `${progress}%`, transform: `translate(-50%, -50%) ${isScrubbing ? 'scale(1)' : 'scale(0)'}` }}
+        />
+      </div>
+    </div>
+  );
 };
 
 export default function ReelPitch() {
@@ -150,15 +265,7 @@ export default function ReelPitch() {
             }
           });
 
-          // LOOP: if this is the last slide, after a short delay scroll back to top
-          if (idx === pitches.length - 1) {
-            setTimeout(() => {
-              const container = containerRef.current;
-              if (container) {
-                container.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-            }, 1800);
-          }
+
         },
         { threshold: 0.7 }
       );
@@ -305,25 +412,35 @@ export default function ReelPitch() {
     setIsAIOpen(true);
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading || !currentPitchForAI) return;
-    const userMsg = { id: messages.length + 1, type: 'user', text: inputMessage, timestamp: new Date() };
+  const handleSendMessage = async (overrideMessage) => {
+    const textToSubmit = overrideMessage || inputMessage;
+    if (!textToSubmit.trim() || isLoading || !currentPitchForAI) return;
+
+    const userMsg = { id: messages.length + 1, type: 'user', text: textToSubmit, timestamp: new Date() };
     setMessages(prev => [...prev, userMsg]);
-    setInputMessage('');
     setIsLoading(true);
-    setTimeout(() => {
-      const p = currentPitchForAI;
-      const lower = inputMessage.toLowerCase();
-      let reply = `I can help with details about ${p.name}. Ask about their business model, investment ask (${p.dealInfo.ask} for ${p.dealInfo.equity}), team, or how to connect!`;
-      if (lower.includes('deal') || lower.includes('invest') || lower.includes('equity'))
-        reply = `${p.name} is raising ${p.dealInfo.ask} for ${p.dealInfo.equity} equity. Revenue: ${p.dealInfo.revenue}. Strong growth opportunity in the ${p.category} space!`;
-      else if (lower.includes('team') || lower.includes('founder'))
-        reply = `${p.name} is led by dedicated founders with deep expertise in ${p.category}. Use the Meet button to connect with them directly!`;
-      else if (lower.includes('market') || lower.includes('industry'))
-        reply = `${p.name} operates in the ${p.category} sector${p.hashtag ? ` (${p.hashtag})` : ''}. Strong market demand with clear differentiation.`;
-      setMessages(prev => [...prev, { id: prev.length + 1, type: 'ai', text: reply, timestamp: new Date() }]);
+
+    // Clear input immediately if not overriding
+    if (!overrideMessage) {
+      setInputMessage('');
+    }
+
+    try {
+      const resp = await startupsService.analyzeStartup(currentPitchForAI.startupId, textToSubmit);
+      const answer = resp?.data?.answer || "I received an empty response. Let me try again later.";
+
+      setMessages(prev => [...prev, { id: prev.length + 1, type: 'ai', text: answer, timestamp: new Date() }]);
+    } catch (error) {
+      console.error("AI Analysis Error:", error);
+      setMessages(prev => [...prev, {
+        id: prev.length + 1,
+        type: 'ai',
+        text: "I encountered an error analyzing this startup. Please try a different question or wait a moment.",
+        timestamp: new Date()
+      }]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } };
@@ -332,12 +449,13 @@ export default function ReelPitch() {
   const renderReel = (pitch) => {
     const state = reelStates[pitch.id] || { isLiked: false, isSaved: false, isPlaying: false, isMuted: true };
     return (
-      <div key={pitch.id} id={`reel-slide-${pitch.id}`} className="w-full h-screen relative overflow-hidden bg-black">
+      <div key={pitch.id} id={`reel-slide-${pitch.id}`} className="w-full h-full relative overflow-hidden bg-black" style={{ minHeight: '100dvh' }}>
 
         {/* ── Video ── */}
         {pitch.video ? (
           <video
             ref={(el) => (videoRefs.current[pitch.id] = el)}
+            id={`video-${pitch.id}`}
             src={pitch.video}
             className="absolute inset-0 w-full h-full object-cover"
             loop playsInline muted={state.isMuted}
@@ -462,6 +580,9 @@ export default function ReelPitch() {
             </div>
           )}
         </div>
+
+        {/* ── Progress Bar ── */}
+        {pitch.video && <ReelProgressBar pitchId={pitch.id} />}
       </div>
     );
   };
@@ -540,11 +661,38 @@ export default function ReelPitch() {
               {isLoading && <div className="flex justify-start"><div className={`rounded-2xl px-4 py-3 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}><FaSpinner className="animate-spin text-[#00B8A9]" size={18} /></div></div>}
             </div>
             <div className={`px-4 py-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+
+              {/* Pre-fed Prompt Pills */}
+              <div className="flex overflow-x-auto gap-2 mb-3 pb-1 snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+                {[
+                  "Summarise this startup?",
+                  "What is their USP?",
+                  "What is their target market?",
+                  "Are they solving a real issue?",
+                  "How scalable is this model?",
+                  "What are the potential risks?"
+                ].map((promptText, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendMessage(promptText)}
+                    disabled={isLoading}
+                    className={`whitespace-nowrap flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors border outline-none
+                      ${isDark
+                        ? 'border-white/15 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'
+                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}
+                    `}
+                  >
+                    {promptText}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex items-center gap-2">
                 <input type="text" value={inputMessage} onChange={e => setInputMessage(e.target.value)} onKeyPress={handleKeyPress}
                   placeholder="Ask about this startup..."
                   className={`flex-1 px-4 py-3 rounded-xl text-sm outline-none ${isDark ? 'bg-white/5 text-white placeholder-white/50 border border-white/10 focus:border-[#00B8A9]' : 'bg-gray-50 text-black placeholder-gray-400 border border-gray-200 focus:border-[#00B8A9]'}`} />
-                <button onClick={handleSendMessage} disabled={!inputMessage.trim() || isLoading}
+                <button onClick={() => handleSendMessage()} disabled={!inputMessage.trim() || isLoading}
                   className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all ${inputMessage.trim() && !isLoading ? 'bg-[#00B8A9] text-white' : isDark ? 'bg-white/5 text-white/30' : 'bg-gray-100 text-gray-300'}`}>
                   <FaPaperPlane size={18} />
                 </button>

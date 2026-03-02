@@ -32,6 +32,10 @@ export const publishPitchReel = async () => {
   return await apiClient.post('/startups/my/publish-reel');
 };
 
+export const analyzeStartup = async (startupId, question) => {
+  return await apiClient.post(`/startups/${startupId}/analyze`, { question });
+};
+
 export default {
   getStartupDetails,
   followStartup,
@@ -41,4 +45,5 @@ export default {
   getMyStartup,
   updateStartup,
   publishPitchReel,
+  analyzeStartup,
 };
