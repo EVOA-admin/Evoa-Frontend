@@ -32,6 +32,7 @@ import StartupProfile from '../modules/startup/startup-profile';
 import InvestorProfile from '../modules/investor/investor-profile';
 import IncubatorProfile from '../modules/incubator/incubator-profile';
 import UserPublicProfile from '../modules/profile/user-public-profile';
+import AuthCallback from '../modules/auth/auth-callback';
 
 export default function AppRoutes() {
   return (
@@ -46,6 +47,7 @@ export default function AppRoutes() {
         <Route path="create-new-password" element={<PublicRoute><CreateNewPassword /></PublicRoute>} />
 
         {/* Onboarding Routes - Require Authentication */}
+        <Route path="auth/callback" element={<AuthCallback />} />
         <Route path="choice-role" element={<ProtectedRoute><ChoiceRole /></ProtectedRoute>} />
         <Route path="register/startup" element={<ProtectedRoute><StartupRegistration /></ProtectedRoute>} />
         <Route path="register/investor" element={<ProtectedRoute><InvestorRegistration /></ProtectedRoute>} />
