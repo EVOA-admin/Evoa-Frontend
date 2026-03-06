@@ -169,6 +169,15 @@ export function AuthProvider({ children }) {
      * Sets roleSelected=true. For viewer, also sets registrationCompleted=true.
      */
     const updateUserRole = async (role) => {
+        // Always use the freshest token from Supabase before the backend call.
+        // This prevents stale/cached tokens causing 401 after an OAuth redirect.
+        try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            if (sessionData?.session?.access_token) {
+                localStorage.setItem('authToken', sessionData.session.access_token);
+            }
+        } catch (_) { /* non-blocking — apiClient will still try */ }
+
         const response = await apiClient.post('/users/role', { role });
         if (response?.data) {
             const userData = response.data?.data || response.data;
