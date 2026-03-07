@@ -107,10 +107,45 @@ export default function Startup() {
                 );
                 post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
               };
+
+              const handleSave = () => {
+                setUserPosts((prev) =>
+                  prev.map((p) =>
+                    p.id === post.id ? { ...p, isSaved: !p.isSaved } : p
+                  )
+                );
+                post.isSaved ? postsService.unsavePost(post.id) : postsService.savePost(post.id);
+              };
+
+              const handleComment = async () => {
+                const text = window.prompt('Add a comment:');
+                if (!text?.trim()) return;
+                try {
+                  await postsService.addComment(post.id, text.trim());
+                  setUserPosts((prev) =>
+                    prev.map((p) =>
+                      p.id === post.id ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
+                    )
+                  );
+                } catch (e) { /* silent */ }
+              };
+
+              const handleShare = () => {
+                const url = `${window.location.origin}/post/${post.id}`;
+                if (navigator.share) {
+                  navigator.share({ title: post.startupName || post.authorName || 'Post', url });
+                } else {
+                  navigator.clipboard?.writeText(url);
+                  alert('Link copied to clipboard!');
+                }
+              };
+
               if (post._type === 'startup') {
-                return <StartupPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} />;
+                return <StartupPostCard key={post.id} post={post} isDark={isDark}
+                  onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} />;
               }
-              return <UserPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} />;
+              return <UserPostCard key={post.id} post={post} isDark={isDark}
+                onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} />;
             })}
           </div>
         </div>
@@ -120,7 +155,14 @@ export default function Startup() {
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
         canUploadReel={true}
-        onCreated={() => fetchPosts()}
+        onCreated={(type) => {
+          if (type === 'reel') {
+            // Navigate to pitch feed so the uploader sees their new reel immediately
+            navigate('/pitch');
+          } else {
+            fetchPosts();
+          }
+        }}
       />
     </AppShell>
   );

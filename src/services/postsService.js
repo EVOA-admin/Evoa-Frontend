@@ -20,6 +20,15 @@ const postsService = {
     /** Unlike a post */
     unlikePost: async (postId) => apiClient.delete(`/posts/${postId}/like`),
 
+    /** Save a post (idempotent) */
+    savePost: async (postId) => apiClient.post(`/posts/${postId}/save`),
+
+    /** Unsave a post */
+    unsavePost: async (postId) => apiClient.delete(`/posts/${postId}/save`),
+
+    /** Delete a post (owner only) */
+    deletePost: async (postId) => apiClient.delete(`/posts/${postId}`),
+
     /**
      * Record a website click — idempotent, counted only once per user.
      * Call when a user taps the startup's website link.

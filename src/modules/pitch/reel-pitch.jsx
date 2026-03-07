@@ -216,7 +216,7 @@ export default function ReelPitch() {
         // Init reel states
         const initialState = {};
         mapped.forEach((p) => {
-          initialState[p.id] = { isLiked: p.isLiked, isSaved: p.isSaved, isPlaying: false, isMuted: true };
+          initialState[p.id] = { isLiked: p.isLiked, isSaved: p.isSaved, isPlaying: false, isMuted: false };
         });
         setReelStates(initialState);
 
@@ -256,7 +256,7 @@ export default function ReelPitch() {
           Object.entries(videoRefs.current).forEach(([rid, v]) => {
             if (!v) return;
             if (rid === pitch.id) {
-              v.muted = reelStates[pitch.id]?.isMuted ?? true;
+              v.muted = reelStates[pitch.id]?.isMuted ?? false;
               v.play().catch(() => { });
               setReelStates(prev => ({ ...prev, [pitch.id]: { ...prev[pitch.id], isPlaying: true } }));
             } else {
@@ -285,7 +285,7 @@ export default function ReelPitch() {
     if (!firstId) return;
     const vid = videoRefs.current[firstId];
     if (vid && reelStates[firstId]) {
-      vid.muted = reelStates[firstId].isMuted;
+      vid.muted = reelStates[firstId].isMuted ?? false;
       vid.play().catch(() => { });
       setReelStates((prev) => ({ ...prev, [firstId]: { ...prev[firstId], isPlaying: true } }));
     }
@@ -367,11 +367,9 @@ export default function ReelPitch() {
     if (!commentText.trim() || commentPosting || !commentPitch) return;
     const text = commentText.trim();
     setCommentPosting(true);
-    // Optimistic UI — use real user data from auth context
-    const myName = currentUser?.fullName || currentUser?.full_name || currentUser?.name
-      || currentUser?.email?.split('@')[0] || 'You';
-    const myAvatar = currentUser?.avatarUrl || currentUser?.avatar_url
-      || currentUser?.user_metadata?.avatar_url || null;
+    // Optimistic UI — use real user data from auth context (backend is source of truth)
+    const myName = currentUser?.fullName || currentUser?.email?.split('@')[0] || 'You';
+    const myAvatar = currentUser?.avatarUrl || null;
     const optimistic = {
       id: `tmp-${Date.now()}`,
       content: text,
@@ -447,7 +445,7 @@ export default function ReelPitch() {
 
   // ── Render reel ───────────────────────────────────────────────────────────
   const renderReel = (pitch) => {
-    const state = reelStates[pitch.id] || { isLiked: false, isSaved: false, isPlaying: false, isMuted: true };
+    const state = reelStates[pitch.id] || { isLiked: false, isSaved: false, isPlaying: false, isMuted: false };
     return (
       <div key={pitch.id} id={`reel-slide-${pitch.id}`} className="w-full h-full relative overflow-hidden bg-black" style={{ minHeight: '100dvh' }}>
 
@@ -530,7 +528,18 @@ export default function ReelPitch() {
             <IoChatbubbleOutline size={22} className="text-white drop-shadow-lg outline-none" style={{ strokeWidth: "32px", transform: "scaleX(-1)" }} />
             <span className="text-[10px] font-semibold text-white drop-shadow-md">{formatNum(pitch.comments)}</span>
           </button>
-          <button className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
+          <button
+            className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform"
+            onClick={(e) => {
+              e.stopPropagation();
+              const url = `${window.location.origin}/pitch?id=${pitch.id}`;
+              if (navigator.share) {
+                navigator.share({ title: pitch.name || 'Pitch Reel', text: pitch.tagline || '', url }).catch(() => { });
+              } else {
+                navigator.clipboard?.writeText(url).then(() => { }).catch(() => { });
+              }
+            }}
+          >
             <IoPaperPlaneOutline size={22} className="text-white drop-shadow-lg -ml-1 pr-1" style={{ strokeWidth: "32px" }} />
             <span className="text-[10px] font-semibold text-white drop-shadow-md">{formatNum(pitch.shares)}</span>
           </button>

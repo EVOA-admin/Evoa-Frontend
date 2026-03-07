@@ -272,9 +272,9 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
         {/* Comment Input */}
         <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
           <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-700 flex items-center justify-center">
-            {currentUser?.avatarUrl || currentUser?.avatar_url
+            {currentUser?.avatarUrl
               ? <img
-                src={currentUser.avatarUrl || currentUser.avatar_url}
+                src={currentUser.avatarUrl}
                 alt="You"
                 className="w-full h-full object-cover"
               />

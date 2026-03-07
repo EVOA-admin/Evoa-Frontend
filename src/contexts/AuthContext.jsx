@@ -95,11 +95,23 @@ export function AuthProvider({ children }) {
                 setRegistrationCompleted(!!regComp);
 
                 setUser(prev => ({
+                    // Start from previous state so non-backend fields persist
                     ...prev,
+                    // Backend data is always the authoritative source for profile fields.
+                    // Spread all backend fields first, then explicitly override the ones
+                    // that might incorrectly fall back to Google OAuth metadata.
                     ...userData,
+                    // Email comes from Supabase (authoritative identity source)
                     email: session.user.email,
-                    id: session.user.id,
-                    avatarUrl: userData.avatarUrl || session.user.user_metadata?.avatar_url || prev?.avatarUrl,
+                    // id here is the backend UUID (userData.id), NOT the Supabase UUID.
+                    // Keep backend id as primary; the Supabase UUID is in session.user.id.
+                    id: userData.id || session.user.id,
+                    // avatarUrl: ONLY use the backend value. If the user uploaded a photo
+                    // during registration it will be here. Never fall back to Google photo.
+                    avatarUrl: userData.avatarUrl || null,
+                    // fullName: ONLY use the backend value (from registration form).
+                    // Never fall back to Google display name.
+                    fullName: userData.fullName || null,
                 }));
             }
         } catch (err) {

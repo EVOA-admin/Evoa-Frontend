@@ -85,6 +85,8 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
 
     const handleSubmitReel = async () => {
         if (!file) { setErrorMsg("Select a video first."); return; }
+        // Guard: prevent double-click / StrictMode double-invoke
+        if (uploadState === "uploading") return;
         setUploadState("uploading");
         setErrorMsg("");
         try {
