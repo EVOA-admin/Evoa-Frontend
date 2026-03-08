@@ -86,7 +86,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
                 {/* ── Header ── */}
                 <div className="flex items-center gap-3 px-4 py-3">
                     <div className="relative flex-shrink-0">
-                        <div className={`w-10 h-10 rounded-2xl overflow-hidden ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                        <div className={`w-10 h-10 rounded-full overflow-hidden ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
                             <img
                                 src={post.authorAvatar || avatarFallback}
                                 alt={post.authorName}

@@ -421,19 +421,24 @@ export default function StartupProfile() {
                         <div className="p-5 space-y-5 max-h-[75vh] overflow-y-auto">
                             {editError && <div className="p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm">{editError}</div>}
 
-                            {/* Logo Picker */}
-                            <div className="flex flex-col items-center">
-                                <div className={`relative w-20 h-20 rounded-2xl overflow-hidden cursor-pointer group ${isDark ? "bg-gray-800" : "bg-gray-100"}`}
-                                    onClick={() => logoInputRef.current?.click()}>
-                                    {logoPreview || startup?.logoUrl
-                                        ? <img src={logoPreview || startup.logoUrl} alt="Logo" className="w-full h-full object-cover" />
-                                        : <div className="w-full h-full flex items-center justify-center"><IoRocketOutline size={32} className={isDark ? "text-gray-500" : "text-gray-400"} /></div>}
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <IoCamera size={20} className="text-white" />
+                            {/* Photo Picker */}
+                            <div className="flex flex-col items-center gap-3 pb-2">
+                                <div className="relative">
+                                    <div className={`w-24 h-24 rounded-full overflow-hidden flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
+                                        {logoPreview || startup?.logoUrl
+                                            ? <img src={logoPreview || startup.logoUrl} alt="Profile" className="w-full h-full object-cover" />
+                                            : <IoRocketOutline size={32} className={isDark ? "text-gray-500" : "text-gray-400"} />}
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => logoInputRef.current?.click()}
+                                        className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#00B8A9] text-white flex items-center justify-center shadow-lg hover:bg-[#00A89A] transition-colors"
+                                    >
+                                        <IoCamera size={15} />
+                                    </button>
                                 </div>
                                 <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-                                <button onClick={() => logoInputRef.current?.click()} className="mt-2 text-xs text-[#00B8A9] font-medium">Change Logo</button>
+                                <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>Tap camera to change photo</span>
                             </div>
 
                             {/* Basic Fields */}

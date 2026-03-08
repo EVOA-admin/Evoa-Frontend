@@ -8,7 +8,6 @@ import {
     FaRegComment, FaShare,
     FaEdit, FaTrash, FaFlag, FaLink,
 } from "react-icons/fa";
-import { IoLinkOutline } from "react-icons/io5";
 import { MdVerified } from "react-icons/md";
 import { HiDotsHorizontal } from "react-icons/hi";
 import ensureUrl from "../../utils/ensureUrl";
@@ -112,7 +111,7 @@ export default function StartupPostCard({
                 <div className="flex items-center justify-between px-4 py-3">
                     <div className="flex items-center gap-3">
                         <div
-                            className={`w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 ${isDark ? "bg-gray-800" : "bg-gray-100"} cursor-pointer`}
+                            className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ${isDark ? "bg-gray-800" : "bg-gray-100"} cursor-pointer`}
                             onClick={() => post.authorId && navigate(`/u/${post.authorId}`)}
                         >
                             <img
@@ -122,11 +121,11 @@ export default function StartupPostCard({
                                 onError={(e) => { e.currentTarget.src = logoFallback; }}
                             />
                         </div>
-                        <div className="flex flex-col leading-tight">
+                        <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                                 <button
                                     onClick={() => post.authorId && navigate(`/u/${post.authorId}`)}
-                                    className={`text-sm font-bold hover:underline bg-transparent border-none p-0 cursor-pointer leading-tight ${isDark ? "text-white" : "text-gray-900"}`}
+                                    className={`text-sm font-bold hover:underline bg-transparent border-none p-0 cursor-pointer leading-tight truncate ${isDark ? "text-white" : "text-gray-900"}`}
                                 >
                                     {post.startupName}
                                 </button>
@@ -134,16 +133,19 @@ export default function StartupPostCard({
                                 {post.website && (
                                     <button
                                         onClick={handleWebsiteClick}
-                                        className="flex items-center text-[#00B8A9] hover:text-[#00968a] transition-colors"
+                                        className="flex items-center text-[#00B8A9] hover:text-[#00968a] transition-colors flex-shrink-0"
                                         title={post.website}
                                     >
-                                        <IoLinkOutline size={14} />
+                                        <FaLink size={12} />
                                     </button>
                                 )}
                             </div>
-                            {post.timeAgo && (
-                                <span className={`text-[11px] ${isDark ? "text-gray-500" : "text-gray-400"}`}>{post.timeAgo}</span>
-                            )}
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] px-1.5 py-0.5 rounded-md font-medium bg-[#00B8A9]/10 text-[#00B8A9]">Startup</span>
+                                {post.timeAgo && (
+                                    <span className={`text-[11px] ${isDark ? "text-gray-600" : "text-gray-400"}`}>· {post.timeAgo}</span>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -190,23 +192,25 @@ export default function StartupPostCard({
                 )}
 
                 {/* ── Tagline + Sectors ── */}
-                <div className="px-4 pt-3 pb-1">
-                    {post.tagline && (
-                        <p className={`text-sm leading-snug mb-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{post.tagline}</p>
-                    )}
-                    {post.sectors?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                            {post.sectors.map((s, i) => (
-                                <span key={i} className={`text-xs px-2.5 py-0.5 rounded-full border ${isDark ? "border-white/15 text-gray-400" : "border-gray-200 text-gray-500"}`}>
-                                    #{s}
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                </div>
+                {(post.tagline || post.sectors?.length > 0) && (
+                    <div className="px-4 pt-2 pb-1">
+                        {post.tagline && (
+                            <p className={`text-sm leading-snug mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{post.tagline}</p>
+                        )}
+                        {post.sectors?.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mb-2">
+                                {post.sectors.map((s, i) => (
+                                    <span key={i} className={`text-xs px-2.5 py-0.5 rounded-full border ${isDark ? "border-white/15 text-gray-400" : "border-gray-200 text-gray-500"}`}>
+                                        #{s}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* ── Stats Row ── */}
-                <div className={`mx-4 grid grid-cols-3 divide-x border rounded-2xl py-3 mb-3 ${isDark ? "border-white/10 divide-white/10 bg-gray-800/60" : "border-gray-100 divide-gray-100 bg-gray-50"}`}>
+                <div className={`mx-4 grid grid-cols-3 divide-x border rounded-2xl py-3 mb-2 ${isDark ? "border-white/10 divide-white/10 bg-gray-800/60" : "border-gray-100 divide-gray-100 bg-gray-50"}`}>
                     <StatCol label="Pitch Views" value={fmt(post.pitchViews)} />
                     <StatCol label="Supporters" value={fmt(post.supporters)} />
                     <StatCol label="Click Through" value={fmt(post.clickThrough)} />
@@ -234,33 +238,32 @@ export default function StartupPostCard({
                 )}
 
                 {/* ── Action Row ── */}
-                <div className={`flex items-center justify-around px-4 py-2.5 border-t ${isDark ? "border-white/8" : "border-gray-100"}`}>
-                    <ActionBtn
-                        icon={post.isLiked
-                            ? <FaHeart className="text-[#00B8A9]" size={18} />
-                            : <FaRegHeart size={18} className={isDark ? "text-gray-400" : "text-gray-500"} />}
-                        onPress={onLike}
-                        label={post.likeCount > 0 ? fmt(post.likeCount) : null}
-                        isDark={isDark}
-                    />
-                    <ActionBtn
-                        icon={post.isSaved
-                            ? <FaBookmark className="text-[#00B8A9]" size={18} />
-                            : <FaRegBookmark size={18} className={isDark ? "text-gray-400" : "text-gray-500"} />}
-                        onPress={onSave}
-                        isDark={isDark}
-                    />
-                    <ActionBtn
-                        icon={<FaRegComment size={18} className={isDark ? "text-gray-400" : "text-gray-500"} />}
-                        onPress={() => setCommentOpen(true)}
-                        label={commentCount > 0 ? fmt(commentCount) : null}
-                        isDark={isDark}
-                    />
-                    <ActionBtn
-                        icon={<FaShare size={18} className={isDark ? "text-gray-400" : "text-gray-500"} />}
-                        onPress={handleShare}
-                        isDark={isDark}
-                    />
+                <div className={`flex items-center gap-1 px-3 py-2 border-t ${isDark ? "border-white/8" : "border-gray-100"}`}>
+                    <button onClick={onLike} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all active:scale-90">
+                        {post.isLiked
+                            ? <FaHeart className="text-[#00B8A9]" size={16} />
+                            : <FaRegHeart size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />}
+                        {post.likeCount > 0 && (
+                            <span className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmt(post.likeCount)}</span>
+                        )}
+                    </button>
+
+                    <button onClick={onSave} className="p-2 rounded-xl transition-all active:scale-90">
+                        {post.isSaved
+                            ? <FaBookmark className="text-[#00B8A9]" size={16} />
+                            : <FaRegBookmark size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />}
+                    </button>
+
+                    <button onClick={() => setCommentOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all active:scale-90">
+                        <FaRegComment size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />
+                        {commentCount > 0 && (
+                            <span className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmt(commentCount)}</span>
+                        )}
+                    </button>
+
+                    <button onClick={handleShare} className="ml-auto p-2 rounded-xl transition-all active:scale-90">
+                        <FaShare size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />
+                    </button>
                 </div>
             </div>
 

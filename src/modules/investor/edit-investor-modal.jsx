@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { IoClose, IoCheckmark, IoAdd, IoTrashOutline } from "react-icons/io5";
+import React, { useState, useEffect, useRef } from "react";
+import { IoClose, IoCheckmark, IoAdd, IoTrashOutline, IoCamera } from "react-icons/io5";
 import { useTheme } from "../../contexts/ThemeContext";
 import { updateInvestorProfile } from "../../services/investorsService";
+import storageService from "../../services/storageService";
 
 export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess }) {
     const { theme } = useTheme();
@@ -9,6 +10,10 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [newAvatar, setNewAvatar] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const avatarInputRef = useRef();
+
     const [formData, setFormData] = useState({
         name: "",
         designation: "",
@@ -42,6 +47,8 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                 stats: profile.stats || { startupsBacked: 0, capitalDeployed: "", exits: 0 },
                 location: profile.location || { city: "", state: "", country: "India" }
             });
+            setNewAvatar(null);
+            setAvatarPreview(null);
         }
     }, [profile, isOpen]);
 
@@ -65,11 +72,29 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
         }));
     };
 
+    const handleAvatarChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setNewAvatar(file);
+        const reader = new FileReader();
+        reader.onload = ev => setAvatarPreview(ev.target.result);
+        reader.readAsDataURL(file);
+    };
+
     const handleSave = async () => {
         setLoading(true);
         setError("");
         try {
-            await updateInvestorProfile(formData);
+            let avatarUrl;
+            if (newAvatar) {
+                try {
+                    const fileName = `avatars/${Date.now()}_${newAvatar.name.replace(/\s+/g, "_")}`;
+                    avatarUrl = await storageService.uploadFile(newAvatar, "avatars", fileName);
+                } catch (uploadErr) {
+                    console.warn("Avatar upload failed:", uploadErr.message);
+                }
+            }
+            await updateInvestorProfile({ ...formData, ...(avatarUrl ? { avatarUrl } : {}) });
             if (onSuccess) onSuccess();
             onClose();
         } catch (err) {
@@ -115,7 +140,30 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                         </div>
                     )}
 
-                    {/* Basic Info */}
+                    {/* ── Profile Photo ── */}
+                    <div className="flex flex-col items-center gap-3 pb-2">
+                        <div className="relative">
+                            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                {avatarPreview || profile?.avatarUrl ? (
+                                    <img src={avatarPreview || profile?.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className={`text-3xl font-bold ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                                        {(formData.name?.[0] || "?").toUpperCase()}
+                                    </span>
+                                )}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => avatarInputRef.current?.click()}
+                                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#00B8A9] text-white flex items-center justify-center shadow-lg hover:bg-[#00A89A] transition-colors"
+                            >
+                                <IoCamera size={15} />
+                            </button>
+                        </div>
+                        <span className={`text-xs ${isDark ? "text-white/40" : "text-gray-400"}`}>Tap camera to change photo</span>
+                        <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                    </div>
+
                     <div className="space-y-4">
                         <h3 className="text-xs font-black uppercase tracking-widest opacity-40">Basic Identity</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -168,8 +216,8 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                                         key={item}
                                         onClick={() => handleArrayChange('sectors', item)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${formData.sectors.includes(item)
-                                                ? "bg-[#00B8A9] border-[#00B8A9] text-white"
-                                                : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
+                                            ? "bg-[#00B8A9] border-[#00B8A9] text-white"
+                                            : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
                                             }`}
                                     >
                                         {item}
@@ -185,8 +233,8 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                                         key={item}
                                         onClick={() => handleArrayChange('stages', item)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${formData.stages.includes(item)
-                                                ? "bg-[#00B8A9] border-[#00B8A9] text-white"
-                                                : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
+                                            ? "bg-[#00B8A9] border-[#00B8A9] text-white"
+                                            : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
                                             }`}
                                     >
                                         {item}
