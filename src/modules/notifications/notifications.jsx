@@ -9,11 +9,14 @@ import {
   markNotificationAsRead,
   markAllNotificationsAsRead,
 } from "../../services/notificationsService";
+import { useAuth } from "../../contexts/AuthContext";
+import { goToProfile } from "../../utils/profileNavigation";
 
 export default function Notifications() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +62,12 @@ export default function Notifications() {
     }
 
     if (notification.link) {
-      navigate(notification.link);
+      if (notification.link.startsWith('/u/')) {
+        const id = notification.link.split('/')[2];
+        goToProfile(id, currentUser, navigate);
+      } else {
+        navigate(notification.link);
+      }
     } else if (notification.type === 'battleground') {
       navigate('/battleground');
     } else if (notification.type === 'pitch' || notification.type === 'investor') {

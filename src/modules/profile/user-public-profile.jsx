@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import apiClient from "../../services/apiClient";
 import startupService from "../../services/startupService";
+import { getConversationWith } from "../../services/chatService";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 
@@ -56,6 +57,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
     const [isFollowing, setIsFollowing] = useState(false);
     const [followLoading, setFollowLoading] = useState(true);
     const [followCount, setFollowCount] = useState(startup?.followerCount || 0);
+    const [messageLoading, setMessageLoading] = useState(false);
 
     useEffect(() => {
         if (!startup?.id || isOwner) { setFollowLoading(false); return; }
@@ -82,6 +84,23 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
             setFollowCount(n => was ? n + 1 : Math.max(0, n - 1));
         } finally {
             setFollowLoading(false);
+        }
+    };
+
+    const handleMessage = async () => {
+        const targetId = startup?.founderId || profile?.id;
+        if (!targetId || messageLoading) return;
+        setMessageLoading(true);
+        try {
+            const res = await getConversationWith(targetId);
+            const convData = res?.data?.data || res?.data;
+            if (convData?.id) {
+                navigate(`/inbox/${convData.id}`);
+            }
+        } catch (e) {
+            console.error("Failed to open chat", e);
+        } finally {
+            setMessageLoading(false);
         }
     };
 
@@ -123,6 +142,15 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                                     ? <FaSpinner size={12} className="animate-spin" />
                                     : isFollowing ? <><FaCheck size={12} /> Supported</> : <><FaHandshake size={12} /> Support</>
                                 }
+                            </button>
+                        )}
+                        {!isOwner && (
+                            <button
+                                onClick={handleMessage}
+                                disabled={messageLoading}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-800 hover:bg-gray-50"}`}
+                            >
+                                {messageLoading ? <FaSpinner size={12} className="animate-spin" /> : <><FaEnvelope size={12} /> Message</>}
                             </button>
                         )}
                         {startup?.pitchDeckUrl && (isOwner || ["investor", "incubator"].includes(currentUser?.role || userRole)) && (
@@ -275,6 +303,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
     const [isConnected, setIsConnected] = useState(false);
     const [connectLoading, setConnectLoading] = useState(true);
     const [connectionCount, setConnectionCount] = useState(profile?.connectionCount ?? 0);
+    const [messageLoading, setMessageLoading] = useState(false);
 
     // Fetch initial connection status
     useEffect(() => {
@@ -311,17 +340,34 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
         }
     };
 
+    const handleMessage = async () => {
+        const targetId = profile?.id;
+        if (!targetId || messageLoading) return;
+        setMessageLoading(true);
+        try {
+            const res = await getConversationWith(targetId);
+            const convData = res?.data?.data || res?.data;
+            if (convData?.id) {
+                navigate(`/inbox/${convData.id}`);
+            }
+        } catch (e) {
+            console.error("Failed to open chat", e);
+        } finally {
+            setMessageLoading(false);
+        }
+    };
+
     const loc = data?.location;
     const socialLinks = data?.socialLinks || {};
 
     const statsItems = role === "investor"
         ? [
-            { label: "Connections", value: connectionCount },
+            { label: "Followers", value: connectionCount },
             { label: "Startups Backed", value: data?.stats?.startupsBacked },
             { label: "Capital Deployed", value: data?.stats?.capitalDeployed },
         ]
         : [
-            { label: "Connections", value: connectionCount },
+            { label: "Followers", value: connectionCount },
             { label: "Startups Incubated", value: data?.stats?.startupsIncubated },
             { label: "Mentors", value: data?.stats?.mentorsCount },
         ];
@@ -352,23 +398,32 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                     </div>
                     {/* Connect / Connected toggle — hidden on own profile */}
                     {!isOwnProfile && (
-                        <button
-                            onClick={handleConnect}
-                            disabled={connectLoading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex-shrink-0 ${isConnected
-                                ? isDark
-                                    ? "bg-white/10 text-white border border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30"
-                                    : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
-                                : "bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30"
-                                }`}
-                        >
-                            {connectLoading
-                                ? <FaSpinner size={12} className="animate-spin" />
-                                : isConnected
-                                    ? <><FaCheck size={12} /> Connected</>
-                                    : <><FaHandshake size={12} /> Connect</>
-                            }
-                        </button>
+                        <div className="flex flex-col gap-2 flex-shrink-0">
+                            <button
+                                onClick={handleConnect}
+                                disabled={connectLoading}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isConnected
+                                    ? isDark
+                                        ? "bg-white/10 text-white border border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30"
+                                        : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                                    : "bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30"
+                                    }`}
+                            >
+                                {connectLoading
+                                    ? <FaSpinner size={12} className="animate-spin" />
+                                    : isConnected
+                                        ? <><FaCheck size={12} /> Following</>
+                                        : <><FaHandshake size={12} /> Follow</>
+                                }
+                            </button>
+                            <button
+                                onClick={handleMessage}
+                                disabled={messageLoading}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-800 hover:bg-gray-50"}`}
+                            >
+                                {messageLoading ? <FaSpinner size={12} className="animate-spin" /> : <><FaEnvelope size={12} /> Message</>}
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -530,6 +585,7 @@ export default function UserPublicProfile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [messageLoading, setMessageLoading] = useState(false);
 
     useEffect(() => {
         if (!userId) return;
@@ -543,6 +599,22 @@ export default function UserPublicProfile() {
 
     const role = profile?.role;
     const startup = profile?.startups?.[0];
+
+    const handleMessage = async () => {
+        if (!profile?.id || messageLoading) return;
+        setMessageLoading(true);
+        try {
+            const res = await getConversationWith(profile.id);
+            const convData = res?.data?.data || res?.data;
+            if (convData?.id) {
+                navigate(`/inbox/${convData.id}`);
+            }
+        } catch (e) {
+            console.error("Failed to open chat", e);
+        } finally {
+            setMessageLoading(false);
+        }
+    };
 
     const pageTitle = loading ? "Profile" : (role === "startup" ? startup?.name : profile?.fullName) || "Profile";
 
@@ -574,6 +646,17 @@ export default function UserPublicProfile() {
                         <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`}>{profile?.fullName}</h2>
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400">Viewer</span>
                         {profile?.bio && <p className={`text-sm text-center max-w-xs leading-relaxed mt-1 ${isDark ? "text-white/70" : "text-gray-600"}`}>{profile.bio}</p>}
+
+                        {profile?.id !== currentUser?.id && (
+                            <button
+                                onClick={handleMessage}
+                                disabled={messageLoading}
+                                className={`flex items-center justify-center gap-2 px-4 py-2 mt-2 rounded-xl text-sm font-semibold border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-800 hover:bg-gray-50"}`}
+                            >
+                                {messageLoading ? <FaSpinner size={12} className="animate-spin" /> : <><FaEnvelope size={12} /> Message</>}
+                            </button>
+                        )}
+
                         {profile?.createdAt && (
                             <p className={`text-xs mt-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>
                                 Member since {new Date(profile.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}

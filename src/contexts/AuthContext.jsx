@@ -134,6 +134,14 @@ export function AuthProvider({ children }) {
         });
     };
 
+    const resendVerification = async (email) => {
+        const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email,
+        });
+        if (error) throw error;
+    };
+
     const signIn = async (email, password) => {
         return await supabase.auth.signInWithPassword({ email, password });
     };
@@ -238,6 +246,7 @@ export function AuthProvider({ children }) {
         updateProfile,
         updateUserRole,
         completeRegistration,
+        resendVerification,
         isAuthenticated: !!user,
     };
 

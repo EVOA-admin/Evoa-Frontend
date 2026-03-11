@@ -96,8 +96,33 @@ export default function IncubatorRegistration() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ── Per-step validation ──────────────────────────────────────────────────────
+  const validateStep = () => {
+    setError('');
+    switch (currentStep) {
+      case 1:
+        if (!formData.incubatorName.trim()) { setError('Incubator name is required.'); return false; }
+        if (!formData.officialEmail.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(formData.officialEmail)) { setError('A valid official email is required.'); return false; }
+        return true;
+      case 2:
+        if (!formData.state) { setError('Please select your state.'); return false; }
+        if (!formData.city.trim()) { setError('City is required.'); return false; }
+        return true;
+      case 3:
+        if (!formData.organizationType) { setError('Please select your organization type.'); return false; }
+        if (!formData.affiliationType) { setError('Please select your affiliation type.'); return false; }
+        return true;
+      case 4:
+        if (!formData.verificationDocumentType) { setError('Please select a verification document type.'); return false; }
+        return true;
+      // Steps 5–7 are optional enrichment
+      default:
+        return true;
+    }
+  };
+
   const nextStep = () => {
-    if (currentStep < 8) setCurrentStep(currentStep + 1);
+    if (validateStep() && currentStep < 8) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {

@@ -15,6 +15,8 @@ import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import postsService from "../../services/postsService";
 import { FaPlus } from "react-icons/fa";
+import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
+import { getUnreadCount } from "../../services/chatService";
 
 export default function Incubator() {
   const { theme } = useTheme();
@@ -119,10 +121,9 @@ export default function Incubator() {
 
   const fetchUnreadCount = async () => {
     try {
-      const res = await getNotifications();
-      const data = res?.data?.data || res?.data || [];
-      const notifications = Array.isArray(data) ? data : [];
-      setUnreadCount(notifications.filter((n) => !n.isRead).length);
+      const res = await getUnreadCount();
+      const d = res?.data?.data || res?.data || {};
+      setUnreadCount((d.unreadMessages || 0) + (d.pendingRequests || 0));
     } catch (err) {
       // Non-critical
     }
@@ -215,13 +216,27 @@ export default function Incubator() {
   };
 
   const plusAction = (
-    <button
-      onClick={() => setShowModal(true)}
-      className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#00B8A9] to-[#007a73] text-white shadow-md active:scale-90 transition-all"
-      title="Create Post"
-    >
-      <FaPlus size={14} />
-    </button>
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => navigate("/inbox")}
+        className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100"}`}
+        title="Messages"
+      >
+        <IoChatbubbleEllipsesOutline size={22} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#00B8A9] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+            {unreadCount > 9 ? "9+" : unreadCount}
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => setShowModal(true)}
+        className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#00B8A9] to-[#007a73] text-white shadow-md active:scale-90 transition-all"
+        title="Create Post"
+      >
+        <FaPlus size={14} />
+      </button>
+    </div>
   );
 
   return (

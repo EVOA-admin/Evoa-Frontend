@@ -6,6 +6,7 @@ import Register from '../modules/auth/register';
 import ForgetPassword from '../modules/auth/forget-password';
 import VerifyOTP from '../modules/auth/verify-otp';
 import CreateNewPassword from '../modules/auth/create-new-password';
+import VerifyEmail from '../modules/auth/verify-email';
 import ChoiceRole from '../modules/auth/choice-role';
 import StartupRegistration from '../modules/auth/startup-registration';
 import InvestorRegistration from '../modules/auth/investor-registration';
@@ -33,6 +34,8 @@ import InvestorProfile from '../modules/investor/investor-profile';
 import IncubatorProfile from '../modules/incubator/incubator-profile';
 import UserPublicProfile from '../modules/profile/user-public-profile';
 import AuthCallback from '../modules/auth/auth-callback';
+import Inbox from '../modules/chat/inbox';
+import Conversation from '../modules/chat/conversation';
 
 export default function AppRoutes() {
   return (
@@ -45,6 +48,7 @@ export default function AppRoutes() {
         <Route path="forget-password" element={<PublicRoute><ForgetPassword /></PublicRoute>} />
         <Route path="verify-otp" element={<PublicRoute><VerifyOTP /></PublicRoute>} />
         <Route path="create-new-password" element={<PublicRoute><CreateNewPassword /></PublicRoute>} />
+        <Route path="verify-email" element={<VerifyEmail />} />
 
         {/* Onboarding Routes - Require Authentication */}
         <Route path="auth/callback" element={<AuthCallback />} />
@@ -85,6 +89,8 @@ export default function AppRoutes() {
       <Route path="/investor/profile" element={<ProtectedRoute allowedRoles={['investor']}><InvestorProfile /></ProtectedRoute>} />
       <Route path="/incubator/profile" element={<ProtectedRoute allowedRoles={['incubator']}><IncubatorProfile /></ProtectedRoute>} />
       <Route path="/u/:userId" element={<ProtectedRoute><UserPublicProfile /></ProtectedRoute>} />
+      <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+      <Route path="/inbox/:id" element={<ProtectedRoute><Conversation /></ProtectedRoute>} />
     </Routes>
   );
 }

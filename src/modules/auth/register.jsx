@@ -148,10 +148,10 @@ export default function Register() {
 
                 setLoading(true);
                 try {
-                  const { error } = await signUp(email, password);
+                  const { data, error } = await signUp(email, password);
                   if (error) throw error;
-                  // Navigation handled by component or context, but usually we go to choice-role
-                  navigate('/choice-role');
+                  // Redirect to email verification page
+                  navigate(`/verify-email?email=${encodeURIComponent(email)}`);
                 } catch (err) {
                   console.error("Signup error:", err);
                   setError(err.message || "Failed to sign up");
