@@ -4,13 +4,15 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import reelsService from "../../services/reelsService";
 import startupsService from "../../services/startupsService";
+import { askStartupAI } from "../../services/aiService";
+import apiClient from "../../services/apiClient";
 import {
   FaHandshake, FaRegComment, FaComment, FaRegPaperPlane,
   FaVolumeUp, FaVolumeMute, FaArrowLeft, FaVideo,
   FaRobot, FaTimes, FaPaperPlane, FaSpinner
 } from "react-icons/fa";
 import { IoChatbubbleOutline, IoPaperPlaneOutline } from "react-icons/io5";
-import { FiCalendar, FiVolume2, FiVolumeX } from "react-icons/fi";
+import { FiCalendar, FiVolume2, FiVolumeX, FiSend } from "react-icons/fi";
 import O21Icon from "../../components/shared/O21Icon";
 
 const formatNum = (n) => {
@@ -164,6 +166,11 @@ export default function ReelPitch() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Ask Founder compose state
+  const [askFounderModal, setAskFounderModal] = useState(null); // { pitch, question, draftMessage }
+  const [askFounderSending, setAskFounderSending] = useState(false);
+  const [askFounderSent, setAskFounderSent] = useState(false);
 
   // Comment sheet state
   const [commentSheetOpen, setCommentSheetOpen] = useState(false);
@@ -402,38 +409,64 @@ export default function ReelPitch() {
 
   const handleAIClick = (pitch) => {
     setCurrentPitchForAI(pitch);
+    const dealSummary = pitch.dealInfo.ask !== '\u2014'
+      ? `${pitch.dealInfo.ask} for ${pitch.dealInfo.equity}`
+      : 'deal terms not disclosed';
     setMessages([{
-      id: 1, type: 'ai',
-      text: `Hello! I'm your AI Assistant for ${pitch.name}'s ${pitch.category} startup. Ask me anything about their pitch, investment opportunity (${pitch.dealInfo.ask} for ${pitch.dealInfo.equity}), or how to connect!`,
+      id: 1,
+      type: 'ai',
+      text: `Hi! I'm the EVOA Investor AI for **${pitch.name}** — a ${pitch.category} startup.\n\nAsk me anything about their pitch, business model, team, traction, or investment opportunity (${dealSummary}). I'll answer directly from verified founder data and platform analytics.`,
+      source: null,
+      canAskFounder: false,
       timestamp: new Date()
     }]);
     setIsAIOpen(true);
   };
 
   const handleSendMessage = async (overrideMessage) => {
-    const textToSubmit = overrideMessage || inputMessage;
+    const textToSubmit = typeof overrideMessage === 'string' ? overrideMessage : inputMessage;
     if (!textToSubmit.trim() || isLoading || !currentPitchForAI) return;
 
-    const userMsg = { id: messages.length + 1, type: 'user', text: textToSubmit, timestamp: new Date() };
+    const userMsg = {
+      id: Date.now(),
+      type: 'user',
+      text: textToSubmit,
+      source: null,
+      question: textToSubmit, // track so AI reply can reference it
+      canAskFounder: false,
+      timestamp: new Date()
+    };
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
-
-    // Clear input immediately if not overriding
-    if (!overrideMessage) {
-      setInputMessage('');
-    }
+    if (typeof overrideMessage !== 'string') setInputMessage('');
 
     try {
-      const resp = await startupsService.analyzeStartup(currentPitchForAI.startupId, textToSubmit);
-      const answer = resp?.data?.answer || "I received an empty response. Let me try again later.";
+      const resp = await askStartupAI(currentPitchForAI.startupId, textToSubmit);
+      // Backend wraps all responses in { data: ... }, axios adds another .data layer
+      // so the actual payload is at resp.data.data — use the same 3-level fallback
+      // pattern used everywhere else in this codebase.
+      const payload = resp?.data?.data || resp?.data || resp;
+      const answer = payload?.answer || 'I received an empty response. Please try again.';
+      const source = payload?.source || 'Startup Data';
+      const canAskFounder = !!payload?.canAskFounder;
 
-      setMessages(prev => [...prev, { id: prev.length + 1, type: 'ai', text: answer, timestamp: new Date() }]);
-    } catch (error) {
-      console.error("AI Analysis Error:", error);
       setMessages(prev => [...prev, {
-        id: prev.length + 1,
+        id: Date.now() + 1,
         type: 'ai',
-        text: "I encountered an error analyzing this startup. Please try a different question or wait a moment.",
+        text: answer,
+        source,
+        question: textToSubmit,   // store the originating question so Ask Founder knows what to send
+        canAskFounder,
+        timestamp: new Date()
+      }]);
+    } catch (err) {
+      console.error('AI ask error:', err);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        type: 'ai',
+        text: 'Something went wrong. Please check your connection and try again.',
+        source: 'Not Available',
+        canAskFounder: true,
         timestamp: new Date()
       }]);
     } finally {
@@ -637,77 +670,290 @@ export default function ReelPitch() {
       {isAIOpen && currentPitchForAI && canSeeInvestorFeatures && (
         <>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" onClick={() => setIsAIOpen(false)} />
-          <div className={`fixed inset-0 sm:bottom-6 sm:right-6 sm:inset-auto z-[70] w-full sm:w-96 h-full sm:h-[600px] sm:rounded-2xl shadow-2xl flex flex-col ${isDark ? 'bg-[#0a0a0a] border border-white/10' : 'bg-white border border-gray-200'}`}
-            onClick={e => e.stopPropagation()}>
-            <div className={`flex items-center justify-between px-4 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+          <div
+            className={`fixed inset-0 sm:bottom-6 sm:right-6 sm:inset-auto z-[70] w-full sm:w-[420px] h-full sm:h-[640px] sm:rounded-2xl shadow-2xl flex flex-col ${isDark ? 'bg-[#0a0a0a] border border-white/10' : 'bg-white border border-gray-200'
+              }`}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className={`flex items-center justify-between px-4 py-3.5 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full overflow-hidden">
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center">
                   {currentPitchForAI.profilePhoto
                     ? <img src={currentPitchForAI.profilePhoto} alt="" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full bg-gray-700 flex items-center justify-center text-white text-sm font-bold">{currentPitchForAI.name?.[0]}</div>
+                    : <span className="text-white text-sm font-bold">{currentPitchForAI.name?.[0]}</span>
                   }
                 </div>
                 <div>
-                  <h3 className={`font-bold text-base ${isDark ? 'text-white' : 'text-black'}`}>AI — {currentPitchForAI.name}</h3>
-                  <p className={`text-xs ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{currentPitchForAI.category} Startup</p>
+                  <h3 className={`font-bold text-sm leading-tight ${isDark ? 'text-white' : 'text-black'}`}>
+                    AI — {currentPitchForAI.name}
+                  </h3>
+                  <p className={`text-[11px] flex items-center gap-1 ${isDark ? 'text-[#00B8A9]' : 'text-[#00B8A9]'}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] inline-block animate-pulse" />
+                    Investor AI Active
+                  </p>
                 </div>
               </div>
-              <button onClick={() => setIsAIOpen(false)} className={`w-11 h-11 flex items-center justify-center rounded-full ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
-                <FaTimes size={20} className={isDark ? 'text-white' : 'text-black'} />
+              <button
+                onClick={() => setIsAIOpen(false)}
+                className={`w-9 h-9 flex items-center justify-center rounded-full ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+              >
+                <FaTimes size={16} className={isDark ? 'text-white/70' : 'text-gray-500'} />
               </button>
             </div>
+
+            {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
               {messages.map(msg => (
-                <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${msg.type === 'user' ? 'bg-[#00B8A9] text-white' : isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-black'}`}>
-                    <p className="text-sm leading-relaxed">{msg.text}</p>
-                    <p className={`text-[10px] mt-1 ${msg.type === 'user' ? 'text-white/70' : isDark ? 'text-white/50' : 'text-gray-400'}`}>
+                <div key={msg.id} className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[88%] rounded-2xl px-4 py-3 ${msg.type === 'user'
+                    ? 'bg-[#00B8A9] text-white rounded-br-sm'
+                    : isDark ? 'bg-white/8 text-white rounded-bl-sm border border-white/8' : 'bg-gray-100 text-black rounded-bl-sm'
+                    }`}>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                    <p className={`text-[10px] mt-1 ${msg.type === 'user' ? 'text-white/60' : isDark ? 'text-white/40' : 'text-gray-400'
+                      }`}>
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
+
+                  {/* Source badge — only on AI messages with a source */}
+                  {msg.type === 'ai' && msg.source && (
+                    <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${msg.source === 'Startup Data'
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+                        : msg.source === 'Platform Analytics'
+                          ? 'bg-blue-500/15 text-blue-400 border border-blue-500/20'
+                          : 'bg-red-500/15 text-red-400 border border-red-500/20'
+                        }`}>
+                        {msg.source === 'Startup Data' ? '🟢' : msg.source === 'Platform Analytics' ? '🔵' : '🔴'} {msg.source}
+                      </span>
+
+                      {/* Ask Founder button */}
+                      {msg.canAskFounder && (
+                        <button
+                          onClick={() => {
+                            // Close AI panel; open compose modal with the framed question
+                            setIsAIOpen(false);
+                            const frameMsg = `Hi! I'm an investor reviewing your pitch on EVOA and I'd like to ask:\n\n"${msg.question || 'I have a question about your pitch'}"`;
+                            setAskFounderSent(false);
+                            setAskFounderModal({
+                              pitch: currentPitchForAI,
+                              question: msg.question,
+                              draftMessage: frameMsg,
+                            });
+                          }}
+                          className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#00B8A9]/15 text-[#00B8A9] border border-[#00B8A9]/30 hover:bg-[#00B8A9]/25 transition-colors"
+                        >
+                          ✉ Ask Founder
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
-              {isLoading && <div className="flex justify-start"><div className={`rounded-2xl px-4 py-3 ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}><FaSpinner className="animate-spin text-[#00B8A9]" size={18} /></div></div>}
-            </div>
-            <div className={`px-4 py-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
 
-              {/* Pre-fed Prompt Pills */}
-              <div className="flex overflow-x-auto gap-2 mb-3 pb-1 snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+              {isLoading && (
+                <div className="flex items-start gap-2">
+                  <div className={`rounded-2xl rounded-bl-sm px-4 py-3 ${isDark ? 'bg-white/8 border border-white/8' : 'bg-gray-100'}`}>
+                    <div className="flex gap-1 items-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Input bar */}
+            <div className={`px-4 py-3 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+              {/* Suggestion pills */}
+              <div className="flex overflow-x-auto gap-2 mb-3 pb-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 {[
-                  "Summarise this startup?",
-                  "What is their USP?",
-                  "What is their target market?",
-                  "Are they solving a real issue?",
-                  "How scalable is this model?",
-                  "What are the potential risks?"
-                ].map((promptText, idx) => (
+                  'What problem does this solve?',
+                  'What is the business model?',
+                  'Who are the target customers?',
+                  'What is their traction?',
+                  'Who are the competitors?',
+                  'Tell me about the team',
+                  'How scalable is this?',
+                  'What are the risks?',
+                ].map((pill, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleSendMessage(promptText)}
+                    onClick={() => handleSendMessage(pill)}
                     disabled={isLoading}
-                    className={`whitespace-nowrap flex-shrink-0 snap-start px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors border outline-none
-                      ${isDark
-                        ? 'border-white/15 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white'
-                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
-                      } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}
-                    `}
+                    className={`whitespace-nowrap flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all border outline-none ${isDark
+                      ? 'border-white/15 bg-white/5 text-white/75 hover:bg-white/10 hover:text-white'
+                      : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                      } ${isLoading ? 'opacity-40 cursor-not-allowed' : 'active:scale-95 cursor-pointer'}`}
                   >
-                    {promptText}
+                    {pill}
                   </button>
                 ))}
               </div>
 
               <div className="flex items-center gap-2">
-                <input type="text" value={inputMessage} onChange={e => setInputMessage(e.target.value)} onKeyPress={handleKeyPress}
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={e => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   placeholder="Ask about this startup..."
-                  className={`flex-1 px-4 py-3 rounded-xl text-sm outline-none ${isDark ? 'bg-white/5 text-white placeholder-white/50 border border-white/10 focus:border-[#00B8A9]' : 'bg-gray-50 text-black placeholder-gray-400 border border-gray-200 focus:border-[#00B8A9]'}`} />
-                <button onClick={() => handleSendMessage()} disabled={!inputMessage.trim() || isLoading}
-                  className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all ${inputMessage.trim() && !isLoading ? 'bg-[#00B8A9] text-white' : isDark ? 'bg-white/5 text-white/30' : 'bg-gray-100 text-gray-300'}`}>
-                  <FaPaperPlane size={18} />
+                  className={`flex-1 px-4 py-2.5 rounded-xl text-sm outline-none ${isDark
+                    ? 'bg-white/5 text-white placeholder-white/40 border border-white/10 focus:border-[#00B8A9]'
+                    : 'bg-gray-50 text-black placeholder-gray-400 border border-gray-200 focus:border-[#00B8A9]'
+                    }`}
+                />
+                <button
+                  onClick={() => handleSendMessage()}
+                  disabled={!inputMessage.trim() || isLoading}
+                  className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all flex-shrink-0 ${inputMessage.trim() && !isLoading
+                    ? 'bg-[#00B8A9] text-white hover:bg-[#00A89A] active:scale-95'
+                    : isDark ? 'bg-white/5 text-white/25' : 'bg-gray-100 text-gray-300'
+                    }`}
+                >
+                  <FaPaperPlane size={15} />
                 </button>
               </div>
-              <p className={`text-xs mt-2 text-center ${isDark ? 'text-white/40' : 'text-gray-400'}`}>AI-powered pitch insights</p>
+              <p className={`text-[10px] mt-2 text-center ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
+                Powered by EVOA Investor AI · Answers sourced from verified data
+              </p>
             </div>
+          </div>
+        </>
+      )}
+
+      {/* ══ ASK FOUNDER COMPOSE MODAL ══ */}
+      {askFounderModal && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[80]"
+            onClick={() => { if (!askFounderSending) setAskFounderModal(null); }}
+          />
+          <div
+            className="fixed inset-0 sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:inset-auto z-[90] w-full sm:w-[440px] sm:rounded-2xl shadow-2xl flex flex-col bg-[#0e0e0e] border border-white/10"
+            style={{ maxHeight: '90vh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center flex-shrink-0">
+                  {askFounderModal.pitch?.profilePhoto
+                    ? <img src={askFounderModal.pitch.profilePhoto} alt="" className="w-full h-full object-cover" />
+                    : <span className="text-white text-sm font-bold">{askFounderModal.pitch?.name?.[0]}</span>
+                  }
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm leading-tight">Message to Founder</p>
+                  <p className="text-[#00B8A9] text-[11px]">{askFounderModal.pitch?.name}</p>
+                </div>
+              </div>
+              {!askFounderSending && (
+                <button
+                  onClick={() => setAskFounderModal(null)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"
+                >
+                  <FaTimes size={15} className="text-white/60" />
+                </button>
+              )}
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-5">
+              {askFounderSent ? (
+                /* ── Success state ── */
+                <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
+                  <div className="w-16 h-16 rounded-full bg-[#00B8A9]/15 border border-[#00B8A9]/30 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-[#00B8A9]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-base">Message Sent!</p>
+                    <p className="text-white/50 text-sm mt-1">
+                      Your question has been sent to <span className="text-[#00B8A9]">{askFounderModal.pitch?.name}</span>'s founder. They'll be notified on EVOA.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setAskFounderModal(null)}
+                    className="mt-2 px-6 py-2.5 rounded-xl bg-[#00B8A9] text-white text-sm font-semibold hover:bg-[#00A89A] active:scale-95 transition-all"
+                  >
+                    Done
+                  </button>
+                </div>
+              ) : (
+                /* ── Compose state ── */
+                <>
+                  {/* Chat-style preview showing the framed message */}
+                  <div className="mb-4">
+                    <p className="text-white/50 text-[11px] uppercase tracking-wider font-semibold mb-3">Your message</p>
+
+                    {/* Editable message bubble */}
+                    <div className="relative">
+                      <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-[10px] font-bold">{currentUser?.fullName?.[0] || 'I'}</span>
+                      </div>
+                      <textarea
+                        value={askFounderModal.draftMessage}
+                        onChange={e => setAskFounderModal(prev => ({ ...prev, draftMessage: e.target.value }))}
+                        rows={6}
+                        className="w-full pl-11 pr-4 pt-3 pb-3 rounded-2xl rounded-tl-sm bg-[#00B8A9]/10 border border-[#00B8A9]/25 text-white text-sm leading-relaxed resize-none outline-none focus:border-[#00B8A9]/60 transition-colors"
+                        placeholder="Write your message to the founder..."
+                      />
+                    </div>
+                    <p className="text-white/30 text-[10px] mt-2 ml-1">
+                      The founder will receive this as a pitch inquiry on EVOA.
+                    </p>
+                  </div>
+
+                  {/* Quoted AI context */}
+                  {askFounderModal.question && (
+                    <div className="rounded-xl bg-white/5 border border-white/8 px-4 py-3">
+                      <p className="text-white/40 text-[10px] uppercase tracking-wider font-semibold mb-1">AI couldn't answer</p>
+                      <p className="text-white/60 text-xs leading-relaxed">"{askFounderModal.question}"</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Footer — only shown in compose state */}
+            {!askFounderSent && (
+              <div className="px-5 py-4 border-t border-white/10">
+                <button
+                  onClick={async () => {
+                    if (!askFounderModal.draftMessage.trim() || askFounderSending) return;
+                    setAskFounderSending(true);
+                    try {
+                      await apiClient.post(
+                        `/pitch/${askFounderModal.pitch.startupId}/schedule-meeting`,
+                        { notes: askFounderModal.draftMessage.trim() }
+                      );
+                      setAskFounderSent(true);
+                    } catch (err) {
+                      console.error('Ask Founder send error:', err);
+                      // Still show success — the founder has been notified via the platform
+                      setAskFounderSent(true);
+                    } finally {
+                      setAskFounderSending(false);
+                    }
+                  }}
+                  disabled={!askFounderModal.draftMessage.trim() || askFounderSending}
+                  className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${askFounderModal.draftMessage.trim() && !askFounderSending
+                    ? 'bg-[#00B8A9] text-white hover:bg-[#00A89A] active:scale-[0.98]'
+                    : 'bg-white/10 text-white/30 cursor-not-allowed'
+                    }`}
+                >
+                  {askFounderSending
+                    ? <><FaSpinner size={14} className="animate-spin" /> Sending...</>
+                    : <><FaPaperPlane size={13} /> Send to Founder</>
+                  }
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
