@@ -620,7 +620,7 @@ export default function UserPublicProfile() {
 
     return (
         <AppShell>
-            <AppHeader title={pageTitle} />
+            <AppHeader title={pageTitle} showThemeToggle={true} />
             <div className="px-4 py-5 pb-6">
                 {loading ? (
                     <div className="flex justify-center py-20"><FaSpinner className="animate-spin text-[#00B8A9]" size={32} /></div>

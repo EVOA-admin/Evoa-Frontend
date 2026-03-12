@@ -86,7 +86,7 @@ export default function IncubatorProfile() {
     if (loading) {
         return (
             <AppShell>
-                <AppHeader title="My Profile" actions={headerActions} />
+                <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
                 <div className="flex items-center justify-center h-72">
                     <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
                 </div>
@@ -96,7 +96,7 @@ export default function IncubatorProfile() {
 
     return (
         <AppShell>
-            <AppHeader title="My Profile" actions={headerActions} />
+            <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
 
             {/* Hero Section */}
             <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>

@@ -175,7 +175,7 @@ export default function StartupProfile() {
 
     return (
         <AppShell>
-            <AppHeader title="My Profile" />
+            <AppHeader title="My Profile" showThemeToggle={true} />
 
             {loading ? (
                 <div className="flex items-center justify-center h-72">

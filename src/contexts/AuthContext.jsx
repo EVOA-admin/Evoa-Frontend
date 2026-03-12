@@ -4,6 +4,31 @@ import apiClient from '../services/apiClient';
 
 const AuthContext = createContext();
 
+// ─── localStorage cache key for onboarding state ─────────────────────────────
+// Keyed by Supabase user ID so different users on the same browser are isolated.
+const CACHE_KEY_PREFIX = 'evoa_onboarding_';
+function getCachedOnboarding(supabaseUid) {
+    try {
+        const raw = localStorage.getItem(CACHE_KEY_PREFIX + supabaseUid);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+function setCachedOnboarding(supabaseUid, { userRole, roleSelected, registrationCompleted }) {
+    try {
+        localStorage.setItem(
+            CACHE_KEY_PREFIX + supabaseUid,
+            JSON.stringify({ userRole, roleSelected, registrationCompleted })
+        );
+    } catch { /* non-fatal */ }
+}
+function clearCachedOnboarding(supabaseUid) {
+    try {
+        if (supabaseUid) localStorage.removeItem(CACHE_KEY_PREFIX + supabaseUid);
+    } catch { /* non-fatal */ }
+}
+
 export function useAuth() {
     return useContext(AuthContext);
 }
@@ -17,8 +42,9 @@ export function AuthProvider({ children }) {
     const [roleSelected, setRoleSelected] = useState(false);
     const [registrationCompleted, setRegistrationCompleted] = useState(false);
     // Prevents concurrent or back-to-back redundant syncAndFetchProfile calls.
-    // Supabase can fire INITIAL_SESSION + SIGNED_IN + TOKEN_REFRESHED in quick succession.
     const isSyncingRef = useRef(false);
+    // Track current supabase UID so we can key the cache correctly.
+    const currentSupabaseUidRef = useRef(null);
 
     // Backward compat: onboardingCompleted is true only when BOTH flags are true
     const onboardingCompleted = roleSelected && registrationCompleted;
@@ -30,11 +56,22 @@ export function AuthProvider({ children }) {
 
             if (session?.user) {
                 localStorage.setItem('authToken', session.access_token);
+                currentSupabaseUidRef.current = session.user.id;
 
-                // TOKEN_REFRESHED is a silent background key rotation — no need to re-sync the
-                // full user profile from the backend. Skipping it avoids an unnecessary 6s wait.
+                // Seed from localStorage cache IMMEDIATELY so navigation works on refresh
+                // before the slow backend sync completes.
+                const cached = getCachedOnboarding(session.user.id);
+                if (cached) {
+                    setUserRole(cached.userRole);
+                    setRoleSelected(cached.roleSelected);
+                    setRegistrationCompleted(cached.registrationCompleted);
+                    // We can safely end the blocking loading state now —
+                    // the user will be routed correctly from cache while sync runs in background.
+                    setLoading(false);
+                }
+
+                // TOKEN_REFRESHED is a silent background key rotation — no need to re-sync.
                 if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-                    // Guard: if a sync is already running, don't start another.
                     if (isSyncingRef.current) return;
                     isSyncingRef.current = true;
                     setSyncing(true);
@@ -43,14 +80,20 @@ export function AuthProvider({ children }) {
                     isSyncingRef.current = false;
                 }
             } else {
+                // User signed out — clear everything
+                const uid = currentSupabaseUidRef.current;
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userData');
+                currentSupabaseUidRef.current = null;
                 setUserRole(null);
                 setRoleSelected(false);
                 setRegistrationCompleted(false);
                 setSyncing(false);
                 isSyncingRef.current = false;
                 setLoading(false);
+                // We intentionally do NOT clear the cache on sign-out here;
+                // clearCachedOnboarding is called explicitly in signOut() below.
+                // This prevents accidental cache wipe on TOKEN_REFRESHED events.
             }
         });
 
@@ -78,57 +121,51 @@ export function AuthProvider({ children }) {
                 const role = userData.role || null;
                 setUserRole(role);
 
-                // --- New two-flag system ---
-                // roleSelected: user explicitly picked a role (default false for brand new users)
+                // Determine roleSelected and registrationCompleted from backend response.
+                // Fix: use !!role for ANY user who has a role (including viewer).
+                // The old code used `role !== 'viewer'` which always set viewers to false.
                 let roleSel = userData.roleSelected;
-                // registrationCompleted: user finished the role-specific form
                 let regComp = userData.registrationCompleted;
 
-                // Backward-compat: if old DB has onboarding_completed column but not new ones,
-                // infer from existing role — non-viewer users who existed before this migration
-                // are treated as fully onboarded.
-                // Backward-compat for users created before the two-flag schema:
-                // If the DB has no record for these columns (null/undefined),
-                // infer from role. This ONLY affects genuinely old records where
-                // the columns literally don't exist yet.
+                // Backward-compat: if DB columns are null/undefined (old users before migration),
+                // infer from the presence of a role. ANY user with a role has selected it.
                 if (roleSel === undefined || roleSel === null) {
-                    roleSel = !!(role && role !== 'viewer');
+                    roleSel = !!role; // ← FIXED: was !!(role && role !== 'viewer')
                 }
                 if (regComp === undefined || regComp === null) {
-                    // Old users with a non-viewer role are assumed to have
-                    // completed registration (they predate the flag system).
-                    regComp = !!(role && role !== 'viewer');
+                    // Non-viewer users with a role are assumed to have completed registration
+                    // (they predate the flag system). Viewers are immediately complete.
+                    regComp = !!role; // ← FIXED: was !!(role && role !== 'viewer')
                 }
-                // NOTE: if the DB explicitly returns false, we MUST respect it.
-                // Never override an explicit false — that is exactly what causes
-                // the registration-bypass bug.
+                // NOTE: explicit false from the DB is always honoured — never override it.
 
                 setRoleSelected(!!roleSel);
                 setRegistrationCompleted(!!regComp);
 
+                // Write authoritative values to the localStorage cache so future
+                // refreshes and network failures never lose this state.
+                if (session.user.id) {
+                    setCachedOnboarding(session.user.id, {
+                        userRole: role,
+                        roleSelected: !!roleSel,
+                        registrationCompleted: !!regComp,
+                    });
+                }
+
                 setUser(prev => ({
-                    // Start from previous state so non-backend fields persist
                     ...prev,
-                    // Backend data is always the authoritative source for profile fields.
-                    // Spread all backend fields first, then explicitly override the ones
-                    // that might incorrectly fall back to Google OAuth metadata.
                     ...userData,
-                    // Email comes from Supabase (authoritative identity source)
                     email: session.user.email,
-                    // id here is the backend UUID (userData.id), NOT the Supabase UUID.
-                    // Keep backend id as primary; the Supabase UUID is in session.user.id.
                     id: userData.id || session.user.id,
-                    // avatarUrl: ONLY use the backend value. If the user uploaded a photo
-                    // during registration it will be here. Never fall back to Google photo.
                     avatarUrl: userData.avatarUrl || null,
-                    // fullName: ONLY use the backend value (from registration form).
-                    // Never fall back to Google display name.
                     fullName: userData.fullName || null,
                 }));
             }
         } catch (err) {
             if (err.message === 'sync_timeout') {
-                console.warn('Backend sync timed out — proceeding without role');
+                console.warn('Backend sync timed out — using cached onboarding state if available');
+                // On timeout, the localStorage cache (seeded above) already holds the last known
+                // good state — so the user won't be redirected to choice-role.
             } else {
                 console.error('Error syncing user with backend:', err);
             }
@@ -169,8 +206,11 @@ export function AuthProvider({ children }) {
     };
 
     const signOut = async () => {
+        const uid = currentSupabaseUidRef.current;
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
+        clearCachedOnboarding(uid);
+        currentSupabaseUidRef.current = null;
         setUserRole(null);
         setUser(null);
         setRoleSelected(false);
@@ -202,25 +242,34 @@ export function AuthProvider({ children }) {
      */
     const updateUserRole = async (role) => {
         // Always use the freshest token from Supabase before the backend call.
-        // This prevents stale/cached tokens causing 401 after an OAuth redirect.
         try {
             const { data: sessionData } = await supabase.auth.getSession();
             if (sessionData?.session?.access_token) {
                 localStorage.setItem('authToken', sessionData.session.access_token);
             }
-        } catch (_) { /* non-blocking — apiClient will still try */ }
+        } catch (_) { /* non-blocking */ }
 
         const response = await apiClient.post('/users/role', { role });
         if (response?.data) {
             const userData = response.data?.data || response.data;
             const newRole = userData.role || role;
+            const isViewer = newRole === 'viewer';
             setUserRole(newRole);
             setRoleSelected(true);
-            // Viewer has no form, so registration is also immediately complete
-            if (newRole === 'viewer') {
+            if (isViewer) {
                 setRegistrationCompleted(true);
             }
             setUser(prev => ({ ...prev, role: newRole, roleSelected: true }));
+
+            // Update cache so refresh works immediately after role selection
+            const uid = currentSupabaseUidRef.current;
+            if (uid) {
+                setCachedOnboarding(uid, {
+                    userRole: newRole,
+                    roleSelected: true,
+                    registrationCompleted: isViewer,
+                });
+            }
         }
         return { success: true };
     };
@@ -237,6 +286,16 @@ export function AuthProvider({ children }) {
         }
         setRegistrationCompleted(true);
         setUser(prev => ({ ...prev, registrationCompleted: true }));
+
+        // Update cache so refresh after completing registration goes to dashboard
+        const uid = currentSupabaseUidRef.current;
+        if (uid) {
+            setCachedOnboarding(uid, {
+                userRole,
+                roleSelected: true,
+                registrationCompleted: true,
+            });
+        }
     };
 
     const value = {
@@ -245,12 +304,9 @@ export function AuthProvider({ children }) {
         userRole,
         loading,
         syncing,
-        // New flags
         roleSelected,
         registrationCompleted,
-        // Computed alias for backward compat
         onboardingCompleted,
-        // Methods
         signUp,
         signIn,
         signInWithGoogle,

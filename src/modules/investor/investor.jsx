@@ -236,6 +236,13 @@ export default function Investor() {
   const plusAction = (
     <div className="flex items-center gap-1">
       <button
+        onClick={() => setShowModal(true)}
+        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100"}`}
+        title="Create Post"
+      >
+        <FaPlus size={16} />
+      </button>
+      <button
         onClick={() => navigate("/inbox")}
         className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100"}`}
         title="Messages"
@@ -247,13 +254,6 @@ export default function Investor() {
           </span>
         )}
       </button>
-      <button
-        onClick={() => setShowModal(true)}
-        className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-[#00B8A9] to-[#007a73] text-white shadow-md active:scale-90 transition-all"
-        title="Create Post"
-      >
-        <FaPlus size={14} />
-      </button>
     </div>
   );
 
@@ -261,9 +261,9 @@ export default function Investor() {
     <AppShell>
       <AppHeader actions={plusAction} />
       <main>
-        <div className="px-0 pb-4">
+        <div className="px-0 pt-0 pb-4">
           <StatusComponent />
-          <div className="space-y-4 px-3">
+          <div className="space-y-4 px-3 mt-0.5">
             {!loading && pitches.length === 0 && userPosts.length === 0 && (
               <EmptyState
                 icon={FaRegNewspaper}

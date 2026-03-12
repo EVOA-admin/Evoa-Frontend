@@ -125,7 +125,7 @@ export default function Profile() {
   if (loading) {
     return (
       <AppShell>
-        <AppHeader title="Profile" />
+        <AppHeader title="Profile" showThemeToggle={true} />
         <div className={`flex items-center justify-center h-40 ${isDark ? 'text-white' : 'text-black'}`}>Loading...</div>
       </AppShell>
     );
@@ -134,7 +134,7 @@ export default function Profile() {
   if (!user) {
     return (
       <AppShell>
-        <AppHeader title="Profile" />
+        <AppHeader title="Profile" showThemeToggle={true} />
         <div className={`flex items-center justify-center h-40 ${isDark ? 'text-white' : 'text-black'}`}>User not found</div>
       </AppShell>
     );
@@ -142,7 +142,7 @@ export default function Profile() {
 
   return (
     <AppShell>
-      <AppHeader title="Profile" />
+      <AppHeader title="Profile" showThemeToggle={true} />
       <main className="pb-4">
         {/* Cover Photo */}
         <div className="relative h-36 overflow-hidden">

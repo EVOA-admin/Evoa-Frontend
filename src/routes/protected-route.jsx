@@ -14,7 +14,7 @@ const DASHBOARD_ROUTES = {
     viewer: '/viewer',
 };
 
-// Profile paths that should bypass the registrationCompleted check
+// Profile paths bypass the registrationCompleted check
 const PROFILE_PATHS = [
     '/startup/profile',
     '/investor/profile',
@@ -23,11 +23,12 @@ const PROFILE_PATHS = [
 ];
 
 export default function ProtectedRoute({ children, allowedRoles = [] }) {
-    const { user, loading, syncing, userRole, roleSelected, registrationCompleted } = useAuth();
+    const { user, loading, userRole, roleSelected, registrationCompleted } = useAuth();
     const location = useLocation();
 
-    // Only block on the very first load (before we know if a user is logged in).
-    // The `syncing` flag is a background re-fetch — never block route rendering on it.
+    // Only block on the initial load. We intentionally DO NOT block on `syncing`
+    // because the localStorage cache seeds onboarding state before sync completes,
+    // so users are routed correctly within milliseconds of page load.
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-black">
@@ -55,7 +56,7 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     }
 
     // Step 3: Role selected but registration not complete → registration form
-    // Skip this check for profile pages — if user has a role they can always see their profile
+    // Skip this check for profile pages and for viewer (no form needed)
     if (roleSelected && !registrationCompleted && userRole !== 'viewer' && !isOnboardingPath && !isProfilePath) {
         return <Navigate to={REGISTRATION_ROUTES[userRole] || '/choice-role'} replace />;
     }

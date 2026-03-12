@@ -181,7 +181,7 @@ export default function ViewerProfile() {
 
     return (
         <AppShell>
-            <AppHeader title="My Profile" />
+            <AppHeader title="My Profile" showThemeToggle={true} />
 
             {/* Loading */}
             {loading ? (

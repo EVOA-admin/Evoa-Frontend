@@ -28,6 +28,7 @@ export default function StatusComponent() {
   const [showModal, setShowModal] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
+  const [watchedIds, setWatchedIds] = useState(new Set()); // tracks stories the user has seen
 
   const fetchStories = useCallback(async () => {
     try {
@@ -68,10 +69,20 @@ export default function StatusComponent() {
     setViewerOpen(true);
   };
 
+  const closeViewer = () => {
+    // Mark the story that was being viewed (and any auto-advanced ones) as watched.
+    // Simple approach: mark the story at current viewerIndex as watched.
+    const watched = viewableStories[viewerIndex];
+    if (watched) {
+      setWatchedIds(prev => new Set([...prev, watched.id]));
+    }
+    setViewerOpen(false);
+  };
+
   return (
     <>
       <div
-        className={`flex gap-3.5 overflow-x-auto pb-2 px-3 scrollbar-hide ${isDark ? "bg-black" : "bg-white"
+        className={`flex gap-3.5 overflow-x-auto pt-3 pb-0 px-3 scrollbar-hide ${isDark ? "bg-black" : "bg-white"
           }`}
         style={{ WebkitOverflowScrolling: "touch" }}
       >
@@ -137,10 +148,12 @@ export default function StatusComponent() {
               className="flex flex-col items-center gap-1.5 shrink-0 focus:outline-none"
               title={name}
             >
-              <div className="w-[60px] h-[60px] rounded-full p-[2.5px] bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600">
+              <div className={`w-[60px] h-[60px] rounded-full p-[2.5px] ${watchedIds.has(story.id)
+                ? isDark ? 'border-2 border-white/20 p-0' : 'border-2 border-gray-300 p-0'
+                : 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600'
+                }`}>
                 <div
-                  className={`w-full h-full rounded-full p-[2px] ${isDark ? "bg-black" : "bg-white"
-                    }`}
+                  className={`w-full h-full rounded-full p-[2px] ${isDark ? "bg-black" : "bg-white"}`}
                 >
                   <img
                     src={avatar}
@@ -173,7 +186,7 @@ export default function StatusComponent() {
         <StoryViewer
           stories={viewableStories}
           startIndex={viewerIndex}
-          onClose={() => setViewerOpen(false)}
+          onClose={closeViewer}
         />
       )}
     </>

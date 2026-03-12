@@ -114,17 +114,23 @@ export default function InvestorRegistration() {
     setError('');
     switch (currentStep) {
       case 1:
+        // Step 1 shows: Full Name, Profile Photo, Designation
         if (!formData.fullName.trim()) { setError('Full name is required.'); return false; }
-        if (!formData.investorType) { setError('Please select your investor type.'); return false; }
         return true;
       case 2:
+        // Step 2 shows: Investor Type
+        if (!formData.investorType) { setError('Please select your investor type.'); return false; }
+        return true;
+      case 3:
+        // Step 3 shows: Investment Range + Sector Focus
         if (!formData.investmentRange) { setError('Please select your investment range.'); return false; }
         if (formData.sectorFocus.length === 0) { setError('Please select at least one sector of focus.'); return false; }
         return true;
-      case 3:
+      case 4:
+        // Step 4 shows: Verification
         if (!formData.verificationOption) { setError('Please select a verification option.'); return false; }
         return true;
-      // Steps 4–7 are optional enrichment
+      // Steps 5–7 are optional enrichment
       default:
         return true;
     }
@@ -258,6 +264,7 @@ export default function InvestorRegistration() {
             <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
               2. Investor Type
             </h2>
+            <p className={`text-xs sm:text-sm mb-2 ${isDark ? 'text-white/50' : 'text-black/50'}`}>Select the category that best describes you.</p>
             <SearchableSelect
               value={formData.investorType}
               onChange={(value) => handleInputChange('investorType', value)}

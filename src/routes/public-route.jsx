@@ -18,9 +18,11 @@ const DASHBOARD_ROUTES = {
 };
 
 export default function PublicRoute({ children }) {
-    const { user, loading, syncing, userRole, roleSelected, registrationCompleted } = useAuth();
+    const { user, loading, userRole, roleSelected, registrationCompleted } = useAuth();
 
-    if (loading || syncing) {
+    // Only block on initial loading. The localStorage cache seeds state before sync,
+    // so we don't need to wait for syncing to complete here.
+    if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="w-16 h-16 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin"></div>

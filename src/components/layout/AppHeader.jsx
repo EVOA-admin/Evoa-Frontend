@@ -7,10 +7,10 @@ import { HiSun, HiMoon } from "react-icons/hi";
 
 /**
  * AppHeader — unified top bar for post-auth pages.
- * Shows logo + wordmark on left, theme toggle + optional action slot on right.
- * Fixed at top of the 430px column (NOT full-viewport-width).
+ * Shows logo + wordmark on left, optional action slot on right.
+ * Pass showThemeToggle={true} on profile pages to restore the theme button.
  */
-export default function AppHeader({ actions = null, title = null }) {
+export default function AppHeader({ actions = null, title = null, showThemeToggle = false }) {
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === "dark";
     const navigate = useNavigate();
@@ -39,19 +39,21 @@ export default function AppHeader({ actions = null, title = null }) {
                 )}
             </div>
 
-            {/* Right: theme toggle + any extra slot */}
+            {/* Right: actions + optional theme toggle */}
             <div className="flex items-center gap-1">
                 {actions}
-                <button
-                    onClick={toggleTheme}
-                    className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark
-                        ? "text-white/60 hover:text-[#00B8A9] hover:bg-white/8"
-                        : "text-gray-500 hover:text-[#00B8A9] hover:bg-gray-100"
-                        }`}
-                    title={isDark ? "Light mode" : "Dark mode"}
-                >
-                    {isDark ? <HiSun size={20} className="animate-spin-slow" /> : <HiMoon size={19} />}
-                </button>
+                {showThemeToggle && (
+                    <button
+                        onClick={toggleTheme}
+                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark
+                            ? "text-white/60 hover:text-[#00B8A9] hover:bg-white/8"
+                            : "text-gray-500 hover:text-[#00B8A9] hover:bg-gray-100"
+                            }`}
+                        title={isDark ? "Light mode" : "Dark mode"}
+                    >
+                        {isDark ? <HiSun size={20} className="animate-spin-slow" /> : <HiMoon size={19} />}
+                    </button>
+                )}
             </div>
         </div>
     );
