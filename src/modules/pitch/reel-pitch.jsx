@@ -168,6 +168,14 @@ export default function ReelPitch() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const aiMessagesEndRef = useRef(null); // sentinel for auto-scroll
+
+  // Auto-scroll AI chat to bottom on new messages or typing indicator
+  useEffect(() => {
+    if (isAIOpen) {
+      aiMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isLoading, isAIOpen]);
 
   // Ask Founder compose state
   const [askFounderModal, setAskFounderModal] = useState(null); // { pitch, question, draftMessage }
@@ -770,6 +778,8 @@ export default function ReelPitch() {
                   </div>
                 </div>
               )}
+              {/* Auto-scroll sentinel */}
+              <div ref={aiMessagesEndRef} />
             </div>
 
             {/* Input bar */}
