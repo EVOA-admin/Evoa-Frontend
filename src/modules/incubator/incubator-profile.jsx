@@ -4,6 +4,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../config/supabase";
 import { getMyIncubatorProfile } from "../../services/incubatorsService";
+import postsService from "../../services/postsService";
 import {
     IoPencil,
     IoLogOutOutline,
@@ -18,6 +19,7 @@ import EditIncubatorModal from "./edit-incubator-modal";
 import ensureUrl from "../../utils/ensureUrl";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
+import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 
 export default function IncubatorProfile() {
     const { theme } = useTheme();
@@ -28,7 +30,7 @@ export default function IncubatorProfile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("about");
+    const [activeTab, setActiveTab] = useState("posts");
 
     useEffect(() => {
         fetchIncubatorProfile();
@@ -59,6 +61,7 @@ export default function IncubatorProfile() {
         : "";
 
     const tabs = [
+        { id: "posts", label: "Posts" },
         { id: "about", label: "About" },
         { id: "programs", label: "Programs" },
         { id: "gallery", label: "Gallery" },
@@ -194,6 +197,16 @@ export default function IncubatorProfile() {
 
             {/* Tab Content */}
             <div className="px-4 py-4 space-y-3 pb-10">
+
+                {/* Posts Tab */}
+                {activeTab === "posts" && (
+                    <ProfileContentGrid
+                        isDark={isDark}
+                        isOwner={true}
+                        fetchFn={postsService.getMyPosts}
+                        role="incubator"
+                    />
+                )}
 
                 {/* About Tab */}
                 {activeTab === "about" && (

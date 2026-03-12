@@ -4,6 +4,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../config/supabase";
 import { getCurrentUserProfile, updateUserProfile } from "../../services/usersService";
+import postsService from "../../services/postsService";
 import storageService from "../../services/storageService";
 import { getNotifications } from "../../services/notificationsService";
 import ensureUrl from "../../utils/ensureUrl";
@@ -24,6 +25,7 @@ import {
 import { FiUser } from "react-icons/fi";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
+import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 
 // Parse occupation from bio string (format: "Occupation: X\nInterests: Y")
 function parseOccupation(bio) {
@@ -172,16 +174,30 @@ export default function ViewerProfile() {
         { id: "media", label: "Media" },
     ];
 
-    // Interest-based "posts" as placeholder activity (no post entity on viewers)
-    const activityItems = interests.slice(0, 4).map((interest, i) => ({
-        id: i,
-        text: `Interested in: ${interest}`,
-        commentCount: 0,
-    }));
+
+
+    const headerActions = (
+        <div className="flex items-center gap-0.5">
+            <button
+                onClick={openEdit}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/60 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-500 hover:text-[#00B8A9] hover:bg-gray-100"}`}
+                title="Edit Profile"
+            >
+                <IoPencil size={18} />
+            </button>
+            <button
+                onClick={handleLogout}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
+                title="Log Out"
+            >
+                <IoLogOutOutline size={18} />
+            </button>
+        </div>
+    );
 
     return (
         <AppShell>
-            <AppHeader title="My Profile" showThemeToggle={true} />
+            <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
 
             {/* Loading */}
             {loading ? (
@@ -234,28 +250,6 @@ export default function ViewerProfile() {
                                 </span>
                                 <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Followers</span>
                             </div>
-
-                            <button
-                                onClick={openEdit}
-                                className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full border transition-all ${isDark
-                                    ? "border-white/30 text-white hover:bg-white/10"
-                                    : "border-gray-300 text-gray-800 hover:bg-gray-100"}`}
-                            >
-                                <IoPencil size={13} />
-                                Edit Profile
-                            </button>
-
-                            {/* Logout Button */}
-                            <button
-                                onClick={handleLogout}
-                                className={`flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full border transition-all ${isDark
-                                    ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
-                                    : "border-red-200 text-red-500 hover:bg-red-50"
-                                    }`}
-                            >
-                                <IoLogOutOutline size={14} />
-                                Log Out
-                            </button>
                         </div>
 
                         {/* Website */}
@@ -309,17 +303,14 @@ export default function ViewerProfile() {
                     </div>
 
                     {/* Tab Content */}
-                    <div className="px-3 py-3 space-y-3">
+                    <div className="px-0 py-0 space-y-3">
                         {activeTab === "posts" && (
-                            <>
-                                {activityItems.length > 0 ? (
-                                    activityItems.map(item => (
-                                        <PostCard key={item.id} item={item} isDark={isDark} />
-                                    ))
-                                ) : (
-                                    <EmptyTabState message="No posts yet" isDark={isDark} />
-                                )}
-                            </>
+                            <ProfileContentGrid
+                                isDark={isDark}
+                                isOwner={true}
+                                fetchFn={postsService.getMyPosts}
+                                role="viewer"
+                            />
                         )}
                         {activeTab === "replies" && (
                             <EmptyTabState message="No replies yet" isDark={isDark} />

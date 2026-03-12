@@ -14,6 +14,7 @@ import ensureUrl from "../../utils/ensureUrl";
 import { goToProfile } from "../../utils/profileNavigation";
 import postsService from "../../services/postsService";
 import PostCommentSheet from "./PostCommentSheet";
+import InvestorThoughtSheet from "./InvestorThoughtSheet";
 
 /**
  * StartupPostCard — rendered when post._type === 'startup'.
@@ -44,6 +45,9 @@ export default function StartupPostCard({
     // Comment sheet
     const [commentOpen, setCommentOpen] = useState(false);
     const [commentCount, setCommentCount] = useState(post.commentCount || 0);
+
+    // Investor Thought sheet (read-only)
+    const [thoughtOpen, setThoughtOpen] = useState(false);
 
     // --- Close menu on outside click ---
     useEffect(() => {
@@ -221,7 +225,7 @@ export default function StartupPostCard({
                 {post.investorThoughts?.length > 0 && (
                     <div
                         className={`mx-4 mb-3 flex items-center gap-3 px-3 py-2.5 rounded-2xl border cursor-pointer ${isDark ? "border-white/10 bg-gray-800/60 active:bg-white/5" : "border-gray-100 bg-gray-50 active:bg-gray-100"}`}
-                        onClick={() => setCommentOpen(true)}
+                        onClick={() => setThoughtOpen(true)}
                     >
                         <div className="flex -space-x-2">
                             {post.investorThoughts.slice(0, 4).map((t, i) => (
@@ -234,7 +238,18 @@ export default function StartupPostCard({
                                 </div>
                             ))}
                         </div>
-                        <span className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>Investor's Thought</span>
+                        <div className="flex flex-col min-w-0">
+                            <span className={`text-xs font-semibold truncate ${isDark ? "text-gray-200" : "text-gray-700"}`}>
+                                {(() => {
+                                    const names = post.investorThoughts.map(t => t.name || t.user?.fullName).filter(Boolean);
+                                    if (names.length === 0) return "Investor";
+                                    const shown = names.slice(0, 2);
+                                    const extra = names.length - shown.length;
+                                    return shown.join(", ") + (extra > 0 ? ` +${extra} more` : "");
+                                })()}
+                            </span>
+                            <span className={`text-[10px] ${isDark ? "text-gray-500" : "text-gray-400"}`}>Investor's Thought</span>
+                        </div>
                     </div>
                 )}
 
@@ -268,13 +283,21 @@ export default function StartupPostCard({
                 </div>
             </div>
 
-            {/* ── Comment Sheet ── */}
+            {/* ── Regular Comment Sheet ── */}
             <PostCommentSheet
                 isOpen={commentOpen}
                 onClose={() => setCommentOpen(false)}
                 postId={post.id}
                 postTitle={post.startupName}
                 onCommentAdded={() => setCommentCount(c => c + 1)}
+            />
+
+            {/* ── Investor Thought Sheet (read-only, investor comments only) ── */}
+            <InvestorThoughtSheet
+                isOpen={thoughtOpen}
+                onClose={() => setThoughtOpen(false)}
+                postId={post.id}
+                postTitle={post.startupName}
             />
         </>
     );

@@ -59,6 +59,12 @@ export const reelsService = {
   createReel: async ({ videoUrl, title, description, hashtags }) => {
     return await apiClient.post('/reels', { videoUrl, title, description, hashtags });
   },
+
+  // Get all reels uploaded by the current user's startup (for profile Posts tab)
+  getMyReels: async () => apiClient.get('/reels/me'),
+
+  // Delete a reel (startup founder only)
+  deleteReel: async (reelId) => apiClient.delete(`/reels/${reelId}`),
 };
 
 export default reelsService;

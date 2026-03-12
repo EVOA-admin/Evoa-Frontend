@@ -4,6 +4,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../config/supabase";
 import { getMyStartup, updateStartup } from "../../services/startupsService";
+import postsService from "../../services/postsService";
+import { reelsService } from "../../services/reelsService";
 import storageService from "../../services/storageService";
 import {
     IoArrowBack, IoNotificationsOutline, IoPencil, IoCamera, IoCheckmark, IoClose,
@@ -16,6 +18,7 @@ import { getNotifications } from "../../services/notificationsService";
 import ensureUrl from "../../utils/ensureUrl";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
+import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 
 export default function StartupProfile() {
     const { theme } = useTheme();
@@ -32,7 +35,7 @@ export default function StartupProfile() {
 
     const [startup, setStartup] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("about");
+    const [activeTab, setActiveTab] = useState("posts");
     const [unreadCount, setUnreadCount] = useState(0);
 
     // Edit modal
@@ -162,6 +165,7 @@ export default function StartupProfile() {
     };
 
     const tabs = [
+        { id: "posts", label: "Posts" },
         { id: "about", label: "About" },
         { id: "team", label: "Team" },
         { id: "pitch", label: "Pitch" },
@@ -173,9 +177,28 @@ export default function StartupProfile() {
         ? [startup.location.city, startup.location.state, startup.location.country].filter(Boolean).join(", ")
         : "";
 
+    const headerActions = (
+        <div className="flex items-center gap-0.5">
+            <button
+                onClick={openEdit}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/60 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-500 hover:text-[#00B8A9] hover:bg-gray-100"}`}
+                title="Edit Profile"
+            >
+                <IoPencil size={18} />
+            </button>
+            <button
+                onClick={handleLogout}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
+                title="Log Out"
+            >
+                <IoLogOutOutline size={18} />
+            </button>
+        </div>
+    );
+
     return (
         <AppShell>
-            <AppHeader title="My Profile" showThemeToggle={true} />
+            <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
 
             {loading ? (
                 <div className="flex items-center justify-center h-72">
@@ -264,17 +287,6 @@ export default function StartupProfile() {
                             >
                                 <IoPencil size={15} />Edit Startup Profile
                             </button>
-
-                            {/* Logout Button */}
-                            <button
-                                onClick={handleLogout}
-                                className={`mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-all ${isDark
-                                    ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
-                                    : "border-red-200 text-red-500 hover:bg-red-50"
-                                    }`}
-                            >
-                                <IoLogOutOutline size={16} />Log Out
-                            </button>
                         </div>
                     </div>
 
@@ -291,6 +303,17 @@ export default function StartupProfile() {
 
                     {/* Tab Content */}
                     <div className="px-4 py-4 space-y-4 pb-10">
+
+                        {/* ── Posts Tab ── */}
+                        {activeTab === "posts" && (
+                            <ProfileContentGrid
+                                isDark={isDark}
+                                isOwner={true}
+                                fetchFn={postsService.getMyPosts}
+                                fetchFn2={reelsService.getMyReels}
+                                role="startup"
+                            />
+                        )}
 
                         {/* ── About Tab ── */}
                         {activeTab === "about" && (

@@ -1,39 +1,35 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiEye, FiEyeOff, FiUpload, FiArrowLeft } from "react-icons/fi";
+import { FiUpload, FiArrowLeft } from "react-icons/fi";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import logo from "../../assets/logo.avif";
 import { createIncubator } from "../../services/incubatorsService";
 import { uploadFile } from "../../services/storageService";
-import { supabase } from "../../config/supabase";
+
 export default function IncubatorRegistration() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
-    // Identity
+    // Step 1 – Identity & Location
     incubatorName: '',
     logo: null,
     officialEmail: '',
     websiteUrl: '',
-    // Location
+    phoneNumber: '',
     city: '',
     state: '',
     fullAddress: '',
-    phoneNumber: '',
-    // Verification
+    // Step 2 – Verification & Program
     organizationType: '',
     affiliationType: '',
     verificationDocumentType: '',
     verificationDocument: null,
-    // Program Details
     programType: '',
     sectorFocus: [],
     equityPolicy: '',
@@ -42,20 +38,13 @@ export default function IncubatorRegistration() {
     programDuration: '',
     cohortSize: '',
     numberOfMentors: '',
-    // Facilities
+    // Step 3 – Facilities & Social Proof
     facilities: [],
-    // Social Proof
     portfolioStartups: '',
     successStories: '',
     linkedinProfile: '',
     instagram: '',
     youtube: '',
-    // Security
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-
   });
 
   const organizationTypes = ['Government Incubator', 'University Incubator', 'Corporate Incubator', 'Private Incubator'];
@@ -65,12 +54,10 @@ export default function IncubatorRegistration() {
   const sectors = ['Tech', 'DeepTech', 'AI/ML', 'FinTech', 'EdTech', 'HealthTech', 'D2C / FMCG', 'ClimateTech', 'Mobility', 'SaaS', 'Web3', 'AgriTech', 'Others'];
   const equityPolicies = ['0% Equity (Free Program)', '1–2% Equity', '2–5% Equity', 'Custom Equity'];
   const fundingSupports = ['No Funding', 'Grant Only', 'Seed Investment', 'Convertible Note', 'Hybrid Support'];
-  const facilities = ['Co-working Space', 'Labs / Prototyping', 'Cloud Credits', 'Legal Support', 'Mentorship Programs', 'Government Scheme Support', 'Corporate Connect', 'Investor Network', 'Market Access'];
+  const facilitiesList = ['Co-working Space', 'Labs / Prototyping', 'Cloud Credits', 'Legal Support', 'Mentorship Programs', 'Government Scheme Support', 'Corporate Connect', 'Investor Network', 'Market Access'];
   const states = ['Uttar Pradesh', 'Delhi NCR', 'Maharashtra', 'Karnataka', 'Tamil Nadu', 'Gujarat', 'Rajasthan', 'West Bengal', 'Telangana', 'Kerala', 'Haryana', 'Madhya Pradesh', 'Punjab', 'Bihar', 'Odisha', 'Others'];
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const handleInputChange = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
   const handleArrayChange = (field, value) => {
     setFormData(prev => ({
@@ -82,7 +69,6 @@ export default function IncubatorRegistration() {
   };
 
   const [previews, setPreviews] = useState({});
-
   const handleFileUpload = (field, file) => {
     if (!file) return;
     setFormData(prev => ({ ...prev, [field]: file }));
@@ -96,39 +82,27 @@ export default function IncubatorRegistration() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // ── Per-step validation ──────────────────────────────────────────────────────
   const validateStep = () => {
     setError('');
     switch (currentStep) {
       case 1:
         if (!formData.incubatorName.trim()) { setError('Incubator name is required.'); return false; }
         if (!formData.officialEmail.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(formData.officialEmail)) { setError('A valid official email is required.'); return false; }
-        return true;
-      case 2:
         if (!formData.state) { setError('Please select your state.'); return false; }
         if (!formData.city.trim()) { setError('City is required.'); return false; }
         return true;
-      case 3:
+      case 2:
         if (!formData.organizationType) { setError('Please select your organization type.'); return false; }
         if (!formData.affiliationType) { setError('Please select your affiliation type.'); return false; }
-        return true;
-      case 4:
         if (!formData.verificationDocumentType) { setError('Please select a verification document type.'); return false; }
         return true;
-      // Steps 5–7 are optional enrichment
       default:
         return true;
     }
   };
 
-  const nextStep = () => {
-    if (validateStep() && currentStep < 8) setCurrentStep(currentStep + 1);
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
-  };
-
+  const nextStep = () => { if (validateStep() && currentStep < 3) setCurrentStep(currentStep + 1); };
+  const prevStep = () => { if (currentStep > 1) setCurrentStep(currentStep - 1); };
 
   const uploadToStorage = async (file, folder) => {
     if (!file) return null;
@@ -137,7 +111,6 @@ export default function IncubatorRegistration() {
     try {
       return await uploadFile(file, 'evoa-media', path);
     } catch (err) {
-      console.warn('Upload to evoa-media failed, trying public bucket:', err.message);
       return await uploadFile(file, 'public', path);
     }
   };
@@ -147,13 +120,11 @@ export default function IncubatorRegistration() {
       setLoading(true);
       setError('');
 
-      // Upload logo and verification doc in parallel
       const [logoUrl, verificationDocUrl] = await Promise.all([
         uploadToStorage(formData.logo, 'incubators/logos'),
         uploadToStorage(formData.verificationDocument, 'incubators/documents'),
       ]);
 
-      // Create DTO — only include fields in CreateIncubatorDto
       const incubatorData = {
         name: formData.incubatorName,
         programTypes: formData.programType ? [formData.programType] : undefined,
@@ -167,11 +138,7 @@ export default function IncubatorRegistration() {
         cohortSize: parseInt(formData.cohortSize) || undefined,
         facilities: formData.facilities.length > 0 ? formData.facilities : undefined,
         socialLinks: (formData.linkedinProfile || formData.instagram || formData.youtube)
-          ? {
-            linkedin: formData.linkedinProfile || undefined,
-            instagram: formData.instagram || undefined,
-            youtube: formData.youtube || undefined,
-          }
+          ? { linkedin: formData.linkedinProfile || undefined, instagram: formData.instagram || undefined, youtube: formData.youtube || undefined }
           : undefined,
         organizationType: formData.organizationType || undefined,
         affiliationType: formData.affiliationType || undefined,
@@ -184,14 +151,9 @@ export default function IncubatorRegistration() {
         fullAddress: formData.fullAddress || undefined,
       };
 
-      // Strip undefined so ValidationPipe doesn't reject them
-      Object.keys(incubatorData).forEach(k => {
-        if (incubatorData[k] === undefined) delete incubatorData[k];
-      });
+      Object.keys(incubatorData).forEach(k => { if (incubatorData[k] === undefined) delete incubatorData[k]; });
 
-      const response = await createIncubator(incubatorData);
-      // createIncubator throws on backend error via apiClient
-
+      await createIncubator(incubatorData);
       await completeRegistration();
       navigate('/incubator');
     } catch (err) {
@@ -202,302 +164,123 @@ export default function IncubatorRegistration() {
     }
   };
 
+  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`;
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              1. Incubator Identity
+          <div className="space-y-3 sm:space-y-4">
+            <h2 className={`text-lg sm:text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-black'}`}>
+              1. Identity &amp; Location
             </h2>
-            <input
-              type="text"
-              placeholder="Incubator Name"
-              value={formData.incubatorName}
-              onChange={(e) => handleInputChange('incubatorName', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
+            <input type="text" placeholder="Incubator Name *" value={formData.incubatorName} onChange={(e) => handleInputChange('incubatorName', e.target.value)} className={inputCls} />
             <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
               Logo Upload
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileUpload('logo', e.target.files[0])}
-                className="hidden"
-              />
+              <input type="file" accept="image/*" onChange={(e) => handleFileUpload('logo', e.target.files[0])} className="hidden" />
               <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
                 {previews.logo ? (
                   <div className="relative group">
-                    <img src={previews.logo} alt="Logo preview" className="w-full h-40 object-cover" />
+                    <img src={previews.logo} alt="Logo preview" className="w-full h-32 object-contain bg-gray-50" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="text-white text-xs font-semibold">Click to change</span>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4">
-                    <FiUpload className="mx-auto mb-2" size={24} />
-                    <span className="text-xs">Click to upload</span>
-                  </div>
+                  <div className="p-4"><FiUpload className="mx-auto mb-2" size={22} /><span className="text-xs">Click to upload logo</span></div>
                 )}
               </div>
             </label>
-            <input
-              type="email"
-              placeholder="Official Email ID"
-              value={formData.officialEmail}
-              onChange={(e) => handleInputChange('officialEmail', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="url"
-              placeholder="Website URL"
-              value={formData.websiteUrl}
-              onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
+            <input type="email" placeholder="Official Email ID *" value={formData.officialEmail} onChange={(e) => handleInputChange('officialEmail', e.target.value)} className={inputCls} />
+            <input type="url" placeholder="Website URL" value={formData.websiteUrl} onChange={(e) => handleInputChange('websiteUrl', e.target.value)} className={inputCls} />
+            <input type="tel" placeholder="Phone Number" value={formData.phoneNumber} onChange={(e) => handleInputChange('phoneNumber', e.target.value)} className={inputCls} />
+            <div className="grid grid-cols-2 gap-3">
+              <input type="text" placeholder="City *" value={formData.city} onChange={(e) => handleInputChange('city', e.target.value)} className={inputCls} />
+              <SearchableSelect value={formData.state} onChange={(value) => handleInputChange('state', value)} options={states.map(s => ({ value: s, label: s }))} placeholder="Select State *" isDark={isDark} />
+            </div>
+            <textarea placeholder="Full Address (Optional)" value={formData.fullAddress} onChange={(e) => handleInputChange('fullAddress', e.target.value)} rows={2} className={inputCls} />
           </div>
         );
 
       case 2:
         return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              2. Location Details
+          <div className="space-y-3 sm:space-y-4">
+            <h2 className={`text-lg sm:text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-black'}`}>
+              2. Verification &amp; Program Details
             </h2>
-            <SearchableSelect
-              value={formData.state}
-              onChange={(value) => handleInputChange('state', value)}
-              options={states.map(state => ({ value: state, label: state }))}
-              placeholder="Select State"
-              isDark={isDark}
-            />
-            <input
-              type="text"
-              placeholder="City"
-              value={formData.city}
-              onChange={(e) => handleInputChange('city', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <textarea
-              placeholder="Full Address (Optional)"
-              value={formData.fullAddress}
-              onChange={(e) => handleInputChange('fullAddress', e.target.value)}
-              rows={3}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              value={formData.phoneNumber}
-              onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
+            <SearchableSelect value={formData.organizationType} onChange={(value) => handleInputChange('organizationType', value)} options={organizationTypes.map(t => ({ value: t, label: t }))} placeholder="Type of Organization *" isDark={isDark} />
+            <SearchableSelect value={formData.affiliationType} onChange={(value) => handleInputChange('affiliationType', value)} options={affiliationTypes.map(t => ({ value: t, label: t }))} placeholder="Affiliation Type *" isDark={isDark} />
+            <SearchableSelect value={formData.verificationDocumentType} onChange={(value) => handleInputChange('verificationDocumentType', value)} options={verificationDocTypes.map(t => ({ value: t, label: t }))} placeholder="Verification Document Type *" isDark={isDark} />
+            {formData.verificationDocumentType && (
+              <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
+                Upload Document (PDF/JPG/PNG)
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('verificationDocument', e.target.files[0])} className="hidden" />
+                <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'} ${previews.verificationDocument ? 'border-[#00B8A9]/40' : ''}`}>
+                  {previews.verificationDocument
+                    ? (typeof previews.verificationDocument === 'string' && previews.verificationDocument.startsWith('blob:')
+                      ? <img src={previews.verificationDocument} alt="Doc" className="h-20 mx-auto object-contain rounded" />
+                      : <><span className="text-[#00B8A9]">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.verificationDocument}</span></>)
+                    : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload</span></>}
+                </div>
+              </label>
+            )}
+            <div className={`border-t pt-4 ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Program Details (Optional)</p>
+              <div className="space-y-3">
+                <SearchableSelect value={formData.programType} onChange={(value) => handleInputChange('programType', value)} options={programTypes.map(t => ({ value: t, label: t }))} placeholder="Program Type" isDark={isDark} />
+                <div>
+                  <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Sector Focus (Multi-Select)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {sectors.map(sector => (
+                      <button key={sector} type="button" onClick={() => handleArrayChange('sectorFocus', sector)}
+                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.sectorFocus.includes(sector) ? 'bg-[#00B8A9] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#00B8A9]/50' : 'border-black/20 text-black/70 hover:border-[#00B8A9]/50'}`}>
+                        {sector}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <SearchableSelect value={formData.equityPolicy} onChange={(value) => handleInputChange('equityPolicy', value)} options={equityPolicies.map(p => ({ value: p, label: p }))} placeholder="Equity Policy" isDark={isDark} />
+                {formData.equityPolicy === 'Custom Equity' && (
+                  <input type="text" placeholder="Enter Custom Equity %" value={formData.customEquity} onChange={(e) => handleInputChange('customEquity', e.target.value)} className={inputCls} />
+                )}
+                <SearchableSelect value={formData.fundingSupport} onChange={(value) => handleInputChange('fundingSupport', value)} options={fundingSupports.map(s => ({ value: s, label: s }))} placeholder="Funding Support" isDark={isDark} />
+                <div className="grid grid-cols-3 gap-3">
+                  <input type="text" placeholder="Duration" value={formData.programDuration} onChange={(e) => handleInputChange('programDuration', e.target.value)} className={inputCls} />
+                  <input type="number" placeholder="Cohort Size" value={formData.cohortSize} onChange={(e) => handleInputChange('cohortSize', e.target.value)} className={inputCls} />
+                  <input type="number" placeholder="# Mentors" value={formData.numberOfMentors} onChange={(e) => handleInputChange('numberOfMentors', e.target.value)} className={inputCls} />
+                </div>
+              </div>
+            </div>
           </div>
         );
 
       case 3:
         return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              3. Verification & Authentication
+          <div className="space-y-3 sm:space-y-4">
+            <h2 className={`text-lg sm:text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-black'}`}>
+              3. Facilities &amp; Social Proof
             </h2>
-            <SearchableSelect
-              value={formData.organizationType}
-              onChange={(value) => handleInputChange('organizationType', value)}
-              options={organizationTypes.map(type => ({ value: type, label: type }))}
-              placeholder="Type of Organization"
-              isDark={isDark}
-            />
-            <SearchableSelect
-              value={formData.affiliationType}
-              onChange={(value) => handleInputChange('affiliationType', value)}
-              options={affiliationTypes.map(type => ({ value: type, label: type }))}
-              placeholder="Affiliation Type"
-              isDark={isDark}
-            />
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              4. Verified Document Section
-            </h2>
-            <SearchableSelect
-              value={formData.verificationDocumentType}
-              onChange={(value) => handleInputChange('verificationDocumentType', value)}
-              options={verificationDocTypes.map(type => ({ value: type, label: type }))}
-              placeholder="Choose Your Verification Document"
-              isDark={isDark}
-            />
-            {formData.verificationDocumentType && (
-              <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-                Upload Selected Document (PDF/JPG/PNG)
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => handleFileUpload('verificationDocument', e.target.files[0])}
-                  className="hidden"
-                />
-                <div className={`mt-2 p-3 sm:p-4 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'} ${previews.verificationDocument ? (isDark ? 'border-[#00B8A9]/40 bg-[#00B8A9]/10' : 'border-[#00B8A9]/40 bg-[#00B8A9]/5') : ''}`}>
-                  {previews.verificationDocument ? (
-                    typeof previews.verificationDocument === 'string' && previews.verificationDocument.startsWith('blob:') ? (
-                      <img src={previews.verificationDocument} alt="Document" className="h-24 mx-auto object-contain rounded" />
-                    ) : (
-                      <><span className="text-[#00B8A9] text-sm">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.verificationDocument}</span></>
-                    )
-                  ) : (
-                    <><FiUpload className="mx-auto mb-1 sm:mb-2" size={20} /><span className="text-xs">Click to upload</span></>
-                  )}
-                </div>
-              </label>
-            )}
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              5. Program Details
-            </h2>
-            <SearchableSelect
-              value={formData.programType}
-              onChange={(value) => handleInputChange('programType', value)}
-              options={programTypes.map(type => ({ value: type, label: type }))}
-              placeholder="Program Type"
-              isDark={isDark}
-            />
             <div>
-              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
-                Sector Focus (Multi-select)
-              </label>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {sectors.map(sector => (
-                  <label key={sector} className={`flex items-center gap-2 p-2  cursor-pointer ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}>
-                    <input
-                      type="checkbox"
-                      checked={formData.sectorFocus.includes(sector)}
-                      onChange={() => handleArrayChange('sectorFocus', sector)}
-                      className="w-4 h-4"
-                    />
-                    <span className={`text-sm ${isDark ? 'text-white' : 'text-black'}`}>{sector}</span>
-                  </label>
+              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Facilities Offered</label>
+              <div className="flex flex-wrap gap-2">
+                {facilitiesList.map(facility => (
+                  <button key={facility} type="button" onClick={() => handleArrayChange('facilities', facility)}
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.facilities.includes(facility) ? 'bg-[#00B8A9] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#00B8A9]/50' : 'border-black/20 text-black/70 hover:border-[#00B8A9]/50'}`}>
+                    {facility}
+                  </button>
                 ))}
               </div>
             </div>
-            <SearchableSelect
-              value={formData.equityPolicy}
-              onChange={(value) => handleInputChange('equityPolicy', value)}
-              options={equityPolicies.map(policy => ({ value: policy, label: policy }))}
-              placeholder="Equity Policy"
-              isDark={isDark}
-            />
-            {formData.equityPolicy === 'Custom Equity' && (
-              <input
-                type="text"
-                placeholder="Enter Custom Equity"
-                value={formData.customEquity}
-                onChange={(e) => handleInputChange('customEquity', e.target.value)}
-                className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-              />
-            )}
-            <SearchableSelect
-              value={formData.fundingSupport}
-              onChange={(value) => handleInputChange('fundingSupport', value)}
-              options={fundingSupports.map(support => ({ value: support, label: support }))}
-              placeholder="Funding Support"
-              isDark={isDark}
-            />
-            <input
-              type="text"
-              placeholder="Program Duration (Weeks/Months)"
-              value={formData.programDuration}
-              onChange={(e) => handleInputChange('programDuration', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="number"
-              placeholder="Cohort Size"
-              value={formData.cohortSize}
-              onChange={(e) => handleInputChange('cohortSize', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="number"
-              placeholder="Number of Mentors"
-              value={formData.numberOfMentors}
-              onChange={(e) => handleInputChange('numberOfMentors', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-          </div>
-        );
-
-      case 6:
-        return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              6. Facilities & Support
-            </h2>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {facilities.map(facility => (
-                <label key={facility} className={`flex items-center gap-2 p-2  cursor-pointer ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}>
-                  <input
-                    type="checkbox"
-                    checked={formData.facilities.includes(facility)}
-                    onChange={() => handleArrayChange('facilities', facility)}
-                    className="w-4 h-4"
-                  />
-                  <span className={`text-sm ${isDark ? 'text-white' : 'text-black'}`}>{facility}</span>
-                </label>
-              ))}
+            <div className={`border-t pt-4 ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Social Proof (Optional)</p>
+              <div className="space-y-3">
+                <textarea placeholder="Portfolio Startups (names or links)" value={formData.portfolioStartups} onChange={(e) => handleInputChange('portfolioStartups', e.target.value)} rows={2} className={inputCls} />
+                <textarea placeholder="Top Startup Success Stories" value={formData.successStories} onChange={(e) => handleInputChange('successStories', e.target.value)} rows={2} className={inputCls} />
+                <input type="url" placeholder="LinkedIn Profile" value={formData.linkedinProfile} onChange={(e) => handleInputChange('linkedinProfile', e.target.value)} className={inputCls} />
+                <input type="url" placeholder="Instagram (Optional)" value={formData.instagram} onChange={(e) => handleInputChange('instagram', e.target.value)} className={inputCls} />
+                <input type="url" placeholder="YouTube (Optional)" value={formData.youtube} onChange={(e) => handleInputChange('youtube', e.target.value)} className={inputCls} />
+              </div>
             </div>
-          </div>
-        );
-
-      case 7:
-        return (
-          <div className="space-y-2 sm:space-y-3 md:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-              7. Social Proof Section
-            </h2>
-            <textarea
-              placeholder="Portfolio Startups (Input / Links)"
-              value={formData.portfolioStartups}
-              onChange={(e) => handleInputChange('portfolioStartups', e.target.value)}
-              rows={3}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <textarea
-              placeholder="Top Startup Success Stories"
-              value={formData.successStories}
-              onChange={(e) => handleInputChange('successStories', e.target.value)}
-              rows={3}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="url"
-              placeholder="LinkedIn Profile"
-              value={formData.linkedinProfile}
-              onChange={(e) => handleInputChange('linkedinProfile', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="url"
-              placeholder="Instagram (Optional)"
-              value={formData.instagram}
-              onChange={(e) => handleInputChange('instagram', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
-            <input
-              type="url"
-              placeholder="YouTube (Optional)"
-              value={formData.youtube}
-              onChange={(e) => handleInputChange('youtube', e.target.value)}
-              className={`w-full px-3 sm:px-4 py-2 sm:py-2.5  text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
-            />
           </div>
         );
 
@@ -509,84 +292,52 @@ export default function IncubatorRegistration() {
   return (
     <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
       <div className="h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {/* Header */}
         <div className="mb-4 sm:mb-6 shrink-0">
           <div className="flex items-center justify-between mb-2 sm:mb-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
               <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
             </div>
-            <button
-              type="button"
-              onClick={() => navigate('/choice-role')}
-              className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl transition-all ${isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-black/60 hover:text-black hover:bg-black/10'
-                }`}
-            >
-              <FiArrowLeft size={15} />
-              Back
+            <button type="button" onClick={() => navigate('/choice-role')} className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl transition-all ${isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-black/60 hover:text-black hover:bg-black/10'}`}>
+              <FiArrowLeft size={15} /> Back
             </button>
           </div>
-          <h1 className={`text-lg sm:text-2xl font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
-            Incubator Registration
-          </h1>
-          <p className={`text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-            Step {currentStep} of 7
-          </p>
+          <h1 className={`text-lg sm:text-2xl font-bold mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Incubator Registration</h1>
+          <p className={`text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>Step {currentStep} of 3</p>
         </div>
 
-        <div className={`mb-4 sm:mb-6 h-1.5 sm:h-2 -full shrink-0 ${isDark ? 'bg-white/10' : 'bg-black/10'}`}>
-          <div
-            className="h-full -full transition-all duration-300 bg-[#00B8A9]"
-            style={{ width: `${(currentStep / 7) * 100}%` }}
-          />
+        {/* Progress Bar */}
+        <div className={`mb-4 sm:mb-6 h-1.5 sm:h-2 w-full shrink-0 rounded-full ${isDark ? 'bg-white/10' : 'bg-black/10'}`}>
+          <div className="h-full rounded-full transition-all duration-300 bg-[#00B8A9]" style={{ width: `${(currentStep / 3) * 100}%` }} />
         </div>
 
-        <div className={`-xl sm:-2xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-black/50 border border-white/10' : 'bg-white border border-black/10'}`}>
+        {/* Form content */}
+        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-black/50 border border-white/10' : 'bg-white border border-black/10'}`}>
           {renderStep()}
         </div>
 
+        {/* Navigation */}
         <div className="flex justify-between gap-2 sm:gap-4 shrink-0">
-          <button
-            type="button"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-            className={`px-4 sm:px-6 py-2 sm:py-2.5  text-xs sm:text-sm font-semibold transition-all ${currentStep === 1
-              ? 'opacity-50 cursor-not-allowed'
-              : isDark
-                ? 'bg-white/10 text-white hover:bg-white/20 cursor-pointer'
-                : 'bg-black/10 text-black hover:bg-black/20 cursor-pointer'
-              }`}
-          >
+          <button type="button" onClick={prevStep} disabled={currentStep === 1}
+            className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/10 text-black hover:bg-black/20'}`}>
             Previous
           </button>
-          {currentStep < 8 ? (
-            <button
-              type="button"
-              onClick={nextStep}
-              className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer"
-            >
+          {currentStep < 3 ? (
+            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
               Next
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all ${loading
-                ? 'bg-gray-400 cursor-not-allowed text-white'
-                : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer'
-                }`}
-            >
+            <button type="button" onClick={handleSubmit} disabled={loading}
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
               {loading ? 'Submitting...' : 'Submit'}
             </button>
           )}
         </div>
         {error && (
-          <div className="mt-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm text-center">
-            {error}
-          </div>
+          <div className="mt-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm text-center">{error}</div>
         )}
       </div>
     </div>
   );
 }
-

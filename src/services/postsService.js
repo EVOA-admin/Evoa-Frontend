@@ -46,6 +46,10 @@ const postsService = {
     /** Get Investor's Thoughts — only investor/incubator comments */
     getInvestorThoughts: async (postId) =>
         apiClient.get(`/posts/${postId}/investor-thoughts`),
+
+    /** Record a post view — call when a post card becomes visible */
+    recordPostView: async (postId) =>
+        apiClient.post(`/posts/${postId}/view`),
 };
 
 export default postsService;

@@ -4,6 +4,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../config/supabase";
 import { getMyInvestorProfile } from "../../services/investorsService";
+import postsService from "../../services/postsService";
 import {
     IoPencil,
     IoLogOutOutline,
@@ -19,6 +20,7 @@ import EditInvestorModal from "./edit-investor-modal";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import ensureUrl from "../../utils/ensureUrl";
+import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 
 export default function InvestorProfile() {
     const { theme } = useTheme();
@@ -29,7 +31,7 @@ export default function InvestorProfile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("about");
+    const [activeTab, setActiveTab] = useState("posts");
 
     useEffect(() => {
         fetchInvestorProfile();
@@ -69,6 +71,7 @@ export default function InvestorProfile() {
         : "";
 
     const tabs = [
+        { id: "posts", label: "Posts" },
         { id: "about", label: "About" },
         { id: "portfolio", label: "Portfolio" },
         { id: "credentials", label: "Docs" },
@@ -199,6 +202,16 @@ export default function InvestorProfile() {
             {/* Tab Content */}
             <div className="px-4 py-4 space-y-3 pb-10">
 
+                {/* Posts Tab */}
+                {activeTab === "posts" && (
+                    <ProfileContentGrid
+                        isDark={isDark}
+                        isOwner={true}
+                        fetchFn={postsService.getMyPosts}
+                        role="investor"
+                    />
+                )}
+
                 {/* About Tab */}
                 {activeTab === "about" && (
                     <>
@@ -208,6 +221,26 @@ export default function InvestorProfile() {
                             </Section>
                         )}
 
+
+                        {profile?.sectors?.length > 0 && (
+                            <Section title="Preferred Sectors" isDark={isDark}>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {profile.sectors.map(s => (
+                                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#00B8A9]/10 text-[#00B8A9] font-medium">{s}</span>
+                                    ))}
+                                </div>
+                            </Section>
+                        )}
+
+                        {!profile?.description && !profile?.sectors?.length && (
+                            <EmptyTabState message="No about info added yet" isDark={isDark} />
+                        )}
+                    </>
+                )}
+
+                {/* Portfolio Tab */}
+                {activeTab === "portfolio" && (
+                    <>
                         {(profile?.minTicketSize || profile?.maxTicketSize || profile?.stages?.length > 0) && (
                             <Section title="Investment Criteria" isDark={isDark}>
                                 <div className="grid grid-cols-2 gap-2">
@@ -228,27 +261,8 @@ export default function InvestorProfile() {
                             </Section>
                         )}
 
-                        {profile?.sectors?.length > 0 && (
-                            <Section title="Preferred Sectors" isDark={isDark}>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {profile.sectors.map(s => (
-                                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#00B8A9]/10 text-[#00B8A9] font-medium">{s}</span>
-                                    ))}
-                                </div>
-                            </Section>
-                        )}
-
-                        {!profile?.description && !profile?.sectors?.length && !profile?.minTicketSize && (
-                            <EmptyTabState message="No about info added yet" isDark={isDark} />
-                        )}
-                    </>
-                )}
-
-                {/* Portfolio Tab */}
-                {activeTab === "portfolio" && (
-                    <>
                         {profile?.socialProof?.length > 0 ? (
-                            <Section title="Social Proof & Network" isDark={isDark}>
+                            <Section title="Social Proof &amp; Network" isDark={isDark}>
                                 <div className="space-y-3">
                                     {profile.socialProof.map((proof, idx) => (
                                         <div key={idx} className={`p-3 rounded-xl border ${isDark ? "border-white/10 bg-white/5" : "border-gray-100 bg-gray-50"}`}>
@@ -260,7 +274,9 @@ export default function InvestorProfile() {
                                 </div>
                             </Section>
                         ) : (
-                            <EmptyTabState message="No portfolio data added yet" isDark={isDark} />
+                            !profile?.minTicketSize && !profile?.maxTicketSize && !profile?.stages?.length && (
+                                <EmptyTabState message="No portfolio data added yet" isDark={isDark} />
+                            )
                         )}
                     </>
                 )}
