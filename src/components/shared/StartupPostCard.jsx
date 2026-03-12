@@ -11,6 +11,7 @@ import {
 import { MdVerified } from "react-icons/md";
 import { HiDotsHorizontal } from "react-icons/hi";
 import ensureUrl from "../../utils/ensureUrl";
+import { goToProfile } from "../../utils/profileNavigation";
 import postsService from "../../services/postsService";
 import PostCommentSheet from "./PostCommentSheet";
 
@@ -112,7 +113,7 @@ export default function StartupPostCard({
                     <div className="flex items-center gap-3">
                         <div
                             className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ${isDark ? "bg-gray-800" : "bg-gray-100"} cursor-pointer`}
-                            onClick={() => post.authorId && navigate(`/u/${post.authorId}`)}
+                            onClick={() => goToProfile(post.authorId, currentUser, navigate)}
                         >
                             <img
                                 src={post.startupLogo || logoFallback}
@@ -124,7 +125,7 @@ export default function StartupPostCard({
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
                                 <button
-                                    onClick={() => post.authorId && navigate(`/u/${post.authorId}`)}
+                                    onClick={() => goToProfile(post.authorId, currentUser, navigate)}
                                     className={`text-sm font-bold hover:underline bg-transparent border-none p-0 cursor-pointer leading-tight truncate ${isDark ? "text-white" : "text-gray-900"}`}
                                 >
                                     {post.startupName}

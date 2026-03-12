@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaRegComment, FaShare, FaEdit, FaTrash, FaFlag, FaLink } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import { HiDotsHorizontal } from "react-icons/hi";
+import { goToProfile } from "../../utils/profileNavigation";
 import postsService from "../../services/postsService";
 import PostCommentSheet from "./PostCommentSheet";
 
@@ -99,7 +100,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1">
                             <button
-                                onClick={() => navigate(`/u/${post.authorId || ''}`)}
+                                onClick={() => goToProfile(post.authorId, currentUser, navigate)}
                                 className={`text-sm font-bold truncate hover:underline cursor-pointer bg-transparent border-none p-0 ${isDark ? "text-white" : "text-gray-900"}`}
                             >
                                 {post.authorName}

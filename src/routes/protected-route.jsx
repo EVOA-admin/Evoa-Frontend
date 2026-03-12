@@ -26,7 +26,9 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     const { user, loading, syncing, userRole, roleSelected, registrationCompleted } = useAuth();
     const location = useLocation();
 
-    if (loading || syncing) {
+    // Only block on the very first load (before we know if a user is logged in).
+    // The `syncing` flag is a background re-fetch — never block route rendering on it.
+    if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="w-16 h-16 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin"></div>

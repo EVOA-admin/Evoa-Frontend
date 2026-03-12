@@ -6,6 +6,8 @@ import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
 import VideoThumbnail from "../../components/shared/VideoThumbnail";
+import { useAuth } from "../../contexts/AuthContext";
+import { goToProfile } from "../../utils/profileNavigation";
 
 // Debounce helper — avoids API call on every keystroke
 function useDebounce(value, delay) {
@@ -21,6 +23,7 @@ export default function Explore() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
@@ -194,7 +197,7 @@ export default function Explore() {
                       {searchResults.startups.map((item) => (
                         <div
                           key={item.id}
-                          onClick={() => navigate(`/u/${item.founder?.id || item.id}`)}
+                          onClick={() => goToProfile(item.founder?.id || item.id, currentUser, navigate)}
                           className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                         >
                           <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
@@ -224,7 +227,7 @@ export default function Explore() {
                         return (
                           <div
                             key={item.id}
-                            onClick={() => navigate(`/u/${item.userId || item.user?.id || item.id}`)}
+                            onClick={() => goToProfile(item.userId || item.user?.id || item.id, currentUser, navigate)}
                             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                           >
                             <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
@@ -255,7 +258,7 @@ export default function Explore() {
                         return (
                           <div
                             key={item.id}
-                            onClick={() => navigate(`/u/${item.userId || item.user?.id || item.id}`)}
+                            onClick={() => goToProfile(item.userId || item.user?.id || item.id, currentUser, navigate)}
                             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                           >
                             <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
@@ -283,7 +286,7 @@ export default function Explore() {
                       {searchResults.users.map((item) => (
                         <div
                           key={item.id}
-                          onClick={() => navigate(`/u/${item.id}`)}
+                          onClick={() => goToProfile(item.id, currentUser, navigate)}
                           className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                         >
                           <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '../config/supabase';
 import apiClient from '../services/apiClient';
 
@@ -16,6 +16,9 @@ export function AuthProvider({ children }) {
     const [userRole, setUserRole] = useState(null);
     const [roleSelected, setRoleSelected] = useState(false);
     const [registrationCompleted, setRegistrationCompleted] = useState(false);
+    // Prevents concurrent or back-to-back redundant syncAndFetchProfile calls.
+    // Supabase can fire INITIAL_SESSION + SIGNED_IN + TOKEN_REFRESHED in quick succession.
+    const isSyncingRef = useRef(false);
 
     // Backward compat: onboardingCompleted is true only when BOTH flags are true
     const onboardingCompleted = roleSelected && registrationCompleted;
@@ -28,10 +31,16 @@ export function AuthProvider({ children }) {
             if (session?.user) {
                 localStorage.setItem('authToken', session.access_token);
 
+                // TOKEN_REFRESHED is a silent background key rotation — no need to re-sync the
+                // full user profile from the backend. Skipping it avoids an unnecessary 6s wait.
                 if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+                    // Guard: if a sync is already running, don't start another.
+                    if (isSyncingRef.current) return;
+                    isSyncingRef.current = true;
                     setSyncing(true);
                     await syncAndFetchProfile(session);
                     setSyncing(false);
+                    isSyncingRef.current = false;
                 }
             } else {
                 localStorage.removeItem('authToken');
@@ -40,6 +49,7 @@ export function AuthProvider({ children }) {
                 setRoleSelected(false);
                 setRegistrationCompleted(false);
                 setSyncing(false);
+                isSyncingRef.current = false;
                 setLoading(false);
             }
         });
@@ -77,19 +87,21 @@ export function AuthProvider({ children }) {
                 // Backward-compat: if old DB has onboarding_completed column but not new ones,
                 // infer from existing role — non-viewer users who existed before this migration
                 // are treated as fully onboarded.
+                // Backward-compat for users created before the two-flag schema:
+                // If the DB has no record for these columns (null/undefined),
+                // infer from role. This ONLY affects genuinely old records where
+                // the columns literally don't exist yet.
                 if (roleSel === undefined || roleSel === null) {
-                    roleSel = role && role !== 'viewer'; // existing non-viewer users are done
+                    roleSel = !!(role && role !== 'viewer');
                 }
                 if (regComp === undefined || regComp === null) {
-                    regComp = role && role !== 'viewer';
+                    // Old users with a non-viewer role are assumed to have
+                    // completed registration (they predate the flag system).
+                    regComp = !!(role && role !== 'viewer');
                 }
-
-                // Additional safety: if user has a non-viewer role and roleSelected is true,
-                // they must have completed registration at some point — treat as complete.
-                // This handles cases where DB has registrationCompleted=false but user is active.
-                if (roleSel && role && role !== 'viewer' && !regComp) {
-                    regComp = true;
-                }
+                // NOTE: if the DB explicitly returns false, we MUST respect it.
+                // Never override an explicit false — that is exactly what causes
+                // the registration-bypass bug.
 
                 setRoleSelected(!!roleSel);
                 setRegistrationCompleted(!!regComp);
@@ -132,6 +144,14 @@ export function AuthProvider({ children }) {
             password,
             options: { data: metadata },
         });
+    };
+
+    const resendVerification = async (email) => {
+        const { error } = await supabase.auth.resend({
+            type: 'signup',
+            email,
+        });
+        if (error) throw error;
     };
 
     const signIn = async (email, password) => {
@@ -238,6 +258,7 @@ export function AuthProvider({ children }) {
         updateProfile,
         updateUserRole,
         completeRegistration,
+        resendVerification,
         isAuthenticated: !!user,
     };
 

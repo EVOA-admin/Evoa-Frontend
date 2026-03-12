@@ -125,8 +125,52 @@ export default function StartupRegistration() {
     }
   };
 
+  // ── Per-step validation ─────────────────────────────────────────────────────
+  const validateStep = () => {
+    setError('');
+    switch (currentStep) {
+      case 1: {
+        // Every listed founder must have at least a name, email, and role
+        for (let i = 0; i < formData.founders.length; i++) {
+          const f = formData.founders[i];
+          if (!f.name.trim()) { setError(`Founder ${i + 1}: Full name is required.`); return false; }
+          if (!f.email.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(f.email)) { setError(`Founder ${i + 1}: A valid email is required.`); return false; }
+          if (!f.role) { setError(`Founder ${i + 1}: Please select a role.`); return false; }
+        }
+        return true;
+      }
+      case 2: {
+        if (!formData.startupName.trim()) { setError('Startup name is required.'); return false; }
+        if (!formData.startupUsername.trim()) { setError('Startup username / handle is required.'); return false; }
+        if (!formData.companyEmail.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(formData.companyEmail)) { setError('A valid company email is required.'); return false; }
+        if (!formData.city.trim()) { setError('City is required.'); return false; }
+        if (!formData.state) { setError('Please select your state.'); return false; }
+        return true;
+      }
+      case 3: {
+        if (formData.industries.length === 0) { setError('Please select at least one industry.'); return false; }
+        if (!formData.stage) { setError('Please select the startup stage.'); return false; }
+        return true;
+      }
+      case 4: {
+        if (!formData.entityType) { setError('Please select your entity type.'); return false; }
+        return true;
+      }
+      case 5: {
+        if (!formData.shortDescription.trim() || formData.shortDescription.trim().length < 20) {
+          setError('Please enter a short description (at least 20 characters).');
+          return false;
+        }
+        return true;
+      }
+      // Steps 6, 7, 8 are optional — allow free passage
+      default:
+        return true;
+    }
+  };
+
   const nextStep = () => {
-    if (currentStep < 8) setCurrentStep(currentStep + 1);
+    if (validateStep() && currentStep < 8) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {

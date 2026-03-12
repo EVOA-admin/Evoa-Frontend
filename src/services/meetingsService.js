@@ -1,19 +1,29 @@
 import apiClient from './apiClient';
 
-export const getMeetings = async () => {
-  return await apiClient.get('/meetings');
-};
+/** Schedule a meeting with a startup */
+export const scheduleMeeting = (startupId, { scheduledAt, notes }) =>
+  apiClient.post(`/meetings/schedule/${startupId}`, { scheduledAt, notes });
 
-export const acceptMeeting = async (meetingId) => {
-  return await apiClient.post(`/meetings/${meetingId}/accept`);
-};
+/** Get all meetings for the current user */
+export const getUserMeetings = () =>
+  apiClient.get('/meetings');
 
-export const rejectMeeting = async (meetingId) => {
-  return await apiClient.post(`/meetings/${meetingId}/reject`);
-};
+/** Get a single meeting by ID */
+export const getMeetingById = (meetingId) =>
+  apiClient.get(`/meetings/${meetingId}`);
+
+/** Accept a meeting (founder only) */
+export const acceptMeeting = (meetingId) =>
+  apiClient.post(`/meetings/${meetingId}/accept`);
+
+/** Cancel/reject a meeting (founder only) */
+export const cancelMeeting = (meetingId) =>
+  apiClient.post(`/meetings/${meetingId}/reject`);
 
 export default {
-  getMeetings,
+  scheduleMeeting,
+  getUserMeetings,
+  getMeetingById,
   acceptMeeting,
-  rejectMeeting,
+  cancelMeeting,
 };

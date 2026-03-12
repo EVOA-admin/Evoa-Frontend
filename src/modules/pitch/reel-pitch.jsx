@@ -14,6 +14,8 @@ import {
 import { IoChatbubbleOutline, IoPaperPlaneOutline } from "react-icons/io5";
 import { FiCalendar, FiVolume2, FiVolumeX, FiSend } from "react-icons/fi";
 import O21Icon from "../../components/shared/O21Icon";
+import { goToProfile } from "../../utils/profileNavigation";
+import ScheduleMeetingModal from "../../components/shared/ScheduleMeetingModal";
 
 const formatNum = (n) => {
   if (!n) return '0';
@@ -182,6 +184,10 @@ export default function ReelPitch() {
   const commentInputRef = useRef(null);
 
   const canSeeInvestorFeatures = userRole === 'investor' || userRole === 'incubator';
+
+  // Schedule meeting state
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [schedulePitch, setSchedulePitch] = useState(null);
 
   // ── Fetch reels from API ──────────────────────────────────────────────────
   useEffect(() => {
@@ -532,7 +538,7 @@ export default function ReelPitch() {
           <div className="flex flex-col items-center gap-2">
             {canSeeInvestorFeatures && (
               <button
-                onClick={(e) => { e.stopPropagation(); window.open('https://meet.new', '_blank'); }}
+                onClick={(e) => { e.stopPropagation(); setSchedulePitch(pitch); setShowScheduleModal(true); }}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white active:scale-90 transition-transform drop-shadow-lg"
               >
                 <FiCalendar size={20} strokeWidth={2.5} />
@@ -586,7 +592,7 @@ export default function ReelPitch() {
             className="flex items-center gap-2 mb-1.5 cursor-pointer hover:bg-white/10 p-1.5 -ml-1.5 rounded-xl transition-colors active:scale-95"
             onClick={(e) => {
               e.stopPropagation();
-              if (pitch.founderId) navigate(`/u/${pitch.founderId}`);
+              if (pitch.founderId) goToProfile(pitch.founderId, currentUser, navigate);
             }}
           >
             <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-[#00B8A9] flex-shrink-0">
@@ -1002,7 +1008,7 @@ export default function ReelPitch() {
                 comments.map((c, i) => (
                   <div key={c.id || i} className="flex gap-3">
                     <button
-                      onClick={() => c.userId && c.userId !== 'me' && navigate(`/u/${c.userId}`)}
+                      onClick={() => c.userId && c.userId !== 'me' && goToProfile(c.userId, currentUser, navigate)}
                       className="flex-shrink-0 focus:outline-none"
                     >
                       <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
@@ -1018,7 +1024,7 @@ export default function ReelPitch() {
                     </button>
                     <div className="flex-1 min-w-0">
                       <button
-                        onClick={() => c.userId && c.userId !== 'me' && navigate(`/u/${c.userId}`)}
+                        onClick={() => c.userId && c.userId !== 'me' && goToProfile(c.userId, currentUser, navigate)}
                         className="text-xs font-semibold text-white/80 hover:text-[#00B8A9] transition-colors text-left"
                       >
                         {c.user?.fullName || c.user?.email?.split('@')[0] || 'User'}
@@ -1061,6 +1067,20 @@ export default function ReelPitch() {
             </div>
           </div>
         </>
+      )}\n
+      {/* ── Schedule Meeting Modal ── */}
+      {showScheduleModal && schedulePitch && (
+        <ScheduleMeetingModal
+          startupId={schedulePitch.startupId}
+          startupName={schedulePitch.name}
+          onClose={() => { setShowScheduleModal(false); setSchedulePitch(null); }}
+          onScheduled={(data) => {
+            setShowScheduleModal(false);
+            setSchedulePitch(null);
+            const convId = data?.conversationId || data?.meeting?.conversationId;
+            if (convId) navigate(`/inbox/${convId}`);
+          }}
+        />
       )}
     </>
   );

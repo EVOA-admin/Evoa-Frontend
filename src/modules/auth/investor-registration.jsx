@@ -109,8 +109,29 @@ export default function InvestorRegistration() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // ── Per-step validation ──────────────────────────────────────────────────────
+  const validateStep = () => {
+    setError('');
+    switch (currentStep) {
+      case 1:
+        if (!formData.fullName.trim()) { setError('Full name is required.'); return false; }
+        if (!formData.investorType) { setError('Please select your investor type.'); return false; }
+        return true;
+      case 2:
+        if (!formData.investmentRange) { setError('Please select your investment range.'); return false; }
+        if (formData.sectorFocus.length === 0) { setError('Please select at least one sector of focus.'); return false; }
+        return true;
+      case 3:
+        if (!formData.verificationOption) { setError('Please select a verification option.'); return false; }
+        return true;
+      // Steps 4–7 are optional enrichment
+      default:
+        return true;
+    }
+  };
+
   const nextStep = () => {
-    if (currentStep < 7) setCurrentStep(currentStep + 1);
+    if (validateStep() && currentStep < 7) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -554,8 +575,8 @@ export default function InvestorRegistration() {
               onClick={handleSubmit}
               disabled={loading}
               className={`px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl transition-all ${loading
-                  ? 'bg-gray-400 cursor-not-allowed text-white'
-                  : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer'
+                ? 'bg-gray-400 cursor-not-allowed text-white'
+                : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer'
                 }`}
             >
               {loading ? 'Submitting...' : 'Submit'}

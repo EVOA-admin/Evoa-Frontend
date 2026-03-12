@@ -4,6 +4,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { FaTimes, FaPaperPlane, FaSpinner, FaRegComment } from "react-icons/fa";
 import postsService from "../../services/postsService";
+import { goToProfile } from "../../utils/profileNavigation";
 
 /**
  * PostCommentSheet — Instagram-style bottom sheet for post comments.
@@ -133,7 +134,7 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                         comments.map((c, i) => (
                             <div key={c.id || i} className="flex gap-3">
                                 <button
-                                    onClick={() => c.userId && c.userId !== "me" && navigate(`/u/${c.userId}`)}
+                                    onClick={() => c.userId && c.userId !== "me" && goToProfile(c.userId, currentUser, navigate)}
                                     className="flex-shrink-0 focus:outline-none"
                                 >
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold overflow-hidden ${isDark ? "bg-gray-700" : "bg-gray-200"}`}>
@@ -147,7 +148,7 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                                 </button>
                                 <div className="flex-1 min-w-0">
                                     <button
-                                        onClick={() => c.userId && c.userId !== "me" && navigate(`/u/${c.userId}`)}
+                                        onClick={() => c.userId && c.userId !== "me" && goToProfile(c.userId, currentUser, navigate)}
                                         className={`text-xs font-semibold hover:text-[#00B8A9] transition-colors text-left ${isDark ? "text-white/80" : "text-gray-800"}`}
                                     >
                                         {c.user?.fullName || c.user?.email?.split("@")[0] || "User"}
@@ -181,8 +182,8 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                         onKeyDown={handleKey}
                         placeholder="Add a comment..."
                         className={`flex-1 rounded-full px-4 py-2.5 text-sm outline-none transition-colors ${isDark
-                                ? "bg-white/[0.06] border border-white/15 text-white placeholder-white/40 focus:border-[#00B8A9]"
-                                : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#00B8A9]"
+                            ? "bg-white/[0.06] border border-white/15 text-white placeholder-white/40 focus:border-[#00B8A9]"
+                            : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#00B8A9]"
                             }`}
                     />
                     <button
