@@ -12,8 +12,13 @@ export const followUser = async (userId) => {
   return await apiClient.post(`/users/${userId}/connect`);
 };
 
+export const deleteAccount = async () => {
+  return await apiClient.delete('/users/me');
+};
+
 export default {
   getCurrentUserProfile,
   updateUserProfile,
   followUser,
+  deleteAccount,
 };

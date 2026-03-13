@@ -26,6 +26,8 @@ import { FiUser } from "react-icons/fi";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
+import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
+import { IoTrashOutline } from "react-icons/io5";
 
 // Parse occupation from bio string (format: "Occupation: X\nInterests: Y")
 function parseOccupation(bio) {
@@ -57,6 +59,7 @@ export default function ViewerProfile() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("posts");
     const [unreadCount, setUnreadCount] = useState(0);
+    const [deleteOpen, setDeleteOpen] = useState(false);
 
     // Edit modal
     const [editOpen, setEditOpen] = useState(false);
@@ -186,6 +189,13 @@ export default function ViewerProfile() {
                 <IoPencil size={18} />
             </button>
             <button
+                onClick={() => setDeleteOpen(true)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
+                title="Delete Account"
+            >
+                <IoTrashOutline size={17} />
+            </button>
+            <button
                 onClick={handleLogout}
                 className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
                 title="Log Out"
@@ -196,199 +206,202 @@ export default function ViewerProfile() {
     );
 
     return (
-        <AppShell>
-            <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
+        <>
+            <AppShell>
+                <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
 
-            {/* Loading */}
-            {loading ? (
-                <div className="flex items-center justify-center h-72">
-                    <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
-                </div>
-            ) : (
-                <>
-                    {/* Profile Card */}
-                    <div className="px-4 pt-6 pb-4 flex flex-col items-center text-center">
-                        {/* Avatar */}
-                        <div className="relative mb-4">
-                            <div className={`w-24 h-24 rounded-full overflow-hidden flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-200"}`}>
-                                {avatarUrl ? (
-                                    <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-                                ) : (
-                                    <FiUser size={40} className={isDark ? "text-gray-500" : "text-gray-400"} />
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Name */}
-                        <h1 className={`text-2xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>
-                            {displayName}
-                        </h1>
-
-                        {/* Occupation */}
-                        {occupation && (
-                            <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                                {occupation}
-                            </p>
-                        )}
-
-                        {/* Location */}
-                        {profile?.location && (
-                            <div className={`flex items-center gap-1 text-xs mb-3 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                                <IoLocationOutline size={13} />
-                                <span>{profile.location}</span>
-                            </div>
-                        )}
-
-                        {/* Followers + Edit Button */}
-                        <div className="flex items-center gap-5 mt-2">
-                            <div className="flex items-center gap-1.5">
-                                <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-                                    {followerCount >= 1000
-                                        ? `${(followerCount / 1000).toFixed(1)}`
-                                        : followerCount}
-                                    {followerCount >= 1000 && <span className={`font-normal text-xs ml-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>K</span>}
-                                </span>
-                                <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Followers</span>
-                            </div>
-                        </div>
-
-                        {/* Website */}
-                        {profile?.website && (
-                            <a
-                                href={ensureUrl(profile.website)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 mt-3 text-xs text-[#00B8A9] hover:underline"
-                            >
-                                <IoLinkOutline size={13} />
-                                {profile.website.replace(/^https?:\/\//, "")}
-                            </a>
-                        )}
-
-                        {/* Interests pills */}
-                        {interests.length > 0 && (
-                            <div className="flex flex-wrap justify-center gap-1.5 mt-3">
-                                {interests.slice(0, 5).map(tag => (
-                                    <span
-                                        key={tag}
-                                        className={`text-xs px-2.5 py-1 rounded-full ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"}`}
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
+                {/* Loading */}
+                {loading ? (
+                    <div className="flex items-center justify-center h-72">
+                        <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
                     </div>
+                ) : (
+                    <>
+                        {/* Profile Card */}
+                        <div className="px-4 pt-6 pb-4 flex flex-col items-center text-center">
+                            {/* Avatar */}
+                            <div className="relative mb-4">
+                                <div className={`w-24 h-24 rounded-full overflow-hidden flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-200"}`}>
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <FiUser size={40} className={isDark ? "text-gray-500" : "text-gray-400"} />
+                                    )}
+                                </div>
+                            </div>
 
-                    {/* Tabs */}
-                    <div className={`sticky top-14 z-20 flex items-center border-b ${isDark ? "bg-gray-950 border-white/10" : "bg-white border-gray-200"}`}>
-                        {tabs.map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
-                                className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === tab.id
-                                    ? isDark ? "text-white" : "text-gray-900"
-                                    : isDark ? "text-gray-500" : "text-gray-400"
-                                    }`}
-                            >
-                                {tab.label}
-                                {activeTab === tab.id && (
-                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-gray-900" style={{ backgroundColor: isDark ? "#fff" : "#111" }} />
-                                )}
-                            </button>
-                        ))}
-                        <button className={`px-4 py-3 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                            <IoListOutline size={18} />
-                        </button>
-                    </div>
+                            {/* Name */}
+                            <h1 className={`text-2xl font-bold mb-1 ${isDark ? "text-white" : "text-gray-900"}`}>
+                                {displayName}
+                            </h1>
 
-                    {/* Tab Content */}
-                    <div className="px-0 py-0 space-y-3">
-                        {activeTab === "posts" && (
-                            <ProfileContentGrid
-                                isDark={isDark}
-                                isOwner={true}
-                                fetchFn={postsService.getMyPosts}
-                                role="viewer"
-                            />
-                        )}
-                        {activeTab === "replies" && (
-                            <EmptyTabState message="No replies yet" isDark={isDark} />
-                        )}
-                        {activeTab === "media" && (
-                            <EmptyTabState message="No media yet" isDark={isDark} />
-                        )}
-                    </div>
-                </>
-            )}
+                            {/* Occupation */}
+                            {occupation && (
+                                <p className={`text-sm mb-1 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                                    {occupation}
+                                </p>
+                            )}
 
-            {/* Edit Profile Modal */}
-            {editOpen && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditOpen(false)} />
-                    <div className={`relative w-full sm:max-w-md mx-auto rounded-t-3xl sm:rounded-3xl overflow-hidden ${isDark ? "bg-gray-900" : "bg-white"}`}>
-                        {/* Modal Header */}
-                        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
-                            <button onClick={() => setEditOpen(false)} className={`p-1 rounded-full ${isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>
-                                <IoClose size={22} />
-                            </button>
-                            <span className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Edit Profile</span>
-                            <button
-                                onClick={handleEditSave}
-                                disabled={editLoading}
-                                className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-[#00B8A9] text-white hover:bg-[#00A89A] disabled:opacity-50 transition-all"
-                            >
-                                {editLoading ? (
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <><IoCheckmark size={15} />Save</>
-                                )}
-                            </button>
-                        </div>
-
-                        <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-                            {editError && (
-                                <div className="p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm">
-                                    {editError}
+                            {/* Location */}
+                            {profile?.location && (
+                                <div className={`flex items-center gap-1 text-xs mb-3 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                                    <IoLocationOutline size={13} />
+                                    <span>{profile.location}</span>
                                 </div>
                             )}
 
-                            {/* Avatar Picker */}
-                            <div className="flex flex-col items-center pb-2">
-                                <div
-                                    className={`relative w-20 h-20 rounded-full overflow-hidden cursor-pointer group ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
-                                    onClick={() => avatarInputRef.current?.click()}
-                                >
-                                    {avatarPreview || avatarUrl ? (
-                                        <img src={avatarPreview || avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <FiUser size={32} className={isDark ? "text-gray-500" : "text-gray-400"} />
-                                        </div>
-                                    )}
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                        <IoCamera size={20} className="text-white" />
-                                    </div>
+                            {/* Followers + Edit Button */}
+                            <div className="flex items-center gap-5 mt-2">
+                                <div className="flex items-center gap-1.5">
+                                    <span className={`text-sm font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                                        {followerCount >= 1000
+                                            ? `${(followerCount / 1000).toFixed(1)}`
+                                            : followerCount}
+                                        {followerCount >= 1000 && <span className={`font-normal text-xs ml-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>K</span>}
+                                    </span>
+                                    <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>Followers</span>
                                 </div>
-                                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                                <button
-                                    onClick={() => avatarInputRef.current?.click()}
-                                    className="mt-2 text-xs text-[#00B8A9] font-medium"
+                            </div>
+
+                            {/* Website */}
+                            {profile?.website && (
+                                <a
+                                    href={ensureUrl(profile.website)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 mt-3 text-xs text-[#00B8A9] hover:underline"
                                 >
-                                    Change Photo
+                                    <IoLinkOutline size={13} />
+                                    {profile.website.replace(/^https?:\/\//, "")}
+                                </a>
+                            )}
+
+                            {/* Interests pills */}
+                            {interests.length > 0 && (
+                                <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+                                    {interests.slice(0, 5).map(tag => (
+                                        <span
+                                            key={tag}
+                                            className={`text-xs px-2.5 py-1 rounded-full ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"}`}
+                                        >
+                                            {tag}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Tabs */}
+                        <div className={`sticky top-14 z-20 flex items-center border-b ${isDark ? "bg-gray-950 border-white/10" : "bg-white border-gray-200"}`}>
+                            {tabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === tab.id
+                                        ? isDark ? "text-white" : "text-gray-900"
+                                        : isDark ? "text-gray-500" : "text-gray-400"
+                                        }`}
+                                >
+                                    {tab.label}
+                                    {activeTab === tab.id && (
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-gray-900" style={{ backgroundColor: isDark ? "#fff" : "#111" }} />
+                                    )}
+                                </button>
+                            ))}
+                            <button className={`px-4 py-3 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                                <IoListOutline size={18} />
+                            </button>
+                        </div>
+
+                        {/* Tab Content */}
+                        <div className="px-0 py-0 space-y-3">
+                            {activeTab === "posts" && (
+                                <ProfileContentGrid
+                                    isDark={isDark}
+                                    isOwner={true}
+                                    fetchFn={postsService.getMyPosts}
+                                    role="viewer"
+                                />
+                            )}
+                            {activeTab === "replies" && (
+                                <EmptyTabState message="No replies yet" isDark={isDark} />
+                            )}
+                            {activeTab === "media" && (
+                                <EmptyTabState message="No media yet" isDark={isDark} />
+                            )}
+                        </div>
+                    </>
+                )}
+
+                {/* Edit Profile Modal */}
+                {editOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setEditOpen(false)} />
+                        <div className={`relative w-full sm:max-w-md mx-auto rounded-t-3xl sm:rounded-3xl overflow-hidden ${isDark ? "bg-gray-900" : "bg-white"}`}>
+                            {/* Modal Header */}
+                            <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                                <button onClick={() => setEditOpen(false)} className={`p-1 rounded-full ${isDark ? "text-gray-400 hover:text-white" : "text-gray-500 hover:text-gray-900"}`}>
+                                    <IoClose size={22} />
+                                </button>
+                                <span className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Edit Profile</span>
+                                <button
+                                    onClick={handleEditSave}
+                                    disabled={editLoading}
+                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-[#00B8A9] text-white hover:bg-[#00A89A] disabled:opacity-50 transition-all"
+                                >
+                                    {editLoading ? (
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <><IoCheckmark size={15} />Save</>
+                                    )}
                                 </button>
                             </div>
 
-                            {/* Fields */}
-                            <EditField label="Full Name" value={editForm.fullName} onChange={v => setEditForm(f => ({ ...f, fullName: v }))} isDark={isDark} />
-                            <EditField label="Occupation" value={editForm.occupation} placeholder="e.g. Student, Developer..." onChange={v => setEditForm(f => ({ ...f, occupation: v }))} isDark={isDark} />
-                            <EditField label="Location" value={editForm.location} placeholder="City, State, Country" onChange={v => setEditForm(f => ({ ...f, location: v }))} isDark={isDark} />
-                            <EditField label="Website / LinkedIn" value={editForm.website} placeholder="https://linkedin.com/in/you" onChange={v => setEditForm(f => ({ ...f, website: v }))} isDark={isDark} />
+                            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                                {editError && (
+                                    <div className="p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm">
+                                        {editError}
+                                    </div>
+                                )}
+
+                                {/* Avatar Picker */}
+                                <div className="flex flex-col items-center pb-2">
+                                    <div
+                                        className={`relative w-20 h-20 rounded-full overflow-hidden cursor-pointer group ${isDark ? "bg-gray-800" : "bg-gray-200"}`}
+                                        onClick={() => avatarInputRef.current?.click()}
+                                    >
+                                        {avatarPreview || avatarUrl ? (
+                                            <img src={avatarPreview || avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <FiUser size={32} className={isDark ? "text-gray-500" : "text-gray-400"} />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                            <IoCamera size={20} className="text-white" />
+                                        </div>
+                                    </div>
+                                    <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                                    <button
+                                        onClick={() => avatarInputRef.current?.click()}
+                                        className="mt-2 text-xs text-[#00B8A9] font-medium"
+                                    >
+                                        Change Photo
+                                    </button>
+                                </div>
+
+                                {/* Fields */}
+                                <EditField label="Full Name" value={editForm.fullName} onChange={v => setEditForm(f => ({ ...f, fullName: v }))} isDark={isDark} />
+                                <EditField label="Occupation" value={editForm.occupation} placeholder="e.g. Student, Developer..." onChange={v => setEditForm(f => ({ ...f, occupation: v }))} isDark={isDark} />
+                                <EditField label="Location" value={editForm.location} placeholder="City, State, Country" onChange={v => setEditForm(f => ({ ...f, location: v }))} isDark={isDark} />
+                                <EditField label="Website / LinkedIn" value={editForm.website} placeholder="https://linkedin.com/in/you" onChange={v => setEditForm(f => ({ ...f, website: v }))} isDark={isDark} />
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </AppShell>
+                )}
+            </AppShell>
+            <DeleteAccountDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
+        </>
     );
 }
 

@@ -20,6 +20,8 @@ import ensureUrl from "../../utils/ensureUrl";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
+import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
+import { IoTrashOutline } from "react-icons/io5";
 
 export default function IncubatorProfile() {
     const { theme } = useTheme();
@@ -31,6 +33,7 @@ export default function IncubatorProfile() {
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("posts");
+    const [deleteOpen, setDeleteOpen] = useState(false);
 
     useEffect(() => {
         fetchIncubatorProfile();
@@ -77,6 +80,13 @@ export default function IncubatorProfile() {
                 <IoPencil size={18} />
             </button>
             <button
+                onClick={() => setDeleteOpen(true)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
+                title="Delete Account"
+            >
+                <IoTrashOutline size={17} />
+            </button>
+            <button
                 onClick={handleLogout}
                 className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
                 title="Log Out"
@@ -98,201 +108,204 @@ export default function IncubatorProfile() {
     }
 
     return (
-        <AppShell>
-            <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
+        <>
+            <AppShell>
+                <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
 
-            {/* Hero Section */}
-            <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
-                <div className="px-4 pt-5 pb-4">
-                    <div className="flex items-start gap-4">
-                        {/* Logo */}
-                        <div className={`w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"} ring-2 ring-[#00B8A9]/30`}>
-                            <img
-                                src={profile?.logoUrl || authUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || "I")}&background=00B8A9&color=fff&size=128`}
-                                alt={profile?.name}
-                                className="w-full h-full object-cover"
-                            />
+                {/* Hero Section */}
+                <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                    <div className="px-4 pt-5 pb-4">
+                        <div className="flex items-start gap-4">
+                            {/* Logo */}
+                            <div className={`w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"} ring-2 ring-[#00B8A9]/30`}>
+                                <img
+                                    src={profile?.logoUrl || authUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || "I")}&background=00B8A9&color=fff&size=128`}
+                                    alt={profile?.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+
+                            {/* Info */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                    <h1 className={`text-lg font-bold leading-tight truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+                                        {profile?.name || "Incubator"}
+                                    </h1>
+                                    <MdVerified className="text-[#00B8A9] flex-shrink-0" size={16} />
+                                </div>
+                                {profile?.tagline && (
+                                    <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"} line-clamp-2 leading-snug`}>{profile.tagline}</p>
+                                )}
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                    {profile?.organizationType && (
+                                        <span className="text-[11px] px-2 py-0.5 bg-[#00B8A9]/15 text-[#00B8A9] rounded-full font-medium">{profile.organizationType}</span>
+                                    )}
+                                    {profile?.affiliationType && (
+                                        <span className={`text-[11px] px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{profile.affiliationType}</span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                                <h1 className={`text-lg font-bold leading-tight truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                                    {profile?.name || "Incubator"}
-                                </h1>
-                                <MdVerified className="text-[#00B8A9] flex-shrink-0" size={16} />
+                        {/* Stats Row */}
+                        {(profile?.numberOfMentors || profile?.cohortSize || profile?.programDuration) && (
+                            <div className={`grid grid-cols-3 divide-x mt-4 pt-4 border-t ${isDark ? "divide-white/10 border-white/10" : "divide-gray-100 border-gray-100"}`}>
+                                {profile?.numberOfMentors && (
+                                    <StatItem label="Mentors" value={profile.numberOfMentors} isDark={isDark} />
+                                )}
+                                {profile?.cohortSize && (
+                                    <StatItem label="Cohort" value={profile.cohortSize} isDark={isDark} />
+                                )}
+                                {profile?.programDuration && (
+                                    <StatItem label="Duration" value={profile.programDuration} isDark={isDark} />
+                                )}
                             </div>
-                            {profile?.tagline && (
-                                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"} line-clamp-2 leading-snug`}>{profile.tagline}</p>
+                        )}
+
+                        {/* Meta info */}
+                        <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                            {locationStr && (
+                                <span className="flex items-center gap-1"><IoLocationOutline size={12} />{locationStr}</span>
                             )}
-                            <div className="flex flex-wrap gap-1 mt-2">
-                                {profile?.organizationType && (
-                                    <span className="text-[11px] px-2 py-0.5 bg-[#00B8A9]/15 text-[#00B8A9] rounded-full font-medium">{profile.organizationType}</span>
-                                )}
-                                {profile?.affiliationType && (
-                                    <span className={`text-[11px] px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{profile.affiliationType}</span>
-                                )}
-                            </div>
+                            {profile?.website && (
+                                <a href={ensureUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00B8A9]">
+                                    <IoLinkOutline size={12} />{profile.website.replace(/^https?:\/\//, "").slice(0, 24)}
+                                </a>
+                            )}
+                            {profile?.officialEmail && (
+                                <span className="flex items-center gap-1"><IoMailOutline size={12} />{profile.officialEmail}</span>
+                            )}
                         </div>
+
+                        {/* Edit Profile Button */}
+                        <button
+                            onClick={() => setEditOpen(true)}
+                            className={`mt-3.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-200 text-gray-800 hover:bg-gray-50"}`}
+                        >
+                            <IoPencil size={14} />Edit Profile
+                        </button>
                     </div>
+                </div>
 
-                    {/* Stats Row */}
-                    {(profile?.numberOfMentors || profile?.cohortSize || profile?.programDuration) && (
-                        <div className={`grid grid-cols-3 divide-x mt-4 pt-4 border-t ${isDark ? "divide-white/10 border-white/10" : "divide-gray-100 border-gray-100"}`}>
-                            {profile?.numberOfMentors && (
-                                <StatItem label="Mentors" value={profile.numberOfMentors} isDark={isDark} />
+                {/* Tabs */}
+                <div className={`sticky top-14 z-20 flex border-b ${isDark ? "bg-gray-950 border-white/10" : "bg-white border-gray-200"}`}>
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === tab.id
+                                ? isDark ? "text-white" : "text-gray-900"
+                                : isDark ? "text-gray-500" : "text-gray-400"
+                                }`}
+                        >
+                            {tab.label}
+                            {activeTab === tab.id && (
+                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#00B8A9]" />
                             )}
-                            {profile?.cohortSize && (
-                                <StatItem label="Cohort" value={profile.cohortSize} isDark={isDark} />
-                            )}
-                            {profile?.programDuration && (
-                                <StatItem label="Duration" value={profile.programDuration} isDark={isDark} />
-                            )}
-                        </div>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Tab Content */}
+                <div className="px-4 py-4 space-y-3 pb-10">
+
+                    {/* Posts Tab */}
+                    {activeTab === "posts" && (
+                        <ProfileContentGrid
+                            isDark={isDark}
+                            isOwner={true}
+                            fetchFn={postsService.getMyPosts}
+                            role="incubator"
+                        />
                     )}
 
-                    {/* Meta info */}
-                    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-                        {locationStr && (
-                            <span className="flex items-center gap-1"><IoLocationOutline size={12} />{locationStr}</span>
-                        )}
-                        {profile?.website && (
-                            <a href={ensureUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00B8A9]">
-                                <IoLinkOutline size={12} />{profile.website.replace(/^https?:\/\//, "").slice(0, 24)}
-                            </a>
-                        )}
-                        {profile?.officialEmail && (
-                            <span className="flex items-center gap-1"><IoMailOutline size={12} />{profile.officialEmail}</span>
-                        )}
-                    </div>
+                    {/* About Tab */}
+                    {activeTab === "about" && (
+                        <>
+                            {profile?.description && (
+                                <Section title="About Us" isDark={isDark}>
+                                    <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{profile.description}</p>
+                                </Section>
+                            )}
 
-                    {/* Edit Profile Button */}
-                    <button
-                        onClick={() => setEditOpen(true)}
-                        className={`mt-3.5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-200 text-gray-800 hover:bg-gray-50"}`}
-                    >
-                        <IoPencil size={14} />Edit Profile
-                    </button>
-                </div>
-            </div>
-
-            {/* Tabs */}
-            <div className={`sticky top-14 z-20 flex border-b ${isDark ? "bg-gray-950 border-white/10" : "bg-white border-gray-200"}`}>
-                {tabs.map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === tab.id
-                            ? isDark ? "text-white" : "text-gray-900"
-                            : isDark ? "text-gray-500" : "text-gray-400"
-                            }`}
-                    >
-                        {tab.label}
-                        {activeTab === tab.id && (
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#00B8A9]" />
-                        )}
-                    </button>
-                ))}
-            </div>
-
-            {/* Tab Content */}
-            <div className="px-4 py-4 space-y-3 pb-10">
-
-                {/* Posts Tab */}
-                {activeTab === "posts" && (
-                    <ProfileContentGrid
-                        isDark={isDark}
-                        isOwner={true}
-                        fetchFn={postsService.getMyPosts}
-                        role="incubator"
-                    />
-                )}
-
-                {/* About Tab */}
-                {activeTab === "about" && (
-                    <>
-                        {profile?.description && (
-                            <Section title="About Us" isDark={isDark}>
-                                <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{profile.description}</p>
-                            </Section>
-                        )}
-
-                        <Section title="Organization Details" isDark={isDark}>
-                            <div className="grid grid-cols-2 gap-2">
-                                <DetailCard label="Type" value={profile?.organizationType || "—"} isDark={isDark} />
-                                <DetailCard label="Affiliation" value={profile?.affiliationType || "—"} isDark={isDark} />
-                                <DetailCard label="Equity Policy" value={profile?.equityPolicy || "—"} isDark={isDark} />
-                                <DetailCard label="Funding Support" value={profile?.fundingSupport || "—"} isDark={isDark} />
-                            </div>
-                        </Section>
-
-                        {profile?.portfolioStartups && (
-                            <Section title="Portfolio Startups" isDark={isDark}>
-                                <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isDark ? "text-gray-300" : "text-gray-700"}`}>{profile.portfolioStartups}</p>
-                            </Section>
-                        )}
-
-                        {/* Logout */}
-                        <button
-                            onClick={handleLogout}
-                            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-all mt-2 ${isDark ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-red-200 text-red-500 hover:bg-red-50"}`}
-                        >
-                            <IoLogOutOutline size={15} />Log Out
-                        </button>
-                    </>
-                )}
-
-                {/* Programs Tab */}
-                {activeTab === "programs" && (
-                    <>
-                        {profile?.programTypes?.length > 0 ? (
-                            <Section title="Program Types" isDark={isDark}>
+                            <Section title="Organization Details" isDark={isDark}>
                                 <div className="grid grid-cols-2 gap-2">
-                                    {profile.programTypes.map((prog, idx) => (
-                                        <div
-                                            key={idx}
-                                            className={`flex items-center gap-2.5 p-3 rounded-xl border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}
-                                        >
-                                            <div className={`p-1.5 rounded-lg ${isDark ? "bg-white/8" : "bg-white"}`}>
-                                                <IoBulbOutline size={16} className="text-[#00B8A9]" />
+                                    <DetailCard label="Type" value={profile?.organizationType || "—"} isDark={isDark} />
+                                    <DetailCard label="Affiliation" value={profile?.affiliationType || "—"} isDark={isDark} />
+                                    <DetailCard label="Equity Policy" value={profile?.equityPolicy || "—"} isDark={isDark} />
+                                    <DetailCard label="Funding Support" value={profile?.fundingSupport || "—"} isDark={isDark} />
+                                </div>
+                            </Section>
+
+                            {profile?.portfolioStartups && (
+                                <Section title="Portfolio Startups" isDark={isDark}>
+                                    <p className={`text-sm leading-relaxed whitespace-pre-wrap ${isDark ? "text-gray-300" : "text-gray-700"}`}>{profile.portfolioStartups}</p>
+                                </Section>
+                            )}
+
+                            {/* Logout */}
+                            <button
+                                onClick={handleLogout}
+                                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-all mt-2 ${isDark ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-red-200 text-red-500 hover:bg-red-50"}`}
+                            >
+                                <IoLogOutOutline size={15} />Log Out
+                            </button>
+                        </>
+                    )}
+
+                    {/* Programs Tab */}
+                    {activeTab === "programs" && (
+                        <>
+                            {profile?.programTypes?.length > 0 ? (
+                                <Section title="Program Types" isDark={isDark}>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {profile.programTypes.map((prog, idx) => (
+                                            <div
+                                                key={idx}
+                                                className={`flex items-center gap-2.5 p-3 rounded-xl border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}
+                                            >
+                                                <div className={`p-1.5 rounded-lg ${isDark ? "bg-white/8" : "bg-white"}`}>
+                                                    <IoBulbOutline size={16} className="text-[#00B8A9]" />
+                                                </div>
+                                                <span className={`text-xs font-semibold leading-tight ${isDark ? "text-gray-200" : "text-gray-700"}`}>{prog}</span>
                                             </div>
-                                            <span className={`text-xs font-semibold leading-tight ${isDark ? "text-gray-200" : "text-gray-700"}`}>{prog}</span>
+                                        ))}
+                                    </div>
+                                </Section>
+                            ) : (
+                                <EmptyTabState message="No programs added yet" isDark={isDark} />
+                            )}
+                        </>
+                    )}
+
+                    {/* Gallery Tab */}
+                    {activeTab === "gallery" && (
+                        <>
+                            {profile?.gallery?.length > 0 ? (
+                                <div className="grid grid-cols-2 gap-1.5">
+                                    {profile.gallery.map((url, idx) => (
+                                        <div key={idx} className="aspect-square rounded-xl overflow-hidden">
+                                            <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
                                         </div>
                                     ))}
                                 </div>
-                            </Section>
-                        ) : (
-                            <EmptyTabState message="No programs added yet" isDark={isDark} />
-                        )}
-                    </>
-                )}
+                            ) : (
+                                <EmptyTabState message="No gallery images added yet" isDark={isDark} />
+                            )}
+                        </>
+                    )}
+                </div>
 
-                {/* Gallery Tab */}
-                {activeTab === "gallery" && (
-                    <>
-                        {profile?.gallery?.length > 0 ? (
-                            <div className="grid grid-cols-2 gap-1.5">
-                                {profile.gallery.map((url, idx) => (
-                                    <div key={idx} className="aspect-square rounded-xl overflow-hidden">
-                                        <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <EmptyTabState message="No gallery images added yet" isDark={isDark} />
-                        )}
-                    </>
-                )}
-            </div>
-
-            {/* Edit Modal */}
-            <EditIncubatorModal
-                isOpen={editOpen}
-                onClose={() => setEditOpen(false)}
-                profile={profile}
-                onSuccess={fetchIncubatorProfile}
-            />
-        </AppShell>
+                {/* Edit Modal */}
+                <EditIncubatorModal
+                    isOpen={editOpen}
+                    onClose={() => setEditOpen(false)}
+                    profile={profile}
+                    onSuccess={fetchIncubatorProfile}
+                />
+            </AppShell>
+            <DeleteAccountDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
+        </>
     );
 }
 

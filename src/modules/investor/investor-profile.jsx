@@ -21,6 +21,8 @@ import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import ensureUrl from "../../utils/ensureUrl";
 import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
+import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
+import { IoTrashOutline } from "react-icons/io5";
 
 export default function InvestorProfile() {
     const { theme } = useTheme();
@@ -32,6 +34,7 @@ export default function InvestorProfile() {
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("posts");
+    const [deleteOpen, setDeleteOpen] = useState(false);
 
     useEffect(() => {
         fetchInvestorProfile();
@@ -85,6 +88,13 @@ export default function InvestorProfile() {
                 title="Edit Profile"
             >
                 <IoPencil size={18} />
+            </button>
+            <button
+                onClick={() => setDeleteOpen(true)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
+                title="Delete Account"
+            >
+                <IoTrashOutline size={17} />
             </button>
             <button
                 onClick={handleLogout}

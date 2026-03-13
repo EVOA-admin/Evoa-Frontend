@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { supabase } from "../../config/supabase";
 import {
   IoRocketSharp,
   IoTrendingUp,
@@ -90,23 +89,12 @@ export default function ChoiceRole() {
     setError('');
 
     try {
-      // Step 1: Always get a fresh Supabase session token before calling the backend.
-      // This is critical for Google OAuth users where the redirect may have just completed.
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError || !sessionData?.session?.access_token) {
-        setError('Could not verify your session. Please try logging in again.');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Sync the fresh token to localStorage so apiClient picks it up
-      localStorage.setItem('authToken', sessionData.session.access_token);
-
-      // Step 2: Save the role to the backend
+      // Save the role to the backend.
+      // updateUserRole() internally refreshes the Supabase session token and
+      // updates the localStorage cache — no need to call getSession() here first.
       await updateUserRole(selectedRole);
 
-      // Step 3: Navigate to registration or dashboard
+      // Navigate immediately — don't wait for any background sync state updates.
       navigate(ROUTES[selectedRole] || '/');
     } catch (err) {
       console.error('[choice-role] Failed to save role:', err);
