@@ -9,7 +9,6 @@ import { FaPlay } from "react-icons/fa";
 import storageService from "../../services/storageService";
 import postsService from "../../services/postsService";
 import reelsService from "../../services/reelsService";
-import { compressVideo } from "../../utils/compressVideo";
 
 /**
  * CreateContentModal
@@ -30,7 +29,7 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
     const [preview, setPreview] = useState(null);
     const [caption, setCaption] = useState("");
     const [hashtags, setHashtags] = useState("");
-    const [uploadState, setUploadState] = useState("idle"); // idle | compressing | uploading | success | error
+    const [uploadState, setUploadState] = useState("idle"); // idle | uploading | success | error
     const [uploadProgress, setUploadProgress] = useState(0);
     const [errorMsg, setErrorMsg] = useState("");
 
@@ -58,7 +57,7 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
         const f = e.target.files?.[0];
         if (!f) return;
         if (type === "video" && f.size > MAX_FILE_MB * 1024 * 1024) {
-            alert(`Please select a video under ${MAX_FILE_MB}MB.`);
+            setErrorMsg(`Video size must be under ${MAX_FILE_MB} MB.`);
             e.target.value = "";
             return;
         }
@@ -94,20 +93,13 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
 
     const handleSubmitReel = async () => {
         if (!file) { setErrorMsg("Select a video first."); return; }
-        if (uploadState === "uploading" || uploadState === "compressing") return;
+        if (uploadState === "uploading") return;
         setErrorMsg("");
         try {
-            let uploadFile = file;
-            // Compress if over 10 MB
-            if (file.size > 10 * 1024 * 1024) {
-                setUploadState("compressing");
-                setUploadProgress(0);
-                uploadFile = await compressVideo(file, 10, pct => setUploadProgress(pct));
-            }
             setUploadState("uploading");
-            const ext = uploadFile.name.split(".").pop();
+            const ext = file.name.split(".").pop();
             const path = `reels/${user?.id}/${Date.now()}.${ext}`;
-            const videoUrl = await storageService.uploadFile(uploadFile, "evoa-media", path);
+            const videoUrl = await storageService.uploadFile(file, "evoa-media", path);
             const tagArr = hashtags.split(/[\s,#]+/).filter(Boolean).map(t => t.replace(/^#/, ""));
             await reelsService.createReel({ videoUrl, title: caption, description: caption, hashtags: tagArr });
             setUploadState("success");
@@ -292,13 +284,12 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
 }
 
 function UploadButton({ state, progress, onPress, label }) {
-    const isCompressing = state === "compressing";
     const isLoading = state === "uploading";
     const isSuccess = state === "success";
     return (
         <button
             onClick={onPress}
-            disabled={isCompressing || isLoading || isSuccess}
+            disabled={isLoading || isSuccess}
             className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${isSuccess
                 ? "bg-green-500 text-white"
                 : "bg-[#00B8A9] text-white hover:bg-[#00A89A] active:scale-95 disabled:opacity-80"
@@ -306,11 +297,6 @@ function UploadButton({ state, progress, onPress, label }) {
         >
             {isSuccess ? (
                 <><IoCheckmarkCircle size={18} />Done!</>
-            ) : isCompressing ? (
-                <span className="flex items-center gap-2">
-                    <IoCloudUpload size={18} className="animate-bounce" />
-                    Compressing video… {progress > 0 ? `${progress}%` : ""}
-                </span>
             ) : isLoading ? (
                 <><IoCloudUpload size={18} className="animate-bounce" />Uploading video…</>
             ) : (

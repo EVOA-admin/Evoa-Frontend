@@ -65,6 +65,9 @@ export const reelsService = {
 
   // Delete a reel (startup founder only)
   deleteReel: async (reelId) => apiClient.delete(`/reels/${reelId}`),
+
+  // Get a single reel by ID (used for direct deep-links from explore)
+  getReelById: async (reelId) => apiClient.get(`/reels/${reelId}`),
 };
 
 export default reelsService;

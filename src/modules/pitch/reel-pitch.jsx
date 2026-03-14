@@ -208,7 +208,7 @@ export default function ReelPitch() {
         const data = res?.data?.data || res?.data || res;
         const reelsData = data?.reels || data || [];
 
-        const mapped = reelsData.map(reel => ({
+        const mapReel = reel => ({
           id: reel.id,
           name: reel.startup?.name || 'Unknown Startup',
           username: reel.startup?.username || '',
@@ -230,7 +230,26 @@ export default function ReelPitch() {
           },
           startupId: reel.startupId,
           founderId: reel.startup?.founder?.id || reel.startup?.founderId,
-        }));
+        });
+
+        let mapped = reelsData.map(mapReel);
+
+        // If a specific reel ID was requested (e.g. from Top Performing Pitch),
+        // fetch it directly and put it first. This ensures the correct video
+        // always opens even if it isn't in the normal for_you feed.
+        if (id) {
+          // Remove the target from the feed list (avoid duplicate)
+          mapped = mapped.filter(p => p.id !== id);
+          try {
+            const specificRes = await reelsService.getReelById(id);
+            const specificReel = specificRes?.data?.data || specificRes?.data || specificRes;
+            if (specificReel?.id) {
+              mapped.unshift(mapReel(specificReel));
+            }
+          } catch (e) {
+            console.warn('[reel-pitch] Could not fetch specific reel:', e?.message);
+          }
+        }
 
         setPitches(mapped);
 
@@ -241,11 +260,8 @@ export default function ReelPitch() {
         });
         setReelStates(initialState);
 
-        // If a specific id was passed, scroll to it
-        if (id && mapped.length > 0) {
-          const idx = mapped.findIndex(p => p.id === id);
-          if (idx > 0) setCurrentIndex(idx);
-        }
+        // Always start at the first reel (which is the requested one when id is set)
+        setCurrentIndex(0);
       } catch (err) {
         console.error('Failed to load reels:', err);
         setPitches([]);

@@ -7,7 +7,6 @@ import SearchableSelect from "../../components/shared/SearchableSelect";
 import logo from "../../assets/logo.avif";
 import storageService from "../../services/storageService";
 import startupsService from "../../services/startupsService";
-import { compressVideo } from "../../utils/compressVideo";
 
 export default function StartupRegistration() {
   const { theme } = useTheme();
@@ -82,8 +81,6 @@ export default function StartupRegistration() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [pitchCompressState, setPitchCompressState] = useState('idle');
-  const [pitchCompressProgress, setPitchCompressProgress] = useState(0);
   const [filePreviews, setFilePreviews] = useState({});
   const [verificationError, setVerificationError] = useState(''); // '' | 'invalid' | 'valid'
 
@@ -107,7 +104,7 @@ export default function StartupRegistration() {
     if (!file) return;
     // Validate pitch video size (max 50MB)
     if (field === 'pitchVideo' && file.size > 50 * 1024 * 1024) {
-      alert('Please select a pitch video under 50MB.');
+      setError('Video size must be under 50 MB.');
       return;
     }
     setFormData(prev => ({ ...prev, [field]: file }));
@@ -187,15 +184,8 @@ export default function StartupRegistration() {
       const idProofUrl = await uploadToStorage(formData.idProof, 'id_proof');
       const businessProofUrl = await uploadToStorage(formData.businessProof, 'business_proof');
 
-      // Compress pitch video if > 10MB before uploading
-      let pitchVideoFile = formData.pitchVideo;
-      if (pitchVideoFile && pitchVideoFile.size > 10 * 1024 * 1024) {
-        setPitchCompressState('compressing');
-        setPitchCompressProgress(0);
-        pitchVideoFile = await compressVideo(pitchVideoFile, 10, pct => setPitchCompressProgress(pct));
-        setPitchCompressState('done');
-      }
-      const pitchVideoUrl = await uploadToStorage(pitchVideoFile, 'pitch_video');
+      // Upload pitch video directly (no compression)
+      const pitchVideoUrl = await uploadToStorage(formData.pitchVideo, 'pitch_video');
       const pitchDeckUrl = await uploadToStorage(formData.pitchDeck, 'pitch_deck');
       const brochureUrl = await uploadToStorage(formData.brochure, 'brochure');
 
@@ -543,9 +533,7 @@ export default function StartupRegistration() {
           ) : (
             <button type="button" onClick={handleSubmit} disabled={loading}
               className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
-              {pitchCompressState === 'compressing'
-                ? `Compressing video… ${pitchCompressProgress > 0 ? pitchCompressProgress + '%' : ''}`
-                : loading ? 'Uploading video…' : 'Submit'}
+              {loading ? 'Uploading video…' : 'Submit'}
             </button>
           )}
         </div>

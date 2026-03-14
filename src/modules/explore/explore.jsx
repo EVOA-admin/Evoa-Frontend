@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay } from "react-icons/fa";
+import { IoLockClosedOutline } from "react-icons/io5";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
@@ -504,22 +505,30 @@ export default function Explore() {
                   Battleground Spotlight
                 </h2>
               </div>
-              <div className={`rounded-2xl p-6 cursor-pointer transition-all ${isDark
-                ? 'bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-500/40'
-                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
+              <div className={`rounded-2xl p-6 transition-all ${isDark
+                ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20 opacity-80'
+                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md opacity-75'
                 }`}>
-                <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Live Pitch Battle
-                </h3>
-                <p className={`text-sm mb-4 ${isDark ? 'text-white/80' : 'text-gray-700'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Live Pitch Battle
+                  </h3>
+                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${isDark ? 'bg-gray-800 text-gray-400 border border-gray-700' : 'bg-gray-100 text-gray-500 border border-gray-200'
+                    }`}>
+                    <IoLockClosedOutline size={9} />
+                    Coming Soon
+                  </div>
+                </div>
+                <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
                   Watch startups compete for investment in real-time
                 </p>
                 <button
-                  onClick={() => navigate('/battleground')}
-                  className="px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all bg-[#00B8A9] text-white hover:bg-[#00A89A] text-sm"
+                  disabled
+                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm cursor-not-allowed ${isDark ? 'bg-gray-800 text-gray-500 border border-gray-700' : 'bg-gray-200 text-gray-400'
+                    }`}
                 >
-                  <FaPlay size={12} />
-                  Watch Live
+                  <IoLockClosedOutline size={13} />
+                  Locked
                 </button>
               </div>
             </div>

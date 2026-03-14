@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -14,6 +14,8 @@ import {
     IoMailOutline,
     IoClose,
     IoCheckmark,
+    IoEllipsisVertical,
+    IoTrashOutline,
 } from "react-icons/io5";
 import { FaLinkedin, FaTwitter, FaGlobe } from "react-icons/fa";
 import EditInvestorModal from "./edit-investor-modal";
@@ -22,10 +24,10 @@ import AppHeader from "../../components/layout/AppHeader";
 import ensureUrl from "../../utils/ensureUrl";
 import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
-import { IoTrashOutline } from "react-icons/io5";
+import { HiSun, HiMoon } from "react-icons/hi";
 
 export default function InvestorProfile() {
-    const { theme } = useTheme();
+    const { theme, toggleTheme } = useTheme();
     const isDark = theme === "dark";
     const navigate = useNavigate();
     const { user: authUser } = useAuth();
@@ -35,6 +37,7 @@ export default function InvestorProfile() {
     const [editOpen, setEditOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("posts");
     const [deleteOpen, setDeleteOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
         fetchInvestorProfile();
@@ -81,28 +84,61 @@ export default function InvestorProfile() {
     ];
 
     const headerActions = (
-        <div className="flex items-center gap-0.5">
+        <div className="relative">
             <button
-                onClick={() => setEditOpen(true)}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/60 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-500 hover:text-[#00B8A9] hover:bg-gray-100"}`}
-                title="Edit Profile"
+                onClick={() => setMenuOpen(o => !o)}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100"}`}
+                title="Menu"
             >
-                <IoPencil size={18} />
+                <IoEllipsisVertical size={22} />
             </button>
-            <button
-                onClick={() => setDeleteOpen(true)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
-                title="Delete Account"
-            >
-                <IoTrashOutline size={17} />
-            </button>
-            <button
-                onClick={handleLogout}
-                className="w-10 h-10 flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 transition-all active:scale-90"
-                title="Log Out"
-            >
-                <IoLogOutOutline size={18} />
-            </button>
+            {menuOpen && <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />}
+            {menuOpen && (
+                <div className={`absolute right-0 top-12 z-50 w-52 rounded-2xl shadow-xl overflow-hidden border ${isDark ? "bg-gray-900 border-white/10" : "bg-white border-gray-100"
+                    }`}>
+                    <button
+                        onClick={() => { setMenuOpen(false); setEditOpen(true); }}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                    >
+                        <IoPencil size={16} className="text-[#00B8A9]" />
+                        Edit Profile
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    <button
+                        onClick={() => {
+                            setMenuOpen(false);
+                            setTimeout(toggleTheme, 150);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            {isDark ? <HiSun size={18} className="text-gray-400" /> : <HiMoon size={18} className="text-gray-500" />}
+                            Theme
+                        </div>
+                        <span className={`text-[10px] uppercase tracking-wider font-bold ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
+                            {isDark ? 'Dark' : 'Light'}
+                        </span>
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    <button
+                        onClick={() => { setMenuOpen(false); setDeleteOpen(true); }}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-red-400 hover:bg-red-500/8 transition-colors"
+                    >
+                        <IoTrashOutline size={16} />
+                        Delete Account
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    <button
+                        onClick={() => { setMenuOpen(false); handleLogout(); }}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-red-400 hover:bg-red-500/8 transition-colors"
+                    >
+                        <IoLogOutOutline size={16} />
+                        Log Out
+                    </button>
+                </div>
+            )}
         </div>
     );
 
@@ -119,7 +155,7 @@ export default function InvestorProfile() {
 
     return (
         <AppShell>
-            <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
+            <AppHeader title="My Profile" actions={headerActions} />
 
             {/* Hero Section */}
             <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>

@@ -286,7 +286,7 @@ export default function Conversation() {
                     {permission && permission.canMessage === false ? (
                         <div className="flex flex-col items-center py-2 w-full">
                             <p className={`text-sm tracking-wide font-medium mb-3 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                                {permission.reason}
+                                You can only chat when the user follows you back.
                             </p>
                             {permission.requiresFollow && (
                                 <button
@@ -294,7 +294,7 @@ export default function Conversation() {
                                     disabled={sending}
                                     className="px-6 py-2 rounded-xl bg-[#00B8A9] text-white font-semibold text-sm hover:bg-[#00A89A] transition-all disabled:opacity-50"
                                 >
-                                    {sending ? "Processing..." : "Follow to Message"}
+                                    {sending ? "Processing..." : "Follow User"}
                                 </button>
                             )}
                         </div>
