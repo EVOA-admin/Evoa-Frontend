@@ -82,9 +82,26 @@ export default function StartupRegistration() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [pitchCompressState, setPitchCompressState] = useState('idle'); // 'idle' | 'compressing' | 'done'
+  const [pitchCompressState, setPitchCompressState] = useState('idle');
   const [pitchCompressProgress, setPitchCompressProgress] = useState(0);
   const [filePreviews, setFilePreviews] = useState({});
+  const [verificationError, setVerificationError] = useState(''); // '' | 'invalid' | 'valid'
+
+  // ── Regex patterns for verification numbers ──────────────────────────────
+  const VERIFICATION_REGEX = {
+    CIN: /^[LU]{1}[0-9]{5}[A-Z]{2}[0-9]{4}[A-Z]{3}[0-9]{6}$/,
+    GST: /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z0-9]{1}Z[A-Z0-9]{1}$/,
+    Udyam: /^UDYAM-[A-Z]{2}-\d{2}-\d{7}$/,
+  };
+
+  const validateVerificationField = (type, value) => {
+    if (!type || !value.trim()) { setVerificationError(''); return true; }
+    const regex = VERIFICATION_REGEX[type];
+    if (!regex) { setVerificationError(''); return true; }
+    const ok = regex.test(value.trim().toUpperCase());
+    setVerificationError(ok ? 'valid' : 'invalid');
+    return ok;
+  };
 
   const handleFileUpload = (field, file) => {
     if (!file) return;
@@ -124,6 +141,16 @@ export default function StartupRegistration() {
         if (formData.industries.length === 0) { setError('Please select at least one industry.'); return false; }
         if (!formData.stage) { setError('Please select the startup stage.'); return false; }
         if (!formData.entityType) { setError('Please select your entity type.'); return false; }
+        // Validate verification number format if a type + value is entered
+        if (formData.verificationType && formData.entityType !== 'Not Registered Yet') {
+          const verVal = formData.verificationType === 'CIN' ? formData.cin
+            : formData.verificationType === 'GST' ? formData.gstin
+              : formData.verificationType === 'Udyam' ? formData.udyamNumber : '';
+          if (verVal.trim() && !validateVerificationField(formData.verificationType, verVal)) {
+            setError('Invalid verification number format. Please check the entered number.');
+            return false;
+          }
+        }
         return true;
       }
       case 3: {
@@ -362,9 +389,72 @@ export default function StartupRegistration() {
                       placeholder="Select Verification Type"
                       isDark={isDark}
                     />
-                    {formData.verificationType === 'CIN' && <input type="text" placeholder="Enter CIN" value={formData.cin} onChange={(e) => handleInputChange('cin', e.target.value)} className={inputCls} />}
-                    {formData.verificationType === 'GST' && <input type="text" placeholder="Enter GSTIN" value={formData.gstin} onChange={(e) => handleInputChange('gstin', e.target.value)} className={inputCls} />}
-                    {formData.verificationType === 'Udyam' && <input type="text" placeholder="Enter Udyam Registration Number" value={formData.udyamNumber} onChange={(e) => handleInputChange('udyamNumber', e.target.value)} className={inputCls} />}
+                    {formData.verificationType === 'CIN' && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Enter CIN (e.g. L17110MH1973PLC019786)"
+                          value={formData.cin}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase();
+                            handleInputChange('cin', val);
+                            if (verificationError) validateVerificationField('CIN', val);
+                          }}
+                          onBlur={(e) => validateVerificationField('CIN', e.target.value.toUpperCase())}
+                          className={inputCls}
+                        />
+                        {formData.cin.trim() && verificationError === 'invalid' && (
+                          <p className="text-xs text-red-500 mt-1 px-1">Invalid format. Please check the entered number.</p>
+                        )}
+                        {formData.cin.trim() && verificationError === 'valid' && (
+                          <p className="text-xs text-green-500 mt-1 px-1">✓ Format Valid (Verification Pending)</p>
+                        )}
+                      </>
+                    )}
+                    {formData.verificationType === 'GST' && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Enter GSTIN (e.g. 22AAAAA0000A1Z5)"
+                          value={formData.gstin}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase();
+                            handleInputChange('gstin', val);
+                            if (verificationError) validateVerificationField('GST', val);
+                          }}
+                          onBlur={(e) => validateVerificationField('GST', e.target.value.toUpperCase())}
+                          className={inputCls}
+                        />
+                        {formData.gstin.trim() && verificationError === 'invalid' && (
+                          <p className="text-xs text-red-500 mt-1 px-1">Invalid format. Please check the entered number.</p>
+                        )}
+                        {formData.gstin.trim() && verificationError === 'valid' && (
+                          <p className="text-xs text-green-500 mt-1 px-1">✓ Format Valid (Verification Pending)</p>
+                        )}
+                      </>
+                    )}
+                    {formData.verificationType === 'Udyam' && (
+                      <>
+                        <input
+                          type="text"
+                          placeholder="Enter Udyam Number (e.g. UDYAM-MH-02-0012345)"
+                          value={formData.udyamNumber}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase();
+                            handleInputChange('udyamNumber', val);
+                            if (verificationError) validateVerificationField('Udyam', val);
+                          }}
+                          onBlur={(e) => validateVerificationField('Udyam', e.target.value.toUpperCase())}
+                          className={inputCls}
+                        />
+                        {formData.udyamNumber.trim() && verificationError === 'invalid' && (
+                          <p className="text-xs text-red-500 mt-1 px-1">Invalid format. Please check the entered number.</p>
+                        )}
+                        {formData.udyamNumber.trim() && verificationError === 'valid' && (
+                          <p className="text-xs text-green-500 mt-1 px-1">✓ Format Valid (Verification Pending)</p>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
                 {formData.entityType === 'Not Registered Yet' && (

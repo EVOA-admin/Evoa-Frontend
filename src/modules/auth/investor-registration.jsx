@@ -87,6 +87,17 @@ export default function InvestorRegistration() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [panError, setPanError] = useState(''); // '' | 'invalid' | 'valid'
+
+  // PAN regex: 5 uppercase letters, 4 digits, 1 uppercase letter
+  const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+
+  const validatePan = (value) => {
+    if (!value.trim()) { setPanError(''); return true; }
+    const ok = PAN_REGEX.test(value.trim().toUpperCase());
+    setPanError(ok ? 'valid' : 'invalid');
+    return ok;
+  };
 
   const validateStep = () => {
     setError('');
@@ -99,6 +110,11 @@ export default function InvestorRegistration() {
         if (!formData.investmentRange) { setError('Please select your investment range.'); return false; }
         if (formData.sectorFocus.length === 0) { setError('Please select at least one sector of focus.'); return false; }
         if (!formData.verificationOption) { setError('Please select a verification option.'); return false; }
+        // Validate PAN format if entered
+        if (formData.panNumber.trim() && !validatePan(formData.panNumber)) {
+          setError('Invalid PAN format. Please check the entered number.');
+          return false;
+        }
         return true;
       default:
         return true;
@@ -250,7 +266,26 @@ export default function InvestorRegistration() {
               <div className="space-y-3">
                 <input type="url" placeholder="LinkedIn Profile (Mandatory)" value={formData.linkedinProfile} onChange={(e) => handleInputChange('linkedinProfile', e.target.value)} className={inputCls} />
                 <input type="url" placeholder="Portfolio / Past Deals Link" value={formData.portfolioLink} onChange={(e) => handleInputChange('portfolioLink', e.target.value)} className={inputCls} />
-                <input type="text" placeholder="PAN Number (Optional but recommended)" value={formData.panNumber} onChange={(e) => handleInputChange('panNumber', e.target.value)} className={inputCls} />
+                <>
+                  <input
+                    type="text"
+                    placeholder="PAN Number (Optional but recommended, e.g. ABCDE1234F)"
+                    value={formData.panNumber}
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase();
+                      handleInputChange('panNumber', val);
+                      if (panError) validatePan(val);
+                    }}
+                    onBlur={(e) => validatePan(e.target.value.toUpperCase())}
+                    className={inputCls}
+                  />
+                  {formData.panNumber.trim() && panError === 'invalid' && (
+                    <p className="text-xs text-red-500 mt-1 px-1">Invalid format. Please check the entered number.</p>
+                  )}
+                  {formData.panNumber.trim() && panError === 'valid' && (
+                    <p className="text-xs text-green-500 mt-1 px-1">✓ Valid PAN format</p>
+                  )}
+                </>
                 <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
                   Upload ID Proof (Aadhaar/Passport/Driving License)
                   <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload('idProof', e.target.files[0])} className="hidden" />
