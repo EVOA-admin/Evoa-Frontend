@@ -1,0 +1,33 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /pitch-us
+Allow: /portfolio
+Allow: /about
+Allow: /contact
+Allow: /privacy-policy
+
+# Disallow private / authenticated routes
+Disallow: /startup
+Disallow: /investor
+Disallow: /incubator
+Disallow: /viewer
+Disallow: /explore
+Disallow: /notifications
+Disallow: /profile
+Disallow: /pitch/
+Disallow: /startup/profile
+Disallow: /investor/profile
+Disallow: /incubator/profile
+Disallow: /viewer/profile
+Disallow: /inbox
+Disallow: /inbox/
+Disallow: /u/
+Disallow: /register/startup
+Disallow: /register/investor
+Disallow: /register/incubator
+Disallow: /register/viewer
+Disallow: /choice-role
+Disallow: /auth/
+
+Sitemap: https://evoa.in/sitemap.xml
