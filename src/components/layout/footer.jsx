@@ -22,19 +22,17 @@ export default function Footer() {
 
   return (
     <footer
-      className={`relative mt-24 transition-all duration-500 backdrop-blur-xl ${
-        isDark
-          ? 'bg-black/70 text-white'
-          : 'bg-white/70 text-black'
-      }`}
+      className={`relative mt-24 transition-all duration-500 backdrop-blur-xl ${isDark
+        ? 'bg-black/70 text-white'
+        : 'bg-white/70 text-black'
+        }`}
     >
       {/* Soft top glow */}
       <div
-        className={`absolute inset-x-0 -top-px h-px ${
-          isDark
-            ? 'bg-gradient-to-r from-transparent via-[#B0FFFA]/30 to-transparent'
-            : 'bg-gradient-to-r from-transparent via-[#00B8A9]/30 to-transparent'
-        }`}
+        className={`absolute inset-x-0 -top-px h-px ${isDark
+          ? 'bg-gradient-to-r from-transparent via-[#B0FFFA]/30 to-transparent'
+          : 'bg-gradient-to-r from-transparent via-[#00B8A9]/30 to-transparent'
+          }`}
       />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 py-14 md:py-18">
@@ -43,19 +41,17 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <h3
-              className={`text-2xl font-bold mb-4 bg-gradient-to-r ${
-                isDark
-                  ? 'from-white via-[#B0FFFA] to-white bg-clip-text text-transparent'
-                  : 'from-black via-[#00B8A9] to-black bg-clip-text text-transparent'
-              }`}
+              className={`text-2xl font-bold mb-4 bg-gradient-to-r ${isDark
+                ? 'from-white via-[#B0FFFA] to-white bg-clip-text text-transparent'
+                : 'from-black via-[#00B8A9] to-black bg-clip-text text-transparent'
+                }`}
             >
               EVO-A
             </h3>
 
             <p
-              className={`text-sm leading-relaxed max-w-md ${
-                isDark ? 'text-white/60' : 'text-black/60'
-              }`}
+              className={`text-sm leading-relaxed max-w-md ${isDark ? 'text-white/60' : 'text-black/60'
+                }`}
             >
               Revolutionizing the startup–investor ecosystem. Connect, invest,
               and grow together in the future of entrepreneurship.
@@ -63,15 +59,21 @@ export default function Footer() {
 
             {/* Social Icons */}
             <div className="flex gap-5 mt-6">
-              {[FaLinkedin, XIcon, FaFacebook, FaInstagram].map((Icon, i) => (
+              {[
+                { icon: FaLinkedin, link: "https://www.linkedin.com/company/evo-a" },
+                // { icon: XIcon, link: "https://x.com/evoa" },
+                // { icon: FaFacebook, link: "https://facebook.com/evoa" },
+                { icon: FaInstagram, link: "https://instagram.com/evoaofficial" }
+              ].map(({ icon: Icon, link }, i) => (
                 <a
                   key={i}
-                  href="#"
-                  className={`transition-all duration-300 hover:scale-125 active:scale-95 ${
-                    isDark
-                      ? 'text-white/50 hover:text-[#B0FFFA]'
-                      : 'text-black/50 hover:text-[#00B8A9]'
-                  }`}
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`transition-all duration-300 hover:scale-125 active:scale-95 ${isDark
+                    ? "text-white/50 hover:text-[#B0FFFA]"
+                    : "text-black/50 hover:text-[#00B8A9]"
+                    }`}
                 >
                   <Icon size={20} />
                 </a>
@@ -92,11 +94,10 @@ export default function Footer() {
                 <li key={label}>
                   <Link
                     to={path}
-                    className={`transition-all duration-300 hover:translate-x-1 ${
-                      isDark
-                        ? 'text-white/60 hover:text-[#B0FFFA]'
-                        : 'text-black/60 hover:text-[#00B8A9]'
-                    }`}
+                    className={`transition-all duration-300 hover:translate-x-1 ${isDark
+                      ? 'text-white/60 hover:text-[#B0FFFA]'
+                      : 'text-black/60 hover:text-[#00B8A9]'
+                      }`}
                   >
                     {label}
                   </Link>
@@ -118,11 +119,10 @@ export default function Footer() {
                 <li key={label}>
                   <a
                     href="#"
-                    className={`transition-all duration-300 hover:translate-x-1 ${
-                      isDark
-                        ? 'text-white/60 hover:text-[#B0FFFA]'
-                        : 'text-black/60 hover:text-[#00B8A9]'
-                    }`}
+                    className={`transition-all duration-300 hover:translate-x-1 ${isDark
+                      ? 'text-white/60 hover:text-[#B0FFFA]'
+                      : 'text-black/60 hover:text-[#00B8A9]'
+                      }`}
                   >
                     {label}
                   </a>
@@ -135,9 +135,8 @@ export default function Footer() {
         {/* Copyright */}
         <div className="mt-14 text-center">
           <p
-            className={`text-xs tracking-wide ${
-              isDark ? 'text-white/40' : 'text-black/40'
-            }`}
+            className={`text-xs tracking-wide ${isDark ? 'text-white/40' : 'text-black/40'
+              }`}
           >
             © {new Date().getFullYear()} EVO-A. All rights reserved.
           </p>

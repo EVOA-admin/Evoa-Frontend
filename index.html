@@ -15,7 +15,33 @@
     <meta property="og:description" content="EVO-A connects startups, investors, and incubators on one platform." />
     <meta property="og:image" content="/vite.avif" />
 
-    <!-- Preconnect for performance -->
+    <!-- Preconnect for Google Fonts (eliminates render-blocking DNS + TLS cost) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+
+    <!--
+      Non-blocking Google Fonts load:
+      media="print" makes the browser treat it as low-priority (non-blocking).
+      onload switches it to media="all" once it downloads, applying it without
+      ever blocking the initial render / FCP / LCP.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <!-- Fallback for no-JS environments -->
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      />
+    </noscript>
+
+    <!-- Preconnect for Google AdSense -->
     <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
 

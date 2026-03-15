@@ -1,18 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import Footer from '../../components/layout/footer';
-import {
-  HeroSection,
-  TransformJourneySection,
-  WhyEvoaSection,
-  WhoIsEvoaSection,
-  HowItWorksSection,
-  PowerfulFeaturesSection,
-  TrustDesignSection,
-  UserJourneySection,
-  FAQSection
-} from './sections';
+
+// HeroSection is eagerly imported — it is the LCP element and must paint immediately
+import HeroSection from './sections/HeroSection';
+
+// Below-fold sections: lazy-loaded so they don’t block initial parse / FCP
+const TransformJourneySection = lazy(() => import('./sections/TransformJourneySection'));
+const WhyEvoaSection          = lazy(() => import('./sections/WhyEvoaSection'));
+const WhoIsEvoaSection        = lazy(() => import('./sections/WhoIsEvoaSection'));
+const HowItWorksSection       = lazy(() => import('./sections/HowItWorksSection'));
+const PowerfulFeaturesSection = lazy(() => import('./sections/PowerfulFeaturesSection'));
+const TrustDesignSection      = lazy(() => import('./sections/TrustDesignSection'));
+const UserJourneySection      = lazy(() => import('./sections/UserJourneySection'));
+const FAQSection              = lazy(() => import('./sections/FAQSection'));
 import {
   HiRocketLaunch,
   HiSparkles,
@@ -98,159 +100,8 @@ const getIcon = (iconName, className = 'text-2xl') => {
 };
 
 
-// Optimized Animation Styles
-const animationStyles = `
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  @keyframes smokeFlow {
-    0% {
-      opacity: 0;
-      transform: translateX(-100px) translateY(0) scale(0.5);
-    }
-    10% {
-      opacity: 0.3;
-    }
-    50% {
-      opacity: 0.5;
-      transform: translateX(200px) translateY(-40px) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: translateX(400px) translateY(-80px) scale(1.5);
-    }
-  }
-  
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-      opacity: 0.2;
-    }
-    50% {
-      transform: translateY(-15px);
-      opacity: 0.4;
-    }
-  }
-  
-  @keyframes pulse-glow {
-    0%, 100% {
-      opacity: 0.3;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.6;
-      transform: scale(1.05);
-    }
-  }
-  
-  @keyframes rotate-slow {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  
-  @keyframes dotMove {
-    0% {
-      top: -2%;
-      opacity: 0;
-    }
-    3% {
-      opacity: 1;
-    }
-    97% {
-      opacity: 1;
-    }
-    100% {
-      top: 102%;
-      opacity: 0;
-    }
-  }
-  
-  @keyframes fade-out {
-    0% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-      pointer-events: none;
-    }
-  }
-  
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-  
-  
-  .animate-float {
-    animation: float 8s ease-in-out infinite;
-  }
-  
-  .animate-pulse-glow {
-    animation: pulse-glow 3s ease-in-out infinite;
-  }
-  
-  .animate-rotate-slow {
-    animation: rotate-slow 20s linear infinite;
-  }
-  
-  .animate-dot-move {
-    animation: dotMove 15s linear infinite;
-  }
-  
-  .animate-fade-out {
-    animation: fade-out 0.5s ease-out forwards;
-  }
-  
-  .animate-shimmer {
-    animation: shimmer 2s linear infinite;
-    background: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(176, 255, 250, 0.1) 50%,
-      transparent 100%
-    );
-    background-size: 1000px 100%;
-  }
-  
-  /* Responsive Grid Pattern */
-  .responsive-grid-pattern {
-    background-size: 25px 25px;
-  }
-  
-  @media (min-width: 640px) {
-    .responsive-grid-pattern {
-      background-size: 30px 30px;
-    }
-  }
-  
-  @media (min-width: 768px) {
-    .responsive-grid-pattern {
-      background-size: 35px 35px;
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    .responsive-grid-pattern {
-      background-size: 40px 40px;
-    }
-  }
-`;
+// Animation keyframes and utility classes are now in src/index.css
+// (removed inline <style> injection to avoid runtime style recalculation)
 
 
 export default function Landing() {
@@ -339,7 +190,7 @@ export default function Landing() {
     <div className={`min-h-screen transition-colors duration-300 ${
       isDark ? 'bg-black' : 'bg-white'
     }`}>
-      <style>{animationStyles}</style>
+      {/* Animation keyframes are in src/index.css — no runtime <style> injection needed */}
       
       <FloatingAnimatedIcons isDark={isDark} />
 
@@ -387,13 +238,15 @@ export default function Landing() {
           <div ref={setRef('transformJourney')} className={`transition-all duration-1000 ${
             isVisible['transformJourney'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <TransformJourneySection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-              SectionTitle={SectionTitle}
-              CardContainer={CardContainer}
-            />
+            <Suspense fallback={null}>
+              <TransformJourneySection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+                SectionTitle={SectionTitle}
+                CardContainer={CardContainer}
+              />
+            </Suspense>
           </div>
 
 
@@ -405,13 +258,15 @@ export default function Landing() {
           <div ref={setRef('whyEvoa')} className={`transition-all duration-1000 ${
             isVisible['whyEvoa'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <WhyEvoaSection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-              SectionTitle={SectionTitle}
-              getIcon={getIcon}
-            />
+            <Suspense fallback={null}>
+              <WhyEvoaSection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+                SectionTitle={SectionTitle}
+                getIcon={getIcon}
+              />
+            </Suspense>
           </div>
 
 
@@ -423,12 +278,14 @@ export default function Landing() {
           <div ref={setRef('whoIsEvoa')} className={`transition-all duration-1000 ${
             isVisible['whoIsEvoa'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <WhoIsEvoaSection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-              SectionTitle={SectionTitle}
-            />
+            <Suspense fallback={null}>
+              <WhoIsEvoaSection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+                SectionTitle={SectionTitle}
+              />
+            </Suspense>
           </div>
 
 
@@ -440,13 +297,15 @@ export default function Landing() {
           <div ref={setRef('howItWorks')} className={`transition-all duration-1000 ${
             isVisible['howItWorks'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <HowItWorksSection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-              SectionTitle={SectionTitle}
-              getIcon={getIcon}
-            />
+            <Suspense fallback={null}>
+              <HowItWorksSection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+                SectionTitle={SectionTitle}
+                getIcon={getIcon}
+              />
+            </Suspense>
           </div>
 
 
@@ -458,11 +317,13 @@ export default function Landing() {
           <div ref={setRef('powerfulFeatures')} className={`transition-all duration-1000 ${
             isVisible['powerfulFeatures'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <PowerfulFeaturesSection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-            />
+            <Suspense fallback={null}>
+              <PowerfulFeaturesSection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+              />
+            </Suspense>
           </div>
 
 
@@ -474,13 +335,15 @@ export default function Landing() {
           <div ref={setRef('trustDesign')} className={`transition-all duration-1000 ${
             isVisible['trustDesign'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <TrustDesignSection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-              SectionTitle={SectionTitle}
-              CardContainer={CardContainer}
-            />
+            <Suspense fallback={null}>
+              <TrustDesignSection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+                SectionTitle={SectionTitle}
+                CardContainer={CardContainer}
+              />
+            </Suspense>
           </div>
 
 
@@ -492,13 +355,15 @@ export default function Landing() {
           <div ref={setRef('userJourney')} className={`transition-all duration-1000 ${
             isVisible['userJourney'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <UserJourneySection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-              SectionTitle={SectionTitle}
-              CardContainer={CardContainer}
-            />
+            <Suspense fallback={null}>
+              <UserJourneySection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+                SectionTitle={SectionTitle}
+                CardContainer={CardContainer}
+              />
+            </Suspense>
           </div>
 
 
@@ -662,14 +527,16 @@ export default function Landing() {
           <div ref={setRef('faq')} className={`transition-all duration-1000 ${
             isVisible['faq'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           }`}>
-            <FAQSection 
-              isVisible={isVisible}
-              isDark={isDark}
-              setRef={setRef}
-              SectionTitle={SectionTitle}
-              openFAQ={openFAQ}
-              toggleFAQ={toggleFAQ}
-            />
+            <Suspense fallback={null}>
+              <FAQSection 
+                isVisible={isVisible}
+                isDark={isDark}
+                setRef={setRef}
+                SectionTitle={SectionTitle}
+                openFAQ={openFAQ}
+                toggleFAQ={toggleFAQ}
+              />
+            </Suspense>
           </div>
         </div>
       </main>

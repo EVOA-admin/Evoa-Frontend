@@ -23,11 +23,10 @@ export default function Contact() {
 
   const SectionTitle = ({ children }) => (
     <h2
-      className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3 ${
-        isDark
-          ? "text-white"
-          : "bg-gradient-to-r from-[#00B8A9] via-[#00C9B7] to-[#00B8A9] bg-clip-text text-transparent"
-      }`}
+      className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3 ${isDark
+        ? "text-white"
+        : "bg-gradient-to-r from-[#00B8A9] via-[#00C9B7] to-[#00B8A9] bg-clip-text text-transparent"
+        }`}
     >
       {children}
     </h2>
@@ -35,11 +34,10 @@ export default function Contact() {
 
   const CardContainer = ({ children, className = "" }) => (
     <div
-      className={`group relative p-5 sm:p-6 md:p-7 lg:p-8 rounded-xl transition-all duration-300 ${
-        isDark
-          ? "bg-gradient-to-br from-black/80 via-slate-900/70 to-black/80 backdrop-blur-xl border border-[#B0FFFA]/20 hover:border-[#B0FFFA]/40 hover:shadow-2xl hover:shadow-[#B0FFFA]/10"
-          : "bg-white backdrop-blur-xl border border-gray-200/80 hover:border-[#00B8A9]/30 hover:shadow-xl hover:shadow-[#00B8A9]/5"
-      } ${className}`}
+      className={`group relative p-5 sm:p-6 md:p-7 lg:p-8 rounded-xl transition-all duration-300 ${isDark
+        ? "bg-gradient-to-br from-black/80 via-slate-900/70 to-black/80 backdrop-blur-xl border border-[#B0FFFA]/20 hover:border-[#B0FFFA]/40 hover:shadow-2xl hover:shadow-[#B0FFFA]/10"
+        : "bg-white backdrop-blur-xl border border-gray-200/80 hover:border-[#00B8A9]/30 hover:shadow-xl hover:shadow-[#00B8A9]/5"
+        } ${className}`}
     >
       {children}
     </div>
@@ -83,7 +81,7 @@ export default function Contact() {
       ...prev,
       [name]: value,
     }));
-    
+
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -94,7 +92,7 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -105,12 +103,12 @@ export default function Contact() {
     try {
       // TODO: Replace with your actual API endpoint
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      
+
       console.log("Contact form submitted:", formData);
-      
+
       setSubmitStatus("success");
       setFormData({ name: "", email: "", subject: "", message: "" });
-      
+
       setTimeout(() => setSubmitStatus(null), 5000);
     } catch (error) {
       console.error("Submission error:", error);
@@ -124,34 +122,33 @@ export default function Contact() {
     {
       icon: HiMail,
       title: "Email",
-      value: "contact@evoa.com",
+      value: "admin@evoa.co.in",
       link: "mailto:contact@evoa.com",
     },
     {
       icon: HiPhone,
       title: "Phone",
-      value: "+91 1234567890",
-      link: "tel:+911234567890",
+      value: "+91 9636641861, 9759054403",
+      link: "tel:+919636641861",
     },
     {
       icon: HiLocationMarker,
       title: "Address",
-      value: "123 Startup Street, Mumbai, Maharashtra 400001",
+      value: "Vasant Kunj, New Delhi, 110070",
       link: null,
     },
   ];
 
   const socialLinks = [
-    { icon: FaLinkedin, name: "LinkedIn", url: "https://linkedin.com/company/evoa" },
-    { icon: FaXTwitter, name: "X (Twitter)", url: "https://twitter.com/evoa" },
-    { icon: FaInstagram, name: "Instagram", url: "https://instagram.com/evoa" },
+    { icon: FaLinkedin, name: "LinkedIn", url: "https://linkedin.com/company/evo-a" },
+    // { icon: FaXTwitter, name: "X (Twitter)", url: "https://twitter.com/evoa" },
+    { icon: FaInstagram, name: "Instagram", url: "https://instagram.com/evoaofficial" },
   ];
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${
-        isDark ? "bg-black" : "bg-gradient-to-br from-gray-50 via-[#B0FFFA]/5 to-gray-50"
-      }`}
+      className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-black" : "bg-gradient-to-br from-gray-50 via-[#B0FFFA]/5 to-gray-50"
+        }`}
     >
       <section
         className="py-12 sm:py-16 md:py-20 lg:py-24"
@@ -161,11 +158,10 @@ export default function Contact() {
           {/* Header */}
           <header className="text-center mb-10 sm:mb-12 md:mb-16">
             <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 backdrop-blur-xl border font-semibold ${
-                isDark
-                  ? "bg-[#B0FFFA]/10 border-[#B0FFFA]/30 text-[#B0FFFA]"
-                  : "bg-[#00B8A9]/10 border-[#00B8A9]/20 text-[#00B8A9]"
-              }`}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 backdrop-blur-xl border font-semibold ${isDark
+                ? "bg-[#B0FFFA]/10 border-[#B0FFFA]/30 text-[#B0FFFA]"
+                : "bg-[#00B8A9]/10 border-[#00B8A9]/20 text-[#00B8A9]"
+                }`}
             >
               <span className="text-xs tracking-wider uppercase">
                 Contact Us
@@ -173,9 +169,8 @@ export default function Contact() {
             </div>
             <SectionTitle>Get in Touch</SectionTitle>
             <p
-              className={`text-base sm:text-lg md:text-xl max-w-3xl mx-auto mt-4 leading-relaxed ${
-                isDark ? "text-slate-300" : "text-gray-600"
-              }`}
+              className={`text-base sm:text-lg md:text-xl max-w-3xl mx-auto mt-4 leading-relaxed ${isDark ? "text-slate-300" : "text-gray-600"
+                }`}
             >
               Have a question or want to discuss a partnership? Our team is here to help.
               <br className="hidden sm:block" />
@@ -195,11 +190,10 @@ export default function Contact() {
                   const content = (
                     <div className="flex items-start gap-4">
                       <div
-                        className={`shrink-0 inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${
-                          isDark
-                            ? "bg-[#B0FFFA]/10 border border-[#B0FFFA]/20"
-                            : "bg-[#00B8A9]/10 border border-[#00B8A9]/20"
-                        }`}
+                        className={`shrink-0 inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${isDark
+                          ? "bg-[#B0FFFA]/10 border border-[#B0FFFA]/20"
+                          : "bg-[#00B8A9]/10 border border-[#00B8A9]/20"
+                          }`}
                       >
                         <IconComponent
                           size={22}
@@ -209,22 +203,20 @@ export default function Contact() {
                       </div>
                       <div className="flex-1">
                         <h3
-                          className={`font-semibold text-sm mb-1.5 ${
-                            isDark ? "text-slate-300" : "text-gray-500"
-                          }`}
+                          className={`font-semibold text-sm mb-1.5 ${isDark ? "text-slate-300" : "text-gray-500"
+                            }`}
                         >
                           {info.title}
                         </h3>
                         <p
-                          className={`text-base sm:text-lg font-medium ${
-                            info.link
-                              ? isDark
-                                ? "text-white hover:text-[#B0FFFA] cursor-pointer"
-                                : "text-gray-900 hover:text-[#00B8A9] cursor-pointer"
-                              : isDark
+                          className={`text-base sm:text-lg font-medium ${info.link
+                            ? isDark
+                              ? "text-white hover:text-[#B0FFFA] cursor-pointer"
+                              : "text-gray-900 hover:text-[#00B8A9] cursor-pointer"
+                            : isDark
                               ? "text-white"
                               : "text-gray-900"
-                          } transition-colors`}
+                            } transition-colors`}
                         >
                           {info.value}
                         </p>
@@ -249,16 +241,14 @@ export default function Contact() {
               {/* Social Links */}
               <CardContainer>
                 <h3
-                  className={`font-semibold text-lg mb-4 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`font-semibold text-lg mb-4 ${isDark ? "text-white" : "text-gray-900"
+                    }`}
                 >
                   Follow Us
                 </h3>
                 <p
-                  className={`text-sm mb-4 ${
-                    isDark ? "text-slate-300" : "text-gray-600"
-                  }`}
+                  className={`text-sm mb-4 ${isDark ? "text-slate-300" : "text-gray-600"
+                    }`}
                 >
                   Connect with us on social media for updates and news.
                 </p>
@@ -271,11 +261,10 @@ export default function Contact() {
                         href={social.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 hover:-translate-y-1 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                          isDark
-                            ? "bg-[#B0FFFA]/10 text-[#B0FFFA] hover:bg-[#B0FFFA]/20 border border-[#B0FFFA]/20 focus:ring-[#B0FFFA]/60 focus:ring-offset-black"
-                            : "bg-[#00B8A9]/10 text-[#00B8A9] hover:bg-[#00B8A9]/20 border border-[#00B8A9]/20 focus:ring-[#00B8A9]/60 focus:ring-offset-white"
-                        }`}
+                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 hover:-translate-y-1 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDark
+                          ? "bg-[#B0FFFA]/10 text-[#B0FFFA] hover:bg-[#B0FFFA]/20 border border-[#B0FFFA]/20 focus:ring-[#B0FFFA]/60 focus:ring-offset-black"
+                          : "bg-[#00B8A9]/10 text-[#00B8A9] hover:bg-[#00B8A9]/20 border border-[#00B8A9]/20 focus:ring-[#00B8A9]/60 focus:ring-offset-white"
+                          }`}
                         aria-label={social.name}
                       >
                         <IconComponent size={20} />
@@ -292,9 +281,8 @@ export default function Contact() {
                 <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                   <div className="mb-6">
                     <h2
-                      className={`text-xl sm:text-2xl font-bold mb-2 ${
-                        isDark ? "text-white" : "text-gray-900"
-                      }`}
+                      className={`text-xl sm:text-2xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"
+                        }`}
                     >
                       Send Us a Message
                     </h2>
@@ -305,14 +293,12 @@ export default function Contact() {
 
                   {/* Success/Error Messages */}
                   {submitStatus === "success" && (
-                    <div className={`p-4 rounded-lg border ${
-                      isDark 
-                        ? "bg-[#B0FFFA]/10 border-[#B0FFFA]/30" 
-                        : "bg-green-50 border-green-200"
-                    }`}>
-                      <p className={`text-sm font-medium ${
-                        isDark ? "text-[#B0FFFA]" : "text-green-800"
+                    <div className={`p-4 rounded-lg border ${isDark
+                      ? "bg-[#B0FFFA]/10 border-[#B0FFFA]/30"
+                      : "bg-green-50 border-green-200"
                       }`}>
+                      <p className={`text-sm font-medium ${isDark ? "text-[#B0FFFA]" : "text-green-800"
+                        }`}>
                         ✓ Message sent successfully! We'll respond within 24 hours.
                       </p>
                     </div>
@@ -331,9 +317,8 @@ export default function Contact() {
                     <div>
                       <label
                         htmlFor="name"
-                        className={`block text-sm font-semibold mb-2 ${
-                          isDark ? "text-white" : "text-gray-700"
-                        }`}
+                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
+                          }`}
                       >
                         Full Name <span className="text-red-500">*</span>
                       </label>
@@ -345,13 +330,12 @@ export default function Contact() {
                         onChange={handleChange}
                         required
                         autoComplete="name"
-                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${
-                          errors.name
-                            ? "border-red-500 focus:ring-red-500"
-                            : isDark
+                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${errors.name
+                          ? "border-red-500 focus:ring-red-500"
+                          : isDark
                             ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
                             : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                        } focus:outline-none`}
+                          } focus:outline-none`}
                         placeholder="John Doe"
                         aria-required="true"
                         aria-invalid={!!errors.name}
@@ -365,9 +349,8 @@ export default function Contact() {
                     <div>
                       <label
                         htmlFor="email"
-                        className={`block text-sm font-semibold mb-2 ${
-                          isDark ? "text-white" : "text-gray-700"
-                        }`}
+                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
+                          }`}
                       >
                         Email Address <span className="text-red-500">*</span>
                       </label>
@@ -379,13 +362,12 @@ export default function Contact() {
                         onChange={handleChange}
                         required
                         autoComplete="email"
-                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${
-                          errors.email
-                            ? "border-red-500 focus:ring-red-500"
-                            : isDark
+                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${errors.email
+                          ? "border-red-500 focus:ring-red-500"
+                          : isDark
                             ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
                             : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                        } focus:outline-none`}
+                          } focus:outline-none`}
                         placeholder="john@company.com"
                         aria-required="true"
                         aria-invalid={!!errors.email}
@@ -399,9 +381,8 @@ export default function Contact() {
                     <div>
                       <label
                         htmlFor="subject"
-                        className={`block text-sm font-semibold mb-2 ${
-                          isDark ? "text-white" : "text-gray-700"
-                        }`}
+                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
+                          }`}
                       >
                         Subject <span className="text-red-500">*</span>
                       </label>
@@ -412,13 +393,12 @@ export default function Contact() {
                         value={formData.subject}
                         onChange={handleChange}
                         required
-                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${
-                          errors.subject
-                            ? "border-red-500 focus:ring-red-500"
-                            : isDark
+                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${errors.subject
+                          ? "border-red-500 focus:ring-red-500"
+                          : isDark
                             ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
                             : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                        } focus:outline-none`}
+                          } focus:outline-none`}
                         placeholder="Partnership Inquiry"
                         aria-required="true"
                         aria-invalid={!!errors.subject}
@@ -432,9 +412,8 @@ export default function Contact() {
                     <div>
                       <label
                         htmlFor="message"
-                        className={`block text-sm font-semibold mb-2 ${
-                          isDark ? "text-white" : "text-gray-700"
-                        }`}
+                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
+                          }`}
                       >
                         Message <span className="text-red-500">*</span>
                       </label>
@@ -445,13 +424,12 @@ export default function Contact() {
                         onChange={handleChange}
                         required
                         rows={6}
-                        className={`w-full px-4 py-3 rounded-xl border resize-none text-sm transition-all duration-200 ${
-                          errors.message
-                            ? "border-red-500 focus:ring-red-500"
-                            : isDark
+                        className={`w-full px-4 py-3 rounded-xl border resize-none text-sm transition-all duration-200 ${errors.message
+                          ? "border-red-500 focus:ring-red-500"
+                          : isDark
                             ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
                             : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                        } focus:outline-none`}
+                          } focus:outline-none`}
                         placeholder="Tell us about your inquiry..."
                         aria-required="true"
                         aria-invalid={!!errors.message}
@@ -466,15 +444,13 @@ export default function Contact() {
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-base px-6 py-3.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                          isSubmitting
-                            ? "opacity-60 cursor-not-allowed"
-                            : "hover:scale-[1.02] active:scale-[0.98]"
-                        } ${
-                          isDark
+                        className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-base px-6 py-3.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isSubmitting
+                          ? "opacity-60 cursor-not-allowed"
+                          : "hover:scale-[1.02] active:scale-[0.98]"
+                          } ${isDark
                             ? "bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black shadow-lg hover:shadow-[#B0FFFA]/40 focus:ring-[#B0FFFA] focus:ring-offset-black"
                             : "bg-gradient-to-r from-[#00B8A9] to-[#00C9B7] text-white shadow-lg hover:shadow-[#00B8A9]/40 focus:ring-[#00B8A9] focus:ring-offset-white"
-                        }`}
+                          }`}
                       >
                         {isSubmitting ? (
                           <>
@@ -511,9 +487,8 @@ export default function Contact() {
 
                     {/* Privacy Notice */}
                     <p
-                      className={`text-xs text-center leading-relaxed pt-1 ${
-                        isDark ? "text-slate-400" : "text-gray-500"
-                      }`}
+                      className={`text-xs text-center leading-relaxed pt-1 ${isDark ? "text-slate-400" : "text-gray-500"
+                        }`}
                     >
                       By submitting this form, you agree to our privacy policy. We respect your
                       privacy and will never share your information with third parties.

@@ -10,6 +10,13 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 600,
     sourcemap: false,
+    // Ensures each lazy-loaded route gets its own CSS file (no flash of unstyled content)
+    cssCodeSplit: true,
+    // Use Vite's built-in esbuild minifier; drop console/debugger in production
+    minify: 'esbuild',
+    esbuildOptions: {
+      drop: ['console', 'debugger'],
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -34,4 +41,3 @@ export default defineConfig({
     },
   },
 })
-

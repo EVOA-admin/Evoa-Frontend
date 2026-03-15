@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+/* Google Fonts are loaded non-blockingly via index.html <link> tags */
 @import "tailwindcss";
 
 
@@ -364,4 +364,115 @@ option:focus {
 
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
+}
+
+/* ============================================================
+   Landing Page Animations (previously injected as inline <style>)
+   Moved here so they are part of the static CSS bundle.
+   ============================================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes smokeFlow {
+  0% {
+    opacity: 0;
+    transform: translateX(-100px) translateY(0) scale(0.5);
+  }
+  10% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+    transform: translateX(200px) translateY(-40px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(400px) translateY(-80px) scale(1.5);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes dotMove {
+  0%   { top: -2%;   opacity: 0; }
+  3%   { opacity: 1; }
+  97%  { opacity: 1; }
+  100% { top: 102%;  opacity: 0; }
+}
+
+@keyframes fade-out {
+  0%   { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 20s linear infinite;
+}
+
+.animate-dot-move {
+  animation: dotMove 15s linear infinite;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.5s ease-out forwards;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(176, 255, 250, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Responsive Grid Pattern */
+.responsive-grid-pattern {
+  background-size: 25px 25px;
+}
+
+@media (min-width: 640px) {
+  .responsive-grid-pattern { background-size: 30px 30px; }
+}
+
+@media (min-width: 768px) {
+  .responsive-grid-pattern { background-size: 35px 35px; }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid-pattern { background-size: 40px 40px; }
 }

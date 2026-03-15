@@ -57,9 +57,8 @@ export default function Navbar() {
             {/* ================= DESKTOP NAV ================= */}
             <nav className="hidden md:flex items-center gap-3 text-sm font-medium">
               {[
+                ['Home', '/'],
                 ['Blog', '/blog'],
-                ['Pitch Us', '/pitch-us'],
-                ['Portfolio', '/portfolio'],
                 ['About', '/about'],
                 ['Contact', '/contact'],
               ].map(([label, path]) => (
@@ -153,9 +152,8 @@ export default function Navbar() {
 
             <div className="flex flex-col px-5 py-6 gap-1">
               {[
+                ['Home', '/'],
                 ['Blog', '/blog'],
-                ['Pitch Us', '/pitch-us'],
-                ['Portfolio', '/portfolio'],
                 ['About', '/about'],
                 ['Contact', '/contact'],
               ].map(([label, path]) => (

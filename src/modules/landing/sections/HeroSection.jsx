@@ -512,6 +512,8 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
               <img
                 src={heroImage}
                 alt="EVO-A Platform"
+                fetchpriority="high"
+                loading="eager"
                 className="w-[320px] h-[320px] object-contain transition-all duration-500 group-hover:scale-105 drop-shadow-2xl mx-auto"
               />
             </div>
