@@ -226,7 +226,7 @@ export default function Viewer() {
         <FaPlus size={16} />
       </button>
       <button
-        onClick={() => window.open('https://021.evoa.co.in/', '_blank')}
+        onClick={() => window.open('https://evoa.co.in/', '_blank')}
         className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 active:scale-90 transition-all"
         title="021 AI"
       >
