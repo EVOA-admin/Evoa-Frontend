@@ -217,7 +217,7 @@ export default function Landing() {
       </div>
 
 
-      <main className="mx-auto max-w-7xl pb-20 pt-0 overflow-x-hidden">
+      <main className="mx-auto max-w-7xl pb-12 pt-0 overflow-x-hidden">
         {/* Hero Section */}
         <div className="relative">
           <HeroSection 
@@ -229,7 +229,7 @@ export default function Landing() {
 
 
         {/* All sections with consistent spacing */}
-        <div className="space-y-16 md:space-y-20 lg:space-y-24">
+        <div className="space-y-8 md:space-y-12 lg:space-y-16">
           {/* Section Divider */}
           <div className={`h-px w-full ${isDark ? 'bg-gradient-to-r from-transparent via-[#B0FFFA]/20 to-transparent' : 'bg-gradient-to-r from-transparent via-[#00B8A9]/20 to-transparent'}`}></div>
 
@@ -375,7 +375,7 @@ export default function Landing() {
       {/* Final Call-to-Action - Full Width Section with Faded Edges - Outside Main Container */}
       <section 
         ref={setRef('finalCta')}
-        className={`relative transition-all duration-1000 ease-out min-h-[400px] sm:min-h-[500px] md:min-h-[600px] w-full overflow-hidden flex flex-col justify-center py-8 sm:py-12 md:py-16 ${
+        className={`relative transition-all duration-1000 ease-out min-h-[400px] sm:min-h-[500px] md:min-h-[600px] w-full overflow-hidden flex flex-col justify-center py-6 sm:py-10 md:py-12 ${
           isVisible['finalCta'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}
       >
@@ -515,11 +515,11 @@ export default function Landing() {
       </section>
       
       {/* Section Divider - Bottom Border Outside Section */}
-      <div className={`h-px w-full mt-8 sm:mt-10 md:mt-12 lg:mt-16 ${isDark ? 'bg-gradient-to-r from-transparent via-[#B0FFFA]/20 to-transparent' : 'bg-gradient-to-r from-transparent via-[#00B8A9]/20 to-transparent'}`}></div>
+      <div className={`h-px w-full mt-6 sm:mt-8 md:mt-10 lg:mt-12 ${isDark ? 'bg-gradient-to-r from-transparent via-[#B0FFFA]/20 to-transparent' : 'bg-gradient-to-r from-transparent via-[#00B8A9]/20 to-transparent'}`}></div>
 
       {/* FAQ Section - Back Inside Main Container */}
-      <main className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-20 pt-0 overflow-x-hidden">
-        <div className="space-y-16 md:space-y-20 lg:space-y-24">
+      <main className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 pb-12 pt-0 overflow-x-hidden">
+        <div className="space-y-8 md:space-y-12 lg:space-y-16">
           {/* Section Divider */}
           <div className={`h-px w-full ${isDark ? 'bg-gradient-to-r from-transparent via-[#B0FFFA]/20 to-transparent' : 'bg-gradient-to-r from-transparent via-[#00B8A9]/20 to-transparent'}`}></div>
 

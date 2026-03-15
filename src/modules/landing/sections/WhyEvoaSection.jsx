@@ -137,7 +137,7 @@ export default function WhyEvoaSection({
   return (
     <section
       ref={setRef('whyEvoa')}
-      className={`relative py-16 sm:py-20 transition-all duration-1000 ${
+      className={`relative py-10 sm:py-20 transition-all duration-1000 ${
         isVisible['whyEvoa']
           ? 'opacity-100 translate-y-0'
           : 'opacity-0 translate-y-8'
@@ -145,7 +145,7 @@ export default function WhyEvoaSection({
     >
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-10 sm:mb-14">
+        <div className="text-center mb-6 sm:mb-14">
           <div
             className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 border backdrop-blur ${
               isDark
@@ -161,7 +161,7 @@ export default function WhyEvoaSection({
           <SectionTitle>Why EVO-A?</SectionTitle>
 
           <p
-            className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto mt-4 ${
+            className={`hidden sm:block text-base sm:text-lg md:text-xl max-w-2xl mx-auto mt-4 ${
               isDark ? 'text-white/70' : 'text-gray-600'
             }`}
           >

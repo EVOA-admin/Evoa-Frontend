@@ -33,22 +33,22 @@ const industriesData = [
 export default function OnePlatformSection({ isVisible, isDark, setRef }) {
   return (
     <section
-  ref={setRef}
-  className={`relative py-20 transition-all duration-1000
-    ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}
+  ref={setRef?.('userJourney')}
+  className={`relative py-10 md:py-20 transition-all duration-1000
+    ${isVisible?.userJourney ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}
   `}
 >
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 md:mb-16">
           <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
             One Platform for <span style={{ color: '#00B8A9' }}>Powering the Startup Economy.</span>
           </h2>
-          <p className={`text-base md:text-lg max-w-3xl mx-auto ${
+          <p className={`hidden sm:block text-base md:text-lg max-w-3xl mx-auto ${
             isDark ? 'text-gray-400' : 'text-gray-600'
           }`}>
             EVO-A is designed to support every layer of the startup journey — from idea discovery to funded growth — across sectors, stages, and communities.
@@ -60,7 +60,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
           <div className="relative inline-block">
             {/* Teal Box */}
             <div 
-              className="rounded-2xl px-10 py-6 shadow-xl transform transition-all duration-300 hover:scale-105 relative z-10"
+              className="rounded-2xl px-6 py-4 md:px-10 md:py-6 shadow-xl transform transition-all duration-300 hover:scale-105 relative z-10"
               style={{
                 background: 'linear-gradient(to right, #00B8A9, #009688)'
               }}
@@ -86,7 +86,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
         </div>
 
         {/* Industry Cards Container */}
-        <div className="relative mt-24 max-w-6xl mx-auto">
+        <div className="relative mt-12 lg:mt-24 max-w-6xl mx-auto">
           
           {/* Cards Grid Wrapper with Horizontal Line */}
           <div className="relative">
@@ -103,7 +103,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
             ></div>
 
             {/* Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 relative pt-24">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 relative pt-0 lg:pt-24">
               {industriesData.map((industry, index) => {
                 const Icon = industry.icon;
                 return (
@@ -127,7 +127,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
                           : 'border-gray-200'
                       }`}
                       style={{
-                        animation: isVisible ? `fadeInUp 0.6s ease-out ${index * 0.1}s both` : 'none',
+                        animation: isVisible?.userJourney ? `fadeInUp 0.6s ease-out ${index * 0.1}s both` : 'none',
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00B8A9'}
                       onMouseLeave={(e) => e.currentTarget.style.borderColor = isDark ? '#1f2937' : '#e5e7eb'}

@@ -46,8 +46,8 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
         isVisible['powerfulFeatures'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
-      <div className="text-center mb-8 sm:mb-10 md:mb-12 lg:mb-16 px-4">
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 backdrop-blur-xl border ${
+      <div className="text-center mb-4 sm:mb-8 md:mb-10 lg:mb-12 px-4">
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 sm:mb-6 backdrop-blur-xl border ${
           isDark 
             ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
             : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
@@ -64,7 +64,7 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
            Zero Noise.
           </span>
         </h2>
-        <p className={`text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed ${
+        <p className={`hidden sm:block text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed ${
           isDark ? 'text-gray-300' : 'text-gray-600'
         }`}>
           A powerful platform designed to simplify startup-investor connections, pitch management, and deal tracking.
@@ -136,6 +136,18 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
                   isDark ? 'bg-[#B0FFFA]/20 text-[#B0FFFA]' : 'bg-[#00B8A9]/20 text-[#00B8A9]'
                 } text-sm font-bold`}>
                   {index + 1}
+                </div>
+                
+                {/* Visual SVG Block mimicking abstract UI */}
+                <div className={`w-full h-24 mb-4 rounded-lg flex items-center justify-center border ${
+                  isDark ? 'bg-black/30 border-[#B0FFFA]/10' : 'bg-gray-50 border-[#00B8A9]/10'
+                }`}>
+                  <svg className={`w-12 h-12 opacity-80 ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} fill="currentColor" viewBox="0 0 24 24">
+                    {/* Abstract illustration relying on index to slightly vary the icon look */}
+                    {index % 3 === 0 && <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h5v2H8v-2z" />}
+                    {index % 3 === 1 && <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.8l5.5 5.2H16v7h-3v-6H11v6H8v-7H6.5L12 5.8z" />}
+                    {index % 3 === 2 && <path d="M11 2v4.3c-2.8.5-5 2.7-5.5 5.5H1v2h4.5c.5 2.8 2.7 5 5.5 5.5V23h2v-3.7c2.8-.5 5-2.7 5.5-5.5H23v-2h-4.5c-.5-2.8-2.7-5-5.5-5.5V2h-2zm1 6.3c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.5-3.5 3.5S8.5 13.7 8.5 11.8s1.6-3.5 3.5-3.5z" />}
+                  </svg>
                 </div>
                 
                 <h3 className={`text-lg sm:text-xl font-bold mb-3 transition-all duration-300 ${

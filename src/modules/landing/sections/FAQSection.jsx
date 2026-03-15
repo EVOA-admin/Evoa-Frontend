@@ -75,7 +75,7 @@ export default function FAQSection({ isVisible, isDark, setRef, SectionTitle, op
   return (
     <section 
       ref={setRef('faq')}
-      className={`relative mt-8 sm:mt-12 md:mt-16 lg:mt-20 transition-all duration-1000 ease-out ${
+      className={`relative mt-4 sm:mt-12 md:mt-16 lg:mt-20 transition-all duration-1000 ease-out ${
         isVisible['faq'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >

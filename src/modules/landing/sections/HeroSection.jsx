@@ -167,7 +167,7 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
       ref={setRef('hero')}
       className={`
         relative overflow-hidden
-        py-10 sm:py-12 lg:py-16
+        py-6 sm:py-10 lg:py-16
         px-4 sm:px-6 lg:px-8
         transition-all duration-1000 ease-out
         ${isVisible['hero'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
@@ -178,11 +178,16 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
           {/* LEFT COLUMN - Content */}
           <div
             className={`
-              space-y-6
+              relative z-10 space-y-6
               transition-all duration-1000 delay-200
               ${isVisible['hero'] ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}
             `}
           >
+            {/* Mobile-only background glow */}
+            <div className={`absolute -inset-10 -z-10 rounded-[3rem] blur-3xl lg:hidden ${
+              isDark ? 'bg-gradient-to-br from-[#B0FFFA]/10 to-transparent' : 'bg-gradient-to-br from-[#00B8A9]/10 to-transparent'
+            }`} />
+
             {/* Tagline - Workflow Requirement - Enhanced Professional Styling */}
             <div className="mb-5 sm:mb-6">
               <div className={`inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full mb-4 backdrop-blur-xl border transition-all duration-500 ${
@@ -245,6 +250,7 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
             {/* Subheading */}
             <p
               className={`
+                hidden sm:block
                 text-base sm:text-lg md:text-xl
                 leading-relaxed max-w-2xl mt-3
                 ${isDark ? 'text-gray-300' : 'text-gray-600'}
@@ -441,6 +447,19 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
               >
                 <span className="relative z-10">Sign in with Email</span>
               </Link>
+            </div>
+
+            {/* Mobile Down Arrow Indicator */}
+            <div className="flex justify-center mt-8 lg:hidden animate-bounce pt-4">
+              <svg
+                className={`w-6 h-6 sm:w-8 sm:h-8 ${isDark ? 'text-[#B0FFFA]/50' : 'text-[#00B8A9]/50'}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
             </div>
           </div>
 

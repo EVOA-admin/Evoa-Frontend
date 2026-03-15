@@ -17,11 +17,11 @@ export default function WhoIsEvoaSection({ isVisible, isDark, setRef, SectionTit
     <section 
       ref={setRef('userRoles')}
       className={`relative transition-all duration-1000 ease-out ${
-        isVisible['userRoles'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        isVisible['whoIsEvoa'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
-      <div className="text-center mb-8 sm:mb-10 md:mb-12 lg:mb-16 px-4">
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 backdrop-blur-xl border ${
+      <div className="text-center mb-6 sm:mb-10 md:mb-12 lg:mb-16 px-4">
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 sm:mb-6 backdrop-blur-xl border ${
           isDark 
             ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
             : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
@@ -31,7 +31,7 @@ export default function WhoIsEvoaSection({ isVisible, isDark, setRef, SectionTit
         
         <SectionTitle>Get Started - Join EVO-A</SectionTitle>
         
-        <p className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto mt-4 ${
+        <p className={`hidden sm:block text-base sm:text-lg md:text-xl max-w-2xl mx-auto mt-4 ${
           isDark ? 'text-white/70' : 'text-gray-600'
         }`}>
           Click on your category to register and join the ecosystem
@@ -212,7 +212,7 @@ export default function WhoIsEvoaSection({ isVisible, isDark, setRef, SectionTit
                 to={role.link}
                 onClick={() => handleRoleClick(role.roleId, role.title)}
                 className={`absolute transition-all duration-700 group/card ${
-                  isVisible['userRoles'] ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
+                  isVisible['whoIsEvoa'] ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
                 }`}
                 style={{ 
                   ...role.position,
@@ -289,7 +289,7 @@ export default function WhoIsEvoaSection({ isVisible, isDark, setRef, SectionTit
             <div
               key={index}
               className={`group relative w-full max-w-sm mx-auto transition-all duration-700 ${
-                isVisible['userRoles'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                isVisible['whoIsEvoa'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
               style={{ transitionDelay: `${index * 150}ms` }}
             >

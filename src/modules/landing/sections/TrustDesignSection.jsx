@@ -5,12 +5,12 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
     <section 
       ref={setRef('trustVerification')}
       className={`relative transition-all duration-1000 ease-out ${
-        isVisible['trustVerification'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        isVisible['trustDesign'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
       {/* Header Section */}
-      <div className="text-center mb-12 md:mb-16 px-4">
-        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6 backdrop-blur-xl border ${
+      <div className="text-center mb-6 md:mb-12 px-4">
+        <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 sm:mb-6 backdrop-blur-xl border ${
           isDark 
             ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
             : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
@@ -23,7 +23,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
           Trust-First Design
         </SectionTitle>
         
-        <p className={`text-lg md:text-xl max-w-4xl mx-auto mt-4 leading-relaxed ${
+        <p className={`hidden sm:block text-lg md:text-xl max-w-4xl mx-auto mt-4 leading-relaxed ${
           isDark ? 'text-white/70' : 'text-gray-600'
         }`}>
           Build confidence with verified profiles and secure document verification across all user types

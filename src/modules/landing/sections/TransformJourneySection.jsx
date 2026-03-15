@@ -55,8 +55,8 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
   return (
     <section
       ref={setRef?.('purposeBuilt')}
-      className={`relative py-16 sm:py-20 md:py-24 transition-all duration-1000 ${
-        isVisible?.purposeBuilt
+      className={`relative py-10 sm:py-16 md:py-24 transition-all duration-1000 ${
+        isVisible?.transformJourney
           ? 'opacity-100 translate-y-0'
           : 'opacity-0 translate-y-8'
       }`}
@@ -65,7 +65,7 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
         {/* Header */}
         <div
           className={`text-center mb-14 transition-all duration-700 ${
-            isVisible?.purposeBuilt
+            isVisible?.transformJourney
               ? 'opacity-100 translate-y-0'
               : 'opacity-0 translate-y-4'
           }`}
@@ -86,7 +86,7 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-                animation: isVisible?.purposeBuilt
+                animation: isVisible?.transformJourney
                   ? 'gradient-shift 4s ease infinite'
                   : 'none',
               }}
@@ -96,7 +96,7 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
           </h2>
 
           <p
-            className={`text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto ${
+            className={`hidden sm:block text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto ${
               isDark ? 'text-white/70' : 'text-gray-600'
             }`}
           >
@@ -116,14 +116,14 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
               <div
                 key={idx}
                 className={`transition-all duration-700 ${
-                  isVisible?.purposeBuilt
+                  isVisible?.transformJourney
                     ? 'opacity-100 translate-y-0'
                     : 'opacity-0 translate-y-8'
                 }`}
                 style={{ transitionDelay: `${200 + idx * 150}ms` }}
               >
                 <div
-                  className={`relative h-full p-8 rounded-2xl text-center transition-all duration-300   ${
+                  className={`relative h-full p-5 sm:p-8 rounded-2xl text-center transition-all duration-300   ${
                     isDark
                       ? 'bg-white/5  border border-white/10'
                       : 'bg-white  border border-gray-200'

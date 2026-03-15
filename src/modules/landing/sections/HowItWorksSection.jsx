@@ -36,8 +36,8 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
         isVisible['howItWorks'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
-      <div className="text-center mb-8 sm:mb-10 md:mb-12 lg:mb-16 px-4">
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 backdrop-blur-xl border ${
+      <div className="text-center mb-6 sm:mb-10 md:mb-12 lg:mb-16 px-4">
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 sm:mb-6 backdrop-blur-xl border ${
           isDark 
             ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
             : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
@@ -45,7 +45,7 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
           <span className="text-xs sm:text-sm font-bold tracking-wider uppercase">Simple Process</span>
         </div>
         <SectionTitle>How It Works</SectionTitle>
-        <p className={`text-base sm:text-lg md:text-xl max-w-2xl mx-auto mt-4 ${
+        <p className={`hidden sm:block text-base sm:text-lg md:text-xl max-w-2xl mx-auto mt-4 ${
           isDark ? 'text-white/70' : 'text-gray-600'
         }`}>
           Get started in four simple steps
@@ -123,35 +123,67 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
 
               {/* Connecting lines between cards */}
               {index < 3 && (
-                <div 
-                  className="hidden lg:block absolute pointer-events-none"
-                  style={{
-                    left: '100%',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: 'calc(2rem + 0.5rem)',
-                    marginLeft: '0.5rem'
-                  }}
-                >
-                  <svg
-                    width="100%"
-                    height="12"
-                    viewBox="0 0 32 12"
-                    preserveAspectRatio="none"
-                    style={{ display: 'block' }}
+                <>
+                  {/* Desktop Horizontal Line */}
+                  <div 
+                    className="hidden lg:block absolute pointer-events-none"
+                    style={{
+                      left: '100%',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: 'calc(2rem + 0.5rem)',
+                      marginLeft: '0.5rem'
+                    }}
                   >
-                    <line
-                      x1="0"
-                      y1="6"
-                      x2="32"
-                      y2="6"
-                      stroke={isDark ? 'rgba(176, 255, 250, 0.5)' : 'rgba(0, 184, 169, 0.5)'}
-                      strokeWidth="2"
-                      strokeDasharray="4 6"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </div>
+                    <svg
+                      width="100%"
+                      height="12"
+                      viewBox="0 0 32 12"
+                      preserveAspectRatio="none"
+                      style={{ display: 'block' }}
+                    >
+                      <line
+                        x1="0"
+                        y1="6"
+                        x2="32"
+                        y2="6"
+                        stroke={isDark ? 'rgba(176, 255, 250, 0.5)' : 'rgba(0, 184, 169, 0.5)'}
+                        strokeWidth="2"
+                        strokeDasharray="4 6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                  
+                  {/* Mobile/Tablet Vertical Line */}
+                  <div 
+                    className="block lg:hidden absolute pointer-events-none"
+                    style={{
+                      top: '100%',
+                      left: '2rem',
+                      height: '1.25rem', // represents the gap
+                      width: '2px',
+                    }}
+                  >
+                    <svg
+                      width="2"
+                      height="100%"
+                      preserveAspectRatio="none"
+                      style={{ display: 'block' }}
+                    >
+                      <line
+                        x1="1"
+                        y1="0"
+                        x2="1"
+                        y2="100%"
+                        stroke={isDark ? 'rgba(176, 255, 250, 0.5)' : 'rgba(0, 184, 169, 0.5)'}
+                        strokeWidth="2"
+                        strokeDasharray="4 6"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </div>
+                </>
               )}
 
               {/* Ending line after card 04 with circle */}
