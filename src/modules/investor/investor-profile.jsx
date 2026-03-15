@@ -154,8 +154,9 @@ export default function InvestorProfile() {
     }
 
     return (
-        <AppShell>
-            <AppHeader title="My Profile" actions={headerActions} />
+        <>
+            <AppShell>
+                <AppHeader title="My Profile" actions={headerActions} />
 
             {/* Hero Section */}
             <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
@@ -364,6 +365,8 @@ export default function InvestorProfile() {
                 onSuccess={fetchInvestorProfile}
             />
         </AppShell>
+        <DeleteAccountDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
+        </>
     );
 }
 

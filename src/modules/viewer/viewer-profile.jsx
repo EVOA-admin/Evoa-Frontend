@@ -22,6 +22,7 @@ import {
     IoGridOutline,
     IoLogOutOutline,
     IoEllipsisVertical,
+    IoTrashOutline,
 } from "react-icons/io5";
 import { FiUser } from "react-icons/fi";
 import AppShell from "../../components/layout/AppShell";
