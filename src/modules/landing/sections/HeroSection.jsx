@@ -184,21 +184,18 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
             `}
           >
             {/* Mobile-only background glow */}
-            <div className={`absolute -inset-10 -z-10 rounded-[3rem] blur-3xl lg:hidden ${
-              isDark ? 'bg-gradient-to-br from-[#B0FFFA]/10 to-transparent' : 'bg-gradient-to-br from-[#00B8A9]/10 to-transparent'
-            }`} />
+            <div className={`absolute -inset-10 -z-10 rounded-[3rem] blur-3xl lg:hidden ${isDark ? 'bg-gradient-to-br from-[#B0FFFA]/10 to-transparent' : 'bg-gradient-to-br from-[#00B8A9]/10 to-transparent'
+              }`} />
 
             {/* Tagline - Workflow Requirement - Enhanced Professional Styling */}
             <div className="mb-5 sm:mb-6">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full mb-4 backdrop-blur-xl border transition-all duration-500 ${
-                isDark 
-                  ? 'bg-[#B0FFFA]/10 border-[#B0FFFA]/30 hover:border-[#B0FFFA]/50 hover:bg-[#B0FFFA]/15' 
-                  : 'bg-[#00B8A9]/10 border-[#00B8A9]/30 hover:border-[#00B8A9]/50 hover:bg-[#00B8A9]/15'
-              }`}>
-                <span className={`text-sm sm:text-base md:text-lg font-bold tracking-wide ${
-                  isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'
+              <div className={`inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full mb-4 backdrop-blur-xl border transition-all duration-500 ${isDark
+                ? 'bg-[#B0FFFA]/10 border-[#B0FFFA]/30 hover:border-[#B0FFFA]/50 hover:bg-[#B0FFFA]/15'
+                : 'bg-[#00B8A9]/10 border-[#00B8A9]/30 hover:border-[#00B8A9]/50 hover:bg-[#00B8A9]/15'
                 }`}>
-                  Join the Future of Startup–Investor Ecosystem
+                <span className={`text-sm sm:text-base md:text-lg font-bold tracking-wide ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'
+                  }`}>
+                  Recognized by the Govt. of India under Startup India 🇮🇳
                 </span>
               </div>
             </div>
@@ -217,10 +214,9 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                   className={`
                     bg-gradient-to-r bg-clip-text text-transparent
                     block min-h-[1.2em]
-                    ${
-                      isDark
-                        ? 'from-[#B0FFFA] via-white to-[#80E5FF]'
-                        : 'from-[#043873] via-teal-600 to-[#043873]'
+                    ${isDark
+                      ? 'from-[#B0FFFA] via-white to-[#80E5FF]'
+                      : 'from-[#043873] via-teal-600 to-[#043873]'
                     }
                   `}
                 >
@@ -244,7 +240,7 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                 ${isDark ? 'text-white' : 'text-gray-900'}
               `}
             >
-              EVOA is Redefining Startup Investments
+              Join the Future of Startup–Investor Ecosystem
             </p>
 
             {/* Subheading */}
@@ -291,16 +287,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                 </div>
                 <div className="min-w-0">
                   <h4
-                    className={`text-xs sm:text-sm font-bold ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}
+                    className={`text-xs sm:text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                      }`}
                   >
                     Instant Matching
                   </h4>
                   <p
-                    className={`text-[11px] sm:text-xs mt-0.5 ${
-                      isDark ? 'text-gray-400' : 'text-gray-600'
-                    }`}
+                    className={`text-[11px] sm:text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}
                   >
                     AI-powered connections
                   </p>
@@ -325,16 +319,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                 </div>
                 <div className="min-w-0">
                   <h4
-                    className={`text-xs sm:text-sm font-bold ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}
+                    className={`text-xs sm:text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                      }`}
                   >
                     100% Secure
                   </h4>
                   <p
-                    className={`text-[11px] sm:text-xs mt-0.5 ${
-                      isDark ? 'text-gray-400' : 'text-gray-600'
-                    }`}
+                    className={`text-[11px] sm:text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}
                   >
                     Bank-level encryption
                   </p>
@@ -359,16 +351,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                 </div>
                 <div className="min-w-0">
                   <h4
-                    className={`text-xs sm:text-sm font-bold ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}
+                    className={`text-xs sm:text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                      }`}
                   >
                     ₹{fundedCount}Cr+ Funded
                   </h4>
                   <p
-                    className={`text-[11px] sm:text-xs mt-0.5 ${
-                      isDark ? 'text-gray-400' : 'text-gray-600'
-                    }`}
+                    className={`text-[11px] sm:text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}
                   >
                     {formatNumber(startupsCount)}+ startups
                   </p>
@@ -393,16 +383,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                 </div>
                 <div className="min-w-0">
                   <h4
-                    className={`text-xs sm:text-sm font-bold ${
-                      isDark ? 'text-white' : 'text-gray-900'
-                    }`}
+                    className={`text-xs sm:text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                      }`}
                   >
                     {formatNumber(usersCount)}+ Users
                   </h4>
                   <p
-                    className={`text-[11px] sm:text-xs mt-0.5 ${
-                      isDark ? 'text-gray-400' : 'text-gray-600'
-                    }`}
+                    className={`text-[11px] sm:text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}
                   >
                     Active community
                   </p>
@@ -438,10 +426,9 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                   font-semibold text-base sm:text-lg border-2
                   transition-all duration-300 hover:scale-105 active:scale-95
                   overflow-hidden
-                  ${
-                    isDark
-                      ? 'border-[#B0FFFA]/60 text-[#B0FFFA] hover:bg-[#B0FFFA]/10 hover:border-[#B0FFFA] hover:shadow-[0_0_30px_rgba(176,255,250,0.3)]'
-                      : 'border-[#043873] text-[#043873] hover:bg-[#00B8A9]/10 hover:border-[#00B8A9] hover:shadow-[0_0_30px_rgba(0,184,169,0.3)]'
+                  ${isDark
+                    ? 'border-[#B0FFFA]/60 text-[#B0FFFA] hover:bg-[#B0FFFA]/10 hover:border-[#B0FFFA] hover:shadow-[0_0_30px_rgba(176,255,250,0.3)]'
+                    : 'border-[#043873] text-[#043873] hover:bg-[#00B8A9]/10 hover:border-[#00B8A9] hover:shadow-[0_0_30px_rgba(0,184,169,0.3)]'
                   }
                 `}
               >
@@ -569,16 +556,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                   <HiRocketLaunch className="w-5 h-5 xl:w-6 xl:h-6 text-[#043873]" />
                 </div>
                 <h3
-                  className={`text-[11px] xl:text-xs font-bold ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  } text-center leading-tight`}
+                  className={`text-[11px] xl:text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                    } text-center leading-tight`}
                 >
                   For Startups
                 </h3>
                 <p
-                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}
+                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}
                 >
                   Pitch & get funded
                 </p>
@@ -614,16 +599,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                   <HiCurrencyDollar className="w-5 h-5 xl:w-6 xl:h-6 text-purple-500" />
                 </div>
                 <h3
-                  className={`text-[11px] xl:text-xs font-bold ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  } text-center leading-tight`}
+                  className={`text-[11px] xl:text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                    } text-center leading-tight`}
                 >
                   For Investors
                 </h3>
                 <p
-                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}
+                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}
                 >
                   Discover unicorns
                 </p>
@@ -659,16 +642,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                   <HiAcademicCap className="w-5 h-5 xl:w-6 xl:h-6 text-cyan-500" />
                 </div>
                 <h3
-                  className={`text-[11px] xl:text-xs font-bold ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  } text-center leading-tight`}
+                  className={`text-[11px] xl:text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                    } text-center leading-tight`}
                 >
                   For Incubators
                 </h3>
                 <p
-                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}
+                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}
                 >
                   Nurture startups
                 </p>
@@ -704,16 +685,14 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                   <HiUsers className="w-5 h-5 xl:w-6 xl:h-6 text-pink-500" />
                 </div>
                 <h3
-                  className={`text-[11px] xl:text-xs font-bold ${
-                    isDark ? 'text-white' : 'text-gray-900'
-                  } text-center leading-tight`}
+                  className={`text-[11px] xl:text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'
+                    } text-center leading-tight`}
                 >
                   For Viewers
                 </h3>
                 <p
-                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${
-                    isDark ? 'text-gray-400' : 'text-gray-600'
-                  }`}
+                  className={`text-[9px] xl:text-[10px] text-center mt-0.5 leading-tight ${isDark ? 'text-gray-400' : 'text-gray-600'
+                    }`}
                 >
                   Explore daily
                 </p>
