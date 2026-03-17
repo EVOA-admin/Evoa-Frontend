@@ -1,4 +1,7 @@
 import React from "react";
+import AdityaImg from "../../../team_images/Aditya_image.jpg";
+import AbhishekImg from "../../../team_images/Abhishek_Image.jpeg";
+import DivyanshuImg from "../../../team_images/Divyanshu_Image.jpeg";
 import { useTheme } from "../../contexts/ThemeContext";
 import { HiUsers, HiChartBar } from "react-icons/hi2";
 import { FaRocket, FaHandPaper, FaLightbulb, FaStar } from "react-icons/fa";
@@ -67,7 +70,7 @@ export default function About() {
     },
     {
       year: "2026",
-      title: "First 100 startups",
+      title: "Add 10000 Startups & 50 Investors",
       description: "Reached a community of 30+ national & 10+ international startups.",
     },
     // {
@@ -89,9 +92,9 @@ export default function About() {
   ];
 
   const team = [
-    { name: "Aditya Narayan Singh", role: "CEO & Co-Founder", image: "https://i.pravatar.cc/150?img=13" },
-    { name: "Abhishek Kumar", role: "CTO & Co-Founder", image: "https://i.pravatar.cc/150?img=11" },
-    { name: "Divyanshu Singh", role: "Full Stack Developer", image: "https://i.pravatar.cc/150?img=12" },
+    { name: "Aditya Singh", role: "CEO & Co-Founder", image: AdityaImg },
+    { name: "Abhishek Kumar", role: "CTO & Co-Founder", image: AbhishekImg },
+    { name: "Divyanshu Singh", role: "Full Stack Developer", image: DivyanshuImg },
   ];
 
   return (
@@ -269,7 +272,7 @@ export default function About() {
                   <CardContainer
                     className="text-center"
                   >
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 overflow-hidden mx-auto mb-3 sm:mb-4 rounded-full border border-white/20">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 overflow-hidden mx-auto mb-3 sm:mb-4 rounded-full border border-gray-200">
                       <img
                         src={member.image}
                         alt={member.name}
