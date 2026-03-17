@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { FaFacebook, FaGoogle } from "react-icons/fa";
+import { IoHomeOutline } from "react-icons/io5";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import logo from "../../assets/logo.avif";
@@ -156,6 +157,19 @@ export default function Login() {
           }}
         />
       </div>
+
+      {/* Home Button */}
+      <Link
+        to="/"
+        className={`absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 ${
+          isDark
+            ? 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border border-white/10'
+            : 'bg-black/5 text-black/60 hover:bg-black/10 hover:text-black border border-black/10'
+        }`}
+      >
+        <IoHomeOutline size={13} />
+        Home
+      </Link>
 
       {/* Left Side - Video Reel */}
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-black z-10">

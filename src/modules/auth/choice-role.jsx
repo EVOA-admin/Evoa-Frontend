@@ -8,7 +8,8 @@ import {
   IoBusinessSharp,
   IoGlasses,
   IoArrowForward,
-  IoCheckmarkCircle
+  IoCheckmarkCircle,
+  IoLogOutOutline,
 } from "react-icons/io5";
 import logo from "../../assets/logo.avif";
 
@@ -36,7 +37,7 @@ export default function ChoiceRole() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-  const { updateUserRole, userRole, loading, roleSelected, registrationCompleted, syncing } = useAuth();
+  const { updateUserRole, userRole, loading, roleSelected, registrationCompleted, syncing, signOut } = useAuth();
 
   // Redirect users who have already selected a role and completed registration
   useEffect(() => {
@@ -118,7 +119,20 @@ export default function ChoiceRole() {
   };
 
   return (
-    <div className={`min-h-screen flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-6 md:py-12 overflow-y-auto ${isDark ? 'bg-black' : 'bg-gray-100'}`}>
+    <div className={`min-h-screen flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-6 md:py-12 overflow-y-auto relative ${isDark ? 'bg-black' : 'bg-gray-100'}`}>
+      {/* Logout Button — top-right corner */}
+      <button
+        onClick={async () => { await signOut(); navigate('/'); }}
+        className={`absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+          isDark
+            ? 'bg-white/10 text-white/60 hover:bg-red-500/20 hover:text-red-400 border border-white/10'
+            : 'bg-black/5 text-gray-400 hover:bg-red-50 hover:text-red-500 border border-black/10'
+        }`}
+      >
+        <IoLogOutOutline size={13} />
+        Log out
+      </button>
+
       <div className="w-full max-w-6xl my-auto sm:my-0">
         {/* Header */}
         <div className="text-center mb-3 sm:mb-6 md:mb-10 pt-2 sm:pt-0">

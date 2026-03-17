@@ -60,40 +60,38 @@ export default function About() {
 
   const milestones = [
     {
-      year: "2020",
+      year: "2025",
       title: "Founded",
       description:
         "EVO‑A launched with a vision to transform how startups connect with capital.",
     },
     {
-      year: "2021",
+      year: "2026",
       title: "First 100 startups",
-      description: "Reached a community of 100 registered startups across India.",
+      description: "Reached a community of 30+ national & 10+ international startups.",
     },
-    {
-      year: "2022",
-      title: "₹100Cr+ raised",
-      description: "Startups on the platform collectively crossed ₹100 crores in funding.",
-    },
-    {
-      year: "2023",
-      title: "500+ investors",
-      description: "Grew to a network of more than 500 active investors.",
-    },
-    {
-      year: "2024",
-      title: "Market leader",
-      description:
-        "Recognized as a leading platform for startup–investor connections in India.",
-    },
+    // {
+    //   year: "2027",
+    //   title: "₹100Cr+ raised",
+    //   description: "Startups on the platform collectively crossed ₹100 crores in funding.",
+    // },
+    // {
+    //   year: "2028",
+    //   title: "10000+ investors",
+    //   description: "Grew to a network of more than 10000 active investors.",
+    // },
+    // {
+    //   year: "2029",
+    //   title: "Market leader",
+    //   description:
+    //     "Recognized as a leading platform for startup–investor connections in India.",
+    // },
   ];
 
   const team = [
     { name: "Aditya Narayan Singh", role: "CEO & Co-Founder", image: "https://i.pravatar.cc/150?img=13" },
     { name: "Abhishek Kumar", role: "CTO & Co-Founder", image: "https://i.pravatar.cc/150?img=11" },
     { name: "Divyanshu Singh", role: "Full Stack Developer", image: "https://i.pravatar.cc/150?img=12" },
-    { name: "Enub Uzair", role: "Data Analyst", image: "https://i.pravatar.cc/150?img=10" },
-    { name: "Harshil Awasthi", role: "RAG Developer", image: "https://i.pravatar.cc/150?img=12" },
   ];
 
   return (
@@ -263,35 +261,36 @@ export default function About() {
           {/* Team */}
           <section aria-labelledby="team-heading">
             <div className="text-center mb-5 sm:mb-7 md:mb-8">
-              <SectionTitle>Meet the team</SectionTitle>
+              <SectionTitle>Our Team</SectionTitle>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-5 md:gap-6">
               {team.map((member, idx) => (
-                <CardContainer
-                  key={idx}
-                  className="text-center p-4 sm:p-5 md:p-6"
-                >
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 overflow-hidden mx-auto mb-3 sm:mb-4 rounded-full border border-white/20">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <h3
-                    className={`text-xs sm:text-sm md:text-base font-semibold mb-1 ${isDark ? "text-white" : "text-gray-900"
-                      }`}
+                <div key={idx} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] md:w-[calc(25%-1rem)] max-w-[220px]">
+                  <CardContainer
+                    className="text-center"
                   >
-                    {member.name}
-                  </h3>
-                  <p
-                    className={`text-[10px] sm:text-xs md:text-sm ${isDark ? "text-white/60" : "text-gray-600"
-                      }`}
-                  >
-                    {member.role}
-                  </p>
-                </CardContainer>
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 overflow-hidden mx-auto mb-3 sm:mb-4 rounded-full border border-white/20">
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    <h3
+                      className={`text-xs sm:text-sm md:text-base font-semibold mb-1 ${isDark ? "text-white" : "text-gray-900"
+                        }`}
+                    >
+                      {member.name}
+                    </h3>
+                    <p
+                      className={`text-[10px] sm:text-xs md:text-sm ${isDark ? "text-white/60" : "text-gray-600"
+                        }`}
+                    >
+                      {member.role}
+                    </p>
+                  </CardContainer>
+                </div>
               ))}
             </div>
           </section>
