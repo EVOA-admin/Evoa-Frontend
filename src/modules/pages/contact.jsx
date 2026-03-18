@@ -6,6 +6,36 @@ import { FaLinkedin, FaInstagram } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import Footer from "../../components/layout/footer";
 
+const SectionTitle = ({ children }) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <h2
+      className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3 ${isDark
+        ? "text-white"
+        : "bg-gradient-to-r from-[#00B8A9] via-[#00C9B7] to-[#00B8A9] bg-clip-text text-transparent"
+        }`}
+    >
+      {children}
+    </h2>
+  );
+};
+
+const CardContainer = ({ children, className = "" }) => {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <div
+      className={`group relative p-5 sm:p-6 md:p-7 lg:p-8 rounded-xl transition-all duration-300 ${isDark
+        ? "bg-gradient-to-br from-black/80 via-slate-900/70 to-black/80 backdrop-blur-xl border border-[#B0FFFA]/20 hover:border-[#B0FFFA]/40 hover:shadow-2xl hover:shadow-[#B0FFFA]/10"
+        : "bg-white backdrop-blur-xl border border-gray-200/80 hover:border-[#00B8A9]/30 hover:shadow-xl hover:shadow-[#00B8A9]/5"
+        } ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
+
 export default function Contact() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -20,28 +50,6 @@ export default function Contact() {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
-
-  const SectionTitle = ({ children }) => (
-    <h2
-      className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3 ${isDark
-        ? "text-white"
-        : "bg-gradient-to-r from-[#00B8A9] via-[#00C9B7] to-[#00B8A9] bg-clip-text text-transparent"
-        }`}
-    >
-      {children}
-    </h2>
-  );
-
-  const CardContainer = ({ children, className = "" }) => (
-    <div
-      className={`group relative p-5 sm:p-6 md:p-7 lg:p-8 rounded-xl transition-all duration-300 ${isDark
-        ? "bg-gradient-to-br from-black/80 via-slate-900/70 to-black/80 backdrop-blur-xl border border-[#B0FFFA]/20 hover:border-[#B0FFFA]/40 hover:shadow-2xl hover:shadow-[#B0FFFA]/10"
-        : "bg-white backdrop-blur-xl border border-gray-200/80 hover:border-[#00B8A9]/30 hover:shadow-xl hover:shadow-[#00B8A9]/5"
-        } ${className}`}
-    >
-      {children}
-    </div>
-  );
 
   const validateForm = () => {
     const newErrors = {};
