@@ -138,15 +138,20 @@ export default function StartupRegistration() {
         if (formData.industries.length === 0) { setError('Please select at least one industry.'); return false; }
         if (!formData.stage) { setError('Please select the startup stage.'); return false; }
         if (!formData.entityType) { setError('Please select your entity type.'); return false; }
-        // Validate verification number format if a type + value is entered
-        if (formData.verificationType && formData.entityType !== 'Not Registered Yet') {
+        if (formData.entityType !== 'Not Registered Yet') {
+          // Verification type is mandatory for registered entities
+          if (!formData.verificationType) { setError('Please select a verification type (CIN / GST / Udyam).'); return false; }
           const verVal = formData.verificationType === 'CIN' ? formData.cin
             : formData.verificationType === 'GST' ? formData.gstin
               : formData.verificationType === 'Udyam' ? formData.udyamNumber : '';
-          if (verVal.trim() && !validateVerificationField(formData.verificationType, verVal)) {
+          if (!verVal.trim()) { setError('Please enter your verification number.'); return false; }
+          if (!validateVerificationField(formData.verificationType, verVal)) {
             setError('Invalid verification number format. Please check the entered number.');
             return false;
           }
+        } else {
+          // Business proof is mandatory for unregistered entities
+          if (!formData.businessProof) { setError('Please upload a business proof document.'); return false; }
         }
         return true;
       }
@@ -450,7 +455,7 @@ export default function StartupRegistration() {
                 {formData.entityType === 'Not Registered Yet' && (
                   <div className="space-y-2.5">
                     <FileUploadBox field="idProof" label="Founder ID Proof (Aadhaar/Passport/License)" accept="image/*,.pdf" />
-                    <FileUploadBox field="businessProof" label="Any Business Proof (Optional)" accept="image/*,.pdf" />
+                    <FileUploadBox field="businessProof" label="Any Business Proof *" accept="image/*,.pdf" />
                   </div>
                 )}
               </div>

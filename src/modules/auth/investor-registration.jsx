@@ -110,11 +110,17 @@ export default function InvestorRegistration() {
         if (!formData.investmentRange) { setError('Please select your investment range.'); return false; }
         if (formData.sectorFocus.length === 0) { setError('Please select at least one sector of focus.'); return false; }
         if (!formData.verificationOption) { setError('Please select a verification option.'); return false; }
-        // Validate PAN format if entered
-        if (formData.panNumber.trim() && !validatePan(formData.panNumber)) {
-          setError('Invalid PAN format. Please check the entered number.');
-          return false;
+        
+        if (formData.verificationOption === 'SEBI') {
+          if (!formData.sebiNumber.trim()) { setError('SEBI Registration Number is required.'); return false; }
+        } else if (formData.verificationOption === 'Non-SEBI') {
+          if (!formData.panNumber.trim()) { setError('PAN Number is required.'); return false; }
+          if (!validatePan(formData.panNumber)) { setError('Invalid PAN format. Please check the entered number.'); return false; }
         }
+        return true;
+      case 3:
+        if (!formData.companyName.trim()) { setError('Company / Fund Name is required.'); return false; }
+        if (formData.startupStagePreference.length === 0) { setError('Please select at least one startup stage preference.'); return false; }
         return true;
       default:
         return true;
@@ -252,7 +258,7 @@ export default function InvestorRegistration() {
             />
             {formData.verificationOption === 'SEBI' && (
               <div className="space-y-3">
-                <input type="text" placeholder="SEBI Registration Number" value={formData.sebiNumber} onChange={(e) => handleInputChange('sebiNumber', e.target.value)} className={inputCls} />
+                <input type="text" placeholder="SEBI Registration Number *" value={formData.sebiNumber} onChange={(e) => handleInputChange('sebiNumber', e.target.value)} className={inputCls} />
                 <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
                   Upload SEBI Certificate (PDF)
                   <input type="file" accept=".pdf" onChange={(e) => handleFileUpload('sebiCertificate', e.target.files[0])} className="hidden" />
@@ -269,7 +275,7 @@ export default function InvestorRegistration() {
                 <>
                   <input
                     type="text"
-                    placeholder="PAN Number (Optional but recommended, e.g. ABCDE1234F)"
+                    placeholder="PAN Number * (e.g. ABCDE1234F)"
                     value={formData.panNumber}
                     onChange={(e) => {
                       const val = e.target.value.toUpperCase();
@@ -308,7 +314,7 @@ export default function InvestorRegistration() {
             <h2 className={`text-lg sm:text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-black'}`}>
               3. Background &amp; Preferences
             </h2>
-            <input type="text" placeholder="Company / Fund Name" value={formData.companyName} onChange={(e) => handleInputChange('companyName', e.target.value)} className={inputCls} />
+            <input type="text" placeholder="Company / Fund Name *" value={formData.companyName} onChange={(e) => handleInputChange('companyName', e.target.value)} className={inputCls} />
             <textarea placeholder="Short Bio / Investment Thesis" value={formData.bio} onChange={(e) => handleInputChange('bio', e.target.value)} rows={3} className={inputCls} />
             <input type="url" placeholder="Website / AngelList / Portfolio Site" value={formData.website} onChange={(e) => handleInputChange('website', e.target.value)} className={inputCls} />
             <div className="grid grid-cols-2 gap-3">
@@ -316,7 +322,7 @@ export default function InvestorRegistration() {
               <SearchableSelect value={formData.state} onChange={(value) => handleInputChange('state', value)} options={states.map(s => ({ value: s, label: s }))} placeholder="Select State" isDark={isDark} />
             </div>
             <div>
-              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Startup Stage Preference (Multi-Select)</label>
+              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Startup Stage Preference * (Multi-Select)</label>
               <div className="flex flex-wrap gap-2">
                 {startupStages.map(stage => (
                   <button key={stage} type="button" onClick={() => handleArrayChange('startupStagePreference', stage)}
