@@ -137,7 +137,7 @@ export default function ViewerRegistration() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
+    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-[#060607]' : 'bg-[#f5f2ef]'}`}>
       <div className="h-screen flex flex-col max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <div className="mb-4 sm:mb-6 shrink-0">
           <div className="flex items-center justify-between mb-2 sm:mb-4">
@@ -163,7 +163,7 @@ export default function ViewerRegistration() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className={`p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4 flex-1 overflow-y-auto ${isDark ? 'bg-black/50 border border-white/10' : 'bg-white border border-black/10'}`}>
+        <form onSubmit={handleSubmit} className={`p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4 flex-1 overflow-y-auto ${isDark ? 'bg-[#0f0f10] border border-[rgba(244,240,232,.08)]' : 'bg-white border border-[rgba(0,0,0,.08)]'}`}>
 
           {/* Error */}
           {error && (
@@ -181,7 +181,7 @@ export default function ViewerRegistration() {
             value={formData.fullName}
             onChange={handleNameChange}
             required
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
           <input
             type="text"
@@ -189,7 +189,7 @@ export default function ViewerRegistration() {
             value={formData.username}
             onChange={(e) => handleInputChange('username', e.target.value)}
             required
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
 
           {/* Profile Photo */}
@@ -201,7 +201,7 @@ export default function ViewerRegistration() {
               onChange={(e) => handleFileUpload(e.target.files[0])}
               className="hidden"
             />
-            <div className={`mt-2 border-2 border-dashed cursor-pointer transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+            <div className={`mt-2 border-2 border-dashed cursor-pointer transition-all ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
               {imagePreview ? (
                 <div className="relative">
                   <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover" />
@@ -226,14 +226,14 @@ export default function ViewerRegistration() {
             placeholder="Email Address"
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
           <input
             type="tel"
             placeholder="Mobile Number"
             value={formData.mobile}
             onChange={(e) => handleInputChange('mobile', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
 
           <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
@@ -251,14 +251,14 @@ export default function ViewerRegistration() {
             placeholder="City"
             value={formData.city}
             onChange={(e) => handleInputChange('city', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
           <input
             type="text"
             placeholder="Country"
             value={formData.country}
             onChange={(e) => handleInputChange('country', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
 
           <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
@@ -286,14 +286,14 @@ export default function ViewerRegistration() {
             placeholder="Occupation (Student, Working Professional, etc.)"
             value={formData.occupation}
             onChange={(e) => handleInputChange('occupation', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
           <input
             type="text"
             placeholder="LinkedIn Profile URL (Optional)"
             value={formData.linkedinProfile}
             onChange={(e) => handleInputChange('linkedinProfile', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`}
+            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
           />
 
           <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
@@ -322,7 +322,7 @@ export default function ViewerRegistration() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-all mt-4 sm:mt-6 shrink-0 bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-all mt-4 sm:mt-6 shrink-0 bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#E8341A]/40 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>

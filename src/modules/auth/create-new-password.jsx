@@ -1,206 +1,86 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { useTheme } from "../../contexts/ThemeContext";
-import logo from "../../assets/logo.avif";
+
+const AUTH_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400&family=DM+Mono:wght@300;400&display=swap');
+@keyframes auth-fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.auth-root{min-height:100vh;display:flex;background:#060607;color:#F4F0E8;font-family:'Cormorant Garamond',serif;}
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;}
+.auth-panel{width:100%;max-width:400px;}
+.auth-brand{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.1em;color:#F4F0E8;margin-bottom:6px;text-align:center;}
+.auth-brand span{color:#E8341A;}
+.auth-brand-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(244,240,232,.35);text-align:center;margin-bottom:32px;}
+.auth-box{background:#0f0f10;border:1px solid rgba(244,240,232,.08);padding:32px 28px;margin-bottom:16px;}
+.auth-heading{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.06em;color:#F4F0E8;margin-bottom:6px;}
+.auth-subheading{font-size:14px;font-weight:300;color:rgba(244,240,232,.45);margin-bottom:24px;}
+.auth-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(244,240,232,.5);margin-bottom:8px;display:block;}
+.auth-field{margin-bottom:18px;position:relative;}
+.auth-input{width:100%;padding:13px 16px;background:rgba(244,240,232,.03);border:1px solid rgba(244,240,232,.08);color:#F4F0E8;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:300;outline:none;transition:border-color .25s,box-shadow .25s;box-sizing:border-box;}
+.auth-input::placeholder{color:rgba(244,240,232,.2);font-style:italic;}
+.auth-input:focus{border-color:#E8341A;box-shadow:0 0 0 3px rgba(232,52,26,.08);}
+.auth-input-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(244,240,232,.35);padding:4px;transition:color .2s;}
+.auth-input-icon:hover{color:#F4F0E8;}
+.auth-btn{width:100%;padding:15px 24px;background:#E8341A;color:#060607;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;border:none;cursor:pointer;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:background .25s,transform .15s;margin-bottom:0;}
+.auth-btn:hover{background:#C9230F;}
+.auth-btn:active{transform:scale(.98);}
+.auth-footer-box{background:#0f0f10;border:1px solid rgba(244,240,232,.06);padding:16px 24px;text-align:center;font-size:14px;font-weight:300;color:rgba(244,240,232,.4);}
+.auth-footer-box a{color:#E8341A;text-decoration:none;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;transition:color .2s;}
+.auth-footer-box a:hover{color:#C9A84C;}
+.auth-home-link{position:absolute;top:20px;right:20px;z-index:20;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,240,232,.4);text-decoration:none;border:1px solid rgba(244,240,232,.1);padding:7px 14px;transition:color .2s,border-color .2s;}
+.auth-home-link:hover{color:#F4F0E8;border-color:rgba(244,240,232,.3);}
+.auth-anim-1{animation:auth-fadeUp .5s ease both;}
+.auth-anim-2{animation:auth-fadeUp .5s .1s ease both;}
+.auth-anim-3{animation:auth-fadeUp .5s .2s ease both;}
+`;
 
 export default function CreateNewPassword() {
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [imagesVisible, setImagesVisible] = useState(false);
+  const [showNew, setShowNew]         = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
 
-  useEffect(() => {
-    // Trigger animation after component mounts
-    const timer = setTimeout(() => {
-      setImagesVisible(true);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleUpdatePassword = () => {
-    // Navigate to login page after updating password
-    navigate("/login");
-  };
+  const handleUpdate = () => navigate("/login");
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${
-      isDark ? 'bg-black' : 'bg-white'
-    }`}>
-      {/* Left Side - Image Collage */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center p-1 lg:p-2 pl-2 lg:pl-4 pr-0.5 lg:pr-1">
-          {/* Image Collage Container */}
-          <div className="relative w-full max-w-xs lg:max-w-sm xl:max-w-md h-[400px] lg:h-[450px] xl:h-[550px] 2xl:h-[600px]">
-            {/* Image 1 - Top Left - Animates from top-left */}
-            <div className={`absolute top-0 left-0 w-32 h-32 lg:w-36 lg:h-36 xl:w-44 xl:h-44 transform -rotate-12 shadow-2xl transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-x-0 translate-y-0 opacity-100' 
-                : '-translate-x-full -translate-y-full opacity-0'
-            }`} style={{ transitionDelay: '0.1s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181641/pexels-photo-1181641.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Startup meeting"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-            
-            {/* Image 2 - Center Large - Animates from bottom */}
-            <div className={`absolute top-8 lg:top-10 xl:top-16 left-8 lg:left-12 xl:left-20 w-44 h-56 lg:w-52 lg:h-64 xl:w-60 xl:h-72 2xl:w-64 2xl:h-80 transform rotate-6 shadow-2xl z-10 transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-y-0 opacity-100' 
-                : 'translate-y-full opacity-0'
-            }`} style={{ transitionDelay: '0.3s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=500"
-                alt="Team collaboration"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-            
-            {/* Image 3 - Bottom Right - Animates from right */}
-            <div className={`absolute bottom-0 right-0 w-36 h-36 lg:w-40 lg:h-40 xl:w-48 xl:h-48 transform rotate-12 shadow-2xl transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-x-0 opacity-100' 
-                : 'translate-x-full opacity-0'
-            }`} style={{ transitionDelay: '0.2s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181641/pexels-photo-1181641.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Business growth"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-            
-            {/* Image 4 - Bottom Left - Animates from left */}
-            <div className={`absolute bottom-4 lg:bottom-6 xl:bottom-8 left-0 w-28 h-28 lg:w-32 lg:h-32 xl:w-40 xl:h-40 transform -rotate-6 shadow-2xl transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-x-0 opacity-100' 
-                : '-translate-x-full opacity-0'
-            }`} style={{ transitionDelay: '0.4s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Innovation"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="auth-root" style={{ position: "relative" }}>
+      <style>{AUTH_CSS}</style>
+      <Link to="/" className="auth-home-link">← Home</Link>
 
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8 py-6 sm:py-8 lg:pl-1 lg:pr-4 xl:pl-2 xl:pr-8 2xl:pr-12">
-        <div className="w-full max-w-md">
-          {/* Logo/Brand */}
-          <div className="mb-6 sm:mb-8 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
-              <img 
-                src={logo} 
-                alt="EVO-A Logo" 
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-              />
-              <span className={`text-2xl sm:text-3xl font-bold tracking-wide ${
-                isDark ? 'text-white' : 'text-black'
-              }`}>EVO-A</span>
-            </div>
-            <h1 className={`text-xl sm:text-2xl font-semibold mb-1 ${
-              isDark ? 'text-white' : 'text-black'
-            }`}>
-              Create New Password
-            </h1>
-            <p className={`text-xs sm:text-sm ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`}>
-              Enter a strong password to secure your account
-            </p>
+      <div className="auth-right">
+        <div className="auth-panel">
+          <div className="auth-anim-1">
+            <div className="auth-brand">EVO<span>-A</span></div>
+            <div className="auth-brand-sub">Startup · Investor · Ecosystem</div>
           </div>
 
-          {/* Form Container */}
-          <div className={`rounded-3xl p-5 sm:p-6 ${
-            isDark 
-              ? 'bg-black/50 border border-white/10' 
-              : 'bg-white border border-black/10'
-          }`}>
-            <form className="space-y-3">
-              {/* New Password Input */}
-              <div>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="New Password"
-                    className={`w-full px-4 py-2.5 sm:py-3  text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all pr-12 ${
-                      isDark 
-                        ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' 
-                        : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors p-1.5 ${
-                      isDark ? 'text-white/50 hover:text-white' : 'text-black/50 hover:text-black'
-                    }`}
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    tabIndex={-1}
-                  >
-                    {showNewPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                  </button>
-                </div>
-              </div>
+          <div className="auth-box auth-anim-2">
+            <div className="auth-heading">Create New Password</div>
+            <div className="auth-subheading">Enter a strong password to secure your account</div>
 
-              {/* Confirm Password Input */}
-              <div>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm Password"
-                    className={`w-full px-4 py-2.5 sm:py-3  text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all pr-12 ${
-                      isDark 
-                        ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' 
-                        : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors p-1.5 ${
-                      isDark ? 'text-white/50 hover:text-white' : 'text-black/50 hover:text-black'
-                    }`}
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    tabIndex={-1}
-                  >
-                    {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Update Password Button */}
-              <button
-                type="button"
-                onClick={handleUpdatePassword}
-                className="w-full py-2.5 sm:py-3 text-sm font-semibold rounded-xl transition-all duration-300 bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98]"
-              >
-                Update Password
+            <div className="auth-field">
+              <label className="auth-label">New Password</label>
+              <input className="auth-input" type={showNew ? "text" : "password"} placeholder="Min 6 characters" style={{paddingRight:48}} />
+              <button type="button" className="auth-input-icon" onClick={() => setShowNew(!showNew)} tabIndex={-1}>
+                {showNew ? <FiEyeOff size={16}/> : <FiEye size={16}/>}
               </button>
-            </form>
+            </div>
+
+            <div className="auth-field">
+              <label className="auth-label">Confirm Password</label>
+              <input className="auth-input" type={showConfirm ? "text" : "password"} placeholder="Repeat password" style={{paddingRight:48}} />
+              <button type="button" className="auth-input-icon" onClick={() => setShowConfirm(!showConfirm)} tabIndex={-1}>
+                {showConfirm ? <FiEyeOff size={16}/> : <FiEye size={16}/>}
+              </button>
+            </div>
+
+            <button type="button" className="auth-btn" onClick={handleUpdate}>
+              Update Password
+            </button>
           </div>
 
-          {/* Sign In Link */}
-          <div className={`mt-4 text-center py-4 rounded-3xl ${
-            isDark 
-              ? 'bg-black/50 border border-white/10' 
-              : 'bg-white border border-black/10'
-          }`}>
-            <p className={`text-sm ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`}>
-              Remember your password?{' '}
-              <Link 
-                to="/login" 
-                className="font-semibold transition-colors text-[#00B8A9] hover:text-[#00A89A]"
-              >
-                Sign in
-              </Link>
-            </p>
+          <div className="auth-footer-box auth-anim-3">
+            Remember your password?&nbsp;&nbsp;
+            <Link to="/login">Sign In →</Link>
           </div>
         </div>
       </div>

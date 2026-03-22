@@ -164,7 +164,7 @@ export default function IncubatorRegistration() {
     }
   };
 
-  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`;
+  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`;
 
   const renderStep = () => {
     switch (currentStep) {
@@ -178,7 +178,7 @@ export default function IncubatorRegistration() {
             <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
               Logo Upload
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload('logo', e.target.files[0])} className="hidden" />
-              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
                 {previews.logo ? (
                   <div className="relative group">
                     <img src={previews.logo} alt="Logo preview" className="w-full h-32 object-contain bg-gray-50" />
@@ -215,7 +215,7 @@ export default function IncubatorRegistration() {
               <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
                 Upload Document (PDF/JPG/PNG)
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('verificationDocument', e.target.files[0])} className="hidden" />
-                <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'} ${previews.verificationDocument ? 'border-[#00B8A9]/40' : ''}`}>
+                <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'} ${previews.verificationDocument ? 'border-[#00B8A9]/40' : ''}`}>
                   {previews.verificationDocument
                     ? (typeof previews.verificationDocument === 'string' && previews.verificationDocument.startsWith('blob:')
                       ? <img src={previews.verificationDocument} alt="Doc" className="h-20 mx-auto object-contain rounded" />
@@ -224,7 +224,7 @@ export default function IncubatorRegistration() {
                 </div>
               </label>
             )}
-            <div className={`border-t pt-4 ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+            <div className={`border-t pt-4 ${isDark ? 'border-[rgba(244,240,232,.07)]' : 'border-[rgba(0,0,0,.08)]'}`}>
               <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Program Details (Optional)</p>
               <div className="space-y-3">
                 <SearchableSelect value={formData.programType} onChange={(value) => handleInputChange('programType', value)} options={programTypes.map(t => ({ value: t, label: t }))} placeholder="Program Type" isDark={isDark} />
@@ -233,7 +233,7 @@ export default function IncubatorRegistration() {
                   <div className="flex flex-wrap gap-2">
                     {sectors.map(sector => (
                       <button key={sector} type="button" onClick={() => handleArrayChange('sectorFocus', sector)}
-                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.sectorFocus.includes(sector) ? 'bg-[#00B8A9] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#00B8A9]/50' : 'border-black/20 text-black/70 hover:border-[#00B8A9]/50'}`}>
+                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.sectorFocus.includes(sector) ? 'bg-[#E8341A] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
                         {sector}
                       </button>
                     ))}
@@ -265,13 +265,13 @@ export default function IncubatorRegistration() {
               <div className="flex flex-wrap gap-2">
                 {facilitiesList.map(facility => (
                   <button key={facility} type="button" onClick={() => handleArrayChange('facilities', facility)}
-                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.facilities.includes(facility) ? 'bg-[#00B8A9] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#00B8A9]/50' : 'border-black/20 text-black/70 hover:border-[#00B8A9]/50'}`}>
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.facilities.includes(facility) ? 'bg-[#E8341A] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
                     {facility}
                   </button>
                 ))}
               </div>
             </div>
-            <div className={`border-t pt-4 ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+            <div className={`border-t pt-4 ${isDark ? 'border-[rgba(244,240,232,.07)]' : 'border-[rgba(0,0,0,.08)]'}`}>
               <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Social Proof (Optional)</p>
               <div className="space-y-3">
                 <textarea placeholder="Portfolio Startups (names or links)" value={formData.portfolioStartups} onChange={(e) => handleInputChange('portfolioStartups', e.target.value)} rows={2} className={inputCls} />
@@ -290,7 +290,7 @@ export default function IncubatorRegistration() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
+    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-[#060607]' : 'bg-[#f5f2ef]'}`}>
       <div className="h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Header */}
         <div className="mb-4 sm:mb-6 shrink-0">
@@ -313,7 +313,7 @@ export default function IncubatorRegistration() {
         </div>
 
         {/* Form content */}
-        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-black/50 border border-white/10' : 'bg-white border border-black/10'}`}>
+        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-[#0f0f10] border border-[rgba(244,240,232,.08)]' : 'bg-white border border-[rgba(0,0,0,.08)]'}`}>
           {renderStep()}
         </div>
 
@@ -324,12 +324,12 @@ export default function IncubatorRegistration() {
             Previous
           </button>
           {currentStep < 3 ? (
-            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
               Next
             </button>
           ) : (
             <button type="button" onClick={handleSubmit} disabled={loading}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
               {loading ? 'Submitting...' : 'Submit'}
             </button>
           )}

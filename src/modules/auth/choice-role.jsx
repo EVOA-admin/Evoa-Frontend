@@ -1,249 +1,261 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../../contexts/ThemeContext";
-import { useAuth } from "../../contexts/AuthContext";
 import {
   IoRocketSharp,
   IoTrendingUp,
   IoBusinessSharp,
   IoGlasses,
-  IoArrowForward,
   IoCheckmarkCircle,
   IoLogOutOutline,
 } from "react-icons/io5";
-import logo from "../../assets/logo.avif";
+import { useAuth } from "../../contexts/AuthContext";
 
-// Dashboard routes for each role
-const DASHBOARDS = {
-  startup: '/startup',
-  investor: '/investor',
-  incubator: '/incubator',
-  viewer: '/viewer',
-};
+/* ─── Dashboards / routes ─── */
+const DASHBOARDS = { startup:'/startup', investor:'/investor', incubator:'/incubator', viewer:'/viewer' };
+const ROUTES     = { startup:'/register/startup', investor:'/register/investor', incubator:'/register/incubator', viewer:'/viewer' };
 
-// Where to go after role selection (registration forms, or dashboard for viewer)
-const ROUTES = {
-  startup: '/register/startup',
-  investor: '/register/investor',
-  incubator: '/register/incubator',
-  viewer: '/viewer',
-};
+/* ─── Role definitions ─── */
+const roles = [
+  { id:'startup',   name:'Startup',   Icon:IoRocketSharp,   tag:'FOUNDER',   desc:'Launch your innovative ideas and connect with investors', features:['Pitch your startup','Connect with investors','Raise funding'] },
+  { id:'investor',  name:'Investor',  Icon:IoTrendingUp,    tag:'BACKER',    desc:'Discover and invest in the most promising startups',       features:['Discover startups','Make investments','Track portfolio'] },
+  { id:'incubator', name:'Incubator', Icon:IoBusinessSharp, tag:'MENTOR',    desc:'Nurture and support startups in your program',             features:['Manage programs','Support startups','Build network'] },
+  { id:'viewer',    name:'Viewer',    Icon:IoGlasses,       tag:'EXPLORER',  desc:'Explore the ecosystem and discover opportunities',          features:['Explore startups','Learn from pitches','Stay updated'] },
+];
+
+const ROLE_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=DM+Mono:wght@300;400&display=swap');
+@keyframes cr-fadeUp  { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes cr-pulse   { 0%,100%{box-shadow:0 0 0 0 rgba(232,52,26,.3)} 50%{box-shadow:0 0 0 8px rgba(232,52,26,0)} }
+
+.cr-root {
+  min-height:100vh;
+  background:#060607;
+  color:#F4F0E8;
+  font-family:'Cormorant Garamond',serif;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;
+  padding:48px 20px 60px;
+  position:relative;overflow:hidden;
+}
+/* bg grid */
+.cr-root::before {
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(244,240,232,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(244,240,232,.03) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+/* ghost watermark */
+.cr-root::after {
+  content:'EVOA';
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(160px,25vw,320px);
+  color:rgba(244,240,232,.015);letter-spacing:.1em;pointer-events:none;
+  z-index:0;white-space:nowrap;
+}
+
+.cr-header { text-align:center;margin-bottom:48px;position:relative;z-index:1; animation:cr-fadeUp .5s ease both; }
+.cr-brand   { font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:.1em;color:#F4F0E8;margin-bottom:4px; }
+.cr-brand span { color:#E8341A; }
+.cr-brand-tag { font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(244,240,232,.3);margin-bottom:20px; }
+.cr-title { font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,42px);letter-spacing:.06em;color:#F4F0E8;margin-bottom:8px; }
+.cr-subtitle { font-size:16px;font-weight:300;color:rgba(244,240,232,.45);font-style:italic; }
+
+/* Role grid */
+.cr-grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:16px;
+  width:100%;max-width:840px;
+  position:relative;z-index:1;
+  margin-bottom:36px;
+  animation:cr-fadeUp .5s .1s ease both;
+}
+@media(min-width:768px){ .cr-grid{grid-template-columns:repeat(4,1fr);gap:20px;} }
+
+.cr-card {
+  background:#0f0f10;
+  border:1px solid rgba(244,240,232,.07);
+  padding:24px 16px;
+  cursor:pointer;
+  transition:border-color .25s,background .25s,transform .18s;
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.cr-card:hover { border-color:rgba(232,52,26,.25);background:#111; }
+.cr-card.selected {
+  border-color:#E8341A;background:rgba(232,52,26,.06);
+}
+.cr-card.selected::before {
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(232,52,26,.04),transparent);
+  pointer-events:none;
+}
+
+.cr-card-check {
+  position:absolute;top:10px;right:10px;
+  color:#E8341A;
+}
+.cr-card-icon-wrap {
+  width:56px;height:56px;
+  background:rgba(244,240,232,.04);
+  border:1px solid rgba(244,240,232,.07);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;
+  transition:border-color .25s,background .25s;
+}
+.cr-card.selected .cr-card-icon-wrap {
+  background:rgba(232,52,26,.08);border-color:rgba(232,52,26,.3);
+  animation:cr-pulse 1.5s ease-in-out infinite;
+}
+.cr-card-tag {
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(244,240,232,.3);margin-bottom:6px;
+}
+.cr-card.selected .cr-card-tag { color:#E8341A; }
+.cr-card-name {
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.06em;
+  color:#F4F0E8;margin-bottom:8px;
+}
+.cr-card-desc {
+  font-size:13px;font-weight:300;color:rgba(244,240,232,.4);
+  line-height:1.6;margin-bottom:14px;
+}
+.cr-card-divider {
+  width:100%;height:1px;background:rgba(244,240,232,.06);margin-bottom:12px;
+}
+.cr-card.selected .cr-card-divider { background:rgba(232,52,26,.15); }
+.cr-card-features { list-style:none;padding:0;margin:0;width:100%; }
+.cr-card-features li {
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;
+  color:rgba(244,240,232,.3);padding:3px 0;
+  display:flex;align-items:center;gap:6px;justify-content:center;
+}
+.cr-card.selected .cr-card-features li { color:rgba(244,240,232,.6); }
+.cr-card-features li::before { content:'·';color:#E8341A;font-size:14px; }
+
+/* Error */
+.cr-error {
+  background:rgba(232,52,26,.08);border:1px solid rgba(232,52,26,.2);
+  color:rgba(232,52,26,.9);font-family:'DM Mono',monospace;
+  font-size:10px;letter-spacing:.06em;padding:12px 16px;
+  margin-bottom:20px;width:100%;max-width:840px;
+  position:relative;z-index:1;
+}
+
+/* Continue button */
+.cr-cta-wrap { position:relative;z-index:1;width:100%;max-width:360px;text-align:center; animation:cr-fadeUp .5s .2s ease both;}
+.cr-cta {
+  width:100%;padding:17px 32px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  border:none;cursor:pointer;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+  transition:background .25s,transform .15s;
+}
+.cr-cta.enabled  { background:#E8341A;color:#060607; }
+.cr-cta.enabled:hover { background:#C9230F; }
+.cr-cta.enabled:active { transform:scale(.97); }
+.cr-cta.disabled { background:rgba(244,240,232,.06);color:rgba(244,240,232,.2);cursor:not-allowed; }
+.cr-cta-hint {
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;
+  color:rgba(244,240,232,.2);margin-top:14px;text-transform:uppercase;
+}
+
+/* Logout */
+.cr-logout {
+  position:absolute;top:20px;right:20px;z-index:10;
+  display:flex;align-items:center;gap:6px;
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(244,240,232,.35);
+  border:1px solid rgba(244,240,232,.08);
+  padding:7px 14px;background:none;cursor:pointer;
+  transition:color .2s,border-color .2s;
+}
+.cr-logout:hover { color:#E8341A;border-color:rgba(232,52,26,.3); }
+`;
 
 export default function ChoiceRole() {
-  const [selectedRole, setSelectedRole] = useState(null);
-  const [hoveredRole, setHoveredRole] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const [selectedRole, setSelectedRole]   = useState(null);
+  const [isSubmitting, setIsSubmitting]   = useState(false);
+  const [error, setError]                 = useState('');
   const navigate = useNavigate();
   const { updateUserRole, userRole, loading, roleSelected, registrationCompleted, syncing, signOut } = useAuth();
 
-  // Redirect users who have already selected a role and completed registration
   useEffect(() => {
     if (!loading && !syncing && roleSelected && registrationCompleted && userRole) {
-      const dashboard = DASHBOARDS[userRole] || '/viewer';
-      navigate(dashboard, { replace: true });
+      navigate(DASHBOARDS[userRole] || '/viewer', { replace: true });
     }
   }, [roleSelected, registrationCompleted, userRole, loading, syncing, navigate]);
 
-  const roles = [
-    {
-      id: 'startup',
-      name: 'Startup',
-      icon: IoRocketSharp,
-      description: 'Launch your innovative ideas and connect with investors',
-      features: ['Pitch your startup', 'Connect with investors', 'Raise funding']
-    },
-    {
-      id: 'investor',
-      name: 'Investor',
-      icon: IoTrendingUp,
-      description: 'Discover and invest in promising startups',
-      features: ['Discover startups', 'Make investments', 'Track portfolio']
-    },
-    {
-      id: 'incubator',
-      name: 'Incubator',
-      icon: IoBusinessSharp,
-      description: 'Nurture and support startups in your program',
-      features: ['Manage programs', 'Support startups', 'Build network']
-    },
-    {
-      id: 'viewer',
-      name: 'Viewer',
-      icon: IoGlasses,
-      description: 'Explore and discover opportunities',
-      features: ['Explore startups', 'Learn from pitches', 'Stay updated']
-    }
-  ];
-
-  const handleRoleSelect = (roleId) => {
-    setSelectedRole(roleId);
-    setError('');
-  };
-
   const handleContinue = async () => {
     if (!selectedRole || isSubmitting) return;
-
-    setIsSubmitting(true);
-    setError('');
-
+    setIsSubmitting(true); setError('');
     try {
-      // Save the role to the backend.
-      // updateUserRole() internally refreshes the Supabase session token and
-      // updates the localStorage cache — no need to call getSession() here first.
       await updateUserRole(selectedRole);
-
-      // Navigate immediately — don't wait for any background sync state updates.
       navigate(ROUTES[selectedRole] || '/');
     } catch (err) {
-      console.error('[choice-role] Failed to save role:', err);
       const status = err?.status;
-      const msg = Array.isArray(err?.data?.message)
-        ? err.data.message.join('. ')
-        : err?.data?.message || err?.message || '';
-
-      if (status === 400) {
-        setError('Invalid role selected. Please try again.');
-      } else if (status === 401) {
-        setError('Session expired. Please log in again.');
-        setTimeout(() => navigate('/login'), 2000);
-      } else if (msg) {
-        setError(msg);
-      } else {
-        setError('Something went wrong. Please try again.');
-      }
+      const msg    = Array.isArray(err?.data?.message) ? err.data.message.join('. ') : err?.data?.message || err?.message || '';
+      if (status === 400)          setError('Invalid role selected. Please try again.');
+      else if (status === 401)     { setError('Session expired. Please log in again.'); setTimeout(() => navigate('/login'), 2000); }
+      else if (msg)                setError(msg);
+      else                         setError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className={`min-h-screen flex items-start sm:items-center justify-center px-3 sm:px-4 md:px-6 py-2 sm:py-6 md:py-12 overflow-y-auto relative ${isDark ? 'bg-black' : 'bg-gray-100'}`}>
-      {/* Logout Button — top-right corner */}
-      <button
-        onClick={async () => { await signOut(); navigate('/'); }}
-        className={`absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
-          isDark
-            ? 'bg-white/10 text-white/60 hover:bg-red-500/20 hover:text-red-400 border border-white/10'
-            : 'bg-black/5 text-gray-400 hover:bg-red-50 hover:text-red-500 border border-black/10'
-        }`}
-      >
-        <IoLogOutOutline size={13} />
-        Log out
+    <div className="cr-root">
+      <style>{ROLE_CSS}</style>
+
+      <button className="cr-logout" onClick={async () => { await signOut(); navigate('/'); }}>
+        <IoLogOutOutline size={12}/> Log out
       </button>
 
-      <div className="w-full max-w-6xl my-auto sm:my-0">
-        {/* Header */}
-        <div className="text-center mb-3 sm:mb-6 md:mb-10 pt-2 sm:pt-0">
-          <div className="inline-flex items-center justify-center gap-1.5 sm:gap-2 md:gap-3 mb-2 sm:mb-4 md:mb-6 flex-wrap">
-            <div className={`p-1 sm:p-1.5 md:p-2 rounded-lg border ${isDark ? 'bg-white/10 border-white/20' : 'bg-white border-gray-200 shadow-sm'}`}>
-              <img src={logo} alt="EVO-A" className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9 object-contain" />
-            </div>
-            <span className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              EVO-A
-            </span>
-          </div>
-          <h1 className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1.5 sm:mb-2 md:mb-3 tracking-tight px-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Choose Your Role
-          </h1>
-          <p className={`text-xs sm:text-sm md:text-base max-w-2xl mx-auto px-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Select the role that best describes you to get started
-          </p>
-        </div>
+      <div className="cr-header">
+        <div className="cr-brand">EVO<span>-A</span></div>
+        <div className="cr-brand-tag">Startup · Investor · Ecosystem</div>
+        <div className="cr-title">Choose Your Role</div>
+        <div className="cr-subtitle">Select the role that best describes you</div>
+      </div>
 
-        {/* Role Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 mb-6 sm:mb-8 md:mb-12">
-          {roles.map((role) => {
-            const IconComponent = role.icon;
-            const isSelected = selectedRole === role.id;
-            const isHovered = hoveredRole === role.id;
+      <div className="cr-grid">
+        {roles.map(({ id, name, Icon, tag, desc, features }) => {
+          const selected = selectedRole === id;
+          return (
+            <button
+              key={id}
+              className={`cr-card${selected ? " selected" : ""}`}
+              onClick={() => { setSelectedRole(id); setError(''); }}
+            >
+              {selected && <IoCheckmarkCircle size={18} className="cr-card-check" />}
+              <div className="cr-card-icon-wrap">
+                <Icon size={26} color={selected ? "#E8341A" : "rgba(244,240,232,.55)"} />
+              </div>
+              <div className="cr-card-tag">{tag}</div>
+              <div className="cr-card-name">{name}</div>
+              <div className="cr-card-desc">{desc}</div>
+              <div className="cr-card-divider" />
+              <ul className="cr-card-features">
+                {features.map((f, i) => <li key={i}>{f}</li>)}
+              </ul>
+            </button>
+          );
+        })}
+      </div>
 
-            return (
-              <button
-                key={role.id}
-                onClick={() => handleRoleSelect(role.id)}
-                onMouseEnter={() => setHoveredRole(role.id)}
-                onMouseLeave={() => setHoveredRole(null)}
-                className={`relative p-4 sm:p-5 md:p-7 transition-all duration-300 border-2 rounded-2xl sm:rounded-3xl cursor-pointer ${isSelected
-                  ? 'bg-[#00B8A9] text-white border-[#00B8A9] shadow-2xl shadow-[#00B8A9]/40 transform scale-[1.02] sm:scale-105'
-                  : isDark
-                    ? 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-[#00B8A9]/30 active:scale-95'
-                    : 'bg-white/90 border-gray-300 hover:bg-white hover:border-[#00B8A9]/30 hover:shadow-lg active:scale-95'
-                  }`}
-              >
-                {isSelected && (
-                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-5 md:right-5">
-                    <IoCheckmarkCircle size={20} className="sm:hidden text-white" />
-                    <IoCheckmarkCircle size={24} className="hidden sm:block text-white" />
-                  </div>
-                )}
+      {error && <div className="cr-error">{error}</div>}
 
-                <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 mx-auto mb-4 sm:mb-5 md:mb-6 flex items-center justify-center transition-all duration-300 rounded-xl ${isSelected
-                  ? 'bg-white/20'
-                  : isDark ? 'bg-white/10' : 'bg-gray-200'
-                  } ${isHovered && !isSelected ? 'transform scale-110' : ''}`}>
-                  <IconComponent size={28} className={`sm:hidden ${isSelected ? 'text-white' : isDark ? 'text-white' : 'text-black'}`} />
-                  <IconComponent size={32} className={`hidden sm:block md:hidden ${isSelected ? 'text-white' : isDark ? 'text-white' : 'text-black'}`} />
-                  <IconComponent size={38} className={`hidden md:block ${isSelected ? 'text-white' : isDark ? 'text-white' : 'text-black'}`} />
-                </div>
-
-                <h3 className={`text-base sm:text-lg md:text-xl font-bold mb-2 sm:mb-3 ${isSelected ? 'text-white' : isDark ? 'text-white' : 'text-gray-800'}`}>
-                  {role.name}
-                </h3>
-
-                <p className={`text-xs sm:text-sm mb-3 sm:mb-4 md:mb-5 leading-relaxed ${isSelected ? 'text-white/90' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {role.description}
-                </p>
-
-                <div className={`space-y-1.5 sm:space-y-2 md:space-y-2.5 pt-3 sm:pt-4 md:pt-5 border-t ${isSelected ? 'border-white/20' : isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                  {role.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-2 sm:gap-2.5">
-                      <div className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full flex-shrink-0 ${isSelected ? 'bg-white/80' : isDark ? 'bg-white/50' : 'bg-gray-500'}`} />
-                      <span className={`text-[10px] sm:text-xs ${isSelected ? 'text-white/80' : isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                        {feature}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm text-center">
-            {error}
-          </div>
-        )}
-
-        {/* Continue Button */}
-        <div className="text-center px-2 pb-4 sm:pb-0">
-          <button
-            onClick={handleContinue}
-            disabled={!selectedRole || isSubmitting}
-            className={`group inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-3.5 md:py-4 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl transition-all duration-300 w-full sm:w-auto justify-center ${selectedRole && !isSubmitting
-              ? 'bg-[#00B8A9] text-white hover:bg-[#00A89A] hover:scale-105 hover:shadow-2xl hover:shadow-[#00B8A9]/40 active:scale-95 cursor-pointer'
-              : isDark
-                ? 'bg-white/10 text-gray-600 cursor-not-allowed'
-                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-          >
-            <span>{isSubmitting ? 'Saving...' : 'Continue to Registration'}</span>
-            <IoArrowForward
-              size={16}
-              className="sm:hidden transition-transform duration-300"
-            />
-            <IoArrowForward
-              size={18}
-              className={`hidden sm:block transition-transform duration-300 ${selectedRole ? 'group-hover:translate-x-1' : ''}`}
-            />
-          </button>
-          <p className={`mt-3 sm:mt-4 md:mt-6 text-xs sm:text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-            You can change your role anytime in settings
-          </p>
-        </div>
+      <div className="cr-cta-wrap">
+        <button
+          className={`cr-cta ${selectedRole && !isSubmitting ? "enabled" : "disabled"}`}
+          onClick={handleContinue}
+          disabled={!selectedRole || isSubmitting}
+        >
+          {isSubmitting ? 'Saving Role…' : 'Continue to Registration'}
+        </button>
+        <div className="cr-cta-hint">You can change your role anytime in settings</div>
       </div>
     </div>
   );

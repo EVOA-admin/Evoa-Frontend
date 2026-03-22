@@ -1,208 +1,131 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../../contexts/ThemeContext";
-import logo from "../../assets/logo.avif";
+
+const AUTH_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400&family=DM+Mono:wght@300;400&display=swap');
+@keyframes auth-fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes auth-ping{0%{transform:scale(1);opacity:1}75%,100%{transform:scale(2);opacity:0}}
+.auth-root{min-height:100vh;display:flex;background:#060607;color:#F4F0E8;font-family:'Cormorant Garamond',serif;}
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;}
+.auth-panel{width:100%;max-width:400px;}
+.auth-brand{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.1em;color:#F4F0E8;margin-bottom:6px;text-align:center;}
+.auth-brand span{color:#E8341A;}
+.auth-brand-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(244,240,232,.35);text-align:center;margin-bottom:32px;}
+.auth-box{background:#0f0f10;border:1px solid rgba(244,240,232,.08);padding:36px 28px;margin-bottom:16px;text-align:center;}
+.auth-heading{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.06em;color:#F4F0E8;margin-bottom:6px;}
+.auth-subheading{font-size:14px;font-weight:300;color:rgba(244,240,232,.45);margin-bottom:24px;line-height:1.7;}
+.auth-otp-row{display:flex;gap:12px;justify-content:center;margin-bottom:28px;}
+.auth-otp-input{
+  width:56px;height:64px;text-align:center;
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.05em;
+  background:rgba(244,240,232,.03);border:1px solid rgba(244,240,232,.1);
+  color:#F4F0E8;outline:none;transition:border-color .25s,box-shadow .25s;
+}
+.auth-otp-input:focus{border-color:#E8341A;box-shadow:0 0 0 3px rgba(232,52,26,.1);}
+.auth-otp-input.filled{border-color:rgba(232,52,26,.4);}
+.auth-btn{width:100%;padding:15px 24px;background:#E8341A;color:#060607;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;border:none;cursor:pointer;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:background .25s,transform .15s;margin-bottom:0;}
+.auth-btn:hover{background:#C9230F;}
+.auth-btn:active{transform:scale(.98);}
+.auth-footer-box{background:#0f0f10;border:1px solid rgba(244,240,232,.06);padding:16px 24px;text-align:center;font-size:14px;font-weight:300;color:rgba(244,240,232,.4);}
+.auth-footer-box a,.auth-footer-box button{color:#E8341A;text-decoration:none;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;transition:color .2s;background:none;border:none;cursor:pointer;padding:0;}
+.auth-footer-box a:hover,.auth-footer-box button:hover{color:#C9A84C;}
+.auth-home-link{position:absolute;top:20px;right:20px;z-index:20;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,240,232,.4);text-decoration:none;border:1px solid rgba(244,240,232,.1);padding:7px 14px;transition:color .2s,border-color .2s;}
+.auth-home-link:hover{color:#F4F0E8;border-color:rgba(244,240,232,.3);}
+.auth-anim-1{animation:auth-fadeUp .5s ease both;}
+.auth-anim-2{animation:auth-fadeUp .5s .1s ease both;}
+.auth-anim-3{animation:auth-fadeUp .5s .2s ease both;}
+
+.otp-icon-ring{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(232,52,26,.08);border:1px solid rgba(232,52,26,.2);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 20px;position:relative;
+}
+.otp-icon-dot{
+  position:absolute;top:0;right:0;
+  width:12px;height:12px;border-radius:50%;background:#E8341A;
+  animation:auth-ping 2s ease-in-out infinite;
+}
+`;
 
 export default function VerifyOTP() {
   const [otp, setOtp] = useState(["", "", "", ""]);
-  const [imagesVisible, setImagesVisible] = useState(false);
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
 
-  useEffect(() => {
-    // Trigger animation after component mounts
-    const timer = setTimeout(() => {
-      setImagesVisible(true);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleVerify = () => {
-    // Navigate to create new password page
-    navigate("/create-new-password");
-  };
+  const handleVerify = () => navigate("/create-new-password");
 
   const handleChange = (index, value) => {
     if (value.length > 1) return;
-    
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 3) {
-      inputRefs[index + 1].current?.focus();
-    }
+    if (value && index < 3) inputRefs[index + 1].current?.focus();
   };
 
   const handleKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
+    if (e.key === "Backspace" && !otp[index] && index > 0)
       inputRefs[index - 1].current?.focus();
-    }
   };
 
-  const handlePaste = (e) => {
+  const handlePaste = e => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").slice(0, 4);
+    const data = e.clipboardData.getData("text").slice(0, 4);
     const newOtp = [...otp];
-    for (let i = 0; i < pastedData.length && i < 4; i++) {
-      newOtp[i] = pastedData[i];
-    }
+    for (let i = 0; i < data.length && i < 4; i++) newOtp[i] = data[i];
     setOtp(newOtp);
   };
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${
-      isDark ? 'bg-black' : 'bg-white'
-    }`}>
-      {/* Left Side - Image Collage */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center p-1 lg:p-2 pl-2 lg:pl-4 pr-0.5 lg:pr-1">
-          {/* Image Collage Container */}
-          <div className="relative w-full max-w-xs lg:max-w-sm xl:max-w-md h-[400px] lg:h-[450px] xl:h-[550px] 2xl:h-[600px]">
-            {/* Image 1 - Top Left - Animates from top-left */}
-            <div className={`absolute top-0 left-0 w-32 h-32 lg:w-36 lg:h-36 xl:w-44 xl:h-44 transform -rotate-12 shadow-2xl transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-x-0 translate-y-0 opacity-100' 
-                : '-translate-x-full -translate-y-full opacity-0'
-            }`} style={{ transitionDelay: '0.1s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181641/pexels-photo-1181641.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Startup meeting"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-            
-            {/* Image 2 - Center Large - Animates from bottom */}
-            <div className={`absolute top-8 lg:top-10 xl:top-16 left-8 lg:left-12 xl:left-20 w-44 h-56 lg:w-52 lg:h-64 xl:w-60 xl:h-72 2xl:w-64 2xl:h-80 transform rotate-6 shadow-2xl z-10 transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-y-0 opacity-100' 
-                : 'translate-y-full opacity-0'
-            }`} style={{ transitionDelay: '0.3s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=500"
-                alt="Team collaboration"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-            
-            {/* Image 3 - Bottom Right - Animates from right */}
-            <div className={`absolute bottom-0 right-0 w-36 h-36 lg:w-40 lg:h-40 xl:w-48 xl:h-48 transform rotate-12 shadow-2xl transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-x-0 opacity-100' 
-                : 'translate-x-full opacity-0'
-            }`} style={{ transitionDelay: '0.2s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181641/pexels-photo-1181641.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Business growth"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-            
-            {/* Image 4 - Bottom Left - Animates from left */}
-            <div className={`absolute bottom-4 lg:bottom-6 xl:bottom-8 left-0 w-28 h-28 lg:w-32 lg:h-32 xl:w-40 xl:h-40 transform -rotate-6 shadow-2xl transition-all duration-700 ease-out ${
-              imagesVisible 
-                ? 'translate-x-0 opacity-100' 
-                : '-translate-x-full opacity-0'
-            }`} style={{ transitionDelay: '0.4s' }}>
-              <img
-                src="https://images.pexels.com/photos/1181396/pexels-photo-1181396.jpeg?auto=compress&cs=tinysrgb&w=400"
-                alt="Innovation"
-                className="w-full h-full object-cover  border-2 border-white/20"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="auth-root" style={{ position: "relative" }}>
+      <style>{AUTH_CSS}</style>
+      <Link to="/" className="auth-home-link">← Home</Link>
 
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8 py-6 sm:py-8 lg:pl-1 lg:pr-4 xl:pl-2 xl:pr-8 2xl:pr-12">
-        <div className="w-full max-w-md">
-          {/* Logo/Brand */}
-          <div className="mb-6 sm:mb-8 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
-              <img 
-                src={logo} 
-                alt="EVO-A Logo" 
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
-              />
-              <span className={`text-2xl sm:text-3xl font-bold tracking-wide ${
-                isDark ? 'text-white' : 'text-black'
-              }`}>EVO-A</span>
-            </div>
-            <h1 className={`text-xl sm:text-2xl font-semibold mb-1 ${
-              isDark ? 'text-white' : 'text-black'
-            }`}>
-              Verify OTP Code
-            </h1>
-            <p className={`text-xs sm:text-sm ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`}>
-              We've sent a 4-digit code to <span className={`font-medium ${
-                isDark ? 'text-white' : 'text-black'
-              }`}>di*****@gmail.com</span>
-            </p>
+      <div className="auth-right">
+        <div className="auth-panel">
+          <div className="auth-anim-1">
+            <div className="auth-brand">EVO<span>-A</span></div>
+            <div className="auth-brand-sub">Startup · Investor · Ecosystem</div>
           </div>
 
-          {/* Form Container */}
-          <div className={`rounded-3xl p-5 sm:p-6 ${
-            isDark 
-              ? 'bg-black/50 border border-white/10' 
-              : 'bg-white border border-black/10'
-          }`}>
-            <form className="space-y-4">
-              {/* OTP Input Fields */}
-              <div className="flex gap-2 sm:gap-3 justify-center">
-                {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={inputRefs[index]}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleChange(index, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(index, e)}
-                    onPaste={handlePaste}
-                    className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-center text-xl sm:text-2xl font-bold border rounded-xl focus:outline-none focus:ring-1 transition-all ${
-                      isDark 
-                        ? 'bg-black/80 border-white/30 text-white focus:ring-[#00B8A9]/30 focus:border-[#00B8A9]' 
-                        : 'bg-white border-black/40 text-black focus:ring-[#00B8A9]/30 focus:border-[#00B8A9]'
-                    }`}
-                  />
-                ))}
-              </div>
+          <div className="auth-box auth-anim-2">
+            <div className="otp-icon-ring">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E8341A" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+              </svg>
+              <div className="otp-icon-dot" />
+            </div>
 
-              {/* Verify Button */}
-              <button
-                type="button"
-                onClick={handleVerify}
-                className="w-full py-2.5 sm:py-3 text-sm font-semibold rounded-xl transition-all duration-300 bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98]"
-              >
-                Verify Code
-              </button>
-            </form>
+            <div className="auth-heading">Verify OTP Code</div>
+            <div className="auth-subheading">We've sent a 4-digit code to your email address</div>
+
+            <div className="auth-otp-row">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={inputRefs[index]}
+                  className={`auth-otp-input${digit ? " filled" : ""}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleChange(index, e.target.value)}
+                  onKeyDown={e => handleKeyDown(index, e)}
+                  onPaste={handlePaste}
+                />
+              ))}
+            </div>
+
+            <button type="button" className="auth-btn" onClick={handleVerify}>
+              Verify Code
+            </button>
           </div>
 
-          {/* Resend OTP Link */}
-          <div className={`mt-4 text-center py-4 rounded-3xl ${
-            isDark 
-              ? 'bg-black/50 border border-white/10' 
-              : 'bg-white border border-black/10'
-          }`}>
-            <p className={`text-sm ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`}>
-              Didn't receive code?{' '}
-              <a 
-                href="#" 
-                className="font-semibold transition-colors text-[#00B8A9] hover:text-[#00A89A]"
-              >
-                Resend OTP
-              </a>
-            </p>
+          <div className="auth-footer-box auth-anim-3">
+            Didn't receive code?&nbsp;&nbsp;
+            <button type="button">Resend OTP</button>
+            &nbsp;·&nbsp;
+            <Link to="/login">Back to Login</Link>
           </div>
         </div>
       </div>

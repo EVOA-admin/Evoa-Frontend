@@ -251,13 +251,13 @@ export default function StartupRegistration() {
     }
   };
 
-  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`;
+  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`;
 
   const FileUploadBox = ({ field, label, accept, previewHeight = 'h-28' }) => (
     <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
       {label}
       <input type="file" accept={accept} onChange={(e) => handleFileUpload(field, e.target.files[0])} className="hidden" />
-      <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden transition-all ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+      <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden transition-all ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
         {filePreviews[field]?.type === 'image' && <img src={filePreviews[field].url} alt="preview" className={`w-full ${previewHeight} object-cover`} />}
         {filePreviews[field]?.type === 'video' && <video src={filePreviews[field].url} controls className={`w-full max-h-40 object-cover`} />}
         {filePreviews[field]?.type === 'file' && (
@@ -319,7 +319,7 @@ export default function StartupRegistration() {
                         const f = [...formData.founders]; f[index].photo = file; setFormData(p => ({ ...p, founders: f }));
                         setFilePreviews(p => ({ ...p, [`founder_${index}`]: { type: 'image', url: URL.createObjectURL(file) } }));
                       }} />
-                      <div className={`mt-1.5 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+                      <div className={`mt-1.5 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
                         {filePreviews[`founder_${index}`]?.type === 'image'
                           ? <img src={filePreviews[`founder_${index}`].url} alt="Founder" className="w-full h-20 object-cover" />
                           : <div className="p-3 text-center"><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Upload</span></div>}
@@ -334,7 +334,7 @@ export default function StartupRegistration() {
             </div>
 
             {/* Startup Basics */}
-            <div className={`border-t pt-4 ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+            <div className={`border-t pt-4 ${isDark ? 'border-[rgba(244,240,232,.07)]' : 'border-[rgba(0,0,0,.08)]'}`}>
               <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Startup Details</p>
               <div className="space-y-2.5">
                 <input type="text" placeholder="Startup Name *" value={formData.startupName} onChange={(e) => handleInputChange('startupName', e.target.value)} className={inputCls} />
@@ -359,7 +359,7 @@ export default function StartupRegistration() {
               <div className="flex flex-wrap gap-2">
                 {industries.map(industry => (
                   <button key={industry} type="button" onClick={() => handleArrayChange('industries', industry)}
-                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.industries.includes(industry) ? 'bg-[#00B8A9] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#00B8A9]/50' : 'border-black/20 text-black/70 hover:border-[#00B8A9]/50'}`}>
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.industries.includes(industry) ? 'bg-[#E8341A] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
                     {industry}
                   </button>
                 ))}
@@ -367,7 +367,7 @@ export default function StartupRegistration() {
             </div>
             <SearchableSelect value={formData.stage} onChange={(value) => handleInputChange('stage', value)} options={stages.map(s => ({ value: s, label: s }))} placeholder="Stage of Startup *" isDark={isDark} />
 
-            <div className={`border-t pt-4 ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+            <div className={`border-t pt-4 ${isDark ? 'border-[rgba(244,240,232,.07)]' : 'border-[rgba(0,0,0,.08)]'}`}>
               <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Business Verification</p>
               <div className="space-y-3">
                 <SearchableSelect value={formData.entityType} onChange={(value) => handleInputChange('entityType', value)} options={entityTypes.map(t => ({ value: t, label: t }))} placeholder="Type of Entity *" isDark={isDark} />
@@ -477,7 +477,7 @@ export default function StartupRegistration() {
             </div>
             <input type="text" placeholder="Hashtags (#Fintech #AI)" value={formData.hashtags} onChange={(e) => handleInputChange('hashtags', e.target.value)} className={inputCls} />
 
-            <div className={`border-t pt-4 ${isDark ? 'border-white/10' : 'border-black/10'}`}>
+            <div className={`border-t pt-4 ${isDark ? 'border-[rgba(244,240,232,.07)]' : 'border-[rgba(0,0,0,.08)]'}`}>
               <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Links (Optional)</p>
               <div className="space-y-2.5">
                 <input type="url" placeholder="Website URL" value={formData.websiteUrl} onChange={(e) => handleInputChange('websiteUrl', e.target.value)} className={inputCls} />
@@ -498,7 +498,7 @@ export default function StartupRegistration() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
+    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-[#060607]' : 'bg-[#f5f2ef]'}`}>
       <div className="h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Header */}
         <div className="mb-4 sm:mb-6 shrink-0">
@@ -521,7 +521,7 @@ export default function StartupRegistration() {
         </div>
 
         {/* Form content */}
-        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-black/50 border border-white/10' : 'bg-white border border-black/10'}`}>
+        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-[#0f0f10] border border-[rgba(244,240,232,.08)]' : 'bg-white border border-[rgba(0,0,0,.08)]'}`}>
           {renderStep()}
         </div>
 
@@ -532,12 +532,12 @@ export default function StartupRegistration() {
             Previous
           </button>
           {currentStep < 3 ? (
-            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
               Next
             </button>
           ) : (
             <button type="button" onClick={handleSubmit} disabled={loading}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
               {loading ? 'Uploading video…' : 'Submit'}
             </button>
           )}

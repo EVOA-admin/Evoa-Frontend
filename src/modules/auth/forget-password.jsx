@@ -1,269 +1,88 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../../contexts/ThemeContext";
-import logo from "../../assets/logo.avif";
 import VideoReel from "../../components/shared/VideoReel";
+
+const AUTH_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap');
+@keyframes auth-fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.auth-root{min-height:100vh;display:flex;background:#060607;color:#F4F0E8;font-family:'Cormorant Garamond',serif;position:relative;overflow:hidden;}
+.auth-left{display:none;}
+@media(min-width:1024px){.auth-left{display:flex;flex-direction:column;justify-content:center;width:50%;position:relative;overflow:hidden;background:#000;}}
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:32px 24px;position:relative;z-index:2;}
+@media(min-width:1024px){.auth-right{width:50%;flex:none;}}
+.auth-panel{width:100%;max-width:400px;}
+.auth-brand{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.1em;color:#F4F0E8;margin-bottom:6px;text-align:center;}
+.auth-brand span{color:#E8341A;}
+.auth-brand-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(244,240,232,.35);text-align:center;margin-bottom:32px;}
+.auth-box{background:#0f0f10;border:1px solid rgba(244,240,232,.08);padding:32px 28px;margin-bottom:16px;}
+.auth-heading{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.06em;color:#F4F0E8;margin-bottom:6px;}
+.auth-subheading{font-size:14px;font-weight:300;color:rgba(244,240,232,.45);margin-bottom:24px;line-height:1.7;}
+.auth-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(244,240,232,.5);margin-bottom:8px;display:block;}
+.auth-field{margin-bottom:18px;position:relative;}
+.auth-input{width:100%;padding:13px 16px;background:rgba(244,240,232,.03);border:1px solid rgba(244,240,232,.08);color:#F4F0E8;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:300;outline:none;transition:border-color .25s,box-shadow .25s;box-sizing:border-box;}
+.auth-input::placeholder{color:rgba(244,240,232,.2);font-style:italic;}
+.auth-input:focus{border-color:#E8341A;box-shadow:0 0 0 3px rgba(232,52,26,.08);}
+.auth-btn{width:100%;padding:15px 24px;background:#E8341A;color:#060607;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;border:none;cursor:pointer;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));transition:background .25s,transform .15s;margin-bottom:16px;}
+.auth-btn:hover{background:#C9230F;}
+.auth-btn:active{transform:scale(.98);}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;}
+.auth-footer-box{background:#0f0f10;border:1px solid rgba(244,240,232,.06);padding:16px 24px;text-align:center;font-size:14px;font-weight:300;color:rgba(244,240,232,.4);}
+.auth-footer-box a{color:#E8341A;text-decoration:none;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;transition:color .2s;}
+.auth-footer-box a:hover{color:#C9A84C;}
+.auth-home-link{position:absolute;top:20px;right:20px;z-index:20;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,240,232,.4);text-decoration:none;border:1px solid rgba(244,240,232,.1);padding:7px 14px;transition:color .2s,border-color .2s;}
+.auth-home-link:hover{color:#F4F0E8;border-color:rgba(244,240,232,.3);}
+.auth-anim-1{animation:auth-fadeUp .5s ease both;}
+.auth-anim-2{animation:auth-fadeUp .5s .1s ease both;}
+.auth-anim-3{animation:auth-fadeUp .5s .15s ease both;}
+.auth-anim-4{animation:auth-fadeUp .5s .2s ease both;}
+`;
 
 export default function ForgetPassword() {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-  const particlesRef = useRef([]);
 
-  // Create floating particles
-  useEffect(() => {
-    const particles = [];
-    const particleCount = 15;
-    
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 4 + 2,
-        duration: Math.random() * 20 + 15,
-        delay: Math.random() * 5,
-      });
-    }
-    
-    particlesRef.current = particles;
-  }, []);
-
-  const handleSendOTP = () => {
-    // Navigate to verify OTP page
-    navigate("/verify-otp");
-  };
+  const handleSendOTP = () => navigate("/verify-otp");
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 relative overflow-hidden ${
-      isDark ? 'bg-black' : 'bg-white'
-    }`}>
-      {/* Floating Particles Background Animation */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {particlesRef.current.map((particle) => (
-          <div
-            key={particle.id}
-            className={`absolute rounded-full ${
-              isDark ? 'bg-[#00B8A9]/20' : 'bg-[#00B8A9]/10'
-            }`}
-            style={{
-              left: `${particle.x}%`,
-              top: `${particle.y}%`,
-              width: `${particle.size}px`,
-              height: `${particle.size}px`,
-              animation: `float ${particle.duration}s ease-in-out infinite`,
-              animationDelay: `${particle.delay}s`,
-            }}
-          />
-        ))}
-      </div>
+    <div className="auth-root">
+      <style>{AUTH_CSS}</style>
+      <Link to="/" className="auth-home-link">← Home</Link>
 
-      {/* Floating Decorative Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {/* Floating circles */}
-        <div 
-          className={`absolute rounded-full blur-xl ${
-            isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
-          }`}
-          style={{
-            width: '300px',
-            height: '300px',
-            top: '10%',
-            right: '5%',
-            animation: 'floatSlow 20s ease-in-out infinite',
-          }}
-        />
-        <div 
-          className={`absolute rounded-full blur-xl ${
-            isDark ? 'bg-[#00B8A9]/10' : 'bg-[#00B8A9]/5'
-          }`}
-          style={{
-            width: '200px',
-            height: '200px',
-            bottom: '15%',
-            left: '10%',
-            animation: 'floatSlow 25s ease-in-out infinite',
-            animationDelay: '2s',
-          }}
-        />
-      </div>
+      <div className="auth-left"><VideoReel /></div>
 
-      {/* Left Side - Video Reel */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-black z-10">
-        <VideoReel />
-      </div>
+      <div className="auth-right">
+        <div className="auth-panel">
+          <div className="auth-anim-1">
+            <div className="auth-brand">EVO<span>-A</span></div>
+            <div className="auth-brand-sub">Startup · Investor · Ecosystem</div>
+          </div>
 
-      {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8 py-6 sm:py-8 lg:pl-1 lg:pr-4 xl:pl-2 xl:pr-8 2xl:pr-12 relative z-10">
-        <div className="w-full max-w-md">
-          {/* Logo/Brand with Animation */}
-          <div className="mb-6 sm:mb-8 text-center animate-fadeInUp">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="relative">
-                <img 
-                  src={logo} 
-                  alt="EVO-A Logo" 
-                  className="h-10 w-10 sm:h-12 sm:w-12 object-contain animate-pulseGlow"
-                />
-                {/* Glow effect */}
-                <div className={`absolute inset-0 rounded-full blur-md opacity-50 ${
-                  isDark ? 'bg-[#00B8A9]' : 'bg-[#00B8A9]/30'
-                } animate-pulseGlow`} style={{ zIndex: -1 }} />
-              </div>
-              <span className={`text-2xl sm:text-3xl font-bold tracking-wide animate-slideInRight ${
-                isDark ? 'text-white' : 'text-black'
-              }`}>EVO-A</span>
+          <div className="auth-box auth-anim-2">
+            <div className="auth-heading">Forgot Password?</div>
+            <div className="auth-subheading">No worries. Enter your email and we'll send you an OTP code to reset your password.</div>
+
+            <div className="auth-field auth-anim-3">
+              <label className="auth-label">Email Address</label>
+              <input
+                className="auth-input"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
             </div>
-            <h1 className={`text-xl sm:text-2xl font-semibold mb-1 animate-fadeInUp ${
-              isDark ? 'text-white' : 'text-black'
-            }`} style={{ animationDelay: '0.1s' }}>
-              Forgot Password?
-            </h1>
-            <p className={`text-xs sm:text-sm animate-fadeInUp ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`} style={{ animationDelay: '0.2s' }}>
-              No worries! Enter your email and we'll send you an OTP code to reset your password.
-            </p>
+
+            <button type="button" className="auth-btn auth-anim-4" onClick={handleSendOTP}>
+              Send OTP Code
+            </button>
           </div>
 
-          {/* Form Container with Animation */}
-          <div className={`rounded-3xl p-5 sm:p-6 animate-fadeInUp ${
-            isDark 
-              ? 'bg-black/50 border border-white/10 backdrop-blur-sm' 
-              : 'bg-white/90 border border-black/10 backdrop-blur-sm'
-          }`} style={{ animationDelay: '0.3s' }}>
-            <form className="space-y-3">
-              {/* Email Input with Animation */}
-              <div className="animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-2.5 sm:py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 transition-all duration-300 transform hover:scale-[1.02] focus:scale-[1.02] ${
-                    isDark 
-                      ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' 
-                      : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-                  }`}
-                />
-              </div>
-
-              {/* Send OTP Button with Enhanced Animation */}
-              <div className="animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
-                <button
-                  type="button"
-                  onClick={handleSendOTP}
-                  className="w-full py-2.5 sm:py-3 text-sm font-semibold rounded-xl transition-all duration-300 bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#00B8A9]/40 active:scale-[0.98] relative overflow-hidden group"
-                >
-                  <span className="relative z-10">Send OTP Code</span>
-                  {/* Shimmer effect */}
-                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Sign In Link with Animation */}
-          <div className={`mt-4 text-center py-4 rounded-3xl animate-fadeInUp ${
-            isDark 
-              ? 'bg-black/50 border border-white/10 backdrop-blur-sm' 
-              : 'bg-white/90 border border-black/10 backdrop-blur-sm'
-          }`} style={{ animationDelay: '0.6s' }}>
-            <p className={`text-sm ${
-              isDark ? 'text-white/60' : 'text-black/60'
-            }`}>
-              Remember your password?{' '}
-              <Link 
-                to="/login" 
-                className="font-semibold transition-all duration-300 text-[#00B8A9] hover:text-[#00A89A] inline-block transform hover:scale-105"
-              >
-                Sign in
-              </Link>
-            </p>
+          <div className="auth-footer-box auth-anim-4">
+            Remember your password?&nbsp;&nbsp;
+            <Link to="/login">Sign In →</Link>
           </div>
         </div>
       </div>
-
-      {/* CSS Animations */}
-      <style>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) translateX(0px);
-            opacity: 0.3;
-          }
-          25% {
-            transform: translateY(-20px) translateX(10px);
-            opacity: 0.6;
-          }
-          50% {
-            transform: translateY(-40px) translateX(-10px);
-            opacity: 0.4;
-          }
-          75% {
-            transform: translateY(-20px) translateX(5px);
-            opacity: 0.5;
-          }
-        }
-
-        @keyframes floatSlow {
-          0%, 100% {
-            transform: translateY(0px) translateX(0px) scale(1);
-          }
-          33% {
-            transform: translateY(-30px) translateX(20px) scale(1.1);
-          }
-          66% {
-            transform: translateY(20px) translateX(-20px) scale(0.9);
-          }
-        }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes pulseGlow {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.8;
-            transform: scale(1.05);
-          }
-        }
-
-        .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease-out forwards;
-          opacity: 0;
-        }
-
-        .animate-slideInRight {
-          animation: slideInRight 0.6s ease-out forwards;
-        }
-
-        .animate-pulseGlow {
-          animation: pulseGlow 3s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

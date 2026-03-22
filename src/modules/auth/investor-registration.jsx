@@ -184,7 +184,7 @@ export default function InvestorRegistration() {
     }
   };
 
-  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'}`;
+  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`;
 
   const renderStep = () => {
     switch (currentStep) {
@@ -198,7 +198,7 @@ export default function InvestorRegistration() {
             <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
               Profile Photo (Recommended)
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload('profilePhoto', e.target.files[0])} className="hidden" />
-              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'}`}>
+              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
                 {previews.profilePhoto ? (
                   <div className="relative group">
                     <img src={previews.profilePhoto} alt="Profile preview" className="w-full h-32 object-cover" />
@@ -262,7 +262,7 @@ export default function InvestorRegistration() {
                 <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
                   Upload SEBI Certificate (PDF)
                   <input type="file" accept=".pdf" onChange={(e) => handleFileUpload('sebiCertificate', e.target.files[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'} ${previews.sebiCertificate ? 'border-[#00B8A9]/40' : ''}`}>
+                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'} ${previews.sebiCertificate ? 'border-[#00B8A9]/40' : ''}`}>
                     {previews.sebiCertificate ? <><span className="text-[#00B8A9]">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.sebiCertificate}</span></> : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload PDF</span></>}
                   </div>
                 </label>
@@ -295,7 +295,7 @@ export default function InvestorRegistration() {
                 <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
                   Upload ID Proof (Aadhaar/Passport/Driving License)
                   <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload('idProof', e.target.files[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#00B8A9]/50' : 'border-black/20 hover:border-[#00B8A9]/50'} ${previews.idProof ? 'border-[#00B8A9]/40' : ''}`}>
+                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'} ${previews.idProof ? 'border-[#00B8A9]/40' : ''}`}>
                     {previews.idProof
                       ? (typeof previews.idProof === 'string' && previews.idProof.startsWith('blob:')
                         ? <img src={previews.idProof} alt="ID" className="h-20 mx-auto object-contain rounded" />
@@ -326,7 +326,7 @@ export default function InvestorRegistration() {
               <div className="flex flex-wrap gap-2">
                 {startupStages.map(stage => (
                   <button key={stage} type="button" onClick={() => handleArrayChange('startupStagePreference', stage)}
-                    className={`px-3 py-1 text-xs rounded-full border transition-all ${formData.startupStagePreference.includes(stage) ? 'bg-[#00B8A9] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#00B8A9]/50' : 'border-black/20 text-black/70 hover:border-[#00B8A9]/50'}`}>
+                    className={`px-3 py-1 text-xs rounded-full border transition-all ${formData.startupStagePreference.includes(stage) ? 'bg-[#E8341A] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
                     {stage}
                   </button>
                 ))}
@@ -342,7 +342,7 @@ export default function InvestorRegistration() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-black' : 'bg-white'}`}>
+    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-[#060607]' : 'bg-[#f5f2ef]'}`}>
       <div className="h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Header */}
         <div className="mb-4 sm:mb-6 shrink-0">
@@ -365,7 +365,7 @@ export default function InvestorRegistration() {
         </div>
 
         {/* Form content */}
-        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-black/50 border border-white/10' : 'bg-white border border-black/10'}`}>
+        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-[#0f0f10] border border-[rgba(244,240,232,.08)]' : 'bg-white border border-[rgba(0,0,0,.08)]'}`}>
           {renderStep()}
         </div>
 
@@ -376,12 +376,12 @@ export default function InvestorRegistration() {
             Previous
           </button>
           {currentStep < 3 ? (
-            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
               Next
             </button>
           ) : (
             <button type="button" onClick={handleSubmit} disabled={loading}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#00B8A9] text-white hover:bg-[#00A89A] shadow-lg shadow-[#00B8A9]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
+              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
               {loading ? 'Submitting...' : 'Submit'}
             </button>
           )}

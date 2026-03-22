@@ -7,7 +7,7 @@ export default function Layout() {
   const location = useLocation();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const authPages = ['/login', '/register', '/choice-role', '/forget-password', '/verify-otp', '/create-new-password', '/register/startup', '/register/investor', '/register/incubator', '/register/viewer'];
+  const authPages = ['/login', '/register', '/choice-role', '/forget-password', '/verify-otp', '/create-new-password', '/verify-email', '/register/startup', '/register/investor', '/register/incubator', '/register/viewer'];
   const isAuthPage = authPages.includes(location.pathname);
   // Homepage has its own built-in Nav — suppress the global one, but don't constrain to h-screen
   const isHomePage = location.pathname === '/';
