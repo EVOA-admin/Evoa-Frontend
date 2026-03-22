@@ -41,9 +41,25 @@
       />
     </noscript>
 
+    <!-- Preconnect for Google Analytics -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+    <!-- Google Analytics 4 (GA4) — async, non-blocking -->
+    <!-- Measurement ID: G-XY11SE5CLR -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XY11SE5CLR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ window.dataLayer.push(arguments); }
+      gtag('js', new Date());
+      // Initial config — page_view on route changes handled in React (GARouteTracker)
+      gtag('config', 'G-XY11SE5CLR', { send_page_view: false });
+    </script>
+
     <!-- Preconnect for Google AdSense -->
     <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+
 
     <!-- Google AdSense — async so it never blocks rendering -->
     <script
