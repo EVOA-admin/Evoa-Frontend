@@ -280,7 +280,7 @@ function Hero() {
         </p>
         <div className="fu4" style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
           <Link to="/register" className="bfire">Create Your Account</Link>
-          <a href="#ai" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted2)", textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
+          <a href="https://021.evoa.co.in" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted2)", textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
             Meet 021 AI <span style={{ width: 24, height: 1, background: "currentColor", display: "inline-block" }} />
           </a>
         </div>
@@ -363,9 +363,9 @@ function Problem() {
 
 /* ─── PILLARS ─── */
 const PILLARS = [
-  { n: "01", icon: "🎬", name: "Pitch Reel", desc: "90-second video pitch. Seen by real investors. No warm intros. No gatekeepers.", tag: "Go Live →", locked: false },
-  { n: "02", icon: "💎", name: "Investor AI", desc: "AI-powered investor matchmaking. Right investor, right stage, right moment.", tag: "Raise Capital →", locked: false },
-  { n: "03", icon: "🤖", name: "021 AI", desc: "Your virtual C-suite. CEO · CMO · CTO · CFO — all running in parallel, 24/7.", tag: "Meet 021 →", locked: false },
+  { n: "01", icon: "🎬", name: "Pitch Reel", desc: "90-second video pitch. Seen by real investors. No warm intros. No gatekeepers.", tag: "Go Live →", locked: false, to: "/login" },
+  { n: "02", icon: "💎", name: "Investor AI", desc: "AI-powered investor matchmaking. Right investor, right stage, right moment.", tag: "Raise Capital →", locked: false, to: "/login" },
+  { n: "03", icon: "🤖", name: "021 AI", desc: "Your virtual C-suite. CEO · CMO · CTO · CFO — all running in parallel, 24/7.", tag: "Meet 021 →", locked: false, href: "https://021.evoa.co.in" },
   { n: "04", icon: "⚡", name: "EVOA Hire", desc: "Hire humans and deploy AI agents simultaneously.", tag: "Coming Soon", locked: true },
   { n: "05", icon: "🏹", name: "Trade Arena", desc: "Test your product with real users before you build.", tag: "Coming Soon", locked: true },
   { n: "06", icon: "⚔️", name: "Battleground", desc: "Compete. Win. Get noticed.", tag: "Coming Soon", locked: true },
@@ -384,7 +384,7 @@ function Pillars() {
       <div className="ghost">02</div>
       <div className="reveal" style={{ maxWidth: 640, marginBottom: 80, position: "relative", zIndex: 1 }}>
         <div className="stag">The Platform</div>
-        <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(44px,5vw,72px)", lineHeight: .94, letterSpacing: ".02em", marginBottom: 20 }}>Five weapons.<br />One arena.</h2>
+        <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(44px,5vw,72px)", lineHeight: .94, letterSpacing: ".02em", marginBottom: 20 }}>Six weapons.<br />One arena.</h2>
         <p style={{ fontSize: "clamp(14px,1.8vw,17px)", fontWeight: 300, lineHeight: 1.7, color: "var(--muted2)" }}>Every tool a startup needs to go from idea to funded — in a single ecosystem designed for the relentless.</p>
       </div>
       <div className="pillars-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 2, position: "relative", zIndex: 1 }}>
@@ -401,7 +401,13 @@ function Pillars() {
             <span className="picon" style={{ fontSize: 28, marginBottom: 16, display: "block", filter: p.locked ? "saturate(0) brightness(.4)" : "saturate(0) brightness(1.5)", transition: "filter .3s" }}>{p.icon}</span>
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: ".04em", marginBottom: 10, color: p.locked ? "var(--muted)" : "var(--white)" }}>{p.name}</div>
             <p style={{ fontSize: 12, fontWeight: 300, lineHeight: 1.7, color: "var(--muted)" }}>{p.desc}</p>
-            <span className="ptag" style={{ display: "inline-block", marginTop: 18, fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: p.locked ? "var(--muted)" : "var(--red)", padding: "4px 10px", border: `1px solid ${p.locked ? "rgba(244,240,232,.1)" : "rgba(232,52,26,.3)"}`, opacity: 0, transition: "opacity .3s" }}>{p.tag}</span>
+            {p.to ? (
+              <Link to={p.to} className="ptag" style={{ display: "inline-block", marginTop: 18, fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--red)", padding: "4px 10px", border: "1px solid rgba(232,52,26,.3)", opacity: 0, transition: "opacity .3s", textDecoration: "none", cursor: "pointer" }}>{p.tag}</Link>
+            ) : p.href ? (
+              <a href={p.href} target="_blank" rel="noopener noreferrer" className="ptag" style={{ display: "inline-block", marginTop: 18, fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--red)", padding: "4px 10px", border: "1px solid rgba(232,52,26,.3)", opacity: 0, transition: "opacity .3s", textDecoration: "none", cursor: "pointer" }}>{p.tag}</a>
+            ) : (
+              <span className="ptag" style={{ display: "inline-block", marginTop: 18, fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: p.locked ? "var(--muted)" : "var(--red)", padding: "4px 10px", border: `1px solid ${p.locked ? "rgba(244,240,232,.1)" : "rgba(232,52,26,.3)"}`, opacity: 0, transition: "opacity .3s" }}>{p.tag}</span>
+            )}
           </div>
         ))}
       </div>
