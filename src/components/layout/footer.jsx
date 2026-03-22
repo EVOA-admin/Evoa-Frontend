@@ -4,11 +4,11 @@ import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 
 /* ─── EVOA Modal CSS — matches home page PolicyModal exactly ─── */
 const FOOTER_MODAL_CSS = `
-.ft-modal-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px)}
+.ft-modal-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);cursor:default}
 .ft-modal-box{position:relative;width:100%;max-width:760px;max-height:80vh;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:#111;border:1px solid rgba(244,240,232,.1);box-shadow:0 40px 120px rgba(0,0,0,.8)}
 .ft-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(244,240,232,.08)}
 .ft-modal-hdr h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.06em;color:#F4F0E8;margin:0}
-.ft-modal-close{background:none;border:none;cursor:pointer;color:rgba(244,240,232,.5);padding:4px;display:flex;transition:color .2s}
+.ft-modal-close{background:none;border:none;cursor:pointer!important;color:rgba(244,240,232,.5);padding:8px;display:flex;transition:color .2s;border-radius:4px}
 .ft-modal-close:hover{color:#F4F0E8}
 .ft-modal-body{padding:24px;overflow-y:auto;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;line-height:1.8;color:rgba(244,240,232,.7)}
 .ft-modal-body h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.05em;color:#C9A84C;margin:24px 0 8px}
