@@ -1,16 +1,62 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUpload, FiArrowLeft } from "react-icons/fi";
-import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
-import logo from "../../assets/logo.avif";
 import { createIncubator } from "../../services/incubatorsService";
 import { uploadFile } from "../../services/storageService";
 
+const REG_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=DM+Mono:wght@300;400&display=swap');
+@keyframes reg-fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.reg-root{min-height:100vh;background:#060607;color:#F4F0E8;font-family:'Cormorant Garamond',serif;display:flex;flex-direction:column;position:relative;overflow-x:hidden}
+.reg-root::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(244,240,232,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(244,240,232,.025) 1px,transparent 1px);background-size:60px 60px;z-index:0}
+.reg-topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px;background:rgba(6,6,7,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(244,240,232,.06);flex-shrink:0}
+.reg-brand{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.1em;color:#F4F0E8}
+.reg-brand span{color:#E8341A}
+.reg-back{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,240,232,.45);border:1px solid rgba(244,240,232,.1);padding:7px 14px;background:none;cursor:pointer;transition:color .2s,border-color .2s}
+.reg-back:hover{color:#E8341A;border-color:rgba(232,52,26,.35)}
+.reg-inner{flex:1;display:flex;flex-direction:column;max-width:860px;width:100%;margin:0 auto;padding:36px 24px 40px;position:relative;z-index:1}
+.reg-head{margin-bottom:32px;animation:reg-fadeUp .4s ease both}
+.reg-step-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#E8341A;margin-bottom:8px}
+.reg-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,44px);letter-spacing:.04em;color:#F4F0E8;margin-bottom:6px;line-height:.95}
+.reg-subtitle{font-size:14px;font-weight:300;color:rgba(244,240,232,.4);font-style:italic}
+.reg-progress{display:flex;align-items:center;gap:8px;margin-bottom:32px}
+.reg-dot{width:32px;height:3px;background:rgba(244,240,232,.12);transition:background .3s,width .3s}
+.reg-dot.active{background:#E8341A;width:48px}
+.reg-dot.done{background:rgba(232,52,26,.4)}
+.reg-card{background:#0a0a0f;border:1px solid rgba(244,240,232,.07);padding:28px;flex:1;overflow-y:auto;margin-bottom:24px;animation:reg-fadeUp .4s .1s ease both}
+.reg-step-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.05em;color:#F4F0E8;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid rgba(244,240,232,.06)}
+.reg-input{width:100%;padding:11px 14px;background:#060607;border:1px solid rgba(244,240,232,.12);color:#F4F0E8;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;outline:none;transition:border-color .2s}
+.reg-input::placeholder{color:rgba(244,240,232,.3)}
+.reg-input:focus{border-color:#E8341A}
+.reg-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,240,232,.4);margin-bottom:6px;display:block}
+.reg-upload{border:1px dashed rgba(244,240,232,.15);padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,240,232,.35)}
+.reg-upload:hover{border-color:rgba(232,52,26,.4);color:#E8341A}
+.reg-upload.filled{border-color:rgba(232,52,26,.35)}
+.reg-chip{display:inline-block;padding:5px 12px;border:1px solid rgba(244,240,232,.12);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,240,232,.5);cursor:pointer;transition:all .2s;background:none}
+.reg-chip:hover{border-color:rgba(232,52,26,.35);color:#E8341A}
+.reg-chip.on{background:rgba(232,52,26,.1);border-color:#E8341A;color:#E8341A}
+.reg-check-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,240,232,.5);padding:6px 0}
+.reg-check-label input{accent-color:#E8341A;width:14px;height:14px}
+.reg-nav{display:flex;justify-content:space-between;gap:16px;flex-shrink:0;animation:reg-fadeUp .4s .2s ease both}
+.reg-btn-ghost{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:13px 28px;border:1px solid rgba(244,240,232,.15);color:rgba(244,240,232,.4);background:none;cursor:pointer;transition:all .2s}
+.reg-btn-ghost:hover:not(:disabled){border-color:rgba(244,240,232,.3);color:#F4F0E8}
+.reg-btn-ghost:disabled{opacity:.3;cursor:not-allowed}
+.reg-btn-primary{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:14px 36px;background:#E8341A;color:#060607;border:none;cursor:pointer;transition:background .2s,transform .15s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.reg-btn-primary:hover:not(:disabled){background:#C9230F}
+.reg-btn-primary:active{transform:scale(.97)}
+.reg-btn-primary:disabled{background:rgba(244,240,232,.1);color:rgba(244,240,232,.3);cursor:not-allowed;clip-path:none}
+.reg-error{background:rgba(232,52,26,.08);border:1px solid rgba(232,52,26,.25);padding:12px 16px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(232,52,26,.9);margin-top:16px}
+.reg-divider-section{border-top:1px solid rgba(244,240,232,.06);margin-top:20px;padding-top:20px}
+.reg-section-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(244,240,232,.3);margin-bottom:16px}
+@media(max-width:640px){.reg-inner{padding:20px 16px 32px}.reg-card{padding:18px}.reg-topbar{padding:0 16px}}
+`;
+
 export default function IncubatorRegistration() {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = true; // page shell is always dark — force dark styles throughout
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
@@ -164,7 +210,8 @@ export default function IncubatorRegistration() {
     }
   };
 
-  const inputCls = `w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`;
+  const TOTAL_STEPS = 3;
+  const inputCls = "reg-input";
 
   const renderStep = () => {
     switch (currentStep) {
@@ -181,7 +228,7 @@ export default function IncubatorRegistration() {
               <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
                 {previews.logo ? (
                   <div className="relative group">
-                    <img src={previews.logo} alt="Logo preview" className="w-full h-32 object-contain bg-gray-50" />
+                    <img src={previews.logo} alt="Logo preview" className="w-full h-32 object-contain" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="text-white text-xs font-semibold">Click to change</span>
                     </div>
@@ -290,53 +337,41 @@ export default function IncubatorRegistration() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-[#060607]' : 'bg-[#f5f2ef]'}`}>
-      <div className="h-screen flex flex-col max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6 shrink-0">
-          <div className="flex items-center justify-between mb-2 sm:mb-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
-              <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
-            </div>
-            <button type="button" onClick={() => navigate('/choice-role')} className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl transition-all ${isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-black/60 hover:text-black hover:bg-black/10'}`}>
-              <FiArrowLeft size={15} /> Back
-            </button>
+    <div className="reg-root">
+      <style>{REG_CSS}</style>
+      <div className="reg-topbar">
+        <div className="reg-brand">EVO<span>-A</span></div>
+        <button className="reg-back" onClick={() => navigate('/choice-role')}>
+          <FiArrowLeft size={12} /> Back
+        </button>
+      </div>
+      <div className="reg-inner">
+        <div className="reg-head">
+          <div className="reg-step-label">Step {currentStep} / {TOTAL_STEPS} — Incubator Registration</div>
+          <div className="reg-title">
+            {currentStep === 1 && 'Identity & Location'}
+            {currentStep === 2 && 'Verification & Program'}
+            {currentStep === 3 && 'Facilities & Social Proof'}
           </div>
-          <h1 className={`text-lg sm:text-2xl font-bold mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Incubator Registration</h1>
-          <p className={`text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>Step {currentStep} of 3</p>
+          <div className="reg-subtitle">Complete all required fields to continue</div>
         </div>
-
-        {/* Progress Bar */}
-        <div className={`mb-4 sm:mb-6 h-1.5 sm:h-2 w-full shrink-0 rounded-full ${isDark ? 'bg-white/10' : 'bg-black/10'}`}>
-          <div className="h-full rounded-full transition-all duration-300 bg-[#00B8A9]" style={{ width: `${(currentStep / 3) * 100}%` }} />
+        <div className="reg-progress">
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <div key={i} className={`reg-dot${i + 1 === currentStep ? ' active' : i + 1 < currentStep ? ' done' : ''}`} />
+          ))}
         </div>
-
-        {/* Form content */}
-        <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 flex-1 overflow-y-auto ${isDark ? 'bg-[#0f0f10] border border-[rgba(244,240,232,.08)]' : 'bg-white border border-[rgba(0,0,0,.08)]'}`}>
-          {renderStep()}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex justify-between gap-2 sm:gap-4 shrink-0">
-          <button type="button" onClick={prevStep} disabled={currentStep === 1}
-            className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/10 text-black hover:bg-black/20'}`}>
-            Previous
-          </button>
-          {currentStep < 3 ? (
-            <button type="button" onClick={nextStep} className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98] transition-all">
-              Next
-            </button>
+        <div className="reg-card">{renderStep()}</div>
+        {error && <div className="reg-error">{error}</div>}
+        <div className="reg-nav">
+          <button className="reg-btn-ghost" onClick={prevStep} disabled={currentStep === 1}>← Previous</button>
+          {currentStep < TOTAL_STEPS ? (
+            <button className="reg-btn-primary" onClick={nextStep}>Next →</button>
           ) : (
-            <button type="button" onClick={handleSubmit} disabled={loading}
-              className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' : 'bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 hover:scale-[1.02] active:scale-[0.98]'}`}>
-              {loading ? 'Submitting...' : 'Submit'}
+            <button className="reg-btn-primary" onClick={handleSubmit} disabled={loading}>
+              {loading ? 'Submitting…' : 'Submit →'}
             </button>
           )}
         </div>
-        {error && (
-          <div className="mt-3 p-3 bg-red-100 border border-red-200 text-red-700 rounded-xl text-sm text-center">{error}</div>
-        )}
       </div>
     </div>
   );

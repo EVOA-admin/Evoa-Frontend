@@ -11,15 +11,15 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 
 /* ─── Dashboards / routes ─── */
-const DASHBOARDS = { startup:'/startup', investor:'/investor', incubator:'/incubator', viewer:'/viewer' };
-const ROUTES     = { startup:'/register/startup', investor:'/register/investor', incubator:'/register/incubator', viewer:'/viewer' };
+const DASHBOARDS = { startup: '/startup', investor: '/investor', incubator: '/incubator', viewer: '/viewer' };
+const ROUTES = { startup: '/register/startup', investor: '/register/investor', incubator: '/register/incubator', viewer: '/viewer' };
 
 /* ─── Role definitions ─── */
 const roles = [
-  { id:'startup',   name:'Startup',   Icon:IoRocketSharp,   tag:'FOUNDER',   desc:'Launch your innovative ideas and connect with investors', features:['Pitch your startup','Connect with investors','Raise funding'] },
-  { id:'investor',  name:'Investor',  Icon:IoTrendingUp,    tag:'BACKER',    desc:'Discover and invest in the most promising startups',       features:['Discover startups','Make investments','Track portfolio'] },
-  { id:'incubator', name:'Incubator', Icon:IoBusinessSharp, tag:'MENTOR',    desc:'Nurture and support startups in your program',             features:['Manage programs','Support startups','Build network'] },
-  { id:'viewer',    name:'Viewer',    Icon:IoGlasses,       tag:'EXPLORER',  desc:'Explore the ecosystem and discover opportunities',          features:['Explore startups','Learn from pitches','Stay updated'] },
+  { id: 'startup', name: 'Startup', Icon: IoRocketSharp, tag: 'FOUNDER', desc: 'Launch your innovative ideas and connect with investors', features: ['Pitch your startup', 'Connect with investors', 'Raise funding'] },
+  { id: 'investor', name: 'Investor', Icon: IoTrendingUp, tag: 'BACKER', desc: 'Discover and invest in the most promising startups', features: ['Discover startups', 'Make investments', 'Track portfolio'] },
+  { id: 'incubator', name: 'Incubator', Icon: IoBusinessSharp, tag: 'MENTOR', desc: 'Nurture and support startups in your program', features: ['Manage programs', 'Support startups', 'Build network'] },
+  { id: 'viewer', name: 'Viewer', Icon: IoGlasses, tag: 'EXPLORER', desc: 'Explore the ecosystem and discover opportunities', features: ['Explore startups', 'Learn from pitches', 'Stay updated'] },
 ];
 
 const ROLE_CSS = `
@@ -176,9 +176,9 @@ const ROLE_CSS = `
 `;
 
 export default function ChoiceRole() {
-  const [selectedRole, setSelectedRole]   = useState(null);
-  const [isSubmitting, setIsSubmitting]   = useState(false);
-  const [error, setError]                 = useState('');
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { updateUserRole, userRole, loading, roleSelected, registrationCompleted, syncing, signOut } = useAuth();
 
@@ -193,24 +193,28 @@ export default function ChoiceRole() {
     setIsSubmitting(true); setError('');
     try {
       await updateUserRole(selectedRole);
-      navigate(ROUTES[selectedRole] || '/');
+      // Use window.location.href instead of React navigate() so the page
+      // reloads with fresh localStorage cache — avoids stale in-memory
+      // React state blocking navigation on the very first click.
+      window.location.href = ROUTES[selectedRole] || '/';
     } catch (err) {
       const status = err?.status;
-      const msg    = Array.isArray(err?.data?.message) ? err.data.message.join('. ') : err?.data?.message || err?.message || '';
-      if (status === 400)          setError('Invalid role selected. Please try again.');
-      else if (status === 401)     { setError('Session expired. Please log in again.'); setTimeout(() => navigate('/login'), 2000); }
-      else if (msg)                setError(msg);
-      else                         setError('Something went wrong. Please try again.');
+      const msg = Array.isArray(err?.data?.message) ? err.data.message.join('. ') : err?.data?.message || err?.message || '';
+      if (status === 400) setError('Invalid role selected. Please try again.');
+      else if (status === 401) { setError('Session expired. Please log in again.'); setTimeout(() => navigate('/login'), 2000); }
+      else if (msg) setError(msg);
+      else setError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div className="cr-root">
       <style>{ROLE_CSS}</style>
 
       <button className="cr-logout" onClick={async () => { await signOut(); navigate('/'); }}>
-        <IoLogOutOutline size={12}/> Log out
+        <IoLogOutOutline size={12} /> Log out
       </button>
 
       <div className="cr-header">
@@ -255,7 +259,7 @@ export default function ChoiceRole() {
         >
           {isSubmitting ? 'Saving Role…' : 'Continue to Registration'}
         </button>
-        <div className="cr-cta-hint">You can change your role anytime in settings</div>
+        {/* <div className="cr-cta-hint">You can change your role anytime in settings</div> */}
       </div>
     </div>
   );

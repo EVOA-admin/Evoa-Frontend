@@ -1,15 +1,51 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiUpload, FiUser, FiArrowLeft } from "react-icons/fi";
-import { useTheme } from "../../contexts/ThemeContext";
+import { FiUpload, FiArrowLeft } from "react-icons/fi";
 import SearchableSelect from "../../components/shared/SearchableSelect";
-import logo from "../../assets/logo.avif";
+import { useTheme } from "../../contexts/ThemeContext";
 import { updateUserProfile } from "../../services/usersService";
 import storageService from "../../services/storageService";
 
+const REG_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=DM+Mono:wght@300;400&display=swap');
+@keyframes reg-fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.reg-root{min-height:100vh;background:#060607;color:#F4F0E8;font-family:'Cormorant Garamond',serif;display:flex;flex-direction:column;position:relative;overflow-x:hidden}
+.reg-root::before{content:'';position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(244,240,232,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(244,240,232,.025) 1px,transparent 1px);background-size:60px 60px;z-index:0}
+.reg-topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px;background:rgba(6,6,7,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(244,240,232,.06);flex-shrink:0}
+.reg-brand{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.1em;color:#F4F0E8}
+.reg-brand span{color:#E8341A}
+.reg-back{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,240,232,.45);border:1px solid rgba(244,240,232,.1);padding:7px 14px;background:none;cursor:pointer;transition:color .2s,border-color .2s}
+.reg-back:hover{color:#E8341A;border-color:rgba(232,52,26,.35)}
+.reg-inner{flex:1;display:flex;flex-direction:column;max-width:680px;width:100%;margin:0 auto;padding:36px 24px 40px;position:relative;z-index:1}
+.reg-head{margin-bottom:32px;animation:reg-fadeUp .4s ease both}
+.reg-step-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#E8341A;margin-bottom:8px}
+.reg-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,44px);letter-spacing:.04em;color:#F4F0E8;margin-bottom:6px;line-height:.95}
+.reg-subtitle{font-size:14px;font-weight:300;color:rgba(244,240,232,.4);font-style:italic}
+.reg-card{background:#0a0a0f;border:1px solid rgba(244,240,232,.07);padding:28px;flex:1;overflow-y:auto;margin-bottom:24px;animation:reg-fadeUp .4s .1s ease both}
+.reg-section-header{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.05em;color:#F4F0E8;margin:20px 0 16px;padding-top:16px;border-top:1px solid rgba(244,240,232,.06)}
+.reg-section-header:first-child{margin-top:0;padding-top:0;border-top:none}
+.reg-input{width:100%;padding:11px 14px;background:#060607;border:1px solid rgba(244,240,232,.12);color:#F4F0E8;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;outline:none;transition:border-color .2s}
+.reg-input::placeholder{color:rgba(244,240,232,.3)}
+.reg-input:focus{border-color:#E8341A}
+.reg-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,240,232,.4);margin-bottom:6px;display:block}
+.reg-upload{border:1px dashed rgba(244,240,232,.15);padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,240,232,.35)}
+.reg-upload:hover{border-color:rgba(232,52,26,.4);color:#E8341A}
+.reg-chip{display:inline-block;padding:5px 12px;border:1px solid rgba(244,240,232,.12);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,240,232,.5);cursor:pointer;transition:all .2s;background:none}
+.reg-chip:hover{border-color:rgba(232,52,26,.35);color:#E8341A}
+.reg-chip.on{background:rgba(232,52,26,.1);border-color:#E8341A;color:#E8341A}
+.reg-check-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,240,232,.5);padding:6px 0}
+.reg-check-label input{accent-color:#E8341A;width:14px;height:14px}
+.reg-btn-primary{width:100%;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:16px 36px;background:#E8341A;color:#060607;border:none;cursor:pointer;transition:background .2s,transform .15s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));margin-top:8px}
+.reg-btn-primary:hover:not(:disabled){background:#C9230F}
+.reg-btn-primary:active{transform:scale(.97)}
+.reg-btn-primary:disabled{background:rgba(244,240,232,.1);color:rgba(244,240,232,.3);cursor:not-allowed;clip-path:none}
+.reg-error{background:rgba(232,52,26,.08);border:1px solid rgba(232,52,26,.25);padding:12px 16px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(232,52,26,.9);margin-bottom:16px}
+@media(max-width:640px){.reg-inner{padding:20px 16px 32px}.reg-card{padding:18px}.reg-topbar{padding:0 16px}}
+`;
+
 export default function ViewerRegistration() {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const isDark = true; // page shell is always dark — force dark styles throughout
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -136,195 +172,87 @@ export default function ViewerRegistration() {
     }
   };
 
+  const inputCls = "reg-input";
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 overflow-hidden ${isDark ? 'bg-[#060607]' : 'bg-[#f5f2ef]'}`}>
-      <div className="h-screen flex flex-col max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        <div className="mb-4 sm:mb-6 shrink-0">
-          <div className="flex items-center justify-between mb-2 sm:mb-4">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <img src={logo} alt="EVO-A Logo" className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
-              <span className={`text-xl sm:text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>EVO-A</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/choice-role')}
-              className={`flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-1.5 rounded-xl transition-all ${isDark ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-black/60 hover:text-black hover:bg-black/10'
-                }`}
-            >
-              <FiArrowLeft size={15} />
-              Back
-            </button>
-          </div>
-          <h1 className={`text-lg sm:text-2xl font-bold mb-1 sm:mb-2 ${isDark ? 'text-white' : 'text-black'}`}>
-            Viewer Registration
-          </h1>
-          <p className={`text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-            Join as a viewer to explore and discover opportunities
-          </p>
+    <div className="reg-root">
+      <style>{REG_CSS}</style>
+      <div className="reg-topbar">
+        <div className="reg-brand">EVO<span>-A</span></div>
+        <button className="reg-back" onClick={() => navigate('/choice-role')}>
+          <FiArrowLeft size={12} /> Back
+        </button>
+      </div>
+      <div className="reg-inner">
+        <div className="reg-head">
+          <div className="reg-step-label">Viewer Registration</div>
+          <div className="reg-title">Create Your Profile</div>
+          <div className="reg-subtitle">Explore the ecosystem as a viewer — no commitment needed</div>
         </div>
+        <form onSubmit={handleSubmit}>
+          <div className="reg-card">
+            {error && <div className="reg-error">{error}</div>}
 
-        <form onSubmit={handleSubmit} className={`p-3 sm:p-4 md:p-6 space-y-2 sm:space-y-3 md:space-y-4 flex-1 overflow-y-auto ${isDark ? 'bg-[#0f0f10] border border-[rgba(244,240,232,.08)]' : 'bg-white border border-[rgba(0,0,0,.08)]'}`}>
-
-          {/* Error */}
-          {error && (
-            <div className="p-3 bg-red-100 border border-red-200 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <h2 className={`text-lg sm:text-xl font-semibold mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-            1. Basic Identity
-          </h2>
-          <input
-            type="text"
-            placeholder="Full Name"
-            value={formData.fullName}
-            onChange={handleNameChange}
-            required
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-          <input
-            type="text"
-            placeholder="Username"
-            value={formData.username}
-            onChange={(e) => handleInputChange('username', e.target.value)}
-            required
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-
-          {/* Profile Photo */}
-          <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-            Profile Photo (Optional)
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => handleFileUpload(e.target.files[0])}
-              className="hidden"
-            />
-            <div className={`mt-2 border-2 border-dashed cursor-pointer transition-all ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
-              {imagePreview ? (
-                <div className="relative">
-                  <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover" />
-                  <div className={`absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity ${isDark ? 'bg-black/60' : 'bg-white/60'}`}>
-                    <span className="text-xs font-medium">Click to change</span>
-                  </div>
+            <div className="reg-section-header">1. Basic Identity</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <input type="text" placeholder="Full Name" value={formData.fullName} onChange={handleNameChange} required className={inputCls} />
+              <input type="text" placeholder="Username" value={formData.username} onChange={(e) => handleInputChange('username', e.target.value)} required className={inputCls} />
+              <label className="reg-label" style={{cursor:'pointer'}}>
+                Profile Photo (Optional)
+                <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e.target.files[0])} className="hidden" style={{display:'none'}} />
+                <div className={`reg-upload${imagePreview ? ' filled' : ''}`} style={{marginTop:6}}>
+                  {imagePreview
+                    ? <img src={imagePreview} alt="Preview" style={{width:'100%',height:80,objectFit:'cover'}} />
+                    : <><FiUpload style={{margin:'0 auto 4px',display:'block'}} size={18}/><span>Click to upload photo</span></>}
                 </div>
-              ) : (
-                <div className="p-3 sm:p-4 text-center">
-                  <FiUpload className="mx-auto mb-1 sm:mb-2" size={20} />
-                  <span className="text-xs">Click to upload photo</span>
-                </div>
-              )}
-            </div>
-          </label>
-
-          <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-            2. Account Details
-          </h2>
-          <input
-            type="email"
-            placeholder="Email Address"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-          <input
-            type="tel"
-            placeholder="Mobile Number"
-            value={formData.mobile}
-            onChange={(e) => handleInputChange('mobile', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-
-          <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-            3. Location Details
-          </h2>
-          <SearchableSelect
-            value={formData.state}
-            onChange={(value) => handleInputChange('state', value)}
-            options={states.map(state => ({ value: state, label: state }))}
-            placeholder="Select State"
-            isDark={isDark}
-          />
-          <input
-            type="text"
-            placeholder="City"
-            value={formData.city}
-            onChange={(e) => handleInputChange('city', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-          <input
-            type="text"
-            placeholder="Country"
-            value={formData.country}
-            onChange={(e) => handleInputChange('country', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-
-          <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-            4. Interest Selection
-          </h2>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {interests.map(interest => (
-              <label key={interest} className={`flex items-center gap-2 p-2 cursor-pointer ${isDark ? 'hover:bg-white/5' : 'hover:bg-black/5'}`}>
-                <input
-                  type="checkbox"
-                  checked={formData.interests.includes(interest)}
-                  onChange={() => handleArrayChange('interests', interest)}
-                  className="w-4 h-4"
-                />
-                <span className={`text-sm ${isDark ? 'text-white' : 'text-black'}`}>{interest}</span>
               </label>
-            ))}
+            </div>
+
+            <div className="reg-section-header">2. Account Details</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => handleInputChange('email', e.target.value)} className={inputCls} />
+              <input type="tel" placeholder="Mobile Number" value={formData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} className={inputCls} />
+            </div>
+
+            <div className="reg-section-header">3. Location</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <SearchableSelect value={formData.state} onChange={(v) => handleInputChange('state', v)} options={states.map(s => ({ value: s, label: s }))} placeholder="Select State" isDark={true} />
+              <input type="text" placeholder="City" value={formData.city} onChange={(e) => handleInputChange('city', e.target.value)} className={inputCls} />
+              <input type="text" placeholder="Country" value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)} className={inputCls} />
+            </div>
+
+            <div className="reg-section-header">4. Interests</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+              {interests.map(interest => (
+                <button key={interest} type="button"
+                  onClick={() => handleArrayChange('interests', interest)}
+                  className={`reg-chip${formData.interests.includes(interest) ? ' on' : ''}`}>
+                  {interest}
+                </button>
+              ))}
+            </div>
+
+            <div className="reg-section-header">5. Optional Info</div>
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <input type="text" placeholder="Occupation (Student, Working Professional, etc.)" value={formData.occupation} onChange={(e) => handleInputChange('occupation', e.target.value)} className={inputCls} />
+              <input type="text" placeholder="LinkedIn Profile URL (Optional)" value={formData.linkedinProfile} onChange={(e) => handleInputChange('linkedinProfile', e.target.value)} className={inputCls} />
+            </div>
+
+            <div className="reg-section-header">6. Terms & Agreements</div>
+            <div style={{display:'flex',flexDirection:'column',gap:4}}>
+              <label className="reg-check-label">
+                <input type="checkbox" checked={formData.agreeToTerms} onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)} required />
+                I agree to EVOA’s Terms & Privacy Policy
+              </label>
+              <label className="reg-check-label">
+                <input type="checkbox" checked={formData.allowNotifications} onChange={(e) => handleInputChange('allowNotifications', e.target.checked)} />
+                Allow notifications for important updates
+              </label>
+            </div>
           </div>
 
-          <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-            5. Optional Professional Info
-          </h2>
-          <input
-            type="text"
-            placeholder="Occupation (Student, Working Professional, etc.)"
-            value={formData.occupation}
-            onChange={(e) => handleInputChange('occupation', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-          <input
-            type="text"
-            placeholder="LinkedIn Profile URL (Optional)"
-            value={formData.linkedinProfile}
-            onChange={(e) => handleInputChange('linkedinProfile', e.target.value)}
-            className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm border focus:outline-none focus:ring-1 transition-all ${isDark ? 'bg-black/80 border-white/20 text-white placeholder-white/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30' : 'bg-white border-black/20 text-black placeholder-black/50 focus:border-[#E8341A] focus:ring-[#E8341A]/30'}`}
-          />
-
-          <h2 className={`text-lg sm:text-xl font-semibold mt-4 sm:mt-6 mb-3 sm:mb-4 ${isDark ? 'text-white' : 'text-black'}`}>
-            6. Terms & Agreements
-          </h2>
-          <label className={`flex items-center gap-2 cursor-pointer ${isDark ? 'text-white' : 'text-black'}`}>
-            <input
-              type="checkbox"
-              checked={formData.agreeToTerms}
-              onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)}
-              required
-              className="w-4 h-4"
-            />
-            <span className="text-sm">I agree to EVOA's Terms & Privacy Policy</span>
-          </label>
-          <label className={`flex items-center gap-2 cursor-pointer ${isDark ? 'text-white' : 'text-black'}`}>
-            <input
-              type="checkbox"
-              checked={formData.allowNotifications}
-              onChange={(e) => handleInputChange('allowNotifications', e.target.checked)}
-              className="w-4 h-4"
-            />
-            <span className="text-sm">Allow notifications for important updates</span>
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-all mt-4 sm:mt-6 shrink-0 bg-[#E8341A] text-white hover:bg-[#C9230F] shadow-lg shadow-[#E8341A]/30 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-[#E8341A]/40 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
+          <button type="submit" disabled={loading} className="reg-btn-primary">
+            {loading ? 'Creating Account…' : 'Create Account →'}
           </button>
         </form>
       </div>
