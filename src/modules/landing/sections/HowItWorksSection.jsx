@@ -16,7 +16,7 @@ const howItWorksSteps = [
   },
   {
     step: '03',
-    title: 'Discover & Pitch',
+    title: 'Pitch & Discover',
     desc: 'Discover pitches from Home feed, Explore page, and Battleground. Watch pitch reels, like, comment, share, and support.',
     iconName: 'HiMagnifyingGlass'
   },

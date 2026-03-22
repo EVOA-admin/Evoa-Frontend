@@ -1,492 +1,305 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaLinkedin, FaFacebook, FaInstagram } from 'react-icons/fa';
-import { useTheme } from '../../contexts/ThemeContext';
+import { FaLinkedin, FaInstagram } from 'react-icons/fa';
 
-// X (Twitter) Icon
+/* ─── EVOA Modal CSS — matches home page PolicyModal exactly ─── */
+const FOOTER_MODAL_CSS = `
+.ft-modal-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.75);backdrop-filter:blur(10px)}
+.ft-modal-box{position:relative;width:100%;max-width:760px;max-height:80vh;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:#111;border:1px solid rgba(244,240,232,.1);box-shadow:0 40px 120px rgba(0,0,0,.8)}
+.ft-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(244,240,232,.08)}
+.ft-modal-hdr h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.06em;color:#F4F0E8;margin:0}
+.ft-modal-close{background:none;border:none;cursor:pointer;color:rgba(244,240,232,.5);padding:4px;display:flex;transition:color .2s}
+.ft-modal-close:hover{color:#F4F0E8}
+.ft-modal-body{padding:24px;overflow-y:auto;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;line-height:1.8;color:rgba(244,240,232,.7)}
+.ft-modal-body h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.05em;color:#C9A84C;margin:24px 0 8px}
+.ft-modal-body h4{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,240,232,.7);margin:16px 0 6px}
+.ft-modal-body ul{padding-left:20px;margin:8px 0}
+.ft-modal-body li{margin-bottom:4px}
+.ft-modal-body p{margin-bottom:12px}
+.ft-modal-body a{color:#E8341A;text-decoration:none}
+.ft-modal-body a:hover{text-decoration:underline}
+.ft-modal-warn{background:rgba(232,52,26,.08);border:1px solid rgba(232,52,26,.2);border-radius:6px;padding:14px 18px;margin:12px 0;display:flex;gap:12px;align-items:flex-start}
+.ft-modal-warn-icon{color:#E8341A;flex-shrink:0;margin-top:2px}
+.ft-modal-warn strong{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#E8341A;display:block;margin-bottom:6px}
+.ft-modal-community-icon{color:#C9A84C;display:block;margin:0 auto 16px;opacity:.8}
+`;
+
+/* ─── Reusable PolicyModal (dark EVOA style) ─── */
+function PolicyModal({ title, children, onClose }) {
+  useEffect(() => {
+    const esc = e => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', esc);
+    return () => document.removeEventListener('keydown', esc);
+  }, [onClose]);
+  return (
+    <div className="ft-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="ft-modal-box">
+        <div className="ft-modal-hdr">
+          <h2>{title}</h2>
+          <button className="ft-modal-close" onClick={onClose} aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="ft-modal-body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 const XIcon = ({ size = 20, className = '' }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    className={className}
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
   </svg>
 );
 
+/* ─── Footer styles (dark EVOA — no Tailwind) ─── */
+const FOOTER_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=DM+Mono:wght@300;400&display=swap');
+
+.evoa-footer {
+  background:#0A0A0A;
+  border-top:1px solid rgba(244,240,232,.06);
+  padding:64px 80px 32px;
+  font-family:'Cormorant Garamond',serif;
+  position:relative;
+}
+.evoa-footer-grid {
+  display:grid;
+  grid-template-columns:1.8fr 1fr 1fr;
+  gap:48px;
+  margin-bottom:52px;
+}
+.evoa-footer-brand-name {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:26px;letter-spacing:.12em;
+  color:#F4F0E8;margin-bottom:16px;
+}
+.evoa-footer-tagline {
+  font-size:15px;font-weight:300;line-height:1.75;
+  color:rgba(244,240,232,.45);max-width:340px;margin-bottom:24px;
+}
+.evoa-footer-socials { display:flex;align-items:center;gap:14px; }
+.evoa-footer-social-btn {
+  width:34px;height:34px;border-radius:50%;
+  border:1px solid rgba(244,240,232,.12);
+  background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(244,240,232,.55);transition:all .25s;text-decoration:none;
+}
+.evoa-footer-social-btn:hover { border-color:rgba(232,52,26,.4);color:#E8341A; }
+.evoa-footer-col-title {
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:.22em;text-transform:uppercase;
+  color:#E8341A;margin-bottom:20px;
+}
+.evoa-footer-links { list-style:none;padding:0;margin:0; }
+.evoa-footer-links li { margin-bottom:12px; }
+.evoa-footer-links a, .evoa-footer-links button {
+  font-family:'Cormorant Garamond',serif;
+  font-size:15px;font-weight:300;
+  color:rgba(244,240,232,.5);
+  text-decoration:none;background:none;border:none;
+  cursor:pointer;padding:0;transition:color .2s;
+  display:inline-block;
+}
+.evoa-footer-links a:hover, .evoa-footer-links button:hover { color:#F4F0E8; }
+.evoa-footer-bottom {
+  border-top:1px solid rgba(244,240,232,.06);
+  padding-top:28px;text-align:center;
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(244,240,232,.25);
+}
+@media(max-width:1024px){
+  .evoa-footer { padding:48px 40px 28px; }
+  .evoa-footer-grid { grid-template-columns:1fr 1fr;gap:36px; }
+}
+@media(max-width:640px){
+  .evoa-footer { padding:40px 20px 24px; }
+  .evoa-footer-grid { grid-template-columns:1fr;gap:32px; }
+}
+`;
+
 export default function Footer() {
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
-
-  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
-  const [isTermsOpen, setIsTermsOpen] = useState(false);
-  const [isAiDisclaimerOpen, setIsAiDisclaimerOpen] = useState(false);
-  const [isCommunityOpen, setIsCommunityOpen] = useState(false);
-
-  const handleSupportLinkClick = (e, label) => {
-    e.preventDefault();
-    if (label === 'Privacy Policy') setIsPrivacyOpen(true);
-    if (label === 'Terms of Service') setIsTermsOpen(true);
-    if (label === 'AI Disclaimer') setIsAiDisclaimerOpen(true);
-    if (label === 'Community Guidelines') setIsCommunityOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsPrivacyOpen(false);
-    setIsTermsOpen(false);
-    setIsAiDisclaimerOpen(false);
-    setIsCommunityOpen(false);
-  };
+  const [modal, setModal] = useState(null);
+  const close = () => setModal(null);
 
   return (
     <>
-      <footer
-        className={`relative mt-24 transition-all duration-500 backdrop-blur-xl ${isDark
-          ? 'bg-black/70 text-white'
-          : 'bg-white/70 text-black'
-          }`}
-      >
-        {/* Soft top glow */}
-        <div
-          className={`absolute inset-x-0 -top-px h-px ${isDark
-            ? 'bg-gradient-to-r from-transparent via-[#B0FFFA]/30 to-transparent'
-            : 'bg-gradient-to-r from-transparent via-[#00B8A9]/30 to-transparent'
-            }`}
-        />
+      <style>{FOOTER_CSS}</style>
+      <style>{FOOTER_MODAL_CSS}</style>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-10 py-14 md:py-18">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-14">
+      <footer className="evoa-footer">
+        <div className="evoa-footer-grid">
 
-            {/* Brand */}
-            <div className="md:col-span-2">
-              <h3
-                className={`text-2xl font-bold mb-4 bg-gradient-to-r ${isDark
-                  ? 'from-white via-[#B0FFFA] to-white bg-clip-text text-transparent'
-                  : 'from-black via-[#00B8A9] to-black bg-clip-text text-transparent'
-                  }`}
-              >
-                EVO-A
-              </h3>
-
-              <p
-                className={`text-sm leading-relaxed max-w-md ${isDark ? 'text-white/60' : 'text-black/60'
-                  }`}
-              >
-                Revolutionizing the startup–investor ecosystem. Connect, invest,
-                and grow together in the future of entrepreneurship.
-              </p>
-
-              {/* Social Icons */}
-              <div className="flex gap-5 mt-6">
-                {[
-                  { icon: FaLinkedin, link: "https://www.linkedin.com/company/evo-a" },
-                  // { icon: XIcon, link: "https://x.com/evoa" },
-                  // { icon: FaFacebook, link: "https://facebook.com/evoa" },
-                  { icon: FaInstagram, link: "https://instagram.com/evoaofficial" }
-                ].map(({ icon: Icon, link }, i) => (
-                  <a
-                    key={i}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`transition-all duration-300 hover:scale-125 active:scale-95 ${isDark
-                      ? "text-white/50 hover:text-[#B0FFFA]"
-                      : "text-black/50 hover:text-[#00B8A9]"
-                      }`}
-                  >
-                    <Icon size={20} />
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="font-semibold mb-4">Quick Links</h4>
-              <ul className="space-y-3 text-sm">
-                {[
-                  ['Home', '/'],
-                  ['Sign In', '/login'],
-                  ['Sign Up', '/register'],
-                  ['About Us', '/about'],
-                ].map(([label, path]) => (
-                  <li key={label}>
-                    <Link
-                      to={path}
-                      className={`transition-all duration-300 hover:translate-x-1 ${isDark
-                        ? 'text-white/60 hover:text-[#B0FFFA]'
-                        : 'text-black/60 hover:text-[#00B8A9]'
-                        }`}
-                    >
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-3 text-sm">
-                {[
-                  'Privacy Policy',
-                  'Terms of Service',
-                  'AI Disclaimer',
-                  'Community Guidelines',
-                ].map((label) => (
-                  <li key={label}>
-                    <a
-                      href="#"
-                      onClick={(e) => handleSupportLinkClick(e, label)}
-                      className={`transition-all duration-300 hover:translate-x-1 ${isDark
-                        ? 'text-white/60 hover:text-[#B0FFFA]'
-                        : 'text-black/60 hover:text-[#00B8A9]'
-                        }`}
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Copyright */}
-          <div className="mt-14 text-center">
-            <p
-              className={`text-xs tracking-wide ${isDark ? 'text-white/40' : 'text-black/40'
-                }`}
-            >
-              © {new Date().getFullYear()} EVO-A. All rights reserved.
+          {/* Brand */}
+          <div>
+            <div className="evoa-footer-brand-name">EVO-A</div>
+            <p className="evoa-footer-tagline">
+              Revolutionizing the startup–investor ecosystem. Connect, invest, and grow together in the future of entrepreneurship.
             </p>
+            <div className="evoa-footer-socials">
+              <a href="https://www.linkedin.com/company/evo-a" target="_blank" rel="noopener noreferrer" className="evoa-footer-social-btn" aria-label="LinkedIn">
+                <FaLinkedin size={15} />
+              </a>
+              <a href="https://instagram.com/evoaofficial" target="_blank" rel="noopener noreferrer" className="evoa-footer-social-btn" aria-label="Instagram">
+                <FaInstagram size={15} />
+              </a>
+            </div>
           </div>
+
+          {/* Quick Links */}
+          <div>
+            <div className="evoa-footer-col-title">Quick Links</div>
+            <ul className="evoa-footer-links">
+              {[['Home', '/'], ['Sign In', '/login'], ['Sign Up', '/register'], ['About Us', '/about']].map(([label, path]) => (
+                <li key={label}><Link to={path}>{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <div className="evoa-footer-col-title">Support</div>
+            <ul className="evoa-footer-links">
+              {[
+                ['Privacy Policy',       'privacy'],
+                ['Terms of Service',     'terms'],
+                ['AI Disclaimer',        'ai'],
+                ['Community Guidelines', 'community'],
+              ].map(([label, key]) => (
+                <li key={key}>
+                  <button onClick={() => setModal(key)}>{label}</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+        </div>
+
+        <div className="evoa-footer-bottom">
+          © {new Date().getFullYear()} EVO-A · Evoa Technology Private Limited · All rights reserved.
         </div>
       </footer>
 
-      {/* Privacy Policy Modal */}
-      {isPrivacyOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`relative w-full max-w-4xl md:w-[60vw] max-h-[80vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden ${isDark ? 'bg-gray-900 text-white border border-white/10' : 'bg-white text-gray-900 border border-gray-200'}`}>
-            <div className={`flex justify-between items-center px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-              <h2 className="text-xl font-bold">Privacy Policy</h2>
-              <button
-                onClick={closeModal}
-                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-black'}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto">
-              <div className={`space-y-6 text-sm sm:text-base leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                <p>
-                  <strong>Evoa Technology Private Limited</strong> ("Evoa", "Company", "we", "us", or "our") respects your privacy and is committed to protecting your personal data.
-                </p>
-                <p>
-                  This Privacy Policy explains how we collect, use, store, and protect your information when you use:
-                </p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>The Evoa platform</li>
-                  <li>Investor AI</li>
-                  <li>021 AI (Zero to One AI Startup Assistant)</li>
-                  <li>Our website <strong>evoa.co.in</strong></li>
-                  <li>Any related services, applications, or tools</li>
-                </ul>
-                <p className="italic">
-                  By using Evoa services, you agree to the collection and use of information in accordance with this policy.
-                </p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>1. About Evoa</h3>
-                <p>Evoa is a digital platform designed to connect:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Startup founders</li>
-                  <li>Investors</li>
-                  <li>Builders</li>
-                  <li>Startup enthusiasts</li>
-                </ul>
-                <p>
-                  Users can pitch startup ideas through short video reels, explore startups, validate ideas using AI tools, and connect with investors.
-                </p>
-                <p>Evoa integrates artificial intelligence systems including:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li><strong>Investor AI</strong> — an AI assistant that helps evaluate startup pitches and investment insights.</li>
-                  <li><strong>021 AI</strong> — an AI startup assistant that helps transform ideas into startups through guided workflows and AI-powered roles (CEO, CTO, CMO, etc.).</li>
-                </ul>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>2. Information We Collect</h3>
-                <p>We collect different types of information depending on how you interact with the platform.</p>
-
-                <h4 className={`text-md font-semibold mt-4 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>2.1 Personal Information</h4>
-                <p>When you register or use our services, we may collect:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Full name</li>
-                  <li>Username</li>
-                  <li>Email address</li>
-                  <li>Profile photo</li>
-                  <li>Password (encrypted)</li>
-                  <li>Country / location</li>
-                  <li>Startup information</li>
-                  <li>Investor profile information</li>
-                </ul>
-
-                <h4 className={`text-md font-semibold mt-4 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>2.2 Startup Information</h4>
-                <p>If you upload a pitch or startup information, we may collect:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Startup name & description</li>
-                  <li>Pitch videos</li>
-                  <li>Business model information</li>
-                  <li>Financial insights (if voluntarily provided)</li>
-                  <li>Market & product information</li>
-                </ul>
-                <p className="italic">This data may be displayed publicly depending on your settings.</p>
-
-                <h4 className={`text-md font-semibold mt-4 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>2.3 AI Interaction Data</h4>
-                <p>When you interact with Investor AI or 021 AI, we may collect:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Startup ideas you submit</li>
-                  <li>AI prompts and responses</li>
-                  <li>Feedback and ratings</li>
-                  <li>AI generated outputs</li>
-                  <li>Chat logs with AI assistants</li>
-                </ul>
-                <p>This data is used to improve AI performance and service quality.</p>
-
-                <h4 className={`text-md font-semibold mt-4 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>2.4 Usage Data</h4>
-                <p>We automatically collect usage data including:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>IP address, browser type, and device type</li>
-                  <li>Operating system</li>
-                  <li>Pages visited & time spent</li>
-                  <li>Click interactions & engagement with startup pitches</li>
-                </ul>
-
-                <h4 className={`text-md font-semibold mt-4 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>2.5 Cookies and Tracking</h4>
-                <p>We may use cookies, analytics tools, and performance tracking technologies to improve user experience, security, and platform performance. Users can disable cookies through browser settings.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>3. How We Use Your Information</h3>
-                <p>We use collected information to:</p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li><strong>Platform Operations:</strong> Create/manage accounts, display pitches, enable networking, provide messaging.</li>
-                  <li><strong>AI Services:</strong> Operate Investor AI & 021 AI, improve AI responses, and train AI systems.</li>
-                  <li><strong>Platform Improvement:</strong> Enhance features, understand user behavior, optimize experience.</li>
-                  <li><strong>Security:</strong> Prevent fraud, detect suspicious activity, protect users.</li>
-                  <li><strong>Communication:</strong> Send updates, notify about changes, provide support.</li>
-                </ul>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>4. AI System Usage (Investor AI & 021 AI)</h3>
-                <p>Evoa provides AI-powered tools that assist with startup idea validation, market analysis, business models, pitch feedback, and investor insights.</p>
-                <p><strong>Important considerations:</strong></p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>AI responses are informational only.</li>
-                  <li>AI output does <strong>not</strong> constitute financial, legal, or investment advice.</li>
-                  <li>Users should independently verify any AI-generated insights.</li>
-                </ul>
-                <p className="italic">Evoa is not responsible for business decisions made based on AI outputs.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>5. Public Content</h3>
-                <p>Some information may be publicly visible, including pitch videos, descriptions, profiles, and comments. Users are responsible for ensuring they do not upload confidential or proprietary information.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>6. Data Sharing & Security</h3>
-                <p>We do not sell user data. We may share data with service providers (cloud, payment, analytics, AI infrastructure) and if required by Indian law.</p>
-                <p>We implement security measures including encryption and secure authentication. However, no system is 100% secure. Users must protect their credentials.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>7. Retention, Your Rights & Minors</h3>
-                <p>We retain data as long as necessary. Users may access data, update profiles, or request account deletion via <strong>support@evoa.co.in</strong>.</p>
-                <p>Evoa services are not intended for users under 14 years of age.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>8. Contact Information</h3>
-                <p>
-                  <strong>Evoa Technology Private Limited</strong><br />
-                  Email: <a href="mailto:admin@evoa.co.in" className={`transition-colors hover:underline ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`}>support@evoa.co.in</a><br />
-                  Website: <a href="https://evoa.co.in" target="_blank" rel="noopener noreferrer" className={`transition-colors hover:underline ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`}>https://evoa.co.in</a>
-                </p>
-              </div>
+      {/* ── PRIVACY POLICY ── */}
+      {modal === 'privacy' && (
+        <PolicyModal title="Privacy Policy" onClose={close}>
+          <p><strong>Evoa Technology Private Limited</strong> ("Evoa") respects your privacy and is committed to protecting your personal data.</p>
+          <p>This Privacy Policy explains how we collect, use, store, and protect your information when you use the Evoa platform, Investor AI, 021 AI, and our website <strong>evoa.co.in</strong>.</p>
+          <h3>1. About Evoa</h3>
+          <p>Evoa is a digital platform connecting startup founders, investors, builders, and startup enthusiasts. Users can pitch startup ideas through short video reels, explore startups, validate ideas using AI tools, and connect with investors. Evoa integrates AI systems including <strong>Investor AI</strong> and <strong>021 AI</strong>.</p>
+          <h3>2. Information We Collect</h3>
+          <h4>2.1 Personal Information</h4>
+          <p>When you register or use our services, we may collect full name, username, email address, profile photo, password (encrypted), country/location, startup information, and investor profile information.</p>
+          <h4>2.2 Startup Information</h4>
+          <p>If you upload a pitch, we may collect startup name &amp; description, pitch videos, business model information, financial insights (if voluntarily provided), and market &amp; product information.</p>
+          <h4>2.3 AI Interaction Data</h4>
+          <p>When you interact with Investor AI or 021 AI, we may collect startup ideas, AI prompts and responses, feedback and ratings, AI generated outputs, and chat logs.</p>
+          <h4>2.4 Usage Data &amp; Cookies</h4>
+          <p>We automatically collect IP address, browser/device type, operating system, pages visited, and engagement metrics. We may use cookies to improve user experience and security.</p>
+          <h3>3. How We Use Your Information</h3>
+          <p>Platform operations, AI services improvement, platform enhancement, security &amp; fraud prevention, and communication about updates.</p>
+          <h3>4. AI System Usage</h3>
+          <div className="ft-modal-warn">
+            <svg className="ft-modal-warn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+            <div>
+              <strong>Important</strong>
+              AI responses are informational only and do not constitute financial, legal, or investment advice. Evoa is not responsible for business decisions made based on AI outputs.
             </div>
           </div>
-        </div>
+          <h3>5. Data Sharing &amp; Security</h3>
+          <p>We do not sell user data. We may share data with service providers and if required by Indian law. We implement encryption and secure authentication.</p>
+          <h3>6. Retention &amp; Your Rights</h3>
+          <p>We retain data as long as necessary. Users may access data, update profiles, or request account deletion via <a href="mailto:support@evoa.co.in">support@evoa.co.in</a>. Evoa services are not intended for users under 14 years of age.</p>
+          <h3>7. Contact</h3>
+          <p><strong>Evoa Technology Private Limited</strong><br />Email: <a href="mailto:support@evoa.co.in">support@evoa.co.in</a><br />Website: <a href="https://evoa.co.in" target="_blank" rel="noopener noreferrer">evoa.co.in</a></p>
+        </PolicyModal>
       )}
 
-      {/* Terms of Service Modal */}
-      {isTermsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`relative w-full max-w-4xl md:w-[60vw] max-h-[80vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden ${isDark ? 'bg-gray-900 text-white border border-white/10' : 'bg-white text-gray-900 border border-gray-200'}`}>
-            <div className={`flex justify-between items-center px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-              <h2 className="text-xl font-bold">Terms of Service</h2>
-              <button
-                onClick={closeModal}
-                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-black'}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto">
-              <div className={`space-y-6 text-sm sm:text-base leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                <p>
-                  These Terms of Service govern your use of the Evoa platform, Investor AI, 021 AI, and our website <strong>evoa.co.in</strong>.
-                </p>
-                <p className="italic">By accessing Evoa services, you agree to these terms.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>1. Eligibility</h3>
-                <p>To use Evoa, you must:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Be at least 14 years old</li>
-                  <li>Provide accurate information</li>
-                  <li>Comply with all applicable laws</li>
-                </ul>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>2. User Accounts</h3>
-                <p>Users must maintain accurate profile information, keep login credentials secure, and be responsible for activities on their account. Evoa reserves the right to suspend accounts for violations.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>3. Platform Purpose</h3>
-                <p>Evoa is designed to enable startup pitching, help investors discover startups, and assist founders through AI tools.</p>
-                <p className="font-semibold">Evoa does not guarantee funding, investment, or business success.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>4. AI Services Disclaimer</h3>
-                <p>Investor AI and 021 AI provide automated insights. They do <strong>not</strong> provide:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Investment advice</li>
-                  <li>Legal advice</li>
-                  <li>Financial guarantees</li>
-                </ul>
-                <p>Users should perform independent research before making decisions.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>5. Startup Pitches</h3>
-                <p>Founders are responsible for ensuring that:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Their pitches are truthful</li>
-                  <li>They have rights to the information they share</li>
-                  <li>They do not upload misleading or fraudulent information</li>
-                </ul>
-                <p className="italic">Evoa does not verify every startup claim.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>6. Intellectual Property</h3>
-                <p>Users retain ownership of their startup ideas, pitch videos, and uploaded content. However, by uploading content, users grant Evoa a license to display, distribute, and promote the content within the platform.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>7. Prohibited Activities</h3>
-                <p>Users must not:</p>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Upload illegal content</li>
-                  <li>Impersonate others</li>
-                  <li>Spread misinformation</li>
-                  <li>Attempt platform hacking</li>
-                  <li>Use bots to manipulate engagement</li>
-                </ul>
-                <p className={`italic ${isDark ? 'text-red-400' : 'text-red-500'}`}>Violation may result in account suspension.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>8. Payments and Subscriptions</h3>
-                <p>Evoa may offer premium services (startup promotion, analytics, premium AI features). Payments may be processed through third-party payment providers. All fees are non-refundable unless required by law.</p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>9. Limitation of Liability</h3>
-                <p>Evoa is not liable for investment losses, business failures, decisions based on AI outputs, or interactions between users. <strong>Users participate on the platform at their own risk.</strong></p>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>10. Governing Law & Contact</h3>
-                <p>These Terms are governed by the laws of India. We may update these Terms periodically.</p>
-                <p>
-                  <strong>Contact for legal or support queries:</strong><br />
-                  Evoa Technology Private Limited<br />
-                  Email: <a href="mailto:support@evoa.co.in" className={`transition-colors hover:underline ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`}>support@evoa.co.in</a>
-                </p>
-              </div>
+      {/* ── TERMS OF SERVICE ── */}
+      {modal === 'terms' && (
+        <PolicyModal title="Terms of Service" onClose={close}>
+          <p>These Terms govern your use of the Evoa platform, Investor AI, 021 AI, and our website <strong>evoa.co.in</strong>.</p>
+          <h3>1. Eligibility</h3>
+          <p>To use Evoa you must be at least 14 years old, provide accurate information, and comply with all applicable laws.</p>
+          <h3>2. User Accounts</h3>
+          <p>Users must maintain accurate profile information, keep login credentials secure, and be responsible for activities on their account. Evoa reserves the right to suspend accounts for violations.</p>
+          <h3>3. Platform Purpose</h3>
+          <p>Evoa enables startup pitching, helps investors discover startups, and assists founders through AI tools. <strong>Evoa does not guarantee funding, investment, or business success.</strong></p>
+          <h3>4. AI Services</h3>
+          <div className="ft-modal-warn">
+            <svg className="ft-modal-warn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+            <div>
+              <strong>Disclaimer</strong>
+              Investor AI and 021 AI do not provide investment, legal, or financial advice. Users should perform independent research before making decisions.
             </div>
           </div>
-        </div>
+          <h3>5. Startup Pitches</h3>
+          <p>Founders are responsible for ensuring pitches are truthful, they have rights to the information shared, and they do not upload misleading or fraudulent information. Evoa does not verify every startup claim.</p>
+          <h3>6. Intellectual Property</h3>
+          <p>Users retain ownership of their content. By uploading, users grant Evoa a license to display, distribute, and promote content within the platform.</p>
+          <h3>7. Prohibited Activities</h3>
+          <p>Users must not upload illegal content, impersonate others, spread misinformation, attempt platform hacking, or use bots to manipulate engagement. Violation may result in account suspension.</p>
+          <h3>8. Limitation of Liability</h3>
+          <p>Evoa is not liable for investment losses, business failures, decisions based on AI outputs, or interactions between users. <strong>Users participate at their own risk.</strong></p>
+          <h3>9. Governing Law</h3>
+          <p>These Terms are governed by the laws of India. Contact: <a href="mailto:support@evoa.co.in">support@evoa.co.in</a></p>
+        </PolicyModal>
       )}
 
-      {/* AI Disclaimer Modal */}
-      {isAiDisclaimerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`relative w-full max-w-4xl md:w-[60vw] max-h-[80vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden ${isDark ? 'bg-gray-900 text-white border border-white/10' : 'bg-white text-gray-900 border border-gray-200'}`}>
-            <div className={`flex justify-between items-center px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-              <h2 className="text-xl font-bold">AI Disclaimer</h2>
-              <button
-                onClick={closeModal}
-                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-black'}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto">
-              <div className={`space-y-6 text-sm sm:text-base leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                <p>
-                  Evoa provides AI-powered tools including <strong>Investor AI</strong> and <strong>021 AI</strong> to assist users with startup insights, idea validation, and informational analysis.
-                </p>
-
-                <div className={`p-4 rounded-lg border flex items-start gap-4 ${isDark ? 'bg-orange-500/10 border-orange-500/30' : 'bg-orange-50 border-orange-200'}`}>
-                  <svg className={`w-6 h-6 shrink-0 mt-0.5 ${isDark ? 'text-orange-400' : 'text-orange-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                  <div>
-                    <h4 className={`font-bold mb-2 ${isDark ? 'text-orange-200' : 'text-orange-900'}`}>Important AI Limitations</h4>
-                    <p className={`text-sm ${isDark ? 'text-orange-200/80' : 'text-orange-800'}`}>These AI systems generate responses automatically and may contain inaccuracies.</p>
-                  </div>
-                </div>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>The information provided by AI tools:</h3>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Does <strong>not</strong> constitute financial advice</li>
-                  <li>Does <strong>not</strong> constitute legal advice</li>
-                  <li>Does <strong>not</strong> constitute investment advice</li>
-                  <li>Should <strong>not</strong> be solely relied upon for business decisions</li>
-                </ul>
-
-                <p className="font-semibold mt-4">
-                  Users are responsible for independently verifying any information before making decisions.
-                </p>
-                <p className="italic text-sm">
-                  Evoa Technology Private Limited is not responsible for any actions taken based on AI-generated content.
-                </p>
-              </div>
+      {/* ── AI DISCLAIMER ── */}
+      {modal === 'ai' && (
+        <PolicyModal title="AI Disclaimer" onClose={close}>
+          <p>Evoa provides AI-powered tools including <strong>Investor AI</strong> and <strong>021 AI</strong> to assist users with startup insights, idea validation, and informational analysis.</p>
+          <div className="ft-modal-warn">
+            <svg className="ft-modal-warn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+            <div>
+              <strong>Important AI Limitations</strong>
+              These AI systems generate responses automatically and may contain inaccuracies. Always verify independently.
             </div>
           </div>
-        </div>
+          <h3>The AI tools do NOT provide:</h3>
+          <ul>
+            <li>Financial advice</li>
+            <li>Legal advice</li>
+            <li>Investment advice</li>
+            <li>Guarantees of business success</li>
+          </ul>
+          <p>Users are responsible for independently verifying any information before making decisions.</p>
+          <p><em>Evoa Technology Private Limited is not responsible for any actions taken based on AI-generated content.</em></p>
+        </PolicyModal>
       )}
 
-      {/* Community Guidelines Modal */}
-      {isCommunityOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className={`relative w-full max-w-4xl md:w-[60vw] max-h-[80vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden ${isDark ? 'bg-gray-900 text-white border border-white/10' : 'bg-white text-gray-900 border border-gray-200'}`}>
-            <div className={`flex justify-between items-center px-6 py-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-              <h2 className="text-xl font-bold">Community Guidelines</h2>
-              <button
-                onClick={closeModal}
-                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-black'}`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto">
-              <div className={`space-y-6 text-sm sm:text-base leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                <div className={`text-center mb-8 pb-6 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                  <svg className={`w-12 h-12 mx-auto mb-4 opacity-80 ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                  <p className="max-w-2xl mx-auto">
-                    We are building a trusted ecosystem for founders and investors. Respect, honesty, and professionalism are our core values.
-                  </p>
-                </div>
-
-                <h3 className={`text-lg font-bold mt-6 mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Prohibited Content & Actions</h3>
-                <p>Users must <strong>not</strong> upload or share:</p>
-                <ul className="list-disc pl-5 space-y-2">
-                  <li>Fraudulent startup claims or fake traction</li>
-                  <li>Misleading financial information or manipulated metrics</li>
-                  <li>Illegal content of any kind</li>
-                  <li>Hate speech, harassment, or abusive language</li>
-                  <li>Copyrighted material without explicit permission</li>
-                  <li>Confidential or proprietary business information they do not have the rights to share</li>
-                </ul>
-
-                <div className={`p-4 rounded-lg mt-8 ${isDark ? 'bg-red-500/10' : 'bg-red-50'}`}>
-                  <p className={`font-semibold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                    Evoa reserves the right to remove any content that violates these guidelines.
-                  </p>
-                  <p className={`text-sm mt-2 ${isDark ? 'text-red-400/80' : 'text-red-600/80'}`}>
-                    Accounts involved in fraudulent activities may be suspended or permanently banned without prior notice.
-                  </p>
-                </div>
-              </div>
+      {/* ── COMMUNITY GUIDELINES ── */}
+      {modal === 'community' && (
+        <PolicyModal title="Community Guidelines" onClose={close}>
+          <div style={{ textAlign:'center', marginBottom:24, paddingBottom:20, borderBottom:'1px solid rgba(244,240,232,.08)' }}>
+            <svg className="ft-modal-community-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="1.5">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <p>We are building a trusted ecosystem for founders and investors. Respect, honesty, and professionalism are our core values.</p>
+          </div>
+          <h3>Prohibited Content &amp; Actions</h3>
+          <p>Users must <strong>not</strong> upload or share:</p>
+          <ul>
+            <li>Fraudulent startup claims or fake traction</li>
+            <li>Misleading financial information or manipulated metrics</li>
+            <li>Illegal content of any kind</li>
+            <li>Hate speech, harassment, or abusive language</li>
+            <li>Copyrighted material without explicit permission</li>
+            <li>Confidential or proprietary information they do not have the rights to share</li>
+          </ul>
+          <div className="ft-modal-warn">
+            <svg className="ft-modal-warn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+            <div>
+              <strong>Enforcement</strong>
+              Evoa reserves the right to remove any content that violates these guidelines. Accounts involved in fraudulent activities may be suspended or permanently banned without prior notice.
             </div>
           </div>
-        </div>
+        </PolicyModal>
       )}
     </>
   );

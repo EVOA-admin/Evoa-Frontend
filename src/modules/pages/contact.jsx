@@ -1,514 +1,614 @@
-import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { HiMail, HiPhone, HiLocationMarker } from "react-icons/hi";
-import { HiArrowRight } from "react-icons/hi2";
-import { FaLinkedin, FaInstagram } from "react-icons/fa";
-import { FaXTwitter } from "react-icons/fa6";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Footer from "../../components/layout/footer";
+import LandingNav from "../../components/layout/LandingNav";
 
-const SectionTitle = ({ children }) => {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  return (
-    <h2
-      className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-3 ${isDark
-        ? "text-white"
-        : "bg-gradient-to-r from-[#00B8A9] via-[#00C9B7] to-[#00B8A9] bg-clip-text text-transparent"
-        }`}
-    >
-      {children}
-    </h2>
-  );
-};
+/* ─── SCOPED CSS (no body/nav/cursor rules — layout handled by App) ─── */
+const CONTACT_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap');
 
-const CardContainer = ({ children, className = "" }) => {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+/* ── ANIMATIONS ── */
+@keyframes con-fadeUp { from{opacity:0;transform:translateY(40px)} to{opacity:1;transform:translateY(0)} }
+@keyframes con-fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes con-pulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.8;transform:scale(1.05)} }
+@keyframes con-orbit { from{transform:rotate(0deg) translateX(120px) rotate(0deg)} to{transform:rotate(360deg) translateX(120px) rotate(-360deg)} }
+@keyframes con-orbit2 { from{transform:rotate(120deg) translateX(80px) rotate(-120deg)} to{transform:rotate(480deg) translateX(80px) rotate(-480deg)} }
+@keyframes con-orbit3 { from{transform:rotate(240deg) translateX(160px) rotate(-240deg)} to{transform:rotate(600deg) translateX(160px) rotate(-600deg)} }
+@keyframes con-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+@keyframes con-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes con-ripple { 0%{transform:scale(0);opacity:1} 100%{transform:scale(4);opacity:0} }
+@keyframes con-glowPulse { 0%,100%{box-shadow:0 0 20px rgba(0,191,165,.2),0 0 40px rgba(0,191,165,.05)} 50%{box-shadow:0 0 40px rgba(0,191,165,.4),0 0 80px rgba(0,191,165,.15)} }
+@keyframes con-morphBg { 0%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%} 50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%} 100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%} }
+@keyframes con-waveform { 0%,100%{transform:scaleY(.3)} 50%{transform:scaleY(1)} }
+
+/* ── REVEAL SYSTEM ── */
+.cr { opacity:0; transform:translateY(30px); transition: opacity .8s ease, transform .8s ease; }
+.cr.vis { opacity:1; transform:translateY(0); }
+.cr.delay1 { transition-delay:.1s }
+.cr.delay2 { transition-delay:.2s }
+.cr.delay3 { transition-delay:.3s }
+.cr.delay4 { transition-delay:.4s }
+.cr.delay5 { transition-delay:.5s }
+.cr.delay6 { transition-delay:.6s }
+.cr.from-left { transform:translateX(-40px); }
+.cr.from-left.vis { transform:translateX(0); }
+.cr.from-right { transform:translateX(40px); }
+.cr.from-right.vis { transform:translateX(0); }
+
+/* ── INPUT STYLING ── */
+.con-input {
+  width: 100%;
+  background: rgba(244,240,232,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 4px;
+  padding: 14px 18px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  font-weight: 300;
+  color: #F4F0E8;
+  outline: none;
+  transition: border-color .3s, background .3s, box-shadow .3s;
+  position: relative;
+}
+.con-input::placeholder { color: rgba(244,240,232,.25); font-style: italic; }
+.con-input:focus {
+  border-color: #00BFA5;
+  background: rgba(0,191,165,.04);
+  box-shadow: 0 0 0 3px rgba(0,191,165,.08), 0 0 30px rgba(0,191,165,.1);
+}
+.con-input.error { border-color: #E8341A; }
+
+/* ── LABEL ── */
+.con-field-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: #00BFA5;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.con-field-label .req { color: #E8341A; }
+
+/* ── SEND BUTTON ── */
+.con-send-btn {
+  width: 100%;
+  padding: 18px 40px;
+  background: #00BFA5;
+  color: #060607;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  position: relative;
+  overflow: hidden;
+  transition: background .3s, transform .2s;
+}
+.con-send-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+  background-size: 200% 100%;
+  animation: con-shimmer 2.5s infinite;
+  pointer-events: none;
+}
+.con-send-btn:hover { background: #C9A84C; transform: translateY(-2px); }
+.con-send-btn:active { transform: translateY(0); }
+.con-send-btn.sending { opacity: .7; pointer-events: none; }
+
+/* ── CONTACT INFO CARD ── */
+.con-info-card {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: border-color .3s, background .3s, transform .3s;
+  position: relative;
+  overflow: hidden;
+}
+.con-info-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, #00BFA5, transparent);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.con-info-card:hover::before { opacity: 1; }
+.con-info-card:hover {
+  border-color: rgba(0,191,165,.25);
+  background: rgba(0,191,165,.04);
+  transform: translateX(6px);
+}
+
+/* ── ICON BOX ── */
+.con-icon-box {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  background: rgba(0,191,165,.1);
+  border: 1px solid rgba(0,191,165,.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .3s, transform .3s;
+}
+.con-info-card:hover .con-icon-box {
+  background: rgba(0,191,165,.2);
+  transform: scale(1.08) rotate(3deg);
+}
+
+/* ── WAVEFORM ── */
+.con-waveform { display: flex; align-items: center; gap: 2px; height: 16px; }
+.con-waveform-bar {
+  width: 2px;
+  background: #00BFA5;
+  border-radius: 1px;
+  animation: con-waveform .8s ease-in-out infinite;
+  opacity: .6;
+}
+
+/* ── PARTICLE CANVAS ── */
+#con-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .4;
+}
+
+/* ── SUCCESS STATE ── */
+.con-success-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(6,6,7,.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s;
+}
+.con-success-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px) {
+  .con-contact-grid { grid-template-columns: 1fr !important; }
+  .con-hero-title { font-size: clamp(52px,14vw,80px) !important; }
+}
+@media(max-width:480px) {
+  .con-info-stack { gap: 12px !important; }
+}
+`;
+
+/* ─── CANVAS BACKGROUND ─── */
+function ParticleCanvas() {
+  const ref = useRef(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let w, h, particles = [], mouseX = 0, mouseY = 0, raf;
+
+    const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+
+    for (let i = 0; i < 60; i++) {
+      particles.push({
+        x: Math.random() * 1400, y: Math.random() * 900,
+        vx: (Math.random() - .5) * .4, vy: (Math.random() - .5) * .4,
+        r: Math.random() * 1.5 + .3,
+        a: Math.random() * .6 + .1,
+        c: Math.random() > .5 ? '#00BFA5' : '#C9A84C'
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+        const dx = mouseX - p.x, dy = mouseY - p.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 180) { p.vx += dx * 0.00015; p.vy += dy * 0.00015; }
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.c; ctx.globalAlpha = p.a; ctx.fill(); ctx.globalAlpha = 1;
+      });
+      for (let i = 0; i < particles.length; i++) for (let j = i + 1; j < particles.length; j++) {
+        const d = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
+        if (d < 110) {
+          ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = '#00BFA5'; ctx.globalAlpha = (1 - d / 110) * .08; ctx.lineWidth = .5; ctx.stroke(); ctx.globalAlpha = 1;
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(raf); };
+  }, []);
+  return <canvas id="con-canvas" ref={ref} />;
+}
+
+/* ─── ORBITING DECORATION ─── */
+function OrbitDeco() {
   return (
-    <div
-      className={`group relative p-5 sm:p-6 md:p-7 lg:p-8 rounded-xl transition-all duration-300 ${isDark
-        ? "bg-gradient-to-br from-black/80 via-slate-900/70 to-black/80 backdrop-blur-xl border border-[#B0FFFA]/20 hover:border-[#B0FFFA]/40 hover:shadow-2xl hover:shadow-[#B0FFFA]/10"
-        : "bg-white backdrop-blur-xl border border-gray-200/80 hover:border-[#00B8A9]/30 hover:shadow-xl hover:shadow-[#00B8A9]/5"
-        } ${className}`}
-    >
-      {children}
+    <div style={{ position: 'absolute', top: '50%', left: '-80px', transform: 'translateY(-50%)', width: 320, height: 320, pointerEvents: 'none', zIndex: 0 }}>
+      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(0,191,165,.06)' }} />
+      <div style={{ position: 'absolute', inset: 30, borderRadius: '50%', border: '1px solid rgba(201,168,76,.04)' }} />
+      {[1, 2, 3].map(i => (
+        <div key={i} style={{ position: 'absolute', top: '50%', left: '50%', width: 6, height: 6, marginTop: -3, marginLeft: -3, borderRadius: '50%', background: i === 2 ? '#C9A84C' : '#00BFA5', boxShadow: `0 0 12px ${i === 2 ? '#C9A84C' : '#00BFA5'}`, animation: `con-orbit${i === 1 ? '' : i} ${5 + i * 2}s linear infinite` }} />
+      ))}
     </div>
   );
-};
+}
 
+/* ─── WAVEFORM ─── */
+function Waveform({ active }) {
+  return (
+    <div className="con-waveform">
+      {Array.from({ length: 7 }, (_, i) => (
+        <div key={i} className="con-waveform-bar" style={{ height: active ? `${8 + Math.sin(i * 1.2) * 6}px` : '4px', animationDelay: `${i * .08}s`, animationPlayState: active ? 'running' : 'paused' }} />
+      ))}
+    </div>
+  );
+}
+
+/* ─── RIPPLE EFFECT ─── */
+function useRipple() {
+  const [ripples, setRipples] = useState([]);
+  const addRipple = useCallback((e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const id = Date.now();
+    setRipples(r => [...r, { id, x, y }]);
+    setTimeout(() => setRipples(r => r.filter(rp => rp.id !== id)), 800);
+  }, []);
+  return { ripples, addRipple };
+}
+
+/* ─── CONTACT INFO ITEM ─── */
+function InfoCard({ icon, label, value, delay, active }) {
+  return (
+    <div className={`con-info-card cr delay${delay}`}>
+      <div className="con-icon-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00BFA5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.4)', marginBottom: 6 }}>{label}</div>
+        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 16, fontWeight: 300, color: '#F4F0E8', lineHeight: 1.5 }}>{value}</div>
+      </div>
+      {active && <Waveform active />}
+    </div>
+  );
+}
+
+/* ─── FLOATING LABEL FIELD ─── */
+function FloatingField({ label, type = 'text', placeholder, value, onChange, error, multiline }) {
+  const [focused, setFocused] = useState(false);
+  const Tag = multiline ? 'textarea' : 'input';
+  return (
+    <div style={{ position: 'relative' }}>
+      <label className="con-field-label">
+        <span style={{ width: 14, height: 1, background: '#00BFA5', display: 'inline-block' }} />
+        {label} <span className="req">*</span>
+      </label>
+      <Tag
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        className={`con-input${error ? ' error' : ''}`}
+        rows={multiline ? 5 : undefined}
+        style={{ display: 'block', resize: multiline ? 'vertical' : undefined, minHeight: multiline ? 120 : undefined }}
+      />
+      {error && <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: '#E8341A', marginTop: 6, letterSpacing: '.1em' }}>↑ {error}</div>}
+      <div style={{ position: 'absolute', bottom: error ? 20 : 0, left: 0, right: 0, height: 1, background: '#00BFA5', transform: focused ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left', transition: 'transform .3s cubic-bezier(.23,1,.32,1)' }} />
+    </div>
+  );
+}
+
+/* ─── MAIN CONTACT PAGE ─── */
 export default function Contact() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-
+  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [charCount, setCharCount] = useState(0);
+  const { ripples, addRipple } = useRipple();
+  const sectionRef = useRef(null);
+  const formRef = useRef(null);
+  const scanRef = useRef(null);
 
-  const validateForm = () => {
-    const newErrors = {};
+  // Inject scoped CSS
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.id = 'evoa-contact-css';
+    style.textContent = CONTACT_CSS;
+    document.head.appendChild(style);
+    return () => {
+      const el = document.getElementById('evoa-contact-css');
+      if (el) document.head.removeChild(el);
+    };
+  }, []);
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Full name is required";
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = "Name must be at least 2 characters";
-    }
+  // Scroll reveal
+  useEffect(() => {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.cr').forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = "Email address is required";
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
+  // Scanline effect
+  useEffect(() => {
+    let pos = -100;
+    const tick = () => {
+      pos += 0.4;
+      if (pos > 100) pos = -100;
+      if (scanRef.current) scanRef.current.style.top = pos + '%';
+      requestAnimationFrame(tick);
+    };
+    const raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
-    if (!formData.subject.trim()) {
-      newErrors.subject = "Subject is required";
-    } else if (formData.subject.trim().length < 5) {
-      newErrors.subject = "Subject must be at least 5 characters";
-    }
-
-    if (!formData.message.trim()) {
-      newErrors.message = "Message is required";
-    } else if (formData.message.trim().length < 20) {
-      newErrors.message = "Message must be at least 20 characters";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validate = () => {
+    const e = {};
+    if (!form.name.trim()) e.name = 'Name is required';
+    if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) e.email = 'Valid email required';
+    if (!form.subject.trim()) e.subject = 'Subject is required';
+    if (form.message.trim().length < 10) e.message = 'Message must be at least 10 characters';
+    return e;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+  const handleSend = (e) => {
+    addRipple(e);
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setErrors({});
+    setSending(true);
+    setTimeout(() => { setSending(false); setSent(true); }, 2200);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-
-    try {
-      // TODO: Replace with your actual API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      console.log("Contact form submitted:", formData);
-
-      setSubmitStatus("success");
-      setFormData({ name: "", email: "", subject: "", message: "" });
-
-      setTimeout(() => setSubmitStatus(null), 5000);
-    } catch (error) {
-      console.error("Submission error:", error);
-      setSubmitStatus("error");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleChange = (field) => (e) => {
+    setForm(f => ({ ...f, [field]: e.target.value }));
+    if (field === 'message') setCharCount(e.target.value.length);
+    if (errors[field]) setErrors(er => ({ ...er, [field]: '' }));
   };
-
-  const contactInfo = [
-    {
-      icon: HiMail,
-      title: "Email",
-      value: "admin@evoa.co.in",
-      link: "mailto:contact@evoa.com",
-    },
-    {
-      icon: HiPhone,
-      title: "Phone",
-      value: "+91 9636641861, 9759054403",
-      link: "tel:+919636641861",
-    },
-    {
-      icon: HiLocationMarker,
-      title: "Address",
-      value: "Vasant Kunj, New Delhi, 110070",
-      link: null,
-    },
-  ];
-
-  const socialLinks = [
-    { icon: FaLinkedin, name: "LinkedIn", url: "https://linkedin.com/company/evo-a" },
-    // { icon: FaXTwitter, name: "X (Twitter)", url: "https://twitter.com/evoa" },
-    { icon: FaInstagram, name: "Instagram", url: "https://instagram.com/evoaofficial" },
-  ];
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-black" : "bg-gradient-to-br from-gray-50 via-[#B0FFFA]/5 to-gray-50"
-        }`}
-    >
-      <section
-        className="py-12 sm:py-16 md:py-20 lg:py-24"
-        aria-labelledby="contact-heading"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-10">
-          {/* Header */}
-          <header className="text-center mb-10 sm:mb-12 md:mb-16">
-            <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 backdrop-blur-xl border font-semibold ${isDark
-                ? "bg-[#B0FFFA]/10 border-[#B0FFFA]/30 text-[#B0FFFA]"
-                : "bg-[#00B8A9]/10 border-[#00B8A9]/20 text-[#00B8A9]"
-                }`}
-            >
-              <span className="text-xs tracking-wider uppercase">
-                Contact Us
-              </span>
-            </div>
-            <SectionTitle>Get in Touch</SectionTitle>
-            <p
-              className={`text-base sm:text-lg md:text-xl max-w-3xl mx-auto mt-4 leading-relaxed ${isDark ? "text-slate-300" : "text-gray-600"
-                }`}
-            >
-              Have a question or want to discuss a partnership? Our team is here to help.
-              <br className="hidden sm:block" />
-              We typically respond within 24 business hours.
-            </p>
-          </header>
+    <>
+      <LandingNav />
+      <ParticleCanvas />
 
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10 items-start">
-            {/* Contact Information - Left Side */}
-            <aside className="space-y-5 sm:space-y-6">
-              {/* Contact Cards */}
-              <div className="space-y-4">
-                {contactInfo.map((info, idx) => {
-                  const IconComponent = info.icon;
+      {/* ── HERO SECTION ── */}
+      <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(100px,14vw,160px) 24px 80px', position: 'relative', overflow: 'hidden', zIndex: 1, background: '#060607' }}>
 
-                  const content = (
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={`shrink-0 inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${isDark
-                          ? "bg-[#B0FFFA]/10 border border-[#B0FFFA]/20"
-                          : "bg-[#00B8A9]/10 border border-[#00B8A9]/20"
-                          }`}
-                      >
-                        <IconComponent
-                          size={22}
-                          className={isDark ? "text-[#B0FFFA]" : "text-[#00B8A9]"}
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3
-                          className={`font-semibold text-sm mb-1.5 ${isDark ? "text-slate-300" : "text-gray-500"
-                            }`}
-                        >
-                          {info.title}
-                        </h3>
-                        <p
-                          className={`text-base sm:text-lg font-medium ${info.link
-                            ? isDark
-                              ? "text-white hover:text-[#B0FFFA] cursor-pointer"
-                              : "text-gray-900 hover:text-[#00B8A9] cursor-pointer"
-                            : isDark
-                              ? "text-white"
-                              : "text-gray-900"
-                            } transition-colors`}
-                        >
-                          {info.value}
-                        </p>
-                      </div>
-                    </div>
-                  );
+        <div style={{ position: 'absolute', top: '20%', left: '-15%', width: 400, height: 400, background: 'radial-gradient(circle,rgba(0,191,165,.07),transparent 65%)', animation: 'con-morphBg 8s ease-in-out infinite', filter: 'blur(40px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '15%', right: '-10%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(201,168,76,.06),transparent 65%)', animation: 'con-morphBg 11s ease-in-out infinite reverse', filter: 'blur(50px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 300, background: 'radial-gradient(circle,rgba(232,52,26,.04),transparent 60%)', pointerEvents: 'none', filter: 'blur(60px)' }} />
 
-                  return (
-                    <CardContainer key={idx} className="hover:scale-[1.01]">
-                      {info.link ? (
-                        <a href={info.link} className="block">
-                          {content}
-                        </a>
-                      ) : (
-                        content
-                      )}
-                    </CardContainer>
-                  );
-                })}
+        {/* ghost text */}
+        <div style={{ position: 'absolute', fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(80px,18vw,240px)', color: 'rgba(244,240,232,.015)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', whiteSpace: 'nowrap', pointerEvents: 'none', letterSpacing: '.1em', userSelect: 'none' }}>CONTACT</div>
+
+        {/* tag */}
+        <div style={{ opacity: 0, animation: 'con-fadeUp .7s ease forwards .2s' }}>
+          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.28em', textTransform: 'uppercase', color: '#00BFA5', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 28, border: '1px solid rgba(0,191,165,.2)', padding: '6px 16px', borderRadius: 40 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00BFA5', boxShadow: '0 0 8px #00BFA5', display: 'inline-block', animation: 'con-pulse 2s ease-in-out infinite' }} />
+            Signal Transmission Open
+          </div>
+        </div>
+
+        {/* main title */}
+        <div style={{ opacity: 0, animation: 'con-fadeUp .9s ease forwards .4s', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <h1 className="con-hero-title" style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(48px,7vw,100px)', lineHeight: 1.05, color: '#F4F0E8', letterSpacing: '-.01em', marginBottom: 8 }}>
+            Let's build<br />
+            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontStyle: 'normal', fontWeight: 400, fontSize: 'clamp(60px,9vw,130px)', lineHeight: .88, letterSpacing: '.03em', display: 'block' }}>
+              <span style={{ color: '#00BFA5' }}>something</span>{' '}
+              <span style={{ WebkitTextStroke: '1px #C9A84C', WebkitTextFillColor: 'transparent' }}>extraordinary</span>
+            </span>
+          </h1>
+        </div>
+
+        {/* sub */}
+        <div style={{ opacity: 0, animation: 'con-fadeUp .9s ease forwards .6s', textAlign: 'center', maxWidth: 560, marginTop: 28 }}>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(16px,2vw,20px)', fontWeight: 300, lineHeight: 1.75, color: 'rgba(244,240,232,0.5)' }}>
+            Have a question, partnership inquiry, or just want to say hello? Our team receives your signal and responds within 24 hours.
+          </p>
+        </div>
+
+        {/* scroll hint */}
+        <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0, animation: 'con-fadeIn 1s ease forwards 1.2s' }}>
+          <div style={{ width: 1, height: 48, background: 'linear-gradient(to bottom,#00BFA5,transparent)', animation: 'con-float 1.8s ease-in-out infinite' }} />
+          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.35)' }}>Scroll</div>
+        </div>
+      </section>
+
+      {/* ── MAIN CONTACT SECTION ── */}
+      <section ref={sectionRef} style={{ padding: 'clamp(60px,8vw,120px) clamp(20px,5vw,80px)', position: 'relative', zIndex: 1, background: '#060607' }}>
+
+        {/* section heading */}
+        <div style={{ textAlign: 'center', marginBottom: 80, position: 'relative', zIndex: 1 }}>
+          <div className="cr" style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.26em', textTransform: 'uppercase', color: '#E8341A', marginBottom: 20, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 28, height: 1, background: '#E8341A', display: 'inline-block' }} />Transmission Center<span style={{ width: 28, height: 1, background: '#E8341A', display: 'inline-block' }} />
+          </div>
+          <h2 className="cr delay1" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(48px,7vw,88px)', letterSpacing: '.04em', color: '#F4F0E8', lineHeight: .9, marginBottom: 20 }}>
+            Get In <span style={{ color: '#00BFA5' }}>Touch</span>
+          </h2>
+          <p className="cr delay2" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, fontWeight: 300, color: 'rgba(244,240,232,0.5)', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+            We typically respond within 24 business hours. Your message travels at the speed of ambition.
+          </p>
+        </div>
+
+        {/* grid */}
+        <div className="con-contact-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 40, maxWidth: 1200, margin: '0 auto', alignItems: 'start' }}>
+
+          {/* ── LEFT: Info Panel ── */}
+          <div style={{ position: 'relative' }}>
+            <OrbitDeco />
+            <div className="con-info-stack" style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', zIndex: 1 }}>
+
+              <InfoCard delay={2}
+                icon={<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></>}
+                label="Email"
+                value="admin@evoa.co.in"
+                active
+              />
+
+              <InfoCard delay={3}
+                icon={<><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></>}
+                label="Phone"
+                value="+91 9636641861, 9759054403"
+              />
+
+              <InfoCard delay={4}
+                icon={<><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></>}
+                label="Address"
+                value="Shanti Nagar, Bareilly, 243001"
+              />
+
+              {/* Follow Us */}
+              <div className="cr delay5" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '24px 28px' }}>
+                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: '.06em', color: '#F4F0E8', marginBottom: 10 }}>Follow Us</div>
+                <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 300, color: 'rgba(244,240,232,0.35)', marginBottom: 20, lineHeight: 1.6 }}>Connect for updates, startup stories, and ecosystem news.</p>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  {[
+                    { label: 'LinkedIn', href: 'https://linkedin.com/company/evo-a', icon: <><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></> },
+                    { label: 'Instagram', href: 'https://instagram.com/evoaofficial', icon: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></> }
+                  ].map(s => (
+                    <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                      style={{ width: 44, height: 44, border: '1px solid rgba(0,191,165,.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'all .3s', background: 'rgba(0,191,165,.05)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,165,.15)'; e.currentTarget.style.borderColor = 'rgba(0,191,165,.5)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,165,.05)'; e.currentTarget.style.borderColor = 'rgba(0,191,165,.2)'; e.currentTarget.style.transform = ''; }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00BFA5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{s.icon}</svg>
+                    </a>
+                  ))}
+                </div>
               </div>
 
-              {/* Social Links */}
-              <CardContainer>
-                <h3
-                  className={`font-semibold text-lg mb-4 ${isDark ? "text-white" : "text-gray-900"
-                    }`}
-                >
-                  Follow Us
-                </h3>
-                <p
-                  className={`text-sm mb-4 ${isDark ? "text-slate-300" : "text-gray-600"
-                    }`}
-                >
-                  Connect with us on social media for updates and news.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  {socialLinks.map((social, idx) => {
-                    const IconComponent = social.icon;
-                    return (
-                      <a
-                        key={idx}
-                        href={social.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 hover:-translate-y-1 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isDark
-                          ? "bg-[#B0FFFA]/10 text-[#B0FFFA] hover:bg-[#B0FFFA]/20 border border-[#B0FFFA]/20 focus:ring-[#B0FFFA]/60 focus:ring-offset-black"
-                          : "bg-[#00B8A9]/10 text-[#00B8A9] hover:bg-[#00B8A9]/20 border border-[#00B8A9]/20 focus:ring-[#00B8A9]/60 focus:ring-offset-white"
-                          }`}
-                        aria-label={social.name}
-                      >
-                        <IconComponent size={20} />
-                      </a>
-                    );
-                  })}
+              {/* Response time stat */}
+              <div className="cr delay6" style={{ background: 'linear-gradient(135deg,rgba(0,191,165,.08),rgba(201,168,76,.05))', border: '1px solid rgba(0,191,165,.15)', borderRadius: 8, padding: '20px 28px', display: 'flex', alignItems: 'center', gap: 20 }}>
+                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 48, lineHeight: 1, color: '#00BFA5', letterSpacing: '.04em' }}>24h</div>
+                <div>
+                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.35)', marginBottom: 4 }}>Response Time</div>
+                  <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 300, color: 'rgba(244,240,232,.6)' }}>We read every message personally</div>
                 </div>
-              </CardContainer>
-            </aside>
+              </div>
+            </div>
+          </div>
 
-            {/* Contact Form - Right Side */}
-            <div>
-              <CardContainer>
-                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-                  <div className="mb-6">
-                    <h2
-                      className={`text-xl sm:text-2xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"
-                        }`}
-                    >
-                      Send Us a Message
-                    </h2>
-                    <p className={`text-sm ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                      Fill out the form below and we'll get back to you shortly.
-                    </p>
-                  </div>
+          {/* ── RIGHT: Contact Form ── */}
+          <div className="cr from-right delay2" ref={formRef} style={{ background: 'rgba(10,10,12,.6)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 'clamp(28px,4vw,52px)', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(20px)', animation: 'con-glowPulse 4s ease-in-out infinite' }}>
 
-                  {/* Success/Error Messages */}
-                  {submitStatus === "success" && (
-                    <div className={`p-4 rounded-lg border ${isDark
-                      ? "bg-[#B0FFFA]/10 border-[#B0FFFA]/30"
-                      : "bg-green-50 border-green-200"
-                      }`}>
-                      <p className={`text-sm font-medium ${isDark ? "text-[#B0FFFA]" : "text-green-800"
-                        }`}>
-                        ✓ Message sent successfully! We'll respond within 24 hours.
-                      </p>
-                    </div>
-                  )}
+            {/* scanline effect */}
+            <div ref={scanRef} style={{ position: 'absolute', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,rgba(0,191,165,.3),transparent)', pointerEvents: 'none', zIndex: 0 }} />
 
-                  {submitStatus === "error" && (
-                    <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                      <p className="text-sm font-medium text-red-800 dark:text-red-300">
-                        ✗ Something went wrong. Please try again or contact us directly.
-                      </p>
-                    </div>
-                  )}
+            {/* top accent */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,#00BFA5 40%,#C9A84C 60%,transparent)' }} />
 
-                  <div className="space-y-5">
-                    {/* Name */}
-                    <div>
-                      <label
-                        htmlFor="name"
-                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
-                          }`}
-                      >
-                        Full Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="name"
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        required
-                        autoComplete="name"
-                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${errors.name
-                          ? "border-red-500 focus:ring-red-500"
-                          : isDark
-                            ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
-                            : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                          } focus:outline-none`}
-                        placeholder="John Doe"
-                        aria-required="true"
-                        aria-invalid={!!errors.name}
-                      />
-                      {errors.name && (
-                        <p className="mt-1 text-xs text-red-500">{errors.name}</p>
-                      )}
-                    </div>
+            {/* form header */}
+            <div style={{ marginBottom: 36, position: 'relative', zIndex: 1 }}>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: '#00BFA5', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Waveform active={!sent} />
+                <span>Send Us a Message</span>
+              </div>
+              <h3 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 36, letterSpacing: '.04em', color: '#F4F0E8', lineHeight: 1, marginBottom: 10 }}>Start a Conversation</h3>
+              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, color: 'rgba(244,240,232,0.35)', lineHeight: 1.6 }}>Fill out the form and we'll get back to you shortly.</p>
+            </div>
 
-                    {/* Email */}
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
-                          }`}
-                      >
-                        Email Address <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        autoComplete="email"
-                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${errors.email
-                          ? "border-red-500 focus:ring-red-500"
-                          : isDark
-                            ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
-                            : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                          } focus:outline-none`}
-                        placeholder="john@company.com"
-                        aria-required="true"
-                        aria-invalid={!!errors.email}
-                      />
-                      {errors.email && (
-                        <p className="mt-1 text-xs text-red-500">{errors.email}</p>
-                      )}
-                    </div>
+            {/* success overlay */}
+            <div className={`con-success-overlay${sent ? ' visible' : ''}`}>
+              <div style={{ fontSize: 56, marginBottom: 24, animation: sent ? 'con-fadeUp .5s ease' : 'none' }}>✦</div>
+              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 48, letterSpacing: '.06em', color: '#00BFA5', marginBottom: 12 }}>Signal Received</div>
+              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, fontWeight: 300, color: 'rgba(244,240,232,0.55)', textAlign: 'center', maxWidth: 320, lineHeight: 1.7 }}>Your message has been transmitted. We'll respond within 24 hours.</p>
+              <button onClick={() => { setSent(false); setForm({ name: '', email: '', subject: '', message: '' }); setCharCount(0); }}
+                style={{ marginTop: 32, fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: '#00BFA5', background: 'transparent', border: '1px solid rgba(0,191,165,.3)', padding: '12px 28px', cursor: 'pointer', transition: 'all .3s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,165,.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              >Send Another →</button>
+            </div>
 
-                    {/* Subject */}
-                    <div>
-                      <label
-                        htmlFor="subject"
-                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
-                          }`}
-                      >
-                        Subject <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="subject"
-                        type="text"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                        className={`w-full px-4 py-3 rounded-xl border text-sm transition-all duration-200 ${errors.subject
-                          ? "border-red-500 focus:ring-red-500"
-                          : isDark
-                            ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
-                            : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                          } focus:outline-none`}
-                        placeholder="Partnership Inquiry"
-                        aria-required="true"
-                        aria-invalid={!!errors.subject}
-                      />
-                      {errors.subject && (
-                        <p className="mt-1 text-xs text-red-500">{errors.subject}</p>
-                      )}
-                    </div>
+            {/* form fields */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <FloatingField label="Full Name" placeholder="Aditya Singh" value={form.name} onChange={handleChange('name')} error={errors.name} />
+                <FloatingField label="Email Address" type="email" placeholder="hello@evoa.co.in" value={form.email} onChange={handleChange('email')} error={errors.email} />
+              </div>
+              <FloatingField label="Subject" placeholder="Partnership Inquiry" value={form.subject} onChange={handleChange('subject')} error={errors.subject} />
+              <div>
+                <FloatingField label="Message" placeholder="Tell us about your inquiry, startup idea, or partnership opportunity..." value={form.message} onChange={handleChange('message')} error={errors.message} multiline />
+                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: charCount > 500 ? '#C9A84C' : 'rgba(244,240,232,0.35)', marginTop: 8, textAlign: 'right', letterSpacing: '.1em' }}>{charCount} chars</div>
+              </div>
 
-                    {/* Message */}
-                    <div>
-                      <label
-                        htmlFor="message"
-                        className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-gray-700"
-                          }`}
-                      >
-                        Message <span className="text-red-500">*</span>
-                      </label>
-                      <textarea
-                        id="message"
-                        name="message"
-                        value={formData.message}
-                        onChange={handleChange}
-                        required
-                        rows={6}
-                        className={`w-full px-4 py-3 rounded-xl border resize-none text-sm transition-all duration-200 ${errors.message
-                          ? "border-red-500 focus:ring-red-500"
-                          : isDark
-                            ? "bg-black/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-[#B0FFFA] focus:ring-2 focus:ring-[#B0FFFA]/20"
-                            : "bg-white border-gray-300 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-2 focus:ring-[#00B8A9]/20"
-                          } focus:outline-none`}
-                        placeholder="Tell us about your inquiry..."
-                        aria-required="true"
-                        aria-invalid={!!errors.message}
-                      />
-                      {errors.message && (
-                        <p className="mt-1 text-xs text-red-500">{errors.message}</p>
-                      )}
-                    </div>
+              {/* send button */}
+              <div style={{ position: 'relative', overflow: 'hidden' }}>
+                <button className={`con-send-btn${sending ? ' sending' : ''}`} onClick={handleSend}>
+                  {sending ? (
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                      <span style={{ display: 'flex', gap: 4 }}>
+                        {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#060607', animation: 'con-pulse .8s ease-in-out infinite', animationDelay: `${i * .2}s` }} />)}
+                      </span>
+                      Transmitting Signal...
+                    </span>
+                  ) : 'Send Message →'}
+                </button>
+                {/* ripples */}
+                {ripples.map(r => (
+                  <span key={r.id} style={{ position: 'absolute', left: r.x, top: r.y, width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,.3)', transform: 'translate(-50%,-50%) scale(0)', animation: 'con-ripple .8s ease-out forwards', pointerEvents: 'none' }} />
+                ))}
+              </div>
 
-                    {/* Submit Button */}
-                    <div className="pt-2">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-base px-6 py-3.5 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${isSubmitting
-                          ? "opacity-60 cursor-not-allowed"
-                          : "hover:scale-[1.02] active:scale-[0.98]"
-                          } ${isDark
-                            ? "bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black shadow-lg hover:shadow-[#B0FFFA]/40 focus:ring-[#B0FFFA] focus:ring-offset-black"
-                            : "bg-gradient-to-r from-[#00B8A9] to-[#00C9B7] text-white shadow-lg hover:shadow-[#00B8A9]/40 focus:ring-[#00B8A9] focus:ring-offset-white"
-                          }`}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <svg
-                              className="animate-spin h-5 w-5"
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              />
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              />
-                            </svg>
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            Send Message
-                            <HiArrowRight size={18} aria-hidden="true" />
-                          </>
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Privacy Notice */}
-                    <p
-                      className={`text-xs text-center leading-relaxed pt-1 ${isDark ? "text-slate-400" : "text-gray-500"
-                        }`}
-                    >
-                      By submitting this form, you agree to our privacy policy. We respect your
-                      privacy and will never share your information with third parties.
-                    </p>
-                  </div>
-                </form>
-              </CardContainer>
+              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 12, fontWeight: 300, color: 'rgba(244,240,232,.3)', textAlign: 'center', lineHeight: 1.6, fontStyle: 'italic' }}>
+                By submitting this form, you agree to our privacy policy. We respect your privacy and will never share your information with third parties.
+              </p>
             </div>
           </div>
         </div>
       </section>
+
+      {/* ── MAP / LOCATION STRIP ── */}
+      <section style={{ padding: 'clamp(40px,6vw,80px) clamp(20px,5vw,80px)', position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,.04)', background: '#060607' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32 }}>
+          <div className="cr">
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.35)', marginBottom: 12 }}>Located In</div>
+            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(32px,5vw,56px)', letterSpacing: '.04em', color: '#F4F0E8', lineHeight: 1 }}>UP, <span style={{ color: '#C9A84C' }}>India</span></div>
+            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 16, fontWeight: 300, color: 'rgba(244,240,232,0.55)', marginTop: 8 }}>Bareilly, 243001</div>
+          </div>
+          {/* Coordinate display */}
+          <div className="cr delay3" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: 'rgba(0,191,165,.5)', letterSpacing: '.12em', textAlign: 'right' }}>
+            <div>28.3676° N</div>
+            <div>79.4304° E</div>
+            <div style={{ marginTop: 8, fontSize: 9, color: 'rgba(244,240,232,0.35)' }}>UTC+05:30 · IST</div>
+          </div>
+          {/* visual grid */}
+          <div className="cr delay2" style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: 6 }}>
+            {Array.from({ length: 40 }, (_, i) => (
+              <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: i === 20 ? '#00BFA5' : 'rgba(255,255,255,.04)', boxShadow: i === 20 ? '0 0 12px #00BFA5' : 'none', animation: i === 20 ? 'con-pulse 2s ease-in-out infinite' : 'none', transition: 'background .3s' }} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       <Footer />
-    </div>
+    </>
   );
 }

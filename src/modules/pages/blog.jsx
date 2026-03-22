@@ -1,309 +1,323 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { HiCalendar, HiUser, HiArrowRight } from "react-icons/hi2";
+import { useState, useEffect, useRef } from "react";
 import Footer from "../../components/layout/footer";
+import LandingNav from "../../components/layout/LandingNav";
+
+/* ─── SCOPED CSS — matches About & Contact design system ─── */
+const BLOG_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap');
+
+/* ── ANIMATIONS ── */
+@keyframes blg-fadeUp   { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
+@keyframes blg-cardIn   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes blg-fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes blg-shimmer  { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes blg-pulse    { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
+
+/* ── REVEAL SYSTEM ── */
+.blg-reveal {
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .75s ease, transform .75s ease;
+}
+.blg-reveal.vis { opacity:1; transform:translateY(0); }
+.blg-reveal.d1 { transition-delay:.1s }
+.blg-reveal.d2 { transition-delay:.2s }
+.blg-reveal.d3 { transition-delay:.3s }
+.blg-reveal.d4 { transition-delay:.4s }
+.blg-reveal.d5 { transition-delay:.5s }
+.blg-reveal.d6 { transition-delay:.6s }
+
+/* ── ROOT ── */
+.blg-root {
+  background:#060607;
+  color:#F4F0E8;
+  font-family:'Cormorant Garamond',Georgia,serif;
+  min-height:100vh;
+  position:relative;
+  overflow-x:hidden;
+}
+
+/* ── HERO ── */
+.blg-hero {
+  position:relative;
+  padding:140px 80px 100px;
+  text-align:center;
+  overflow:hidden;
+}
+.blg-hero-ghost {
+  position:absolute;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(140px,22vw,340px);
+  color:rgba(244,240,232,.018);
+  left:50%;transform:translateX(-50%);
+  top:-20px;line-height:1;pointer-events:none;user-select:none;
+  white-space:nowrap;
+}
+.blg-pill {
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'DM Mono',monospace;font-size:9px;
+  letter-spacing:.22em;text-transform:uppercase;color:#E8341A;
+  border:1px solid rgba(232,52,26,.3);padding:6px 18px;border-radius:40px;
+  margin-bottom:28px;
+}
+.blg-pill::before {
+  content:'';width:6px;height:6px;border-radius:50%;background:#E8341A;
+  display:inline-block;animation:blg-pulse 2s ease-in-out infinite;
+}
+.blg-hero h1 {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(56px,8vw,120px);
+  letter-spacing:.04em;line-height:.9;
+  margin-bottom:24px;
+}
+.blg-hero h1 em {
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-weight:300;
+  color:#C9A84C;font-size:.65em;
+  display:block;line-height:1.3;letter-spacing:.02em;
+}
+.blg-hero-sub {
+  font-size:clamp(16px,2vw,20px);font-weight:300;
+  color:rgba(244,240,232,.55);line-height:1.75;
+  max-width:560px;margin:0 auto 48px;
+}
+
+/* ── DIVIDER ── */
+.blg-divider {
+  width:80px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(232,52,26,.5),rgba(201,168,76,.4),transparent);
+  margin:0 auto 60px;
+}
+
+/* ── CATEGORIES ── */
+.blg-cats {
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+  margin-bottom:72px;
+}
+.blg-cat-btn {
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;padding:9px 22px;border-radius:40px;cursor:pointer;
+  border:1px solid rgba(244,240,232,.12);
+  color:rgba(244,240,232,.5);background:transparent;
+  transition:all .25s;
+}
+.blg-cat-btn:hover { border-color:rgba(244,240,232,.3);color:#F4F0E8; }
+.blg-cat-btn.active {
+  background:#E8341A;border-color:#E8341A;color:#060607;
+}
+
+/* ── GRID ── */
+.blg-section {
+  padding:0 80px 120px;
+  position:relative;
+}
+.blg-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:32px;
+  max-width:1400px;
+  margin:0 auto;
+}
+
+/* ── CARD ── */
+.blg-card {
+  background:#0f0f10;
+  border:1px solid rgba(244,240,232,.07);
+  transition:border-color .3s,transform .35s;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.blg-card:hover {
+  border-color:rgba(232,52,26,.25);
+  transform:translateY(-6px);
+}
+.blg-card-img {
+  position:relative;width:100%;height:220px;overflow:hidden;
+}
+.blg-card-img img {
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .55s ease;
+}
+.blg-card:hover .blg-card-img img { transform:scale(1.06); }
+.blg-card-img-overlay {
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 40%,rgba(6,6,7,.85));
+}
+.blg-cat-badge {
+  position:absolute;top:16px;left:16px;
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;padding:5px 12px;
+  background:rgba(6,6,7,.7);backdrop-filter:blur(8px);
+  border:1px solid rgba(232,52,26,.3);color:#E8341A;
+}
+.blg-card-body {
+  padding:28px 28px 24px;
+  flex:1;display:flex;flex-direction:column;
+}
+.blg-card-title {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(20px,2.2vw,28px);
+  letter-spacing:.04em;line-height:1.1;
+  color:#F4F0E8;margin-bottom:14px;
+  transition:color .25s;
+}
+.blg-card:hover .blg-card-title { color:#E8341A; }
+.blg-card-excerpt {
+  font-size:15px;font-weight:300;line-height:1.75;
+  color:rgba(244,240,232,.55);margin-bottom:24px;flex:1;
+}
+.blg-card-meta {
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;
+  text-transform:uppercase;color:rgba(244,240,232,.35);
+  margin-bottom:20px;
+}
+.blg-card-meta-left { display:flex;gap:16px; }
+.blg-read-btn {
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:#E8341A;
+  background:none;border:none;cursor:pointer;padding:0;
+  transition:gap .25s,color .25s;
+}
+.blg-read-btn:hover { gap:14px;color:#C9A84C; }
+.blg-read-btn svg { width:14px;height:14px;transition:transform .25s; }
+.blg-read-btn:hover svg { transform:translateX(4px); }
+
+/* ── CARD ENTER ANIMATION (triggered by React key re-mount) ── */
+.blg-card-anim { animation: blg-cardIn .45s ease both; }
+
+/* ── BAR / LOAD MORE ── */
+.blg-load-wrap { text-align:center;margin-top:64px; }
+.blg-load-btn {
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;padding:16px 44px;
+  background:transparent;border:1px solid #E8341A;
+  color:#E8341A;cursor:pointer;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+  transition:background .3s,color .3s;
+}
+.blg-load-btn:hover { background:#E8341A;color:#060607; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .blg-grid { grid-template-columns:repeat(2,1fr); }
+  .blg-section { padding:0 40px 100px; }
+  .blg-hero { padding:120px 40px 80px; }
+}
+@media(max-width:640px){
+  .blg-grid { grid-template-columns:1fr; }
+  .blg-section { padding:0 20px 80px; }
+  .blg-hero { padding:100px 20px 60px; }
+  .blg-cats { gap:8px; }
+}
+`;
+
+/* ── DATA ── */
+const BLOG_POSTS = [
+  { id:1, title:"The Future of Startup Funding in India",        excerpt:"Exploring how the startup ecosystem is evolving and what investors are looking for in 2026.",                                  author:"John Doe",     date:"Mar 15, 2026", category:"Funding",        readTime:"5 min",  img:"https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800" },
+  { id:2, title:"10 Tips for Pitching Your Startup Successfully", excerpt:"Learn the essential strategies to make your pitch stand out and attract the right investors.",                               author:"Jane Smith",   date:"Mar 10, 2026", category:"Pitching",       readTime:"7 min",  img:"https://images.pexels.com/photos/1181476/pexels-photo-1181476.jpeg?auto=compress&cs=tinysrgb&w=800" },
+  { id:3, title:"Building a Strong Investor Network",             excerpt:"Discover how to connect with the right investors and build meaningful relationships in the startup world.",                   author:"Mike Johnson", date:"Mar 5, 2026",  category:"Networking",     readTime:"6 min",  img:"https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800" },
+  { id:4, title:"AI Startups: The Next Big Wave",                 excerpt:"Understanding the AI revolution and how startups are leveraging artificial intelligence to disrupt industries.",              author:"Sarah Williams",date:"Feb 28, 2026",category:"Technology",     readTime:"8 min",  img:"https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800" },
+  { id:5, title:"From Idea to IPO: A Startup Journey",           excerpt:"A comprehensive guide on scaling your startup from initial concept to public offering.",                                      author:"David Brown",  date:"Feb 20, 2026", category:"Growth",         readTime:"10 min", img:"https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=800" },
+  { id:6, title:"Sustainable Startups: The Green Revolution",    excerpt:"How eco-friendly startups are changing the business landscape and attracting conscious investors worldwide.",                 author:"Emily Davis",  date:"Feb 15, 2026", category:"Sustainability",  readTime:"6 min",  img:"https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800" },
+];
+
+const CATEGORIES = ["All","Funding","Pitching","Networking","Technology","Growth","Sustainability"];
 
 export default function Blog() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [isVisible, setIsVisible] = useState({});
-  const sectionRefs = useRef({});
+  const [activeCat, setActiveCat] = useState("All");
+  const revealRefs = useRef([]);
 
-  // Intersection Observer for scroll animations
   useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -100px 0px'
-    };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          setIsVisible((prev) => ({
-            ...prev,
-            [entry.target.dataset.section]: true
-          }));
-        }
-      });
-    }, observerOptions);
-
-    const timeoutId = setTimeout(() => {
-      Object.values(sectionRefs.current).forEach((ref) => {
-        if (ref) observer.observe(ref);
-      });
-    }, 100);
-
-    return () => {
-      clearTimeout(timeoutId);
-      Object.values(sectionRefs.current).forEach((ref) => {
-        if (ref) observer.unobserve(ref);
-      });
-    };
+    const obs = new IntersectionObserver(
+      es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add("vis"); }),
+      { threshold: 0.08 }
+    );
+    revealRefs.current.forEach(el => el && obs.observe(el));
+    return () => obs.disconnect();
   }, []);
 
-  const setRef = (section) => (el) => {
-    if (el) {
-      sectionRefs.current[section] = el;
-      el.dataset.section = section;
-    }
-  };
+  const addRef = i => el => { revealRefs.current[i] = el; };
 
-  const SectionTitle = ({ children }) => (
-    <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-bold leading-snug mb-2 sm:mb-3 bg-gradient-to-r ${isDark
-        ? 'from-white via-[#B0FFFA] to-white bg-clip-text text-transparent'
-        : 'from-black via-[#00B8A9] to-black bg-clip-text text-transparent'
-      }`}>
-      {children}
-    </h2>
-  );
-
-  const CardContainer = ({ children, className = '' }) => (
-    <div className={`group relative p-4 sm:p-6 md:p-8 lg:p-10 rounded-xl sm:rounded-2xl transition-all duration-500 overflow-hidden ${isDark
-        ? 'bg-gradient-to-br from-black/60 via-black/40 to-black/60 backdrop-blur-xl border border-[#B0FFFA]/20 hover:border-[#B0FFFA]/40 hover:shadow-[0_12px_40px_rgba(176,255,250,0.15),0_0_0_1px_rgba(176,255,250,0.1)] hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1'
-        : 'bg-gradient-to-br from-white/90 via-white/80 to-white/90 backdrop-blur-xl border border-[#B0FFFA]/30 hover:border-[#B0FFFA]/50 hover:shadow-[0_12px_40px_rgba(0,184,169,0.12),0_0_0_1px_rgba(176,255,250,0.2)] hover:scale-[1.01] sm:hover:scale-[1.02] hover:-translate-y-1'
-      } ${className}`}>
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-[#B0FFFA]/5 via-transparent to-[#80E5FF]/5 rounded-xl sm:rounded-2xl"></div>
-      <div className="relative z-10">
-        {children}
-      </div>
-    </div>
-  );
-
-  const blogPosts = [
-    {
-      id: 1,
-      title: "The Future of Startup Funding in India",
-      excerpt:
-        "Exploring how the startup ecosystem is evolving and what investors are looking for in 2026.",
-      author: "John Doe",
-      date: "March 15, 2026",
-      category: "Funding",
-      image:
-        "https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800",
-      readTime: "5 min read",
-    },
-    {
-      id: 2,
-      title: "10 Tips for Pitching Your Startup Successfully",
-      excerpt:
-        "Learn the essential strategies to make your pitch stand out and attract the right investors.",
-      author: "Jane Smith",
-      date: "March 10, 2026",
-      category: "Pitching",
-      image:
-        "https://images.pexels.com/photos/1181476/pexels-photo-1181476.jpeg?auto=compress&cs=tinysrgb&w=800",
-      readTime: "7 min read",
-    },
-    {
-      id: 3,
-      title: "Building a Strong Investor Network",
-      excerpt:
-        "Discover how to connect with the right investors and build meaningful relationships in the startup world.",
-      author: "Mike Johnson",
-      date: "March 5, 2026",
-      category: "Networking",
-      image:
-        "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800",
-      readTime: "6 min read",
-    },
-    {
-      id: 4,
-      title: "AI Startups: The Next Big Wave",
-      excerpt:
-        "Understanding the AI revolution and how startups are leveraging artificial intelligence.",
-      author: "Sarah Williams",
-      date: "February 28, 2026",
-      category: "Technology",
-      image:
-        "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800",
-      readTime: "8 min read",
-    },
-    {
-      id: 5,
-      title: "From Idea to IPO: A Startup Journey",
-      excerpt:
-        "A comprehensive guide on scaling your startup from initial concept to public offering.",
-      author: "David Brown",
-      date: "February 20, 2026",
-      category: "Growth",
-      image:
-        "https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=800",
-      readTime: "10 min read",
-    },
-    {
-      id: 6,
-      title: "Sustainable Startups: The Green Revolution",
-      excerpt:
-        "How eco-friendly startups are changing the business landscape and attracting conscious investors.",
-      author: "Emily Davis",
-      date: "February 15, 2026",
-      category: "Sustainability",
-      image:
-        "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800",
-      readTime: "6 min read",
-    },
-  ];
-
-  const categories = [
-    "All",
-    "Funding",
-    "Pitching",
-    "Networking",
-    "Technology",
-    "Growth",
-    "Sustainability",
-  ];
-
-  const filteredPosts = selectedCategory === "All"
-    ? blogPosts
-    : blogPosts.filter(post => post.category === selectedCategory);
+  const filtered = activeCat === "All" ? BLOG_POSTS : BLOG_POSTS.filter(p => p.category === activeCat);
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-black' : 'bg-white'
-      }`}>
-      <section
-        ref={setRef('blog')}
-        className={`relative py-8 sm:py-10 md:py-12 transition-all duration-1000 ease-out ${isVisible['blog'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
-        aria-labelledby="blog-heading"
-      >
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
-          {/* Header */}
-          <header className="text-center mb-6 sm:mb-8 md:mb-10 px-4">
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 backdrop-blur-xl border ${isDark
-                ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]'
-                : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
-              }`}>
-              <span className="text-xs font-bold tracking-wider uppercase">Insights & Stories</span>
-            </div>
-            <SectionTitle>EVO‑A Blog</SectionTitle>
-            <p className={`text-sm sm:text-base md:text-lg max-w-2xl mx-auto mt-3 ${isDark ? 'text-white/70' : 'text-gray-600'
-              }`}>
-              Insights, stories, and expert advice on startups, investing, and the entrepreneurial ecosystem.
-            </p>
-          </header>
+    <div className="blg-root">
+      <style>{BLOG_CSS}</style>
+      <LandingNav />
 
-          {/* Categories */}
-          <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8 md:mb-10 justify-center">
-            {categories.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setSelectedCategory(category)}
-                className={`px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 text-xs sm:text-sm md:text-base font-semibold rounded-lg transition-all duration-300 ${selectedCategory === category
-                    ? isDark
-                      ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black shadow-lg'
-                      : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white shadow-lg'
-                    : isDark
-                      ? 'bg-black/40 text-white hover:bg-black/60 border border-[#B0FFFA]/30 hover:border-[#B0FFFA]/50'
-                      : 'bg-white/90 text-gray-700 hover:bg-white border border-[#00B8A9]/30 hover:border-[#00B8A9]/50'
-                  }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+      {/* ── HERO ── */}
+      <section className="blg-hero">
+        <div className="blg-hero-ghost">BLOG</div>
+        <div className="blg-pill blg-reveal" ref={addRef(0)}>Insights &amp; Stories</div>
+        <h1 className="blg-reveal" ref={addRef(1)}>
+          EVO‑A <span style={{ color:"#E8341A" }}>BLOG</span>
+          <em>intelligence for founders</em>
+        </h1>
+        <p className="blg-hero-sub blg-reveal" ref={addRef(2)}>
+          Insights, stories, and expert advice on startups, investing, and the entrepreneurial ecosystem.
+        </p>
+        <div className="blg-divider" />
+      </section>
 
-          {/* Blog Posts Grid */}
-          <main
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6"
-            aria-label="Blog articles"
+      {/* ── CATEGORIES ── */}
+      <div className="blg-cats blg-reveal" ref={addRef(3)}>
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat}
+            className={`blg-cat-btn${activeCat === cat ? " active" : ""}`}
+            onClick={() => setActiveCat(cat)}
           >
-            {filteredPosts.map((post, index) => (
-              <CardContainer
-                key={post.id}
-                className={`flex flex-col overflow-hidden transition-all duration-700 ${isVisible['blog'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-                  }`}
-                style={{ transitionDelay: `${index * 100}ms` }}
-              >
-                {/* Image */}
-                <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden rounded-lg mb-4 sm:mb-5">
-                  <img
-                    src={post.image}
-                    alt={post.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    loading="lazy"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${isDark
-                      ? 'from-black/90 via-black/40 to-transparent'
-                      : 'from-black/80 via-black/30 to-transparent'
-                    } opacity-0 group-hover:opacity-100 transition-opacity duration-300`}>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <button className={`w-full py-2.5 sm:py-3 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 rounded-lg transition-all duration-300 ${isDark
-                          ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black hover:shadow-lg'
-                          : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white hover:shadow-lg'
-                        }`}>
-                        Read Article
-                        <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    </div>
-                  </div>
-                  <span className={`absolute top-3 sm:top-4 left-3 sm:left-4 px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold backdrop-blur-xl ${isDark
-                      ? 'bg-[#B0FFFA]/20 border border-[#B0FFFA]/30 text-[#B0FFFA]'
-                      : 'bg-white/90 border border-[#00B8A9]/30 text-[#00B8A9]'
-                    }`}>
-                    {post.category}
-                  </span>
-                </div>
+            {cat}
+          </button>
+        ))}
+      </div>
 
-                {/* Content */}
-                <div className="flex flex-col flex-1">
-                  <h2 className={`text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 line-clamp-2 ${isDark ? 'text-white group-hover:text-[#B0FFFA]' : 'text-black group-hover:text-[#00B8A9]'
-                    } transition-colors duration-300`}>
-                    {post.title}
-                  </h2>
-                  <p className={`text-sm sm:text-base md:text-lg mb-3 sm:mb-4 line-clamp-3 leading-relaxed ${isDark ? 'text-white/80' : 'text-gray-700'
-                    }`}>
-                    {post.excerpt}
-                  </p>
-
-                  {/* Meta Info */}
-                  <div className={`mt-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs sm:text-sm mb-3 sm:mb-4 ${isDark ? 'text-white/60' : 'text-gray-600'
-                    }`}>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                      <span className="inline-flex items-center gap-1.5">
-                        <HiUser className="w-4 h-4" aria-hidden="true" />
-                        <span>{post.author}</span>
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <HiCalendar className="w-4 h-4" aria-hidden="true" />
-                        <span>{post.date}</span>
-                      </span>
-                    </div>
-                    <span className="font-medium">{post.readTime}</span>
-                  </div>
-
-                  {/* Read More */}
-                  <button
-                    type="button"
-                    className={`inline-flex items-center gap-2 text-sm sm:text-base font-semibold transition-all duration-300 ${isDark
-                        ? 'text-[#B0FFFA] hover:text-[#80E5FF]'
-                        : 'text-[#00B8A9] hover:text-[#008C81]'
-                      }`}
-                    aria-label={`Read more: ${post.title}`}
-                  >
-                    Read more
-                    <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-                  </button>
-                </div>
-              </CardContainer>
-            ))}
-          </main>
-
-          {/* Load More */}
-          <div className="text-center mt-8 sm:mt-10 md:mt-12">
-            <button
-              type="button"
-              className={`px-6 sm:px-8 md:px-10 py-2.5 sm:py-3 md:py-3.5 font-bold text-sm sm:text-base md:text-lg rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 ${isDark
-                  ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black shadow-xl hover:shadow-[0_0_40px_rgba(176,255,250,0.5)]'
-                  : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white shadow-xl hover:shadow-[0_0_40px_rgba(0,184,169,0.3)]'
-                }`}
+      {/* ── GRID ── */}
+      <section className="blg-section">
+        <div className="blg-grid" key={activeCat}>
+          {filtered.map((post, i) => (
+            <article
+              key={post.id}
+              className="blg-card blg-card-anim"
+              style={{ animationDelay: `${i * 80}ms` }}
             >
-              Load more articles
-            </button>
-          </div>
+              {/* Image */}
+              <div className="blg-card-img">
+                <img src={post.img} alt={post.title} loading="lazy" />
+                <div className="blg-card-img-overlay" />
+                <span className="blg-cat-badge">{post.category}</span>
+              </div>
+
+              {/* Body */}
+              <div className="blg-card-body">
+                <h2 className="blg-card-title">{post.title}</h2>
+                <p className="blg-card-excerpt">{post.excerpt}</p>
+                <div className="blg-card-meta">
+                  <div className="blg-card-meta-left">
+                    <span>✦ {post.author}</span>
+                    <span>{post.date}</span>
+                  </div>
+                  <span>{post.readTime}</span>
+                </div>
+                <button className="blg-read-btn" type="button" aria-label={`Read: ${post.title}`}>
+                  Read Article
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {/* Load more */}
+        <div className="blg-load-wrap blg-reveal" ref={addRef(10)}>
+          <button className="blg-load-btn" type="button">Load More Articles</button>
         </div>
       </section>
+
       <Footer />
     </div>
   );

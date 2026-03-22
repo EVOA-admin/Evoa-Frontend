@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import LandingNav from "../../components/layout/LandingNav";
 
 /* ─────────────────────────────────────────
    GLOBAL CSS
@@ -100,7 +98,38 @@ body{cursor:none;overflow-x:hidden;}
 .bfire{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:16px 36px;background:var(--red);color:var(--black);text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));display:inline-block;transition:all .3s;border:none;cursor:pointer}
 .bfire:hover{background:var(--gold);transform:translateY(-2px)}
 
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 40px;height:72px;display:flex;align-items:center;justify-content:space-between;transition:background .4s,border-color .4s;border-bottom:1px solid transparent}
+.nav.sticky{background:rgba(6,6,7,.94);backdrop-filter:blur(24px);border-color:rgba(244,240,232,.04)}
+.nlogo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.12em;color:var(--white);text-decoration:none}
+.nlogo span{color:var(--red)}
+.nlinks{display:flex;gap:28px;list-style:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2)}
+.nlinks a{color:inherit;text-decoration:none;transition:color .2s;position:relative}
+.nlinks a::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:1px;background:var(--red);transform:scaleX(0);transition:transform .25s}
+.nlinks a:hover{color:var(--white)}
+.nlinks a:hover::after{transform:scaleX(1)}
+.nright{display:flex;align-items:center;gap:14px}
+.nsignin{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:9px 20px;border-radius:40px;background:rgba(244,240,232,.08);border:1px solid rgba(244,240,232,.12);color:var(--white);text-decoration:none;transition:all .25s}
+.nsignin:hover{background:rgba(244,240,232,.15)}
+.ncta{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:10px 24px;border:1px solid var(--red);color:var(--red);text-decoration:none;transition:all .25s;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.ncta:hover{background:var(--red)!important;color:var(--black)!important}
 
+/* ── HAMBURGER ── */
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px;z-index:1001}
+.hamburger span{display:block;width:24px;height:1.5px;background:var(--white);transition:all .3s;transform-origin:center}
+.hamburger.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+/* ── MOBILE DRAWER ── */
+.mobile-drawer{position:fixed;inset:0;z-index:999;background:rgba(6,6,7,.98);backdrop-filter:blur(24px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;opacity:0;pointer-events:none;transition:opacity .35s}
+.mobile-drawer.open{opacity:1;pointer-events:all}
+.mobile-drawer a{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,10vw,52px);letter-spacing:.04em;color:var(--muted2);text-decoration:none;transition:color .2s,transform .2s;display:block;text-align:center}
+.mobile-drawer a:hover{color:var(--white);transform:translateX(8px)}
+.mdivider{width:40px;height:1px;background:rgba(244,240,232,.1)}
+.m-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.m-signin{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:11px 28px;border-radius:40px;background:rgba(244,240,232,.08);border:1px solid rgba(244,240,232,.15);color:var(--white);text-decoration:none}
+.m-cta{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;padding:12px 32px;background:var(--red);color:var(--black);text-decoration:none;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
 
 /* ── CURSOR ── */
 .evoa-cur{width:10px;height:10px;background:var(--red);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:difference}
@@ -214,7 +243,43 @@ function Cursor() {
   </>);
 }
 
-
+/* ─── NAV ─── */
+function Nav() {
+  const [sticky, setSticky] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const h = () => setSticky(window.scrollY > 40);
+    window.addEventListener("scroll", h);
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+  useEffect(() => { document.body.style.overflow = open ? "hidden" : ""; }, [open]);
+  const close = () => setOpen(false);
+  const LINKS = [["Home", "#"], ["Blog", "#"], ["About", "#segments"], ["Contact", "#features"], ["Platform", "#pillars"], ["021 AI", "#ai"]];
+  return (<>
+    <nav className={`nav${sticky ? " sticky" : ""}`}>
+      <a href="#" className="nlogo">EVO<span>A</span></a>
+      <ul className="nlinks">
+        {LINKS.map(([l, h]) => <li key={l}><a href={h}>{l}</a></li>)}
+      </ul>
+      <div className="nright">
+        <a href="#" className="nsignin">Sign In</a>
+        <a href="#" className="ncta">Launch 26.03</a>
+        <button className={`hamburger${open ? " open" : ""}`} onClick={() => setOpen(o => !o)} aria-label="Menu">
+          <span /><span /><span />
+        </button>
+      </div>
+    </nav>
+    <div className={`mobile-drawer${open ? " open" : ""}`}>
+      <div className="mdivider" />
+      {LINKS.map(([l, h]) => <a key={l} href={h} onClick={close}>{l}</a>)}
+      <div className="mdivider" />
+      <div className="m-btns">
+        <a href="#" className="m-signin" onClick={close}>Sign In</a>
+        <a href="#" className="m-cta" onClick={close}>Launch 26.03</a>
+      </div>
+    </div>
+  </>);
+}
 
 /* ─── PARTICLE CANVAS ─── */
 function ParticleCanvas() {
@@ -257,7 +322,7 @@ function Hero() {
   return (
     <section id="hero" className="hero-grid" style={{ minHeight: "100vh", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", padding: "140px 48px 80px", position: "relative", overflow: "hidden" }}>
       <ParticleCanvas />
-      <div className="hero-div" style={{ position: "absolute", top: 0, right: "50%", bottom: 0, width: 1, background: "linear-gradient(to bottom,transparent,rgba(232,52,26,.2) 30%,rgba(201,168,76,.15) 70%,transparent)", zIndex: 1 }} />
+      <div className="hero-div" style={{ position: "absolute", top: 0, right: "42%", bottom: 0, width: 1, background: "linear-gradient(to bottom,transparent,rgba(232,52,26,.2) 30%,rgba(201,168,76,.15) 70%,transparent)", zIndex: 1 }} />
       <div style={{ position: "relative", zIndex: 2 }}>
         <div className="fu1" style={{ marginBottom: 20, display: "inline-flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 6, padding: "8px 16px" }}>
           <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 13, fontWeight: 300, color: "rgba(244,240,232,.6)", letterSpacing: ".04em" }}>Recognised By</span>
@@ -279,7 +344,7 @@ function Hero() {
           EVOA is where startups pitch in 90 seconds, hire the best, test products, raise capital — and compete to win. No elite networks required.
         </p>
         <div className="fu4" style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-          <Link to="/register" className="bfire">Create Your Account</Link>
+          <a href="#pillars" className="bfire">Create Your Account</a>
           <a href="#ai" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted2)", textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
             Meet 021 AI <span style={{ width: 24, height: 1, background: "currentColor", display: "inline-block" }} />
           </a>
@@ -406,8 +471,8 @@ function Pillars() {
         ))}
       </div>
       <div className="reveal" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 60, position: "relative", zIndex: 1, flexWrap: "wrap" }}>
-        <Link to="/register" className="bfire" style={{ padding: "16px 40px" }}>Create Account — Free</Link>
-        <Link to="/register" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", padding: "15px 40px", color: "var(--white)", textDecoration: "none", border: "1px solid rgba(244,240,232,.2)", display: "inline-block", clipPath: "polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))" }}>Start Pitching →</Link>
+        <a href="#" className="bfire" style={{ padding: "16px 40px" }}>Create Account — Free</a>
+        <a href="#" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", padding: "15px 40px", color: "var(--white)", textDecoration: "none", border: "1px solid rgba(244,240,232,.2)", display: "inline-block", clipPath: "polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))" }}>Start Pitching →</a>
       </div>
     </section>
   );
@@ -422,12 +487,7 @@ function AISection() {
   const [inp, setInp] = useState("");
   const [typing, setTyping] = useState(false);
   const bottom = useRef(null);
-  const chatContainer = useRef(null);
-  useEffect(() => {
-    if (chatContainer.current) {
-      chatContainer.current.scrollTop = chatContainer.current.scrollHeight;
-    }
-  }, [msgs]);
+  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
   const send = () => {
     if (!inp.trim()) return;
     setMsgs(m => [...m, { from: "user", text: inp.trim() }]);
@@ -450,7 +510,7 @@ function AISection() {
         </div>
         <div>
           <p style={{ fontSize: "clamp(15px,2vw,18px)", fontWeight: 300, lineHeight: 1.8, color: "var(--muted2)", marginBottom: 32 }}>The 021 AI system isn't a chatbot. It's a full executive team — CEO, CMO, CTO, CFO — operating in parallel, 24/7.</p>
-          <Link to="/register" className="bfire">Click to Turn Your Idea Into Reality →</Link>
+          <a href="#" className="bfire">Click to Turn Your Idea Into Reality →</a>
         </div>
       </div>
       <div className="ai-app reveal" style={{ position: "relative", zIndex: 1, transitionDelay: ".2s" }}>
@@ -480,7 +540,7 @@ function AISection() {
             {/* Chat */}
             <div className="ai-chat" style={{ display: "flex", flexDirection: "column", background: "#0a0a0f", height: 480 }}>
               <div style={{ padding: "12px 18px", borderBottom: "1px solid rgba(244,240,232,.05)" }}><span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "var(--white)" }}>👤 CFO</span></div>
-              <div ref={chatContainer} style={{ flex: 1, overflowY: "auto", padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
                 {msgs.map((m, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: m.from === "user" ? "flex-end" : "flex-start", alignItems: "flex-start", gap: 8 }}>
                     {m.from === "ai" && <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#1a1108", border: "1px solid rgba(232,168,52,.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, flexShrink: 0 }}>💰</div>}
@@ -490,7 +550,7 @@ function AISection() {
                   </div>
                 ))}
                 {typing && <div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ width: 26, height: 26, borderRadius: "50%", background: "#1a1108", border: "1px solid rgba(232,168,52,.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>💰</div><div style={{ padding: "10px 14px", background: "rgba(244,240,232,.04)", border: "1px solid rgba(244,240,232,.07)", borderRadius: 3, display: "flex", gap: 4 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--gold)", animation: `blink 1.2s ease-in-out infinite ${i * .2}s` }} />)}</div></div>}
-
+                <div ref={bottom} />
               </div>
               <div style={{ padding: "10px 14px", borderTop: "1px solid rgba(244,240,232,.06)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(244,240,232,.04)", border: "1px solid rgba(244,240,232,.08)", borderRadius: 3, padding: "8px 12px" }}>
@@ -529,7 +589,7 @@ function AISection() {
 const HOW = [
   { n: 1, acc: "var(--red)", cls: "hf0", title: "Create Your Account", desc: "Sign up with email or phone, choose your role — Startup, Investor, Incubator, or Viewer." },
   { n: 2, acc: "var(--gold)", cls: "hf1", title: "Complete Your Profile", desc: "Startups: founder details, verification & pitch. Investors: ticket size, sector focus. Incubators: programs & documents." },
-  { n: 3, acc: "var(--red)", cls: "hf2", title: "Discover & Pitch", desc: "Discover pitches from Home feed, Explore page, and Battleground. Watch pitch reels, like, comment, share, and support." },
+  { n: 3, acc: "var(--red)", cls: "hf2", title: "Pitch & Discover", desc: "Discover pitches from Home feed, Explore page, and Battleground. Watch pitch reels, like, comment, share, and support." },
   { n: 4, acc: "var(--gold)", cls: "hf3", title: "Connect & Close Deals", desc: "Comments, messages, offers, battlegrounds — all lead you to real conversations and deals." },
 ];
 function HowItWorks() {
@@ -588,7 +648,7 @@ function HowItWorks() {
       </div>
       <div className={`reveal${vis ? " vis" : ""}`} style={{ textAlign: "center", marginTop: 72, position: "relative", zIndex: 2, transitionDelay: ".6s" }}>
         <div style={{ width: 1, height: 48, background: "linear-gradient(to bottom,transparent,var(--gold))", margin: "0 auto 28px" }} />
-        <Link to="/register" className="bfire" style={{ padding: "18px 52px" }}>Create Your Account — Free</Link>
+        <a href="#" className="bfire" style={{ padding: "18px 52px" }}>Create Your Account — Free</a>
         <p style={{ marginTop: 16, fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontStyle: "italic", fontWeight: 300, color: "var(--muted)" }}>No gatekeepers. No warm intros. Just your idea.</p>
       </div>
     </section>
@@ -757,7 +817,7 @@ function Mission() {
     <section id="mission" className="mission-sec" style={{ padding: "160px 48px", background: "var(--black)", textAlign: "center", position: "relative", overflow: "hidden" }}>
       <div style={{ position: "absolute", fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(100px,18vw,200px)", letterSpacing: ".08em", color: "rgba(244,240,232,.02)", top: "50%", left: "50%", transform: "translate(-50%,-50%)", whiteSpace: "nowrap", pointerEvents: "none", userSelect: "none" }}>EVOA</div>
       <p className="reveal" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(20px,3.5vw,48px)", fontWeight: 300, fontStyle: "italic", lineHeight: 1.4, maxWidth: 900, margin: "0 auto 40px", color: "var(--white)", position: "relative", zIndex: 2 }}>
-        "We are building the world's first <em style={{ color: "var(--gold)", fontStyle: "normal" }}>video-based</em> startup ecosystem — where your idea and your execution are the only credentials that matter."
+        "We are building the world's first <em style={{ color: "var(--gold)", fontStyle: "normal" }}>merit-based</em> startup ecosystem — where your idea and your execution are the only credentials that matter."
       </p>
       <div className="reveal" style={{ position: "relative", zIndex: 2, transitionDelay: ".2s", display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
         <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom,transparent,var(--gold))", marginBottom: 4 }} />
@@ -794,23 +854,20 @@ function Launch() {
       <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(-45deg,rgba(0,0,0,.04) 0,rgba(0,0,0,.04) 1px,transparent 1px,transparent 8px)", pointerEvents: "none" }} />
       <div style={{ position: "relative", zIndex: 2 }}>
         <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(6,6,7,.6)", marginBottom: 12 }}>Global Launch</div>
-        <div className="launch-d" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(56px,8vw,120px)", lineHeight: .88, color: "var(--black)", letterSpacing: ".02em" }}>26.03.2026</div>
+        <div className="launch-d" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(56px,8vw,120px)", lineHeight: .88, color: "var(--black)", letterSpacing: ".02em" }}>26.03<br />.2026</div>
       </div>
       <div className="launch-r" style={{ position: "relative", zIndex: 2, textAlign: "right" }}>
         <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(16px,2vw,22px)", fontWeight: 300, fontStyle: "italic", color: "rgba(6,6,7,.7)", marginBottom: 28, maxWidth: 360 }}>The future of the startup ecosystem goes live. Be the first inside.</p>
-        <Link to="/register" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", padding: "16px 36px", background: "var(--black)", color: "var(--white)", textDecoration: "none", clipPath: "polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))", display: "inline-block" }}>Claim Your Spot — Free</Link>
+        <a href="#" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", padding: "16px 36px", background: "var(--black)", color: "var(--white)", textDecoration: "none", clipPath: "polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))", display: "inline-block" }}>Claim Your Spot — Free</a>
       </div>
     </section>
   );
 }
 
 /* ─── FOOTER ─── */
-const LI = ({ href, to, onClick, children }) => {
+const LI = ({ href = "#", children }) => {
   const [hov, setHov] = useState(false);
-  const style = { fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, color: hov ? "rgba(244,240,232,.9)" : "rgba(244,240,232,.5)", textDecoration: "none", transition: "color .2s", background: "none", border: "none", cursor: "pointer", padding: 0 };
-  if (to) return <li><Link to={to} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={style}>{children}</Link></li>;
-  if (onClick) return <li><button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={style}>{children}</button></li>;
-  return <li><a href={href || "#"} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={style}>{children}</a></li>;
+  return <li><a href={href} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, color: hov ? "rgba(244,240,232,.9)" : "rgba(244,240,232,.5)", textDecoration: "none", transition: "color .2s" }}>{children}</a></li>;
 };
 const SocialIcon = ({ children }) => {
   const [hov, setHov] = useState(false);
@@ -820,216 +877,56 @@ const SocialIcon = ({ children }) => {
     </a>
   );
 };
-
-/* ─── POLICY MODALS ─── */
-const MODAL_STYLES = `
-.ln-modal-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
-.ln-modal-box{position:relative;width:100%;max-width:760px;max-height:80vh;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:#111;border:1px solid rgba(244,240,232,.1);box-shadow:0 40px 120px rgba(0,0,0,.8)}
-.ln-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(244,240,232,.08)}
-.ln-modal-hdr h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.06em;color:#F4F0E8;margin:0}
-.ln-modal-close{background:none;border:none;cursor:pointer;color:rgba(244,240,232,.5);padding:4px;display:flex;transition:color .2s}
-.ln-modal-close:hover{color:#F4F0E8}
-.ln-modal-body{padding:24px;overflow-y:auto;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;line-height:1.8;color:rgba(244,240,232,.7)}
-.ln-modal-body h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.05em;color:#C9A84C;margin:24px 0 8px}
-.ln-modal-body h4{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,240,232,.7);margin:16px 0 6px}
-.ln-modal-body ul{padding-left:20px;margin:8px 0}
-.ln-modal-body li{margin-bottom:4px}
-.ln-modal-body p{margin-bottom:12px}
-.ln-modal-body a{color:#E8341A;text-decoration:none}
-.ln-modal-body a:hover{text-decoration:underline}
-.ln-modal-warn{background:rgba(232,52,26,.08);border:1px solid rgba(232,52,26,.2);border-radius:6px;padding:14px 18px;margin:12px 0;display:flex;gap:12px;align-items:flex-start}
-`;
-
-function PolicyModal({ title, children, onClose }) {
-  useEffect(() => {
-    const esc = e => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", esc);
-    return () => document.removeEventListener("keydown", esc);
-  }, [onClose]);
-  return (
-    <div className="ln-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="ln-modal-box">
-        <div className="ln-modal-hdr">
-          <h2>{title}</h2>
-          <button className="ln-modal-close" onClick={onClose} aria-label="Close">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
-          </button>
-        </div>
-        <div className="ln-modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
-
 function Footer() {
-  const [modal, setModal] = useState(null); // "privacy" | "terms" | "ai" | "community"
-  const close = () => setModal(null);
   return (
-    <>
-      <style>{MODAL_STYLES}</style>
-      <footer className="footer-sec" style={{ padding: "64px 48px 32px", background: "#0A0A0A", borderTop: "1px solid rgba(244,240,232,.06)" }}>
-        <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr", gap: 48, marginBottom: 52 }}>
-          {/* Brand */}
-          <div>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, letterSpacing: ".12em", color: "var(--white)", marginBottom: 16 }}>EVO-A</div>
-            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, lineHeight: 1.75, color: "rgba(244,240,232,.45)", maxWidth: 340, marginBottom: 24 }}>Revolutionizing the startup–investor ecosystem. Connect, invest, and grow together in the future of entrepreneurship.</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <SocialIcon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,240,232,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" />
-                </svg>
-              </SocialIcon>
-              <SocialIcon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,240,232,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                </svg>
-              </SocialIcon>
-            </div>
-          </div>
-          {/* Quick Links */}
-          <div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--white)", fontWeight: 500, marginBottom: 24 }}>Quick Links</div>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
-              <LI to="/">Home</LI><LI to="/login">Sign In</LI><LI to="/register">Sign Up</LI><LI to="/about">About Us</LI>
-            </ul>
-          </div>
-          {/* Support */}
-          <div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--white)", fontWeight: 500, marginBottom: 24 }}>Support</div>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
-              <LI onClick={() => setModal("privacy")}>Privacy Policy</LI>
-              <LI onClick={() => setModal("terms")}>Terms of Service</LI>
-              <LI onClick={() => setModal("ai")}>AI Disclaimer</LI>
-              <LI onClick={() => setModal("community")}>Community Guidelines</LI>
-            </ul>
+    <footer className="footer-sec" style={{ padding: "64px 48px 32px", background: "#0A0A0A", borderTop: "1px solid rgba(244,240,232,.06)" }}>
+      <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr", gap: 48, marginBottom: 52 }}>
+        {/* Brand */}
+        <div>
+          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, letterSpacing: ".12em", color: "var(--white)", marginBottom: 16 }}>EVO-A</div>
+          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, lineHeight: 1.75, color: "rgba(244,240,232,.45)", maxWidth: 340, marginBottom: 24 }}>Revolutionizing the startup–investor ecosystem. Connect, invest, and grow together in the future of entrepreneurship.</p>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <SocialIcon>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,240,232,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" />
+              </svg>
+            </SocialIcon>
+            <SocialIcon>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,240,232,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+              </svg>
+            </SocialIcon>
           </div>
         </div>
-        <div style={{ height: 1, background: "rgba(244,240,232,.07)", marginBottom: 24 }} />
-        <div style={{ textAlign: "center", fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".1em", color: "rgba(244,240,232,.3)" }}>© 2026 EVO-A. All rights reserved.</div>
-      </footer>
-
-      {/* ── PRIVACY POLICY ── */}
-      {modal === "privacy" && (
-        <PolicyModal title="Privacy Policy" onClose={close}>
-          <p><strong>Evoa Technology Private Limited</strong> ("Evoa", "Company", "we", "us", or "our") respects your privacy and is committed to protecting your personal data.</p>
-          <p>This Privacy Policy explains how we collect, use, store, and protect your information when you use the Evoa platform, Investor AI, 021 AI, our website <strong>evoa.co.in</strong>, and any related services.</p>
-          <p><em>By using Evoa services, you agree to the collection and use of information in accordance with this policy.</em></p>
-          <h3>1. About Evoa</h3>
-          <p>Evoa is a digital platform designed to connect startup founders, investors, builders, and startup enthusiasts. Users can pitch startup ideas through short video reels, explore startups, validate ideas using AI tools, and connect with investors.</p>
-          <h3>2. Information We Collect</h3>
-          <h4>2.1 Personal Information</h4>
-          <p>When you register or use our services, we may collect: full name, username, email address, profile photo, password (encrypted), country/location, startup information, and investor profile information.</p>
-          <h4>2.2 Startup Information</h4>
-          <p>If you upload a pitch or startup information, we may collect: startup name & description, pitch videos, business model information, financial insights (if voluntarily provided), and market & product information. <em>This data may be displayed publicly depending on your settings.</em></p>
-          <h4>2.3 AI Interaction Data</h4>
-          <p>When you interact with Investor AI or 021 AI, we may collect: startup ideas you submit, AI prompts and responses, feedback and ratings, AI generated outputs, and chat logs with AI assistants. This data is used to improve AI performance and service quality.</p>
-          <h4>2.4 Usage Data</h4>
-          <p>We automatically collect: IP address, browser type, device type, operating system, pages visited & time spent, and click interactions & engagement with startup pitches.</p>
-          <h3>3. How We Use Your Information</h3>
-          <ul>
-            <li><strong>Platform Operations:</strong> Create/manage accounts, display pitches, enable networking, provide messaging.</li>
-            <li><strong>AI Services:</strong> Operate Investor AI & 021 AI, improve AI responses, and train AI systems.</li>
-            <li><strong>Platform Improvement:</strong> Enhance features, understand user behavior, optimize experience.</li>
-            <li><strong>Security:</strong> Prevent fraud, detect suspicious activity, protect users.</li>
-            <li><strong>Communication:</strong> Send updates, notify about changes, provide support.</li>
+        {/* Quick Links */}
+        <div>
+          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--white)", fontWeight: 500, marginBottom: 24 }}>Quick Links</div>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
+            <LI>Home</LI><LI>Sign In</LI><LI>Sign Up</LI><LI>About Us</LI>
           </ul>
-          <h3>4. AI System Usage</h3>
-          <p>Evoa provides AI-powered tools that assist with startup idea validation, market analysis, business models, pitch feedback, and investor insights. AI responses are informational only and do <strong>not</strong> constitute financial, legal, or investment advice. Users should independently verify any AI-generated insights.</p>
-          <h3>5. Data Sharing & Security</h3>
-          <p>We do not sell user data. We may share data with service providers (cloud, payment, analytics, AI infrastructure) and if required by Indian law. We implement encryption and secure authentication. Users must protect their credentials.</p>
-          <h3>6. Retention, Your Rights & Minors</h3>
-          <p>We retain data as long as necessary. Users may access data, update profiles, or request account deletion via <strong>support@evoa.co.in</strong>. Evoa services are not intended for users under 14 years of age.</p>
-          <h3>7. Contact</h3>
-          <p><strong>Evoa Technology Private Limited</strong><br />Email: <a href="mailto:support@evoa.co.in">support@evoa.co.in</a> · Website: <a href="https://evoa.co.in" target="_blank" rel="noopener noreferrer">evoa.co.in</a></p>
-        </PolicyModal>
-      )}
-
-      {/* ── TERMS OF SERVICE ── */}
-      {modal === "terms" && (
-        <PolicyModal title="Terms of Service" onClose={close}>
-          <p>These Terms of Service govern your use of the Evoa platform, Investor AI, 021 AI, and our website <strong>evoa.co.in</strong>.</p>
-          <p><em>By accessing Evoa services, you agree to these terms.</em></p>
-          <h3>1. Eligibility</h3>
-          <p>To use Evoa, you must be at least 14 years old, provide accurate information, and comply with all applicable laws.</p>
-          <h3>2. User Accounts</h3>
-          <p>Users must maintain accurate profile information, keep login credentials secure, and be responsible for activities on their account. Evoa reserves the right to suspend accounts for violations.</p>
-          <h3>3. Platform Purpose</h3>
-          <p>Evoa is designed to enable startup pitching, help investors discover startups, and assist founders through AI tools. <strong>Evoa does not guarantee funding, investment, or business success.</strong></p>
-          <h3>4. AI Services Disclaimer</h3>
-          <p>Investor AI and 021 AI provide automated insights. They do <strong>not</strong> provide investment advice, legal advice, or financial guarantees. Users should perform independent research before making decisions.</p>
-          <h3>5. Startup Pitches</h3>
-          <p>Founders are responsible for ensuring that their pitches are truthful, they have rights to the information they share, and they do not upload misleading or fraudulent information. <em>Evoa does not verify every startup claim.</em></p>
-          <h3>6. Intellectual Property</h3>
-          <p>Users retain ownership of their startup ideas, pitch videos, and uploaded content. However, by uploading content, users grant Evoa a license to display, distribute, and promote the content within the platform.</p>
-          <h3>7. Prohibited Activities</h3>
-          <ul>
-            <li>Upload illegal content or impersonate others</li>
-            <li>Spread misinformation or attempt platform hacking</li>
-            <li>Use bots to manipulate engagement</li>
+        </div>
+        {/* Support */}
+        <div>
+          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--white)", fontWeight: 500, marginBottom: 24 }}>Support</div>
+          <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
+            <LI>Privacy Policy</LI><LI>Terms of Service</LI><LI>AI Disclaimer</LI><LI>Community Guidelines</LI>
           </ul>
-          <div className="ln-modal-warn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8341A" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-            <span>Violation may result in account suspension or permanent ban without prior notice.</span>
-          </div>
-          <h3>8. Limitation of Liability</h3>
-          <p>Evoa is not liable for investment losses, business failures, decisions based on AI outputs, or interactions between users. <strong>Users participate on the platform at their own risk.</strong></p>
-          <h3>9. Governing Law & Contact</h3>
-          <p>These Terms are governed by the laws of India. Contact: <a href="mailto:support@evoa.co.in">support@evoa.co.in</a></p>
-        </PolicyModal>
-      )}
-
-      {/* ── AI DISCLAIMER ── */}
-      {modal === "ai" && (
-        <PolicyModal title="AI Disclaimer" onClose={close}>
-          <p>Evoa provides AI-powered tools including <strong>Investor AI</strong> and <strong>021 AI</strong> to assist users with startup insights, idea validation, and informational analysis.</p>
-          <div className="ln-modal-warn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8341A" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-            <div><strong style={{ color: "#F4F0E8" }}>Important AI Limitations</strong><br />These AI systems generate responses automatically and may contain inaccuracies.</div>
-          </div>
-          <h3>The information provided by AI tools:</h3>
-          <ul>
-            <li>Does <strong>not</strong> constitute financial advice</li>
-            <li>Does <strong>not</strong> constitute legal advice</li>
-            <li>Does <strong>not</strong> constitute investment advice</li>
-            <li>Should <strong>not</strong> be solely relied upon for business decisions</li>
-          </ul>
-          <p><strong>Users are responsible for independently verifying any information before making decisions.</strong></p>
-          <p><em>Evoa Technology Private Limited is not responsible for any actions taken based on AI-generated content.</em></p>
-        </PolicyModal>
-      )}
-
-      {/* ── COMMUNITY GUIDELINES ── */}
-      {modal === "community" && (
-        <PolicyModal title="Community Guidelines" onClose={close}>
-          <p>We are building a trusted ecosystem for founders and investors. Respect, honesty, and professionalism are our core values.</p>
-          <h3>Prohibited Content & Actions</h3>
-          <p>Users must <strong>not</strong> upload or share:</p>
-          <ul>
-            <li>Fraudulent startup claims or fake traction</li>
-            <li>Misleading financial information or manipulated metrics</li>
-            <li>Illegal content of any kind</li>
-            <li>Hate speech, harassment, or abusive language</li>
-            <li>Copyrighted material without explicit permission</li>
-            <li>Confidential or proprietary business information they do not have the rights to share</li>
-          </ul>
-          <div className="ln-modal-warn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8341A" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-            <div><strong style={{ color: "#F4F0E8" }}>Evoa reserves the right to remove any content that violates these guidelines.</strong><br /><span style={{ fontSize: 13 }}>Accounts involved in fraudulent activities may be suspended or permanently banned without prior notice.</span></div>
-          </div>
-        </PolicyModal>
-      )}
-    </>
+        </div>
+      </div>
+      <div style={{ height: 1, background: "rgba(244,240,232,.07)", marginBottom: 24 }} />
+      <div style={{ textAlign: "center", fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".1em", color: "rgba(244,240,232,.3)" }}>© 2026 EVO-A. All rights reserved.</div>
+    </footer>
   );
 }
 
 /* ─── ROOT ─── */
-export default function Landing() {
+export default function EVOAHomepage() {
   useReveal();
   return (
     <div className="evoa-root">
       <style>{STYLES}</style>
       <Cursor />
-      <LandingNav />
+      <Nav />
       <Hero />
       <Ticker />
       <Problem />
