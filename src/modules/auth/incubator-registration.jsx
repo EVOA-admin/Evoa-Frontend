@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import { createIncubator } from "../../services/incubatorsService";
 import { uploadFile } from "../../services/storageService";
+import { updateUserProfile } from "../../services/usersService";
 
 const REG_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=DM+Mono:wght@300;400&display=swap');
@@ -200,6 +201,13 @@ export default function IncubatorRegistration() {
       Object.keys(incubatorData).forEach(k => { if (incubatorData[k] === undefined) delete incubatorData[k]; });
 
       await createIncubator(incubatorData);
+
+      // Set the incubator logo as the user's profile picture (only if uploaded).
+      // Falls back to Google profile photo when no logo is provided.
+      if (logoUrl) {
+        await updateUserProfile({ avatarUrl: logoUrl }).catch(() => {});
+      }
+
       await completeRegistration();
       navigate('/incubator');
     } catch (err) {

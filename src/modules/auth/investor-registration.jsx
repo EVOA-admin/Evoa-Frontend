@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import { createInvestor } from "../../services/investorsService";
 import { uploadFile } from "../../services/storageService";
+import { updateUserProfile } from "../../services/usersService";
 
 const REG_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=DM+Mono:wght@300;400&display=swap');
@@ -254,6 +255,13 @@ export default function InvestorRegistration() {
       Object.keys(investorData).forEach(k => { if (investorData[k] === undefined) delete investorData[k]; });
 
       await createInvestor(investorData);
+
+      // Set the investor's uploaded photo as their profile picture (only if uploaded).
+      // Falls back to Google profile photo when no photo is provided.
+      if (profilePhotoUrl) {
+        await updateUserProfile({ avatarUrl: profilePhotoUrl }).catch(() => {});
+      }
+
       await completeRegistration();
       navigate('/investor');
     } catch (err) {

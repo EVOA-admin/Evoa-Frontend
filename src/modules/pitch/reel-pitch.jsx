@@ -161,6 +161,7 @@ export default function ReelPitch() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reelStates, setReelStates] = useState({});
+  const [expandedDescs, setExpandedDescs] = useState({}); // keyed by pitch.id — tap-to-expand description
 
   // AI Chat State
   const [isAIOpen, setIsAIOpen] = useState(false);
@@ -631,26 +632,44 @@ export default function ReelPitch() {
             </div>
           </div>
 
-          {/* Description */}
-          <p className="text-xs text-white/85 leading-relaxed line-clamp-2 mb-2.5">{pitch.description}</p>
+          {/* Description — Instagram-style tap to expand */}
+          {pitch.description && (
+            <p
+              className={`text-xs text-white/85 leading-relaxed mb-2.5 cursor-pointer select-none ${
+                expandedDescs[pitch.id] ? '' : 'line-clamp-2'
+              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpandedDescs(prev => ({ ...prev, [pitch.id]: !prev[pitch.id] }));
+              }}
+            >
+              {pitch.description}
+              {!expandedDescs[pitch.id] && (
+                <span className="text-white/50 font-semibold ml-1">more</span>
+              )}
+            </p>
+          )}
 
-          {/* Deal info pills */}
+          {/* Deal info — full-width Ask banner */}
           {(pitch.dealInfo.ask !== '\u2014' || pitch.dealInfo.revenue !== '\u2014') && (
-            <div className="flex gap-2 flex-wrap">
-              {pitch.dealInfo.ask !== '\u2014' && (
-                <div className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white">
-                  <p className="text-[9px] opacity-80">Ask</p>
-                  <p className="font-bold text-[11px]">{pitch.dealInfo.ask} · {pitch.dealInfo.equity}</p>
-                </div>
-              )}
-              {pitch.dealInfo.revenue !== '\u2014' && (
-                <div className="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-sm text-white border border-white/20">
-                  <p className="text-[9px] opacity-80">Revenue</p>
-                  <p className="font-bold text-[11px]">{pitch.dealInfo.revenue}</p>
-                </div>
-              )}
+            <div className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-[#00B8A9] to-[#008C81] px-4 py-2.5">
+              <div>
+                <p className="text-[9px] text-white/70 uppercase tracking-widest mb-0.5">Ask</p>
+                <p className="font-bold text-[12px] text-white">{pitch.dealInfo.ask}</p>
+              </div>
+              <div className="h-6 w-px bg-white/25" />
+              <div>
+                <p className="text-[9px] text-white/70 uppercase tracking-widest mb-0.5">Equity</p>
+                <p className="font-bold text-[12px] text-white">{pitch.dealInfo.equity}</p>
+              </div>
+              <div className="h-6 w-px bg-white/25" />
+              <div>
+                <p className="text-[9px] text-white/70 uppercase tracking-widest mb-0.5">Revenue</p>
+                <p className="font-bold text-[12px] text-white">{pitch.dealInfo.revenue}</p>
+              </div>
             </div>
           )}
+
         </div>
 
         {/* ── Progress Bar ── */}

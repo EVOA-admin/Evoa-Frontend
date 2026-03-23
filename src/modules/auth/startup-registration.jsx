@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import storageService from "../../services/storageService";
 import startupsService from "../../services/startupsService";
+import { updateUserProfile } from "../../services/usersService";
 
 const REG_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600&family=DM+Mono:wght@300;400&display=swap');
@@ -286,6 +287,12 @@ export default function StartupRegistration() {
       // NOTE: The backend's createStartup() automatically creates the pitch reel
       // from pitchVideoUrl. Do NOT call reelsService.createReel() here — doing so
       // creates a duplicate reel record in the database.
+
+      // Set the startup logo as the user's profile picture (only if uploaded).
+      // Fallback to Google profile photo is preserved when no logo is provided.
+      if (logoUrl) {
+        await updateUserProfile({ avatarUrl: logoUrl }).catch(() => {});
+      }
 
       await completeRegistration();
       navigate('/startup');

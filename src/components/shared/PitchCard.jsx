@@ -169,38 +169,30 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
           </p>
         )}
 
-        {/* Deal Info */}
+        {/* Deal Info — full-width Ask banner */}
         {pitch.dealInfo && (
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <div className={`px-3 py-2 rounded-lg transition-all ${isDark
-              ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black'
-              : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white'
-              }`}>
-              <span className="text-xs opacity-90 block mb-1">Raising</span>
-              <p className="font-bold text-sm">
-                ₹{pitch.dealInfo.amount || '0'}
-              </p>
+          <div className={`w-full rounded-xl px-4 py-3 mb-3 flex items-center justify-between gap-2 ${
+            isDark
+              ? 'bg-gradient-to-r from-[#00B8A9] to-[#008C81]'
+              : 'bg-gradient-to-r from-[#00B8A9] to-[#007A72]'
+          }`}>
+            <div>
+              <span className="text-[10px] text-white/70 uppercase tracking-widest block mb-0.5">Ask</span>
+              <span className="text-white font-bold text-sm">₹{pitch.dealInfo.amount || '0'}</span>
             </div>
-            <div className={`px-3 py-2 rounded-lg transition-all ${isDark
-              ? 'bg-gradient-to-r from-[#80E5FF] to-[#B0FFFA] text-black'
-              : 'bg-gradient-to-r from-[#008C81] to-[#00B8A9] text-white'
-              }`}>
-              <span className="text-xs opacity-90 block mb-1">Equity</span>
-              <p className="font-bold text-sm">
-                {pitch.dealInfo.equity || '0'}%
-              </p>
+            <div className="h-6 w-px bg-white/20" />
+            <div>
+              <span className="text-[10px] text-white/70 uppercase tracking-widest block mb-0.5">Equity</span>
+              <span className="text-white font-bold text-sm">{pitch.dealInfo.equity || '0'}%</span>
             </div>
-            <div className={`px-3 py-2 rounded-lg transition-all ${isDark
-              ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black'
-              : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white'
-              }`}>
-              <span className="text-xs opacity-90 block mb-1">Revenue</span>
-              <p className="font-bold text-sm">
-                ₹{pitch.dealInfo.revenue || '0'}
-              </p>
+            <div className="h-6 w-px bg-white/20" />
+            <div>
+              <span className="text-[10px] text-white/70 uppercase tracking-widest block mb-0.5">Revenue</span>
+              <span className="text-white font-bold text-sm">₹{pitch.dealInfo.revenue || '0'}</span>
             </div>
           </div>
         )}
+
 
         {/* Links */}
         {pitch.links && (
