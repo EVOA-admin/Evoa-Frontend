@@ -173,6 +173,46 @@ const ROLE_CSS = `
   transition:color .2s,border-color .2s;
 }
 .cr-logout:hover { color:#E8341A;border-color:rgba(232,52,26,.3); }
+
+/* ── Mobile: fit all 4 cards + CTA on one screen ── */
+@media(max-width:767px){
+  .cr-root {
+    padding:36px 14px 24px;
+    justify-content:center;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+  .cr-header {
+    margin-bottom:16px;
+  }
+  .cr-brand { font-size:26px; }
+  .cr-brand-tag { margin-bottom:8px; }
+  .cr-title { font-size:22px; margin-bottom:4px; }
+  .cr-subtitle { font-size:13px; }
+
+  .cr-grid {
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .cr-card {
+    padding:14px 10px 12px;
+  }
+  .cr-card-icon-wrap {
+    width:40px; height:40px;
+    margin-bottom:8px;
+  }
+  .cr-card-tag { font-size:7px; margin-bottom:4px; }
+  .cr-card-name { font-size:16px; margin-bottom:0; }
+
+  /* Hide verbose content — not needed at a glance on mobile */
+  .cr-card-desc,
+  .cr-card-divider,
+  .cr-card-features { display:none; }
+
+  .cr-cta-wrap { max-width:100%; }
+  .cr-cta { padding:14px 24px; font-size:10px; letter-spacing:.18em; }
+  .cr-error { font-size:9px; padding:10px 12px; margin-bottom:12px; }
+}
 `;
 
 export default function ChoiceRole() {

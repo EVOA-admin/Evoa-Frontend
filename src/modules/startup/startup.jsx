@@ -12,7 +12,6 @@ import CreateContentModal from "../../components/shared/CreateContentModal";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import postsService from "../../services/postsService";
-import StatusComponent from "../../components/shared/StatusComponent";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { getUnreadCount } from "../../services/chatService";
 
@@ -106,8 +105,7 @@ export default function Startup() {
       <AppHeader actions={uploadAction} />
       <main>
         <div className="px-0 pt-0 pb-4">
-          <StatusComponent />
-          <div className="space-y-4 px-3 mt-0.5">
+          <div className="space-y-4 px-3 mt-2">
             {!loading && userPosts.length === 0 && (
               <EmptyState
                 icon={FaRegNewspaper}

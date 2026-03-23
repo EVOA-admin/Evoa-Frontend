@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import StatusComponent from "../../components/shared/StatusComponent";
 import PitchCard from "../../components/shared/PitchCard";
 import { FaRegNewspaper } from "react-icons/fa";
 import EmptyState from "../../components/shared/EmptyState";
@@ -244,8 +243,7 @@ export default function Incubator() {
       <AppHeader actions={plusAction} />
       <main>
         <div className="px-0 pt-0 pb-4">
-          <StatusComponent />
-          <div className="space-y-4 px-3 mt-0.5">
+          <div className="space-y-4 px-3 mt-2">
             {!loading && pitches.length === 0 && userPosts.length === 0 && (
               <EmptyState
                 icon={FaRegNewspaper}
