@@ -271,12 +271,12 @@ function Hero() {
           <span style={{ width: 32, height: 1, background: "var(--red)", display: "inline-block" }} />Global Startup Ecosystem · Est. 2025
         </div>
         <h1 className="fu2 hero-h1" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(72px,8vw,116px)", lineHeight: .92, letterSpacing: ".02em", marginBottom: 32 }}>
-          <span style={{ display: "block" }}>Stop</span>
-          <span style={{ display: "block", color: "var(--red)" }}>Pitching</span>
-          <span style={{ display: "block", fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, fontStyle: "italic", fontSize: "clamp(40px,5.5vw,78px)", color: "var(--gold)", lineHeight: 1.1 }}>into the void.</span>
+          <span style={{ display: "block" }}>Pitch</span>
+          <span style={{ display: "block", color: "var(--red)" }}>your startup</span>
+          <span style={{ display: "block", fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, fontStyle: "italic", fontSize: "clamp(40px,5.5vw,78px)", color: "var(--gold)", lineHeight: 1.1 }}>here.</span>
         </h1>
         <p className="fu3" style={{ fontSize: "clamp(15px,2vw,20px)", fontWeight: 300, lineHeight: 1.7, color: "var(--muted2)", maxWidth: 420, marginBottom: 48 }}>
-          EVOA is where startups pitch in 90 seconds, hire the best, test products, raise capital — and compete to win. No elite networks required.
+          Find the best startup pitches, connect with top investors & incubators — all in one place. EVOA.
         </p>
         <div className="fu4" style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
           <Link to="/register" className="bfire">Create Your Account</Link>
