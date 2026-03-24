@@ -9,7 +9,6 @@ import {
   IoLogOutOutline,
 } from "react-icons/io5";
 import { useAuth } from "../../contexts/AuthContext";
-import { supabase } from "../../config/supabase";
 
 /* ─── Dashboards / routes ─── */
 const DASHBOARDS = { startup: '/startup', investor: '/investor', incubator: '/incubator', viewer: '/viewer' };
@@ -223,7 +222,6 @@ export default function ChoiceRole() {
   const navigate = useNavigate();
   const { updateUserRole, userRole, loading, roleSelected, registrationCompleted, syncing, signOut } = useAuth();
 
-  // Only redirect already-registered users away from this page (guard)
   useEffect(() => {
     if (!loading && !syncing && roleSelected && registrationCompleted && userRole) {
       navigate(DASHBOARDS[userRole] || '/viewer', { replace: true });
@@ -232,55 +230,20 @@ export default function ChoiceRole() {
 
   const handleContinue = async () => {
     if (!selectedRole || isSubmitting) return;
-    setIsSubmitting(true);
-    setError('');
-
+    setIsSubmitting(true); setError('');
     try {
-      // ── Step 1: Guarantee a fresh auth token is in localStorage ──────────
-      // On first load the Supabase onAuthStateChange callback may not have
-      // fired yet, leaving authToken absent. Fetch directly from Supabase so
-      // the subsequent API call never gets a 401.
-      const { data: sessionData } = await supabase.auth.getSession();
-      const freshToken = sessionData?.session?.access_token;
-      if (freshToken) {
-        localStorage.setItem('authToken', freshToken);
-      } else {
-        // No session — force re-login
-        setError('Session expired. Please log in again.');
-        setTimeout(() => navigate('/login'), 1500);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // ── Step 2: Set the role on the backend ──────────────────────────────
       await updateUserRole(selectedRole);
-
-      // ── Step 3: Navigate — use replace() so the browser history stays
-      // clean and the token is already in localStorage at this point.
-      const dest = ROUTES[selectedRole] || '/';
-      window.location.replace(dest);
-      // Intentionally do NOT call setIsSubmitting(false) — the page is
-      // navigating away; keeping the button in loading state prevents
-      // double-clicks during the brief navigation delay.
+      // Use window.location.href instead of React navigate() so the page
+      // reloads with fresh localStorage cache — avoids stale in-memory
+      // React state blocking navigation on the very first click.
+      window.location.href = ROUTES[selectedRole] || '/';
     } catch (err) {
-      const status = err?.status || err?.response?.status;
-      const msg =
-        Array.isArray(err?.data?.message) ? err.data.message.join('. ')
-        : err?.response?.data?.message
-        || err?.data?.message
-        || err?.message
-        || '';
-
-      if (status === 401) {
-        setError('Session expired. Please log in again.');
-        setTimeout(() => navigate('/login'), 2000);
-      } else if (status === 400) {
-        setError('Invalid role selected. Please try again.');
-      } else if (msg) {
-        setError(msg);
-      } else {
-        setError('Something went wrong. Please try again.');
-      }
+      const status = err?.status;
+      const msg = Array.isArray(err?.data?.message) ? err.data.message.join('. ') : err?.data?.message || err?.message || '';
+      if (status === 400) setError('Invalid role selected. Please try again.');
+      else if (status === 401) { setError('Session expired. Please log in again.'); setTimeout(() => navigate('/login'), 2000); }
+      else if (msg) setError(msg);
+      else setError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
   };

@@ -241,9 +241,15 @@ export function AuthProvider({ children }) {
      * Sets roleSelected=true. For viewer, also sets registrationCompleted=true.
      */
     const updateUserRole = async (role) => {
-        // Note: the caller (choice-role.jsx) already fetches a fresh Supabase
-        // token and writes it to localStorage before calling this function,
-        // so there is no need to do a second getSession() here.
+        // On production (Vercel), the onAuthStateChange callback may not have fired yet
+        // by the time the user clicks "Continue", so localStorage.authToken could be missing.
+        // Always get a fresh token from Supabase directly to avoid a 401 on first load.
+        const { data: sessionData } = await supabase.auth.getSession();
+        const freshToken = sessionData?.session?.access_token;
+        if (freshToken) {
+            localStorage.setItem('authToken', freshToken);
+        }
+
         const response = await apiClient.post('/users/role', { role });
         if (response?.data) {
             const userData = response.data?.data || response.data;
@@ -256,8 +262,8 @@ export function AuthProvider({ children }) {
             }
             setUser(prev => ({ ...prev, role: newRole, roleSelected: true }));
 
-            // Update cache so page navigations work immediately
-            const uid = currentSupabaseUidRef.current;
+            // Update cache so refresh works immediately after role selection
+            const uid = currentSupabaseUidRef.current || sessionData?.session?.user?.id;
             if (uid) {
                 setCachedOnboarding(uid, {
                     userRole: newRole,
