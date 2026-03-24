@@ -61,13 +61,15 @@ export default function Notifications() {
       }
     }
 
-    if (notification.link) {
-      if (notification.link.startsWith('/u/')) {
-        const id = notification.link.split('/')[2];
-        goToProfile(id, currentUser, navigate);
-      } else {
-        navigate(notification.link);
-      }
+    // Derive actor ID: prefer explicit actorId field (new), fall back to /u/<id> link
+    const actorId =
+      notification.actorId ||
+      (notification.link?.startsWith('/u/') ? notification.link.split('/')[2] : null);
+
+    if (actorId) {
+      goToProfile(actorId, currentUser, navigate);
+    } else if (notification.link) {
+      navigate(notification.link);
     } else if (notification.type === 'battleground') {
       navigate('/battleground');
     } else if (notification.type === 'pitch' || notification.type === 'investor') {
@@ -102,6 +104,44 @@ export default function Notifications() {
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
     return date.toLocaleDateString();
+  };
+
+  /**
+   * Renders the notification message with the actor username as a teal clickable button.
+   * Uses actorId (new backend field) to navigate to their profile on click.
+   * Falls back to extracting actorId from notification.link if actorId not present.
+   */
+  const renderMessage = (notification) => {
+    const msg = notification.message || '';
+
+    // Prefer explicit actorId field; fall back to /u/<id> link extraction
+    const actorId =
+      notification.actorId ||
+      (notification.link?.startsWith('/u/') ? notification.link.split('/')[2] : null);
+
+    // Extract the leading name-like phrase (1–3 capitalised words at the start)
+    const leadingName = msg.match(/^([A-Z][a-zA-Z'-]+(?: [A-Z][a-zA-Z'-]+){0,2})\b/);
+    if (leadingName) {
+      const name = leadingName[1];
+      const rest = msg.slice(name.length);
+      return (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation(); // prevent card's handleNotificationClick
+              if (actorId) goToProfile(actorId, currentUser, navigate);
+            }}
+            className="font-bold text-[#00B8A9] hover:underline bg-transparent border-none p-0 cursor-pointer"
+            style={{ font: 'inherit', display: 'inline' }}
+          >
+            {name}
+          </button>
+          {rest}
+        </>
+      );
+    }
+
+    return msg;
   };
 
   return (
@@ -188,7 +228,7 @@ export default function Notifications() {
                       </p>
                     )}
                     <p className={`text-sm ${isDark ? 'text-white/80' : 'text-black/80'}`}>
-                      {notification.message}
+                      {renderMessage(notification)}
                     </p>
                     <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-black/50'}`}>
                       {formatTime(notification.createdAt)}

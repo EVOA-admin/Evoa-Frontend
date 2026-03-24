@@ -155,6 +155,7 @@ export default function ReelPitch() {
   const hashtagFilter = searchParams.get('hashtag'); // set from explore page
   const containerRef = useRef(null);
   const videoRefs = useRef({});
+  const sentinelRef = useRef(null); // infinite-loop sentinel — bottom of reel list
   const { userRole, user: currentUser } = useAuth();
 
   const [pitches, setPitches] = useState([]);
@@ -197,6 +198,21 @@ export default function ReelPitch() {
   // Schedule meeting state
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [schedulePitch, setSchedulePitch] = useState(null);
+
+  // ── Infinite loop: when user scrolls past the last reel, jump back to top ──
+  useEffect(() => {
+    if (!sentinelRef.current || !containerRef.current || pitches.length === 0) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        // Instantly reset scroll position — snap-mandatory will re-snap to reel 0
+        containerRef.current.scrollTo({ top: 0, behavior: 'instant' });
+      },
+      { threshold: 0.1 }
+    );
+    obs.observe(sentinelRef.current);
+    return () => obs.disconnect();
+  }, [pitches]);
 
   // ── Fetch reels from API ──────────────────────────────────────────────────
   useEffect(() => {
@@ -710,6 +726,8 @@ export default function ReelPitch() {
                   {renderReel(pitch)}
                 </div>
               ))}
+              {/* Infinite-loop sentinel — 1px div observed; triggers scroll-to-top */}
+              <div ref={sentinelRef} style={{ height: '1px', flexShrink: 0 }} />
             </div>
           )}
         </div>
