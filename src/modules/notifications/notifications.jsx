@@ -93,18 +93,22 @@ export default function Notifications() {
 
   const formatTime = (dateStr) => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
+    // Force UTC parsing — if the string has no timezone indicator ('Z' or '+'/'-' after date part),
+    // JS would treat it as local IST, making all times appear 5h30m older than actual.
+    const utcStr = /[Zz]|[+-]\d{2}:\d{2}$/.test(dateStr) ? dateStr : dateStr + 'Z';
+    const date = new Date(utcStr);
     const now = new Date();
     const diff = now - date;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
-    if (minutes < 1) return 'just now';
+    if (diff < 0 || minutes < 1) return 'just now';
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
   };
+
 
   /**
    * Renders the notification message with the actor username as a teal clickable button.
