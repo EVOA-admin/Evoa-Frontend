@@ -100,6 +100,18 @@ body{cursor:none;overflow-x:hidden;}
 .bfire{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:16px 36px;background:var(--red);color:var(--black);text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));display:inline-block;transition:all .3s;border:none;cursor:pointer}
 .bfire:hover{background:var(--gold);transform:translateY(-2px)}
 
+/* ── PITCH SHOWCASE ── */
+.pitch-showcase{padding:60px 0 80px;background:var(--grey);position:relative;overflow:hidden;}
+.pitch-showcase-hdr{padding:0 48px;margin-bottom:40px;}
+.pitch-scroll{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 48px 24px;scrollbar-width:none;cursor:grab;}
+.pitch-scroll::-webkit-scrollbar{display:none;}
+.pitch-card{flex:0 0 auto;width:200px;transition:transform .35s cubic-bezier(.23,1,.32,1),box-shadow .35s ease;scroll-snap-align:start;}
+.pitch-card:hover{transform:scale(1.04);}
+.pitch-card:hover .pitch-card-img{box-shadow:0 12px 40px rgba(232,52,26,.18),0 0 0 1px rgba(232,52,26,.2);border-color:rgba(232,52,26,.25);}
+.pitch-card-name{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pitch-card-img{width:100%;aspect-ratio:9/16;object-fit:cover;border:1px solid rgba(244,240,232,.08);display:block;transition:box-shadow .35s ease,border-color .35s ease;background:var(--greyL);}
+@media(max-width:768px){.pitch-showcase-hdr{padding:0 20px;}.pitch-scroll{padding:0 20px 16px;gap:12px;}.pitch-card{width:150px;}}
+
 
 
 /* ── CURSOR ── */
@@ -253,9 +265,9 @@ function ParticleCanvas() {
 
 /* ─── HERO ─── */
 function Hero() {
-  const cnt = useCounter(2400);
+  const cnt = useCounter(40);
   return (
-    <section id="hero" className="hero-grid" style={{ minHeight: "100vh", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", padding: "140px 48px 80px", position: "relative", overflow: "hidden" }}>
+    <section id="hero" className="hero-grid" style={{ minHeight: "100vh", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", padding: "10px 48px 60px", position: "relative", overflow: "hidden" }}>
       <ParticleCanvas />
       <div className="hero-div" style={{ position: "absolute", top: 0, right: "50%", bottom: 0, width: 1, background: "linear-gradient(to bottom,transparent,rgba(232,52,26,.2) 30%,rgba(201,168,76,.15) 70%,transparent)", zIndex: 1 }} />
       <div style={{ position: "relative", zIndex: 2 }}>
@@ -295,7 +307,7 @@ function Hero() {
             <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 64, lineHeight: 1, color: "var(--white)", letterSpacing: ".04em" }}>{cnt.toLocaleString()}</div>
             <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--muted)", marginTop: 4 }}>Startups on Platform</div>
           </div>
-          {[{ v: "2,400+", l: "Startups Live", c: "fs0", s: { top: "8%", right: "5%" } }, { v: "18", l: "Countries", c: "fs1", s: { top: "38%", right: "-2%" } }, { v: "₹40Cr+", l: "Capital Matched", c: "fs2", s: { bottom: "18%", right: "8%" } }, { v: "021", l: "AI Co-Founder", c: "fs3", s: { bottom: "30%", left: "2%" } }].map((st, i) => (
+          {[{ v: "40+", l: "Startups Live", c: "fs0", s: { top: "8%", right: "5%" } }, { v: "11", l: "Countries", c: "fs1", s: { top: "38%", right: "-2%" } }, { v: "100", l: "Free Early Access", c: "fs2", s: { bottom: "18%", right: "8%" } }, { v: "021", l: "AI Co-Founder", c: "fs3", s: { bottom: "30%", left: "2%" } }].map((st, i) => (
             <div key={i} className={st.c} style={{ position: "absolute", fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted2)", whiteSpace: "nowrap", ...st.s }}>
               <strong style={{ color: "var(--gold)", fontWeight: 400, display: "block", fontSize: 18, fontFamily: "'Bebas Neue',sans-serif" }}>{st.v}</strong>{st.l}
             </div>
@@ -330,6 +342,63 @@ function Ticker() {
         ))}
       </div>
     </div>
+  );
+}
+
+/* ─── PITCH SHOWCASE ─── */
+const PITCH_IMAGES = [
+  { name: 'Freshily', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/Freshily_19.png' },
+  { name: 'Curve Electric', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/curve_electric.png' },
+  { name: 'Decentra Classes', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/decentra_classes.png' },
+  { name: 'Dream Provider', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/dream_provider.png' },
+  { name: 'KCloud', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/kcloud.jpeg' },
+  { name: 'Mahua Choco Chips', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/mahua_choco_chips.jpeg' },
+  { name: 'Rentilium', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/rentilium.png' },
+  { name: 'Titlam Handicrafts', url: 'https://uocfornrjfikdajrhzog.supabase.co/storage/v1/object/public/root-page-pitch-images/titlam_handicrafts.jpeg' },
+];
+
+function PitchShowcase() {
+  const scrollRef = useRef(null);
+  // Enable click-drag scrolling
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let isDown = false, sx = 0, sl = 0;
+    const down = e => { isDown = true; sx = e.pageX - el.offsetLeft; sl = el.scrollLeft; el.style.cursor = 'grabbing'; };
+    const up = () => { isDown = false; el.style.cursor = 'grab'; };
+    const move = e => { if (!isDown) return; e.preventDefault(); const x = e.pageX - el.offsetLeft; el.scrollLeft = sl - (x - sx); };
+    el.addEventListener('mousedown', down);
+    el.addEventListener('mouseleave', up);
+    el.addEventListener('mouseup', up);
+    el.addEventListener('mousemove', move);
+    return () => { el.removeEventListener('mousedown', down); el.removeEventListener('mouseleave', up); el.removeEventListener('mouseup', up); el.removeEventListener('mousemove', move); };
+  }, []);
+
+  return (
+    <section className="pitch-showcase">
+      <div className="ghost" style={{ fontSize: 220, top: -20, right: -10 }}>03</div>
+      <div className="pitch-showcase-hdr reveal">
+        <div className="stag">Live on EVOA</div>
+        <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(36px,4.5vw,62px)', lineHeight: .94, letterSpacing: '.02em', marginBottom: 12 }}>Startups pitching now.</h2>
+        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(14px,1.6vw,17px)', fontWeight: 300, color: 'var(--muted2)', maxWidth: 440 }}>Real founders. Real pitches. Discover the next big idea.</p>
+      </div>
+      <div className="pitch-scroll" ref={scrollRef}>
+        {PITCH_IMAGES.map((p, i) => (
+          <div key={i} className="pitch-card">
+            <div className="pitch-card-name">{p.name}</div>
+            <img
+              className="pitch-card-img"
+              src={p.url}
+              alt={`${p.name} startup pitch thumbnail`}
+              loading={i < 3 ? 'eager' : 'lazy'}
+              decoding="async"
+              width="200"
+              height="356"
+            />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -1038,6 +1107,7 @@ export default function Landing() {
       <LandingNav />
       <Hero />
       <Ticker />
+      <PitchShowcase />
       <Problem />
       <Pillars />
       <AISection />
