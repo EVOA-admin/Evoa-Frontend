@@ -346,7 +346,6 @@ export default function Explore() {
             {/* Top Performing Pitches */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-3">
-                <FaTrophy className={isDark ? 'text-yellow-400' : 'text-yellow-600'} size={16} />
                 <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Top Performing Pitch
                 </h2>

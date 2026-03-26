@@ -323,11 +323,11 @@ function Hero() {
 
 /* ─── TICKER ─── */
 const TICKS = [
-  { t: "Fintech startup from Mumbai just pitched", h: "4 minutes ago" },
-  { t: "Investor from Singapore matched", h: "Seed round ₹2Cr" },
-  { t: "021 AI co-founder activated", h: "EdTech founder · Bangalore" },
-  { t: "Trade Arena product test", h: "847 responses in 2 hours" },
-  { t: "New investor joined", h: "Dragon's Den alumni · London" },
+  { t: "Free Early Access", h: "For first 100 startups" },
+  { t: "Investor AI launched", h: "Get startup's real time report" },
+  { t: "021 AI co-founder activated", h: "get your own CXO's" },
+  // { t: "Trade Arena product test", h: "847 responses in 2 hours" },
+  // { t: "New investor joined", h: "Dragon's Den alumni · London" },
 ];
 function Ticker() {
   const items = [...TICKS, ...TICKS];
