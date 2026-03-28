@@ -9,6 +9,7 @@ import { FaPlay } from "react-icons/fa";
 import storageService from "../../services/storageService";
 import postsService from "../../services/postsService";
 import reelsService from "../../services/reelsService";
+import ImageCropEditor from "./ImageCropEditor";
 
 /**
  * CreateContentModal
@@ -23,10 +24,12 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
     const isDark = theme === "dark";
     const { user } = useAuth();
 
-    // Step: 'choose' | 'post' | 'reel'
+    // Step: 'choose' | 'crop' | 'post' | 'reel'
     const [step, setStep] = useState(canUploadReel ? "choose" : "post");
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
+    const [croppedBlob, setCroppedBlob] = useState(null);   // result from ImageCropEditor
+    const [croppedPreview, setCroppedPreview] = useState(null); // URL for cropped blob
     const [caption, setCaption] = useState("");
     const [hashtags, setHashtags] = useState("");
     const [uploadState, setUploadState] = useState("idle"); // idle | uploading | success | error
@@ -40,6 +43,8 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
         setStep(canUploadReel ? "choose" : "post");
         setFile(null);
         setPreview(null);
+        setCroppedBlob(null);
+        setCroppedPreview(null);
         setCaption("");
         setHashtags("");
         setUploadState("idle");
@@ -63,11 +68,29 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
         }
         setFile(f);
         setPreview(URL.createObjectURL(f));
-        setStep(type === "video" ? "reel" : "post");
+        // Images go through the crop step first; videos skip straight to reel
+        setStep(type === "video" ? "reel" : "crop");
+    };
+
+    // Called when the user accepts the crop
+    const handleCropConfirm = (blob) => {
+        setCroppedBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setCroppedPreview(url);
+        setStep("post");
+    };
+
+    // Called when the user taps "Retake" inside the crop editor
+    const handleCropCancel = () => {
+        setFile(null);
+        setPreview(null);
+        setCroppedBlob(null);
+        setCroppedPreview(null);
+        setStep(canUploadReel ? "choose" : "post");
     };
 
     const handleSubmitPost = async () => {
-        if (!file && !caption.trim()) {
+        if (!croppedBlob && !file && !caption.trim()) {
             setErrorMsg("Add an image or caption to post.");
             return;
         }
@@ -75,10 +98,13 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
         setErrorMsg("");
         try {
             let imageUrl = null;
-            if (file) {
-                const ext = file.name.split(".").pop();
+            // Upload the cropped blob if available, otherwise fall back to raw file
+            const uploadSource = croppedBlob || file;
+            if (uploadSource) {
+                const ext = croppedBlob ? "jpg" : file.name.split(".").pop();
                 const path = `posts/${user?.id}/${Date.now()}.${ext}`;
-                imageUrl = await storageService.uploadFile(file, "evoa-media", path);
+                // storageService.uploadFile accepts File or Blob
+                imageUrl = await storageService.uploadFile(uploadSource, "evoa-media", path);
             }
             const tagArr = hashtags.split(/[\s,#]+/).filter(Boolean).map(t => t.replace(/^#/, ""));
             await postsService.createPost({ imageUrl, caption, hashtags: tagArr });
@@ -128,13 +154,24 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
 
                 {/* Header */}
                 <div className={`flex items-center gap-3 px-4 py-3 border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
-                    {step !== "choose" && (
-                        <button onClick={() => { setStep(canUploadReel ? "choose" : "post"); setFile(null); setPreview(null); }} className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}>
+                    {step !== "choose" && step !== "crop" && (
+                        <button
+                            onClick={() => {
+                                if (step === "post") {
+                                    // Go back to crop if we have an original image, else choose/post
+                                    if (preview) { setStep("crop"); setCroppedBlob(null); setCroppedPreview(null); }
+                                    else { setStep(canUploadReel ? "choose" : "post"); setFile(null); }
+                                } else {
+                                    setStep(canUploadReel ? "choose" : "post"); setFile(null); setPreview(null);
+                                }
+                            }}
+                            className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
+                        >
                             <IoArrowBack size={18} className={isDark ? "text-white" : "text-gray-800"} />
                         </button>
                     )}
                     <h2 className={`text-base font-bold flex-1 ${isDark ? "text-white" : "text-gray-900"}`}>
-                        {step === "choose" ? "Create" : step === "reel" ? "New Pitch Reel" : "New Post"}
+                        {step === "choose" ? "Create" : step === "crop" ? "Adjust Photo" : step === "reel" ? "New Pitch Reel" : "New Post"}
                     </h2>
                     <button onClick={handleClose} className={`p-1.5 rounded-lg ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}>
                         <IoClose size={18} className={isDark ? "text-white/70" : "text-gray-500"} />
@@ -174,11 +211,24 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                     </div>
                 )}
 
+                {/* ── CROP step ── */}
+                {step === "crop" && preview && (
+                    <div className="px-4 pb-2">
+                        <ImageCropEditor
+                            src={preview}
+                            aspectRatio={4 / 3}
+                            onConfirm={handleCropConfirm}
+                            onCancel={handleCropCancel}
+                            isDark={isDark}
+                        />
+                    </div>
+                )}
+
                 {/* ── POST step ── */}
                 {(step === "post") && (
                     <div className="p-4 space-y-4">
-                        {/* Image picker */}
-                        {!preview ? (
+                        {/* Image picker — shown only when no image selected */}
+                        {!croppedPreview && !preview ? (
                             <button
                                 onClick={() => imageInputRef.current?.click()}
                                 className={`w-full aspect-[4/3] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${isDark ? "border-white/15 hover:border-[#00B8A9]/40 bg-white/5" : "border-gray-200 hover:border-[#00B8A9]/40 bg-gray-50"}`}
@@ -188,9 +238,9 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                             </button>
                         ) : (
                             <div className="relative rounded-2xl overflow-hidden aspect-[4/3]">
-                                <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                <img src={croppedPreview || preview} alt="Preview" className="w-full h-full object-cover" />
                                 <button
-                                    onClick={() => { setFile(null); setPreview(null); }}
+                                    onClick={() => { setFile(null); setPreview(null); setCroppedBlob(null); setCroppedPreview(null); }}
                                     className="absolute top-2 right-2 p-1 bg-black/60 rounded-full"
                                 >
                                     <IoClose size={14} className="text-white" />
@@ -298,7 +348,7 @@ function UploadButton({ state, progress, onPress, label }) {
             {isSuccess ? (
                 <><IoCheckmarkCircle size={18} />Done!</>
             ) : isLoading ? (
-                <><IoCloudUpload size={18} className="animate-bounce" />Uploading video…</>
+                <><IoCloudUpload size={18} className="animate-bounce" />Uploading post…</>
             ) : (
                 label
             )}
