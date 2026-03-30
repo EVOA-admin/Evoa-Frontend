@@ -218,7 +218,6 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                             src={preview}
                             aspectRatio={4 / 3}
                             onConfirm={handleCropConfirm}
-                            onCancel={handleCropCancel}
                             isDark={isDark}
                         />
                     </div>
