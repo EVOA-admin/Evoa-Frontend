@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import Footer from "../../components/layout/footer";
 import LandingNav from "../../components/layout/LandingNav";
+import { supabase } from "../../config/supabase";
 
 /* ─── SCOPED CSS — matches About & Contact design system ─── */
 const BLOG_CSS = `
@@ -184,8 +185,47 @@ const BLOG_CSS = `
 .blg-read-btn svg { width:14px;height:14px;transition:transform .25s; }
 .blg-read-btn:hover svg { transform:translateX(4px); }
 
-/* ── CARD ENTER ANIMATION (triggered by React key re-mount) ── */
+/* ── CARD ENTER ANIMATION ── */
 .blg-card-anim { animation: blg-cardIn .45s ease both; }
+
+/* ── LOADING SKELETON ── */
+.blg-skel-grid {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:32px;
+  max-width:1400px;
+  margin:0 auto;
+}
+.blg-skel-card {
+  background:#0f0f10;
+  border:1px solid rgba(244,240,232,.07);
+}
+.blg-skel-img {
+  height:220px;
+  background:linear-gradient(90deg,#1a1a1b 25%,#222 50%,#1a1a1b 75%);
+  background-size:200% 100%;
+  animation:blg-shimmer 1.4s infinite;
+}
+.blg-skel-body { padding:28px; }
+.blg-skel-line {
+  height:14px;border-radius:4px;margin-bottom:12px;
+  background:linear-gradient(90deg,#1a1a1b 25%,#222 50%,#1a1a1b 75%);
+  background-size:200% 100%;
+  animation:blg-shimmer 1.4s infinite;
+}
+.blg-skel-line.w80 { width:80%; }
+.blg-skel-line.w60 { width:60%; }
+.blg-skel-line.w90 { width:90%; }
+
+/* ── EMPTY / ERROR ── */
+.blg-empty {
+  text-align:center;
+  padding:80px 24px;
+  color:rgba(244,240,232,.4);
+  font-family:'DM Mono',monospace;
+  font-size:13px;
+  letter-spacing:.1em;
+}
 
 /* ── BAR / LOAD MORE ── */
 .blg-load-wrap { text-align:center;margin-top:64px; }
@@ -201,33 +241,57 @@ const BLOG_CSS = `
 
 /* ── RESPONSIVE ── */
 @media(max-width:1024px){
-  .blg-grid { grid-template-columns:repeat(2,1fr); }
+  .blg-grid,.blg-skel-grid { grid-template-columns:repeat(2,1fr); }
   .blg-section { padding:0 40px 100px; }
   .blg-hero { padding:120px 40px 80px; }
 }
 @media(max-width:640px){
-  .blg-grid { grid-template-columns:1fr; }
+  .blg-grid,.blg-skel-grid { grid-template-columns:1fr; }
   .blg-section { padding:0 20px 80px; }
   .blg-hero { padding:100px 20px 60px; }
   .blg-cats { gap:8px; }
 }
 `;
 
-/* ── DATA ── */
-const BLOG_POSTS = [
-  { id:1, title:"The Future of Startup Funding in India",        excerpt:"Exploring how the startup ecosystem is evolving and what investors are looking for in 2026.",                                  author:"John Doe",     date:"Mar 15, 2026", category:"Funding",        readTime:"5 min",  img:"https://images.pexels.com/photos/1181244/pexels-photo-1181244.jpeg?auto=compress&cs=tinysrgb&w=800" },
-  { id:2, title:"10 Tips for Pitching Your Startup Successfully", excerpt:"Learn the essential strategies to make your pitch stand out and attract the right investors.",                               author:"Jane Smith",   date:"Mar 10, 2026", category:"Pitching",       readTime:"7 min",  img:"https://images.pexels.com/photos/1181476/pexels-photo-1181476.jpeg?auto=compress&cs=tinysrgb&w=800" },
-  { id:3, title:"Building a Strong Investor Network",             excerpt:"Discover how to connect with the right investors and build meaningful relationships in the startup world.",                   author:"Mike Johnson", date:"Mar 5, 2026",  category:"Networking",     readTime:"6 min",  img:"https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=800" },
-  { id:4, title:"AI Startups: The Next Big Wave",                 excerpt:"Understanding the AI revolution and how startups are leveraging artificial intelligence to disrupt industries.",              author:"Sarah Williams",date:"Feb 28, 2026",category:"Technology",     readTime:"8 min",  img:"https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800" },
-  { id:5, title:"From Idea to IPO: A Startup Journey",           excerpt:"A comprehensive guide on scaling your startup from initial concept to public offering.",                                      author:"David Brown",  date:"Feb 20, 2026", category:"Growth",         readTime:"10 min", img:"https://images.pexels.com/photos/3184357/pexels-photo-3184357.jpeg?auto=compress&cs=tinysrgb&w=800" },
-  { id:6, title:"Sustainable Startups: The Green Revolution",    excerpt:"How eco-friendly startups are changing the business landscape and attracting conscious investors worldwide.",                 author:"Emily Davis",  date:"Feb 15, 2026", category:"Sustainability",  readTime:"6 min",  img:"https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=800" },
-];
+const CATEGORIES = ["All", "Funding", "Pitching", "Networking", "Technology", "Growth", "Sustainability"];
 
-const CATEGORIES = ["All","Funding","Pitching","Networking","Technology","Growth","Sustainability"];
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString("en-IN", {
+    day: "numeric", month: "short", year: "numeric"
+  });
+}
+
+function excerpt(text, max = 200) {
+  if (!text) return "";
+  return text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
+}
 
 export default function Blog() {
   const [activeCat, setActiveCat] = useState("All");
+  const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const revealRefs = useRef([]);
+
+  useEffect(() => {
+    async function fetchBlogs() {
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("blogs")
+          .select("*")
+          .eq("status", "published")
+          .order("created_at", { ascending: false });
+
+        if (fetchError) throw fetchError;
+        setBlogs(data || []);
+      } catch (err) {
+        setError(err.message || "Failed to load blogs.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBlogs();
+  }, []);
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -240,7 +304,7 @@ export default function Blog() {
 
   const addRef = i => el => { revealRefs.current[i] = el; };
 
-  const filtered = activeCat === "All" ? BLOG_POSTS : BLOG_POSTS.filter(p => p.category === activeCat);
+  const filtered = activeCat === "All" ? blogs : blogs.filter(p => p.category === activeCat);
 
   return (
     <div className="blg-root">
@@ -252,7 +316,7 @@ export default function Blog() {
         <div className="blg-hero-ghost">BLOG</div>
         <div className="blg-pill blg-reveal" ref={addRef(0)}>Insights &amp; Stories</div>
         <h1 className="blg-reveal" ref={addRef(1)}>
-          EVO‑A <span style={{ color:"#E8341A" }}>BLOG</span>
+          EVO‑A <span style={{ color: "#E8341A" }}>BLOG</span>
           <em>intelligence for founders</em>
         </h1>
         <p className="blg-hero-sub blg-reveal" ref={addRef(2)}>
@@ -276,46 +340,68 @@ export default function Blog() {
 
       {/* ── GRID ── */}
       <section className="blg-section">
-        <div className="blg-grid" key={activeCat}>
-          {filtered.map((post, i) => (
-            <article
-              key={post.id}
-              className="blg-card blg-card-anim"
-              style={{ animationDelay: `${i * 80}ms` }}
-            >
-              {/* Image */}
-              <div className="blg-card-img">
-                <img src={post.img} alt={post.title} loading="lazy" />
-                <div className="blg-card-img-overlay" />
-                <span className="blg-cat-badge">{post.category}</span>
-              </div>
-
-              {/* Body */}
-              <div className="blg-card-body">
-                <h2 className="blg-card-title">{post.title}</h2>
-                <p className="blg-card-excerpt">{post.excerpt}</p>
-                <div className="blg-card-meta">
-                  <div className="blg-card-meta-left">
-                    <span>✦ {post.author}</span>
-                    <span>{post.date}</span>
-                  </div>
-                  <span>{post.readTime}</span>
+        {loading ? (
+          <div className="blg-skel-grid">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="blg-skel-card">
+                <div className="blg-skel-img" />
+                <div className="blg-skel-body">
+                  <div className="blg-skel-line w80" />
+                  <div className="blg-skel-line w90" />
+                  <div className="blg-skel-line w60" />
                 </div>
-                <button className="blg-read-btn" type="button" aria-label={`Read: ${post.title}`}>
-                  Read Article
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
-            </article>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="blg-empty">⚠ {error}</div>
+        ) : filtered.length === 0 ? (
+          <div className="blg-empty">
+            {activeCat === "All"
+              ? "No blog posts published yet."
+              : `No posts in the "${activeCat}" category.`}
+          </div>
+        ) : (
+          <div className="blg-grid" key={activeCat}>
+            {filtered.map((post, i) => (
+              <article
+                key={post.id}
+                className="blg-card blg-card-anim"
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                {/* Image */}
+                <div className="blg-card-img">
+                  <img
+                    src={post.cover_image || "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800"}
+                    alt={post.title}
+                    loading="lazy"
+                  />
+                  <div className="blg-card-img-overlay" />
+                  <span className="blg-cat-badge">{post.category}</span>
+                </div>
 
-        {/* Load more */}
-        <div className="blg-load-wrap blg-reveal" ref={addRef(10)}>
-          <button className="blg-load-btn" type="button">Load More Articles</button>
-        </div>
+                {/* Body */}
+                <div className="blg-card-body">
+                  <h2 className="blg-card-title">{post.title}</h2>
+                  <p className="blg-card-excerpt">{excerpt(post.content)}</p>
+                  <div className="blg-card-meta">
+                    <div className="blg-card-meta-left">
+                      <span>✦ {post.author}</span>
+                      <span>{formatDate(post.created_at)}</span>
+                    </div>
+                    <span>{post.read_time}</span>
+                  </div>
+                  <button className="blg-read-btn" type="button" aria-label={`Read: ${post.title}`}>
+                    Read Article
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <Footer />
