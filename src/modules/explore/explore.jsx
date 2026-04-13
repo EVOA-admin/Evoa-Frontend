@@ -30,7 +30,7 @@ export default function Explore() {
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  const [trendingHashtags, setTrendingHashtags] = useState([]);
+
   const [topPitches, setTopPitches] = useState([]);
   const [startupsOfWeek, setStartupsOfWeek] = useState([]);
   const [investorSpotlight, setInvestorSpotlight] = useState([]);
@@ -43,17 +43,12 @@ export default function Explore() {
     const fetchExploreData = async () => {
       setLoadingData(true);
       try {
-        const [hashtagsRes, topRes, weekRes, spotlightRes] = await Promise.allSettled([
-          exploreService.getTrendingHashtags(),
+        const [topRes, weekRes, spotlightRes] = await Promise.allSettled([
           exploreService.getTopPitches(),
           exploreService.getStartupsOfWeek(),
           exploreService.getInvestorSpotlight(),
         ]);
 
-        if (hashtagsRes.status === 'fulfilled' && hashtagsRes.value?.data) {
-          const tags = hashtagsRes.value.data?.data || hashtagsRes.value.data;
-          setTrendingHashtags(Array.isArray(tags) ? tags : []);
-        }
         if (topRes.status === 'fulfilled' && topRes.value?.data) {
           const pitches = topRes.value.data?.data || topRes.value.data;
           setTopPitches(Array.isArray(pitches) ? pitches : []);
@@ -316,32 +311,6 @@ export default function Explore() {
         {/* Trending section — shown when not searching */}
         {!searchQuery.trim() && (
           <>
-            {/* Trending Tags */}
-            <div className="mb-8">
-              <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Trending Tags
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {(trendingHashtags.length > 0
-                  ? trendingHashtags.map((t) => typeof t === 'string' ? t : `#${t.tag || t.name}`)
-                  : ['#AI', '#HealthTech', '#BharatFirst', '#FinTech', '#EdTech', '#GreenTech']
-                ).map((tag, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      const raw = tag.replace(/^#/, '');
-                      navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(raw)}`);
-                    }}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isDark
-                      ? 'bg-white/10 text-white hover:bg-[#00B8A9]/20 hover:text-[#00B8A9]'
-                      : 'bg-gray-100 text-gray-700 hover:bg-[#00B8A9]/10 hover:text-[#00B8A9]'
-                      }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Top Performing Pitches */}
             <div className="mb-8">

@@ -9,13 +9,32 @@ import apiClient from "../../services/apiClient";
 import {
   FaHandshake, FaRegComment, FaComment, FaRegPaperPlane,
   FaVolumeUp, FaVolumeMute, FaArrowLeft, FaVideo,
-  FaRobot, FaTimes, FaPaperPlane, FaSpinner
+  FaRobot, FaTimes, FaPaperPlane, FaSpinner, FaHashtag
 } from "react-icons/fa";
 import { IoChatbubbleOutline, IoPaperPlaneOutline } from "react-icons/io5";
 import { FiCalendar, FiVolume2, FiVolumeX, FiSend } from "react-icons/fi";
 import O21Icon from "../../components/shared/O21Icon";
 import { goToProfile } from "../../utils/profileNavigation";
 import ScheduleMeetingModal from "../../components/shared/ScheduleMeetingModal";
+
+// ── Fisher-Yates shuffle (in-place clone) ─────────────────────────────────────
+// Uses a session-stable seed so every page load / refresh gets a
+// different order, but navigating back mid-session keeps the same order.
+const SESSION_SEED = Math.random();
+function seededRandom(index) {
+  // Simple but effective: combine session seed + index to get a deterministic
+  // value per (session × position), different every session.
+  const x = Math.sin(SESSION_SEED * 9301 + index * 49297 + 233720) * 1000;
+  return x - Math.floor(x);
+}
+function shuffleReels(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(seededRandom(i) * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 const formatNum = (n) => {
   if (!n) return '0';
@@ -266,6 +285,11 @@ export default function ReelPitch() {
           } catch (e) {
             console.warn('[reel-pitch] Could not fetch specific reel:', e?.message);
           }
+          // Do NOT shuffle deeplink feeds — the requested reel must stay first
+        } else if (!hashtagFilter) {
+          // Randomize the for-you feed — different order each session/refresh
+          // Hashtag feeds keep their relevance-ranked order from the backend
+          mapped = shuffleReels(mapped);
         }
 
         setPitches(mapped);
@@ -704,7 +728,11 @@ export default function ReelPitch() {
             <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-95">
               <FaArrowLeft size={18} />
             </button>
-            <h1 className="text-lg font-bold text-white">Pitch Reels</h1>
+            <h1 className="text-lg font-bold text-white flex items-center gap-1.5">
+              {hashtagFilter ? (
+                <><FaHashtag size={14} className="text-[#00B8A9]" />{hashtagFilter}</>
+              ) : 'Pitch Reels'}
+            </h1>
             <div className="w-11" />
           </div>
 
