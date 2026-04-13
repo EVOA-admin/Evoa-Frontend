@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -26,6 +26,8 @@ import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
 import { HiSun, HiMoon } from "react-icons/hi";
 
+const AmbassadorDashboard = lazy(() => import("../ambassador/AmbassadorDashboard"));
+
 export default function InvestorProfile() {
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === "dark";
@@ -38,6 +40,7 @@ export default function InvestorProfile() {
     const [activeTab, setActiveTab] = useState("posts");
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState("main"); // 'main' | 'ambassador'
 
     useEffect(() => {
         fetchInvestorProfile();
@@ -105,6 +108,17 @@ export default function InvestorProfile() {
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    {/* Ambassador Program */}
+                    <button
+                        id="investor-ambassador-btn"
+                        onClick={() => { setMenuOpen(false); setActiveSection("ambassador"); }}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors"
+                        style={{ color: '#C9A84C' }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Ambassador Program
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button
                         onClick={() => {
                             setMenuOpen(false);
@@ -157,6 +171,12 @@ export default function InvestorProfile() {
         <>
             <AppShell>
                 <AppHeader title="My Profile" actions={headerActions} />
+
+                {activeSection === "ambassador" ? (
+                    <Suspense fallback={<div style={{padding:32,textAlign:'center'}}><div style={{width:32,height:32,border:'3px solid rgba(201,168,76,.2)',borderTopColor:'#C9A84C',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto'}}/><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>}>
+                        <AmbassadorDashboard onBack={() => setActiveSection("main")} />
+                    </Suspense>
+                ) : (<>
 
             {/* Hero Section */}
             <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
@@ -267,8 +287,6 @@ export default function InvestorProfile() {
                                 <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{profile.description}</p>
                             </Section>
                         )}
-
-
                         {profile?.sectors?.length > 0 && (
                             <Section title="Preferred Sectors" isDark={isDark}>
                                 <div className="flex flex-wrap gap-1.5">
@@ -278,7 +296,6 @@ export default function InvestorProfile() {
                                 </div>
                             </Section>
                         )}
-
                         {!profile?.description && !profile?.sectors?.length && (
                             <EmptyTabState message="No about info added yet" isDark={isDark} />
                         )}
@@ -307,9 +324,8 @@ export default function InvestorProfile() {
                                 )}
                             </Section>
                         )}
-
                         {profile?.socialProof?.length > 0 ? (
-                            <Section title="Social Proof &amp; Network" isDark={isDark}>
+                            <Section title="Social Proof & Network" isDark={isDark}>
                                 <div className="space-y-3">
                                     {profile.socialProof.map((proof, idx) => (
                                         <div key={idx} className={`p-3 rounded-xl border ${isDark ? "border-white/10 bg-white/5" : "border-gray-100 bg-gray-50"}`}>
@@ -345,7 +361,6 @@ export default function InvestorProfile() {
                         ) : (
                             <EmptyTabState message="No credentials added yet" isDark={isDark} />
                         )}
-
                         {/* Logout */}
                         <button
                             onClick={handleLogout}
@@ -364,8 +379,9 @@ export default function InvestorProfile() {
                 profile={profile}
                 onSuccess={fetchInvestorProfile}
             />
-        </AppShell>
-        <DeleteAccountDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
+            </>)}
+            </AppShell>
+            <DeleteAccountDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
         </>
     );
 }
@@ -380,6 +396,7 @@ function Section({ title, children, isDark }) {
         </div>
     );
 }
+
 
 function StatItem({ label, value, isDark }) {
     return (

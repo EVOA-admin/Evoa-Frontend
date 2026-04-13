@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,6 +22,8 @@ import AppHeader from "../../components/layout/AppHeader";
 import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
 
+const AmbassadorDashboard = lazy(() => import("../ambassador/AmbassadorDashboard"));
+
 export default function StartupProfile() {
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === "dark";
@@ -41,6 +43,7 @@ export default function StartupProfile() {
     const [unreadCount, setUnreadCount] = useState(0);
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState("main"); // 'main' | 'ambassador'
 
     // Edit modal
     const [editOpen, setEditOpen] = useState(false);
@@ -210,6 +213,17 @@ export default function StartupProfile() {
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    {/* Ambassador Program */}
+                    <button
+                        id="startup-ambassador-btn"
+                        onClick={() => { setMenuOpen(false); setActiveSection("ambassador"); }}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors"
+                        style={{ color: '#C9A84C' }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Ambassador Program
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button
                         onClick={() => {
                             setMenuOpen(false);
@@ -264,6 +278,10 @@ export default function StartupProfile() {
                             Create Startup
                         </button>
                     </div>
+                ) : activeSection === "ambassador" ? (
+                    <Suspense fallback={<div style={{padding:32,textAlign:'center'}}><div style={{width:32,height:32,border:'3px solid rgba(201,168,76,.2)',borderTopColor:'#C9A84C',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto'}}/><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>}>
+                        <AmbassadorDashboard onBack={() => setActiveSection("main")} />
+                    </Suspense>
                 ) : (
                     <>
                         {/* Hero Section */}

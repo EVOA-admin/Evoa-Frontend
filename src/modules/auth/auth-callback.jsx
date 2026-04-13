@@ -1,17 +1,29 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
+import { applyReferralCode } from '../../services/ambassadorService';
 
 /**
- * AuthCallback — handles the Supabase OAuth redirect.
+ * AuthCallback — handles the Supabase OAuth / email-link redirect.
  *
- * After Google login, Supabase redirects to /auth/callback with the session
- * encoded in the URL fragment (#access_token=...). This component:
+ * After login, Supabase redirects to /auth/callback.  This component:
  *  1. Waits for Supabase to exchange the fragment for a real session
- *  2. Lets the AuthContext onAuthStateChange fire and sync the user
- *  3. Redirects to the home page — public-route / protected-route handle
- *     the onboarding gate from there
+ *  2. If sessionStorage has a pending referral code, applies it now
+ *     (fire-and-forget — never blocks navigation on failure)
+ *  3. Navigates to "/" — public-route / protected-route handle onboarding gating
  */
+async function tryApplyPendingReferral() {
+    const code = sessionStorage.getItem('evoa_referral_code');
+    if (!code) return;
+    try {
+        await applyReferralCode(code);
+    } catch (_) {
+        // Ignore — don't block auth flow over a referral error
+    } finally {
+        sessionStorage.removeItem('evoa_referral_code');
+    }
+}
+
 export default function AuthCallback() {
     const navigate = useNavigate();
 
@@ -19,7 +31,6 @@ export default function AuthCallback() {
         let cancelled = false;
 
         const handleCallback = async () => {
-            // Give Supabase time to parse the URL fragment and establish the session
             const { data, error } = await supabase.auth.getSession();
 
             if (cancelled) return;
@@ -31,15 +42,15 @@ export default function AuthCallback() {
             }
 
             if (data?.session) {
-                // Session established — navigate to root and let ProtectedRoute/PublicRoute
-                // handle where to send the user based on their onboarding state
+                await tryApplyPendingReferral();
                 navigate('/', { replace: true });
             } else {
-                // No session found after OAuth — try one more time after a short delay
+                // Retry once after delay (handles OAuth fragment race)
                 setTimeout(async () => {
                     if (cancelled) return;
                     const { data: retryData } = await supabase.auth.getSession();
                     if (retryData?.session) {
+                        await tryApplyPendingReferral();
                         navigate('/', { replace: true });
                     } else {
                         navigate('/login', { replace: true });
@@ -58,3 +69,5 @@ export default function AuthCallback() {
         </div>
     );
 }
+
+

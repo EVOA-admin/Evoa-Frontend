@@ -352,7 +352,7 @@ function TCModal({ onClose }) {
 const steps = [
   {
     num: '01', icon: '🚀', title: 'Sign Up on Evoa',
-    desc: (<>Create your account by clicking{' '}<Link to="/register" className="amb-signup-link">Signup</Link>{' '}and choose your role — <strong style={{ color: 'rgba(244,240,232,0.85)' }}>Viewer</strong> or{' '}<strong style={{ color: 'rgba(244,240,232,0.85)' }}>Startup</strong> — to get started on the platform.</>),
+    desc: (<>Create your account by clicking{' '}<Link to="/register" className="amb-signup-link">Signup</Link>{' '}and choose your role Recommended: <strong style={{ color: 'rgba(244,240,232,0.85)' }}>Viewer</strong> or{' '}<strong style={{ color: 'rgba(244,240,232,0.85)' }}>Startup</strong> — to get started on the platform.</>),
     accent: '#E8341A',
   },
   {

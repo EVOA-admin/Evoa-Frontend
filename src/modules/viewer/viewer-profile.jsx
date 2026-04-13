@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -31,6 +31,8 @@ import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
 import { HiSun, HiMoon } from "react-icons/hi";
 
+const AmbassadorDashboard = lazy(() => import("../ambassador/AmbassadorDashboard"));
+
 // Parse occupation from bio string (format: "Occupation: X\nInterests: Y")
 function parseOccupation(bio) {
     if (!bio) return "";
@@ -62,6 +64,7 @@ export default function ViewerProfile() {
     const [activeTab, setActiveTab] = useState("watching");
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [activeSection, setActiveSection] = useState("main"); // 'main' | 'ambassador'
 
     // Edit modal
     const [editOpen, setEditOpen] = useState(false);
@@ -203,6 +206,17 @@ export default function ViewerProfile() {
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    {/* Ambassador Program */}
+                    <button
+                        id="viewer-ambassador-btn"
+                        onClick={() => { setMenuOpen(false); setActiveSection("ambassador"); }}
+                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors"
+                        style={{ color: '#C9A84C' }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Ambassador Program
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button
                         onClick={() => {
                             setMenuOpen(false);
@@ -250,6 +264,10 @@ export default function ViewerProfile() {
                     <div className="flex items-center justify-center h-72">
                         <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
                     </div>
+                ) : activeSection === "ambassador" ? (
+                    <Suspense fallback={<div style={{padding:32,textAlign:'center'}}><div style={{width:32,height:32,border:'3px solid rgba(201,168,76,.2)',borderTopColor:'#C9A84C',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto'}}/><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>}>
+                        <AmbassadorDashboard onBack={() => setActiveSection("main")} />
+                    </Suspense>
                 ) : (
                     <>
                         {/* Profile Card */}
