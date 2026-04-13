@@ -49,11 +49,12 @@ const Portfolio = lazy(() => import('../modules/pages/portfolio'));
 const About = lazy(() => import('../modules/pages/about'));
 const Contact = lazy(() => import('../modules/pages/contact'));
 const PrivacyPolicy = lazy(() => import('../modules/pages/privacy-policy'));
+const AmbassadorProgram = lazy(() => import('../modules/pages/ambassador-program'));
 
 export default function AppRoutes() {
   return (
-    // Suspense is required for React.lazy — null fallback keeps UI clean
-    <Suspense fallback={null}>
+    // Suspense is required for React.lazy — dark fallback prevents blank flash
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#060607', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, border: '3px solid rgba(201,168,76,0.15)', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>}>
       <Routes>
       <Route path="/" element={<Layout />}>
         {/* Public Routes - Accessible only when NOT logged in */}
@@ -93,6 +94,7 @@ export default function AppRoutes() {
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="ambassador-program" element={<AmbassadorProgram />} />
 
         {/* Catch all - Redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />

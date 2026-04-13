@@ -36,6 +36,8 @@ body{cursor:none;overflow-x:hidden;}
 @keyframes floatStat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes ambassadorMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes ambassadorGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 @keyframes scrollAnim{0%{opacity:1;transform:scaleY(0);transform-origin:top}50%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1);transform-origin:bottom}}
 @keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 @keyframes spineDraw{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}
@@ -1097,6 +1099,110 @@ function Footer() {
   );
 }
 
+/* ─── AMBASSADOR BANNER ─── */
+const BANNER_CSS = `
+.amb-banner {
+  position: fixed;
+  top: 72px;
+  left: 0;
+  right: 0;
+  height: 38px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(270deg,#1a1004,#2a1a00,#C9A84C22,#1a1004,#2a1a00,#C9A84C22,#1a1004);
+  background-size: 400% 400%;
+  animation: ambassadorGlow 8s ease infinite;
+  border-bottom: 1px solid rgba(201,168,76,0.25);
+  border-top: 1px solid rgba(201,168,76,0.12);
+  box-shadow: 0 2px 16px rgba(201,168,76,0.08), inset 0 -1px 0 rgba(201,168,76,0.07);
+}
+.amb-track {
+  display: flex;
+  white-space: nowrap;
+  animation: ambassadorMarquee 22s linear infinite;
+  will-change: transform;
+}
+.amb-track:hover { animation-play-state: paused; }
+.amb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 48px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(201,168,76,0.9);
+}
+.amb-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #C9A84C;
+  flex-shrink: 0;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(201,168,76,0.8);
+}
+.amb-text { color: rgba(244,240,232,0.85); letter-spacing: .14em; }
+.amb-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border: 1px solid rgba(201,168,76,0.5);
+  color: #C9A84C;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background .25s, color .25s, border-color .25s;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: rgba(201,168,76,0.06);
+}
+.amb-cta:hover {
+  background: #C9A84C;
+  color: #060607;
+  border-color: #C9A84C;
+}
+.amb-spacer { height: 38px; width: 100%; flex-shrink: 0; }
+@media(max-width:768px) {
+  .amb-banner { top: 60px; height: 34px; }
+  .amb-item { font-size: 9px; padding: 0 32px; gap: 10px; }
+  .amb-spacer { height: 34px; }
+}
+`;
+
+const AMB_TEXT = "Join Ambassador Program and Earn Money with Us";
+const AMB_ITEMS = Array(8).fill(null);
+
+function AmbassadorBanner() {
+  return (
+    <>
+      <style>{BANNER_CSS}</style>
+      <div className="amb-banner" role="marquee" aria-label="Ambassador program promotion">
+        <div className="amb-track">
+          {AMB_ITEMS.map((_, i) => (
+            <span key={i} className="amb-item">
+              <span className="amb-dot" />
+              <span className="amb-text">{AMB_TEXT}</span>
+              <Link to="/ambassador-program" className="amb-cta" aria-label="Join Ambassador Program">
+                Click Here
+                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+                  <path d="M1 7L7 1M7 1H2M7 1V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+            </span>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ─── ROOT ─── */
 export default function Landing() {
   useReveal();
@@ -1105,6 +1211,9 @@ export default function Landing() {
       <style>{STYLES}</style>
       <Cursor />
       <LandingNav />
+      <AmbassadorBanner />
+      {/* Extra spacer for the ambassador banner below the nav spacer already in LandingNav */}
+      <div className="amb-spacer" />
       <Hero />
       <Ticker />
       <PitchShowcase />
