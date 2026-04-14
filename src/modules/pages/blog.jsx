@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Footer from "../../components/layout/footer";
 import LandingNav from "../../components/layout/LandingNav";
 import { supabase } from "../../config/supabase";
@@ -261,12 +262,28 @@ function formatDate(iso) {
   });
 }
 
-function excerpt(text, max = 200) {
-  if (!text) return "";
+/** Strip HTML tags and entity references to produce plain text for the card excerpt */
+function stripHtml(html) {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, " ")          // remove tags
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#?[a-z0-9]+;/gi, " ")   // remaining entities
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function excerpt(html, max = 200) {
+  const text = stripHtml(html);
   return text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
 }
 
 export default function Blog() {
+  const navigate = useNavigate();
   const [activeCat, setActiveCat] = useState("All");
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -293,6 +310,15 @@ export default function Blog() {
     fetchBlogs();
   }, []);
 
+  /* SEO for the blog listing page */
+  useEffect(() => {
+    document.title = "Blog — EVOA | Insights for Founders & Investors";
+    let el = document.querySelector('meta[name="description"]');
+    if (!el) { el = document.createElement("meta"); el.name = "description"; document.head.appendChild(el); }
+    el.content = "Read expert insights on startups, funding, pitching, networking and the entrepreneurial ecosystem from the EVOA community.";
+    return () => { document.title = "EVOA — Ecosystem for Visionary Opportunity Accelerators"; };
+  }, []);
+
   useEffect(() => {
     const obs = new IntersectionObserver(
       es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add("vis"); }),
@@ -303,6 +329,8 @@ export default function Blog() {
   }, []);
 
   const addRef = i => el => { revealRefs.current[i] = el; };
+
+  const goToArticle = (id) => navigate(`/blog/${id}`);
 
   const filtered = activeCat === "All" ? blogs : blogs.filter(p => p.category === activeCat);
 
@@ -367,7 +395,12 @@ export default function Blog() {
               <article
                 key={post.id}
                 className="blg-card blg-card-anim"
-                style={{ animationDelay: `${i * 80}ms` }}
+                style={{ animationDelay: `${i * 80}ms`, cursor: "pointer" }}
+                onClick={() => goToArticle(post.id)}
+                role="link"
+                tabIndex={0}
+                onKeyDown={e => e.key === "Enter" && goToArticle(post.id)}
+                aria-label={`Read article: ${post.title}`}
               >
                 {/* Image */}
                 <div className="blg-card-img">
@@ -391,7 +424,12 @@ export default function Blog() {
                     </div>
                     <span>{post.read_time}</span>
                   </div>
-                  <button className="blg-read-btn" type="button" aria-label={`Read: ${post.title}`}>
+                  <button
+                    className="blg-read-btn"
+                    type="button"
+                    aria-label={`Read: ${post.title}`}
+                    onClick={e => { e.stopPropagation(); goToArticle(post.id); }}
+                  >
                     Read Article
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M5 12h14M12 5l7 7-7 7" />

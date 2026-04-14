@@ -43,8 +43,9 @@ const IncubatorProfile = lazy(() => import('../modules/incubator/incubator-profi
 const UserPublicProfile = lazy(() => import('../modules/profile/user-public-profile'));
 
 // Public pages
-const Blog = lazy(() => import('../modules/pages/blog'));
-const PitchUs = lazy(() => import('../modules/pages/pitch-us'));
+const Blog        = lazy(() => import('../modules/pages/blog'));
+const BlogArticle = lazy(() => import('../modules/pages/blog-article'));
+const PitchUs     = lazy(() => import('../modules/pages/pitch-us'));
 const Portfolio = lazy(() => import('../modules/pages/portfolio'));
 const About = lazy(() => import('../modules/pages/about'));
 const Contact = lazy(() => import('../modules/pages/contact'));
@@ -89,6 +90,7 @@ export default function AppRoutes() {
 
         {/* Public Pages - Accessible by everyone */}
         <Route path="blog" element={<Blog />} />
+        <Route path="blog/:id" element={<BlogArticle />} />
         <Route path="pitch-us" element={<PitchUs />} />
         <Route path="portfolio" element={<Portfolio />} />
         <Route path="about" element={<About />} />
