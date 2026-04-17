@@ -243,7 +243,7 @@ export default function Incubator() {
       <AppHeader actions={plusAction} />
       <main>
         <div className="px-0 pt-0 pb-4">
-          <div className="space-y-4 px-3 mt-2">
+          <div className="mt-2">
             {!loading && pitches.length === 0 && userPosts.length === 0 && (
               <EmptyState
                 icon={FaRegNewspaper}
@@ -268,7 +268,7 @@ export default function Incubator() {
         </div>
         {/* ── User Posts Feed ── */}
         {userPosts.length > 0 && (
-          <div className="px-3 mt-4 space-y-4 pb-4">
+          <div className="mt-4 pb-4">
             {userPosts.map(post => {
               const handleLike = () => {
                 setUserPosts(prev => prev.map(p =>

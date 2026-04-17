@@ -83,7 +83,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
 
     return (
         <>
-            <div className={`rounded-2xl overflow-hidden border ${isDark ? "bg-gray-900 border-white/8" : "bg-white border-gray-100"}`}>
+            <div className={`overflow-hidden border-b ${isDark ? "bg-gray-900 border-white/8" : "bg-white border-gray-100"}`}>
                 {/* ── Header ── */}
                 <div className="flex items-center gap-3 px-4 py-3">
                     <div className="relative flex-shrink-0">
@@ -144,7 +144,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
 
                 {/* ── Image ── */}
                 {post.imageUrl && (
-                    <div className="mx-3 rounded-xl overflow-hidden aspect-[4/3]">
+                    <div className="overflow-hidden aspect-[4/3]">
                         <img
                             src={post.imageUrl}
                             alt="Post"

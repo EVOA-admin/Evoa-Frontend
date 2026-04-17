@@ -105,7 +105,7 @@ export default function Startup() {
       <AppHeader actions={uploadAction} />
       <main>
         <div className="px-0 pt-0 pb-4">
-          <div className="space-y-4 px-3 mt-2">
+          <div className="mt-2">
             {!loading && userPosts.length === 0 && (
               <EmptyState
                 icon={FaRegNewspaper}

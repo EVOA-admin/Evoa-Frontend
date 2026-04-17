@@ -110,7 +110,7 @@ export default function StartupPostCard({
 
     return (
         <>
-            <div className={`rounded-3xl overflow-hidden shadow-sm border ${isDark ? "bg-gray-900 border-white/8" : "bg-white border-gray-100"}`}>
+            <div className={`overflow-hidden border-b ${isDark ? "bg-gray-900 border-white/8" : "bg-white border-gray-100"}`}>
 
                 {/* ── Header ── */}
                 <div className="flex items-center justify-between px-4 py-3">
@@ -186,7 +186,7 @@ export default function StartupPostCard({
 
                 {/* ── Hero Image ── */}
                 {post.imageUrl && (
-                    <div className="mx-3 rounded-2xl overflow-hidden aspect-[16/9]">
+                    <div className="overflow-hidden aspect-[16/9]">
                         <img
                             src={post.imageUrl}
                             alt={post.startupName}
