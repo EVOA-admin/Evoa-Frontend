@@ -19,6 +19,12 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
+function getPitchViewCount(pitch) {
+  const rawCount = pitch?.viewCount ?? pitch?.view_count ?? pitch?.views ?? 0;
+  const numericCount = typeof rawCount === 'number' ? rawCount : Number(rawCount);
+  return Number.isFinite(numericCount) ? numericCount : 0;
+}
+
 export default function Explore() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -360,7 +366,7 @@ export default function Explore() {
                           <p className="text-white/80 text-[9px] truncate">{pitch.startup?.name || pitch.company}</p>
                           <div className="flex items-center gap-1 mt-1">
                             <FaEye className="text-white/70" size={9} />
-                            <span className="text-white/70 text-[9px] font-medium">{(pitch.viewCount || pitch.views || 0).toLocaleString()} views</span>
+                            <span className="text-white/70 text-[9px] font-medium">{getPitchViewCount(pitch).toLocaleString()} views</span>
                           </div>
                         </div>
                       </div>

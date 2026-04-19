@@ -175,6 +175,7 @@ export default function ReelPitch() {
   const containerRef = useRef(null);
   const videoRefs = useRef({});
   const sentinelRef = useRef(null); // infinite-loop sentinel — bottom of reel list
+  const trackedViewIdsRef = useRef(new Set());
   const { userRole, user: currentUser } = useAuth();
 
   const [pitches, setPitches] = useState([]);
@@ -254,6 +255,7 @@ export default function ReelPitch() {
           category: reel.startup?.industries?.[0] || reel.startup?.industry || '',
           description: reel.description || reel.title || '',
           likes: reel.likeCount || 0,
+          views: reel.viewCount ?? reel.view_count ?? 0,
           comments: reel.commentCount || 0,
           shares: reel.shareCount || 0,
           isLiked: reel.isLiked || false,
@@ -329,6 +331,16 @@ export default function ReelPitch() {
 
           // Update current index
           setCurrentIndex(idx);
+
+          if (!trackedViewIdsRef.current.has(pitch.id)) {
+            trackedViewIdsRef.current.add(pitch.id);
+            reelsService.trackView(pitch.id).catch(() => {
+              trackedViewIdsRef.current.delete(pitch.id);
+            });
+            setPitches(prev => prev.map(item =>
+              item.id === pitch.id ? { ...item, views: (item.views || 0) + 1 } : item
+            ));
+          }
 
           // Pause all videos, play the visible one
           Object.entries(videoRefs.current).forEach(([rid, v]) => {
