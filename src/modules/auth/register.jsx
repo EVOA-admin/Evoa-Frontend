@@ -126,6 +126,8 @@ export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  const normalizedReferralCode = refCode.trim().toUpperCase();
+
   // Pre-fill referral code from URL: /register?ref=XXXXXX
   useEffect(() => {
     const urlRef = searchParams.get('ref');
@@ -147,7 +149,8 @@ export default function Register() {
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await validateReferralCode(code);
-        if (res?.data?.valid) {
+        const validation = res?.data?.data || res?.data || {};
+        if (validation.valid) {
           setRefStatus('valid');
           setRefErrMsg('');
         } else {
@@ -175,12 +178,18 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const { data, error } = await signUp(email, password);
+      const { data, error } = await signUp(
+        email,
+        password,
+        refOpen && normalizedReferralCode && refStatus === 'valid'
+          ? { referralCode: normalizedReferralCode }
+          : {}
+      );
       if (error) throw error;
 
       // Persist valid referral code for auth-callback to apply
-      if (refOpen && refCode.trim() && refStatus === 'valid') {
-        sessionStorage.setItem('evoa_referral_code', refCode.trim().toUpperCase());
+      if (refOpen && normalizedReferralCode && refStatus === 'valid') {
+        sessionStorage.setItem('evoa_referral_code', normalizedReferralCode);
       }
 
       navigate(`/verify-email?email=${encodeURIComponent(email)}`);
@@ -195,8 +204,8 @@ export default function Register() {
     try {
       setLoading(true); setError(null);
       // Store referral code before OAuth redirect (sessionStorage survives same-tab redirect)
-      if (refOpen && refCode.trim() && refStatus === 'valid') {
-        sessionStorage.setItem('evoa_referral_code', refCode.trim().toUpperCase());
+      if (refOpen && normalizedReferralCode && refStatus === 'valid') {
+        sessionStorage.setItem('evoa_referral_code', normalizedReferralCode);
       }
       const { error } = await signInWithGoogle();
       if (error) throw error;

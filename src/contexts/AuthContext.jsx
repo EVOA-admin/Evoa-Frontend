@@ -49,6 +49,23 @@ export function AuthProvider({ children }) {
     // Backward compat: onboardingCompleted is true only when BOTH flags are true
     const onboardingCompleted = roleSelected && registrationCompleted;
 
+    const tryApplyPendingReferral = async (session) => {
+        const sessionCode = session?.user?.user_metadata?.referralCode;
+        const pendingCode = sessionStorage.getItem('evoa_referral_code');
+        const code = (pendingCode || sessionCode || '').trim().toUpperCase();
+        if (!code) return;
+
+        try {
+            await apiClient.post('/ambassador/apply', { referralCode: code });
+        } catch (err) {
+            console.warn('Referral apply skipped:', err?.message || err);
+        } finally {
+            if (pendingCode) {
+                sessionStorage.removeItem('evoa_referral_code');
+            }
+        }
+    };
+
     useEffect(() => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             setSession(session);
@@ -76,6 +93,7 @@ export function AuthProvider({ children }) {
                     isSyncingRef.current = true;
                     setSyncing(true);
                     await syncAndFetchProfile(session);
+                    await tryApplyPendingReferral(session);
                     setSyncing(false);
                     isSyncingRef.current = false;
                 }
