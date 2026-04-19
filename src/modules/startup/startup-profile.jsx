@@ -396,6 +396,8 @@ export default function StartupProfile() {
                                     {startup.verification?.entityType && (
                                         <Section title="Business Entity" isDark={isDark}>
                                             <InfoRow label="Entity Type" value={startup.verification.entityType} isDark={isDark} />
+                                            {startup.verification.countryName && <InfoRow label="Country" value={startup.verification.countryName} isDark={isDark} />}
+                                            {startup.verification.registry && <InfoRow label="Registry" value={startup.verification.registry} isDark={isDark} />}
                                             {startup.verification.type && <InfoRow label="Verification" value={startup.verification.type} isDark={isDark} />}
                                         </Section>
                                     )}

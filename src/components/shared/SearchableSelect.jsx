@@ -7,7 +7,8 @@ export default function SearchableSelect({
   options,
   placeholder = "Select...",
   isDark = false,
-  className = ""
+  className = "",
+  accentColor = "#00B8A9"
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,9 +46,17 @@ export default function SearchableSelect({
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full px-4 py-3 text-sm border rounded-xl focus:outline-none focus:ring-1 transition-all flex items-center justify-between cursor-pointer ${
           isDark
-            ? "bg-white/5 border-white/10 text-white focus:border-[#00B8A9] focus:ring-[#00B8A9]/30"
-            : "bg-gray-100 border-gray-200 text-gray-900 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30"
+            ? "bg-white/5 border-white/10 text-white"
+            : "bg-gray-100 border-gray-200 text-gray-900"
         }`}
+        style={{
+          ...(isOpen
+            ? {
+                borderColor: accentColor,
+                boxShadow: `0 0 0 1px ${accentColor}, 0 0 0 4px ${accentColor}4D`,
+              }
+            : {}),
+        }}
       >
         <span className={selectedOption ? "" : "text-gray-500"}>
           {selectedOption ? selectedOption.label : placeholder}
@@ -83,9 +92,13 @@ export default function SearchableSelect({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full pl-9 pr-3 py-2 text-sm rounded-lg border focus:outline-none focus:ring-1 ${
                   isDark
-                    ? "bg-white/10 border-white/20 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30"
-                    : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30"
+                    ? "bg-white/10 border-white/20 text-white placeholder-white/40"
+                    : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"
                 }`}
+                style={{
+                  borderColor: undefined,
+                  boxShadow: undefined,
+                }}
                 autoFocus
               />
             </div>
@@ -101,11 +114,12 @@ export default function SearchableSelect({
                   onClick={() => handleSelect(option.value)}
                   className={`w-full text-left px-4 py-2.5 text-sm transition-all cursor-pointer ${
                     value === option.value
-                      ? "bg-[#00B8A9] text-white"
+                      ? "text-white"
                       : isDark
                       ? "text-white hover:bg-white/10"
                       : "text-gray-900 hover:bg-gray-100"
                   }`}
+                  style={value === option.value ? { backgroundColor: accentColor } : undefined}
                 >
                   {option.label}
                 </button>
