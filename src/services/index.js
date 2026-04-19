@@ -13,6 +13,7 @@ export { default as exploreService } from './exploreService';
 export { default as notificationsService } from './notificationsService';
 export { default as usersService } from './usersService';
 export { default as pricingService } from './pricingService';
+export { default as battlegroundService } from './battlegroundService';
 
 // Named exports for convenience
 export {

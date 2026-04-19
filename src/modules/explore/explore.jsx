@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay } from "react-icons/fa";
-import { IoLockClosedOutline } from "react-icons/io5";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
@@ -474,29 +473,28 @@ export default function Explore() {
                 </h2>
               </div>
               <div className={`rounded-2xl p-6 transition-all ${isDark
-                ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20 opacity-80'
-                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md opacity-75'
+                ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20'
+                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
                 }`}>
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                     Live Pitch Battle
                   </h3>
-                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 ${isDark ? 'bg-gray-800 text-gray-400 border border-gray-700' : 'bg-gray-100 text-gray-500 border border-gray-200'
+                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-[#E8341A]/15 text-[#ff9c8f] border border-[#E8341A]/20' : 'bg-[#E8341A]/10 text-[#E8341A] border border-[#E8341A]/15'
                     }`}>
-                    <IoLockClosedOutline size={9} />
-                    Coming Soon
+                    Open Now
                   </div>
                 </div>
                 <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
                   Watch startups compete for investment in real-time
                 </p>
                 <button
-                  disabled
-                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm cursor-not-allowed ${isDark ? 'bg-gray-800 text-gray-500 border border-gray-700' : 'bg-gray-200 text-gray-400'
+                  type="button"
+                  onClick={() => navigate('/battlefield')}
+                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-[#E8341A] text-white hover:bg-[#c92a13]' : 'bg-[#E8341A] text-white hover:bg-[#c92a13]'
                     }`}
                 >
-                  <IoLockClosedOutline size={13} />
-                  Locked
+                  Enter Battlefield
                 </button>
               </div>
             </div>
