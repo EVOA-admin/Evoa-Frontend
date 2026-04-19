@@ -84,25 +84,6 @@ const INDUSTRIES = [
   "Others",
 ];
 const STAGES = ["Idea Stage", "Pre-Seed", "Seed", "Series A", "Series B+", "Growth / Scale"];
-const STATES = [
-  "Uttar Pradesh",
-  "Delhi NCR",
-  "Maharashtra",
-  "Karnataka",
-  "Tamil Nadu",
-  "Gujarat",
-  "Rajasthan",
-  "West Bengal",
-  "Telangana",
-  "Kerala",
-  "Haryana",
-  "Madhya Pradesh",
-  "Punjab",
-  "Bihar",
-  "Odisha",
-  "Others",
-];
-
 const COUNTRY_OPTIONS = [
   { value: "IN", label: "🇮🇳 India" },
   { value: "US", label: "🇺🇸 United States" },
@@ -127,7 +108,6 @@ const COUNTRY_OPTIONS = [
   { value: "MX", label: "🇲🇽 Mexico" },
   { value: "CN", label: "🇨🇳 China" },
   { value: "TR", label: "🇹🇷 Turkey" },
-  { value: "PK", label: "🇵🇰 Pakistan" },
   { value: "BD", label: "🇧🇩 Bangladesh" },
   { value: "AR", label: "🇦🇷 Argentina" },
   { value: "AT", label: "🇦🇹 Austria" },
@@ -621,8 +601,6 @@ export default function StartupRegistration() {
     startupUsername: "",
     startupLogo: null,
     companyEmail: "",
-    city: "",
-    state: "",
     country: "India",
     industries: [],
     stage: "",
@@ -768,14 +746,6 @@ export default function StartupRegistration() {
           setError("A valid company email is required.");
           return false;
         }
-        if (!formData.city.trim()) {
-          setError("City is required.");
-          return false;
-        }
-        if (!formData.state) {
-          setError("Please select your state.");
-          return false;
-        }
         return true;
       }
       case 2: {
@@ -907,8 +877,6 @@ export default function StartupRegistration() {
         stage: formData.stage,
         industries: formData.industries,
         location: {
-          city: formData.city,
-          state: formData.state,
           country: formData.country,
         },
         founders: foundersWithPhotos.map((founder) => ({
@@ -1139,23 +1107,6 @@ export default function StartupRegistration() {
                   onChange={(e) => handleInputChange("companyEmail", e.target.value)}
                   className={inputCls}
                 />
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    placeholder="City *"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
-                    className={inputCls}
-                  />
-                  <SearchableSelect
-                    value={formData.state}
-                    onChange={(value) => handleInputChange("state", value)}
-                    options={STATES.map((state) => ({ value: state, label: state }))}
-                    placeholder="Select State *"
-                    isDark={isDark}
-                    accentColor="#E8341A"
-                  />
-                </div>
               </div>
             </div>
           </div>
