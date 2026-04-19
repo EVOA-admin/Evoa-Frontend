@@ -59,6 +59,7 @@ export default function Navbar() {
               {[
                 ['Home', '/'],
                 ['Blog', '/blog'],
+                ['Pricing', '/pricing'],
                 ['About', '/about'],
                 ['Contact', '/contact'],
               ].map(([label, path]) => (
@@ -154,6 +155,7 @@ export default function Navbar() {
               {[
                 ['Home', '/'],
                 ['Blog', '/blog'],
+                ['Pricing', '/pricing'],
                 ['About', '/about'],
                 ['Contact', '/contact'],
               ].map(([label, path]) => (

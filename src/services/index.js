@@ -12,6 +12,7 @@ export { default as startupsService } from './startupsService';
 export { default as exploreService } from './exploreService';
 export { default as notificationsService } from './notificationsService';
 export { default as usersService } from './usersService';
+export { default as pricingService } from './pricingService';
 
 // Named exports for convenience
 export {

@@ -13,7 +13,7 @@ export default function Layout() {
   const isHomePage = location.pathname === '/';
   const dashboardPages = ['/startup', '/investor', '/incubator', '/viewer', '/explore', '/notifications'];
   const isDashboardPage = dashboardPages.includes(location.pathname);
-  const publicPagesWithLandingNav = ['/blog', '/about', '/contact', '/pitch-us', '/portfolio', '/privacy-policy', '/ambassador-program'];
+  const publicPagesWithLandingNav = ['/blog', '/about', '/contact', '/pitch-us', '/portfolio', '/privacy-policy', '/ambassador-program', '/pricing'];
   const hideNav = isAuthPage || isDashboardPage || isHomePage || publicPagesWithLandingNav.includes(location.pathname);
 
   return (

@@ -134,7 +134,7 @@ const NAV_CSS = `
 }
 `;
 
-const LINKS = [["Home", "/"], ["Blog", "/blog"], ["About", "/about"], ["Contact", "/contact"]];
+const LINKS = [["Home", "/"], ["Blog", "/blog"], ["Pricing", "/pricing"], ["About", "/about"], ["Contact", "/contact"]];
 
 export default function LandingNav() {
   const [sticky, setSticky] = useState(false);

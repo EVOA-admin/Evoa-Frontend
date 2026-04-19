@@ -154,7 +154,7 @@ export default function Footer() {
           <div>
             <div className="evoa-footer-col-title">Quick Links</div>
             <ul className="evoa-footer-links">
-              {[['Home', '/'], ['Sign In', '/login'], ['Sign Up', '/register'], ['About Us', '/about']].map(([label, path]) => (
+              {[['Home', '/'], ['Pricing', '/pricing'], ['Sign In', '/login'], ['Sign Up', '/register'], ['About Us', '/about']].map(([label, path]) => (
                 <li key={label}><Link to={path}>{label}</Link></li>
               ))}
             </ul>

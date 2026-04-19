@@ -51,6 +51,7 @@ const About = lazy(() => import('../modules/pages/about'));
 const Contact = lazy(() => import('../modules/pages/contact'));
 const PrivacyPolicy = lazy(() => import('../modules/pages/privacy-policy'));
 const AmbassadorProgram = lazy(() => import('../modules/pages/ambassador-program'));
+const Pricing = lazy(() => import('../modules/pages/pricing'));
 
 export default function AppRoutes() {
   return (
@@ -95,6 +96,7 @@ export default function AppRoutes() {
         <Route path="portfolio" element={<Portfolio />} />
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
+        <Route path="pricing" element={<Pricing />} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
         <Route path="ambassador-program" element={<AmbassadorProgram />} />
 
@@ -114,4 +116,3 @@ export default function AppRoutes() {
     </Suspense>
   );
 }
-
