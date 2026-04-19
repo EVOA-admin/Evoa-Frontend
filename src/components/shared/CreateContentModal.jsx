@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -9,6 +10,7 @@ import { FaPlay } from "react-icons/fa";
 import storageService from "../../services/storageService";
 import postsService from "../../services/postsService";
 import reelsService from "../../services/reelsService";
+import { openRazorpayCheckout } from "../../utils/razorpay";
 import ImageCropEditor from "./ImageCropEditor";
 
 /**
@@ -20,9 +22,10 @@ import ImageCropEditor from "./ImageCropEditor";
  *  - onCreated: fn(type) — called after successful creation
  */
 export default function CreateContentModal({ isOpen, onClose, canUploadReel = false, onCreated }) {
+    const navigate = useNavigate();
     const { theme } = useTheme();
     const isDark = theme === "dark";
-    const { user } = useAuth();
+    const { user, userRole, refreshUserProfile } = useAuth();
 
     // Step: 'choose' | 'crop' | 'post' | 'reel'
     const [step, setStep] = useState(canUploadReel ? "choose" : "post");
@@ -35,6 +38,8 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
     const [uploadState, setUploadState] = useState("idle"); // idle | uploading | success | error
     const [uploadProgress, setUploadProgress] = useState(0);
     const [errorMsg, setErrorMsg] = useState("");
+    const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+    const [upgradeLoading, setUpgradeLoading] = useState(false);
 
     const imageInputRef = useRef(null);
     const videoInputRef = useRef(null);
@@ -50,6 +55,8 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
         setUploadState("idle");
         setUploadProgress(0);
         setErrorMsg("");
+        setShowUpgradePrompt(false);
+        setUpgradeLoading(false);
     };
 
     const handleClose = () => {
@@ -87,6 +94,58 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
         setCroppedBlob(null);
         setCroppedPreview(null);
         setStep(canUploadReel ? "choose" : "post");
+    };
+
+    const handleReelSelect = async () => {
+        setErrorMsg("");
+        try {
+            const response = await reelsService.getPitchCount();
+            const data = response?.data?.data || response?.data || {};
+            if ((data?.pitchCount || 0) >= 1 && !data?.isPremium) {
+                setShowUpgradePrompt(true);
+                return;
+            }
+            videoInputRef.current?.click();
+        } catch (err) {
+            setErrorMsg(err?.message || "Unable to check your pitch access right now.");
+        }
+    };
+
+    const handleUpgradeCheckout = async () => {
+        if (!user) {
+            handleClose();
+            navigate("/login");
+            return;
+        }
+
+        const planType = userRole === "startup"
+            ? "startup_pro"
+            : userRole === "investor"
+                ? "investor_premium"
+                : null;
+
+        if (!planType) {
+            setErrorMsg("Premium upgrade is only available for startup and investor accounts.");
+            return;
+        }
+
+        try {
+            setUpgradeLoading(true);
+            setErrorMsg("");
+            await openRazorpayCheckout({
+                planType,
+                user,
+                onSuccess: async () => {
+                    await refreshUserProfile();
+                    handleClose();
+                    navigate(planType === "startup_pro" ? "/startup" : "/investor", { replace: true });
+                },
+            });
+        } catch (err) {
+            setErrorMsg(err?.message || "Unable to start the payment process right now.");
+        } finally {
+            setUpgradeLoading(false);
+        }
     };
 
     const handleSubmitPost = async () => {
@@ -132,7 +191,13 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
             setTimeout(() => { handleClose(); onCreated?.("reel"); }, 1200);
         } catch (err) {
             console.error(err);
-            setErrorMsg(err?.message || "Upload failed. Try again.");
+            if ((err?.message || "").toLowerCase().includes("upgrade required")) {
+                setShowUpgradePrompt(true);
+                setStep("choose");
+                setErrorMsg("You’ve reached your free pitch limit. Upgrade to continue pitching.");
+            } else {
+                setErrorMsg(err?.message || "Upload failed. Try again.");
+            }
             setUploadState("error");
         }
     };
@@ -180,10 +245,34 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
 
                 {/* ── CHOOSE step ── */}
                 {step === "choose" && (
-                    <div className="p-5 grid grid-cols-2 gap-3">
+                    <div className="p-5">
+                        {showUpgradePrompt ? (
+                            <div className={`rounded-2xl border p-5 ${isDark ? "border-[#E8341A]/30 bg-[#E8341A]/10" : "border-[#E8341A]/20 bg-[#E8341A]/5"}`}>
+                                <p className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Upgrade to Premium 🚀</p>
+                                <p className={`text-sm mt-2 leading-6 ${isDark ? "text-white/70" : "text-gray-600"}`}>
+                                    You’ve reached your free pitch limit. Upgrade to continue pitching.
+                                </p>
+                                <div className="grid gap-3 mt-5">
+                                    <button
+                                        onClick={handleUpgradeCheckout}
+                                        disabled={upgradeLoading}
+                                        className="w-full min-h-[46px] rounded-xl bg-[#E8341A] text-[#060607] text-sm font-bold hover:bg-[#C9230F] transition-colors"
+                                    >
+                                        {upgradeLoading ? "Processing..." : userRole === "investor" ? "Upgrade Now – ₹4999/month" : "Upgrade Now – ₹999/month"}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowUpgradePrompt(false)}
+                                        className={`w-full min-h-[46px] rounded-xl border text-sm font-semibold transition-colors ${isDark ? "border-white/10 text-white/70 hover:border-white/20 hover:text-white" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900"}`}
+                                    >
+                                        Back
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                    <div className="grid grid-cols-2 gap-3">
                         {/* Reel tile */}
                         <button
-                            onClick={() => videoInputRef.current?.click()}
+                            onClick={handleReelSelect}
                             className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-dashed transition-all active:scale-95 ${isDark ? "border-white/15 hover:border-[#00B8A9]/60 hover:bg-[#00B8A9]/10" : "border-gray-200 hover:border-[#00B8A9]/60 hover:bg-[#00B8A9]/5"}`}
                         >
                             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center shadow-lg shadow-[#00B8A9]/30">
@@ -208,6 +297,8 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                                 <p className={`text-xs mt-0.5 ${isDark ? "text-gray-500" : "text-gray-400"}`}>Share an image</p>
                             </div>
                         </button>
+                    </div>
+                        )}
                     </div>
                 )}
 

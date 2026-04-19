@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Footer from "../../components/layout/footer";
 import LandingNav from "../../components/layout/LandingNav";
 import pricingService from "../../services/pricingService";
+import { useAuth } from "../../contexts/AuthContext";
+import { openRazorpayCheckout } from "../../utils/razorpay";
 
 const PRICING_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap');
@@ -441,8 +443,12 @@ const defaultPricing = {
 };
 
 export default function PricingPage() {
+  const navigate = useNavigate();
+  const { user, userRole, refreshUserProfile } = useAuth();
   const [pricing, setPricing] = useState(defaultPricing);
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState("");
+  const [checkoutError, setCheckoutError] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -450,8 +456,9 @@ export default function PricingPage() {
     const loadPricing = async () => {
       try {
         const response = await pricingService.getPricing();
-        if (mounted && response?.data?.data) {
-          setPricing(response.data.data);
+        const data = response?.data?.data || response?.data;
+        if (mounted && data) {
+          setPricing(data);
         }
       } catch (error) {
         console.error("Failed to load pricing:", error);
@@ -468,6 +475,37 @@ export default function PricingPage() {
       mounted = false;
     };
   }, []);
+
+  const handlePlanCheckout = async (planType) => {
+    try {
+      setCheckoutError("");
+      setCheckoutLoading(planType);
+      await openRazorpayCheckout({
+        planType,
+        user,
+        onSuccess: async () => {
+          await refreshUserProfile();
+          navigate(planType === "startup_pro" ? "/startup" : "/investor", { replace: true });
+        },
+      });
+    } catch (error) {
+      setCheckoutError(error?.message || "Unable to start checkout.");
+    } finally {
+      setCheckoutLoading("");
+    }
+  };
+
+  const startupPrimaryAction = () => {
+    if (!user) return navigate("/login");
+    if (userRole !== "startup") return navigate("/pricing");
+    return handlePlanCheckout("startup_pro");
+  };
+
+  const investorPrimaryAction = () => {
+    if (!user) return navigate("/login");
+    if (userRole !== "investor") return navigate("/login");
+    return handlePlanCheckout("investor_premium");
+  };
 
   return (
     <div className="pr-root">
@@ -497,6 +535,7 @@ export default function PricingPage() {
         {loading ? (
           <div className="pr-state">Loading Pricing</div>
         ) : (
+          <>
           <div className="pr-grid">
             <article className="pr-card" style={{ animationDelay: ".08s" }}>
               <div className="pr-card-tag">Startups</div>
@@ -530,7 +569,9 @@ export default function PricingPage() {
 
               <div className="pr-actions">
                 <Link to="/register" className="pr-btn">{pricing.startups.freePlan.cta}</Link>
-                <Link to="/login" className="pr-btn primary">{pricing.startups.proPlan.cta}</Link>
+                <button type="button" className="pr-btn primary" onClick={startupPrimaryAction} disabled={checkoutLoading === "startup_pro"}>
+                  {checkoutLoading === "startup_pro" ? "Processing..." : pricing.startups.proPlan.cta}
+                </button>
                 <div className="pr-meta">Pitch, grow, and get discovered.</div>
               </div>
             </article>
@@ -567,7 +608,9 @@ export default function PricingPage() {
 
               <div className="pr-actions">
                 <Link to="/explore" className="pr-btn">{pricing.investors.freePlan.cta}</Link>
-                <Link to="/login" className="pr-btn primary">{pricing.investors.premiumPlan.cta}</Link>
+                <button type="button" className="pr-btn primary" onClick={investorPrimaryAction} disabled={checkoutLoading === "investor_premium"}>
+                  {checkoutLoading === "investor_premium" ? "Processing..." : pricing.investors.premiumPlan.cta}
+                </button>
                 <div className="pr-meta">Discover the next big thing before everyone else.</div>
               </div>
             </article>
@@ -603,6 +646,8 @@ export default function PricingPage() {
               </div>
             </article>
           </div>
+          {checkoutError ? <div className="pr-state" style={{ paddingTop: 32 }}>{checkoutError}</div> : null}
+          </>
         )}
       </section>
 

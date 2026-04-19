@@ -63,6 +63,8 @@ export const reelsService = {
   // Get all reels uploaded by the current user's startup (for profile Posts tab)
   getMyReels: async () => apiClient.get('/reels/me'),
 
+  getPitchCount: async () => apiClient.get('/reels/pitch-count/me'),
+
   // Delete a reel (startup founder only)
   deleteReel: async (reelId) => apiClient.delete(`/reels/${reelId}`),
 

@@ -317,6 +317,12 @@ export function AuthProvider({ children }) {
         }
     };
 
+    const refreshUserProfile = async () => {
+        if (!session) return null;
+        await syncAndFetchProfile(session);
+        return true;
+    };
+
     const value = {
         user,
         session,
@@ -333,6 +339,7 @@ export function AuthProvider({ children }) {
         updateProfile,
         updateUserRole,
         completeRegistration,
+        refreshUserProfile,
         resendVerification,
         isAuthenticated: !!user,
     };

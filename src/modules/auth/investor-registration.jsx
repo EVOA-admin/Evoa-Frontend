@@ -93,7 +93,7 @@ export default function InvestorRegistration() {
   const { theme } = useTheme();
   const isDark = true; // page shell is always dark — force dark styles throughout
   const navigate = useNavigate();
-  const { completeRegistration } = useAuth();
+  const { completeRegistration, refreshUserProfile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
 
   const [formData, setFormData] = useState({
@@ -263,7 +263,8 @@ export default function InvestorRegistration() {
       }
 
       await completeRegistration();
-      navigate('/investor');
+      await refreshUserProfile();
+      navigate('/investor-payment');
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message || 'Failed to register. Please try again.');

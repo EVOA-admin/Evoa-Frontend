@@ -17,6 +17,8 @@ const DASHBOARD_ROUTES = {
     viewer: '/viewer',
 };
 
+const INVESTOR_PAYMENT_ROUTE = '/investor-payment';
+
 export default function PublicRoute({ children }) {
     const { user, loading, userRole, roleSelected, registrationCompleted } = useAuth();
 
@@ -37,6 +39,10 @@ export default function PublicRoute({ children }) {
         // Step 2: Role selected but registration not completed — send to registration form
         if (!registrationCompleted && userRole && userRole !== 'viewer') {
             return <Navigate to={REGISTRATION_ROUTES[userRole] || '/choice-role'} replace />;
+        }
+
+        if (userRole === 'investor' && !user?.isLegacyUser && (!!user?.isPaymentPending || !user?.isPremium)) {
+            return <Navigate to={INVESTOR_PAYMENT_ROUTE} replace />;
         }
 
         // Step 3: Fully onboarded — send to their dashboard

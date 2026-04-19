@@ -52,6 +52,7 @@ const Contact = lazy(() => import('../modules/pages/contact'));
 const PrivacyPolicy = lazy(() => import('../modules/pages/privacy-policy'));
 const AmbassadorProgram = lazy(() => import('../modules/pages/ambassador-program'));
 const Pricing = lazy(() => import('../modules/pages/pricing'));
+const InvestorPayment = lazy(() => import('../modules/pages/investor-payment'));
 
 export default function AppRoutes() {
   return (
@@ -97,6 +98,7 @@ export default function AppRoutes() {
         <Route path="about" element={<About />} />
         <Route path="contact" element={<Contact />} />
         <Route path="pricing" element={<Pricing />} />
+        <Route path="investor-payment" element={<ProtectedRoute allowedRoles={['investor']}><InvestorPayment /></ProtectedRoute>} />
         <Route path="privacy-policy" element={<PrivacyPolicy />} />
         <Route path="ambassador-program" element={<AmbassadorProgram />} />
 
