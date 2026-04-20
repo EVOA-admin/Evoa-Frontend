@@ -29,7 +29,7 @@ export default function Explore() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, userRole } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
@@ -317,6 +317,41 @@ export default function Explore() {
         {!searchQuery.trim() && (
           <>
 
+            {/* Battleground Spotlight */}
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <FaFire className={isDark ? 'text-orange-400' : 'text-orange-600'} size={16} />
+                <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Battleground Spotlight
+                </h2>
+              </div>
+              <div className={`rounded-2xl p-6 transition-all ${isDark
+                ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20'
+                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
+                }`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Live Pitch Battle
+                  </h3>
+                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-[#E8341A]/15 text-[#ff9c8f] border border-[#E8341A]/20' : 'bg-[#E8341A]/10 text-[#E8341A] border border-[#E8341A]/15'
+                    }`}>
+                    Open Now
+                  </div>
+                </div>
+                <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                  Watch startups compete for investment in real-time
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/battlefield')}
+                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-[#E8341A] text-white hover:bg-[#c92a13]' : 'bg-[#E8341A] text-white hover:bg-[#c92a13]'
+                    }`}
+                >
+                  {userRole === 'startup' ? 'Enter Battlefield' : 'Watch Here'}
+                </button>
+              </div>
+            </div>
+
             {/* Top Performing Pitches */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-3">
@@ -468,41 +503,6 @@ export default function Explore() {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Battleground Spotlight */}
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <FaFire className={isDark ? 'text-orange-400' : 'text-orange-600'} size={16} />
-                <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Battleground Spotlight
-                </h2>
-              </div>
-              <div className={`rounded-2xl p-6 transition-all ${isDark
-                ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20'
-                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
-                }`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Live Pitch Battle
-                  </h3>
-                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-[#E8341A]/15 text-[#ff9c8f] border border-[#E8341A]/20' : 'bg-[#E8341A]/10 text-[#E8341A] border border-[#E8341A]/15'
-                    }`}>
-                    Open Now
-                  </div>
-                </div>
-                <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-                  Watch startups compete for investment in real-time
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/battlefield')}
-                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-[#E8341A] text-white hover:bg-[#c92a13]' : 'bg-[#E8341A] text-white hover:bg-[#c92a13]'
-                    }`}
-                >
-                  Enter Battlefield
-                </button>
-              </div>
             </div>
           </>
         )}
