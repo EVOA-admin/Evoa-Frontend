@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaFire, FaRocket, FaUserTie, FaPlay, FaCheckCircle } from "react-icons/fa";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
@@ -6,10 +7,12 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import battlegroundService from "../../services/battlegroundService";
 import { openRazorpayCheckout } from "../../utils/razorpay";
+import VideoThumbnail from "../../components/shared/VideoThumbnail";
 
 export default function BattlefieldPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
+  const navigate = useNavigate();
   const { user, userRole, refreshUserProfile } = useAuth();
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -151,29 +154,51 @@ export default function BattlefieldPage() {
               Loading registered startups...
             </div>
           ) : overview?.registeredStartups?.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
               {overview.registeredStartups.map((startup) => (
-                <article
-                  key={startup.id}
-                  className={`rounded-2xl overflow-hidden border transition-all ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white shadow-sm"}`}
-                >
-                  <div className={`relative h-40 ${isDark ? "bg-[#120807]" : "bg-gray-100"}`}>
-                    {startup.pitchThumbnailUrl ? (
-                      <img src={startup.pitchThumbnailUrl} alt={startup.startupName} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-[#E8341A]/80 to-[#4b1510] flex items-center justify-center">
-                        <FaPlay className="text-white/80" size={30} />
+                <article key={startup.id} className="space-y-2.5">
+                  <div
+                    onClick={() => startup.pitchId && navigate(`/pitch/${startup.pitchId}`)}
+                    className={`relative aspect-[9/16] overflow-hidden rounded-2xl border transition-all ${startup.pitchId ? "cursor-pointer hover:scale-[1.02]" : "cursor-default"} ${isDark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white shadow-sm"}`}
+                  >
+                    <div className="absolute inset-0">
+                      {startup.pitchThumbnailUrl ? (
+                        <img src={startup.pitchThumbnailUrl} alt={startup.startupName} className="h-full w-full object-cover" />
+                      ) : startup.pitchVideoUrl ? (
+                        <VideoThumbnail
+                          videoUrl={startup.pitchVideoUrl}
+                          alt={startup.pitchTitle || startup.startupName}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#E8341A]/85 via-[#7a1c10] to-[#180707]">
+                          <FaPlay className="text-white/80" size={28} />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+
+                    <div className="absolute top-2 right-2">
+                      <div className="rounded-full bg-black/55 p-2 shadow-lg backdrop-blur-sm">
+                        <FaPlay className="text-white" size={12} />
                       </div>
-                    )}
+                    </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className={`text-base font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
+
+                  <div className="px-0.5">
+                    <h3 className={`truncate text-sm font-bold leading-tight ${isDark ? "text-white" : "text-gray-900"}`}>
                       {startup.startupName}
                     </h3>
-                    <div className={`mt-2 flex items-center gap-2 text-sm ${isDark ? "text-white/65" : "text-gray-600"}`}>
-                      <FaUserTie className={isDark ? "text-white/35" : "text-gray-400"} />
-                      {startup.founderName}
+                    <div className={`mt-1 flex items-center gap-1.5 text-xs ${isDark ? "text-white/65" : "text-gray-600"}`}>
+                      <FaUserTie size={10} />
+                      <span className="truncate">{startup.founderName}</span>
                     </div>
+                    {!startup.pitchId ? (
+                      <div className={`mt-1 text-[11px] ${isDark ? "text-white/45" : "text-gray-400"}`}>
+                        Pitch coming soon
+                      </div>
+                    ) : null}
                   </div>
                 </article>
               ))}

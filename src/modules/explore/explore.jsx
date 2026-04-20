@@ -321,7 +321,7 @@ export default function Explore() {
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-3">
                 <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Top Performing Pitch
+                  Top Performing Pitches
                 </h2>
               </div>
               {loadingData ? (
