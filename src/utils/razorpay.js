@@ -38,9 +38,19 @@ export const openRazorpayCheckout = async ({
 }) => {
   await ensureRazorpayScript();
 
-  const orderResponse = createOrder
-    ? await createOrder()
-    : await pricingService.createOrder(planType);
+  if (typeof window.Razorpay !== "function") {
+    throw new Error("Razorpay checkout is unavailable right now.");
+  }
+
+  let orderResponse;
+  try {
+    orderResponse = createOrder
+      ? await createOrder()
+      : await pricingService.createOrder(planType);
+  } catch (error) {
+    console.error("[Razorpay] create order failed:", error);
+    throw new Error(error?.message || "Unable to create payment order right now.");
+  }
   const orderData = orderResponse?.data?.data || orderResponse?.data || {};
 
   if (orderData?.alreadyParticipating) {
@@ -51,10 +61,13 @@ export const openRazorpayCheckout = async ({
   }
 
   if (!orderData?.orderId || !orderData?.razorpayKey) {
+    console.error("[Razorpay] invalid order payload:", orderData);
     throw new Error("Unable to initiate payment right now.");
   }
 
   return new Promise((resolve, reject) => {
+    let settled = false;
+
     const razorpay = new window.Razorpay({
       key: orderData.razorpayKey,
       amount: orderData.amount,
@@ -91,23 +104,37 @@ export const openRazorpayCheckout = async ({
           if (onSuccess) {
             await onSuccess(response);
           }
+          settled = true;
           resolve(response);
         } catch (error) {
+          console.error("[Razorpay] verify payment failed:", error);
+          settled = true;
           reject(error);
         }
       },
       modal: {
         ondismiss: async () => {
+          if (settled) return;
           try {
             if (onDismiss) {
               await onDismiss({ razorpayOrderId: orderData.orderId });
             }
-          } catch {
+          } catch (error) {
+            console.error("[Razorpay] dismiss handler failed:", error);
             // Ignore dismiss cleanup errors so the UI can still recover.
           }
+          settled = true;
           reject(new Error(cancelMessage));
         },
       },
+    });
+
+    razorpay.on("payment.failed", (response) => {
+      if (settled) return;
+      settled = true;
+      const failureMessage = response?.error?.description || "Payment failed. Please try again.";
+      console.error("[Razorpay] payment failed:", response?.error || response);
+      reject(new Error(failureMessage));
     });
 
     razorpay.open();

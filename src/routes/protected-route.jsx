@@ -14,8 +14,6 @@ const DASHBOARD_ROUTES = {
     viewer: '/viewer',
 };
 
-const INVESTOR_PAYMENT_ROUTE = '/investor-payment';
-
 // Profile paths bypass the registrationCompleted check
 const PROFILE_PATHS = [
     '/startup/profile',
@@ -46,7 +44,7 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
 
     const isOnboardingPath = location.pathname === '/choice-role' || location.pathname.startsWith('/register/');
     const isProfilePath = PROFILE_PATHS.includes(location.pathname);
-    const isInvestorPaymentPath = location.pathname === INVESTOR_PAYMENT_ROUTE;
+    const isInvestorPaymentPath = location.pathname === '/investor-payment';
     const investorNeedsPayment = userRole === 'investor' && !user?.isLegacyUser && (!!user?.isPaymentPending || !user?.isPremium);
 
     // Step 1: No role selected yet → choice-role (unless already there)
@@ -57,9 +55,12 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     // Step 2: Registration already done → block access to onboarding pages
     if (registrationCompleted && isOnboardingPath) {
         if (investorNeedsPayment) {
-            return <Navigate to={INVESTOR_PAYMENT_ROUTE} replace />;
+            if (location.pathname !== REGISTRATION_ROUTES.investor) {
+                return <Navigate to={REGISTRATION_ROUTES.investor} replace />;
+            }
+        } else {
+            return <Navigate to={DASHBOARD_ROUTES[userRole] || '/viewer'} replace />;
         }
-        return <Navigate to={DASHBOARD_ROUTES[userRole] || '/viewer'} replace />;
     }
 
     // Step 3: Role selected but registration not complete → registration form
@@ -69,13 +70,12 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     }
 
     if (investorNeedsPayment && !isInvestorPaymentPath && !isOnboardingPath) {
-        return <Navigate to={INVESTOR_PAYMENT_ROUTE} replace />;
+        return <Navigate to={REGISTRATION_ROUTES.investor} replace />;
     }
 
-    if (!investorNeedsPayment && isInvestorPaymentPath && userRole === 'investor') {
-        return <Navigate to={DASHBOARD_ROUTES.investor} replace />;
+    if (isInvestorPaymentPath && userRole === 'investor') {
+        return <Navigate to={investorNeedsPayment ? REGISTRATION_ROUTES.investor : DASHBOARD_ROUTES.investor} replace />;
     }
-
     // Step 4: Role-based access control — wrong role → their dashboard
     if (allowedRoles.length > 0 && userRole && !allowedRoles.includes(userRole)) {
         return <Navigate to={DASHBOARD_ROUTES[userRole] || '/viewer'} replace />;
