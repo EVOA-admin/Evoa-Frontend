@@ -39,7 +39,15 @@ export default function PublicRoute({ children }) {
             return <Navigate to={REGISTRATION_ROUTES[userRole] || '/choice-role'} replace />;
         }
 
-        if (userRole === 'investor' && !user?.isLegacyUser && (!!user?.isPaymentPending || !user?.isPremium)) {
+        // Avoid false redirects while auth is rehydrating and payment flags have
+        // not been populated onto the user object yet.
+        if (
+            userRole === 'investor' &&
+            (
+                user?.isPaymentPending === true ||
+                (user?.isLegacyUser === false && user?.isPremium === false)
+            )
+        ) {
             return <Navigate to={REGISTRATION_ROUTES.investor} replace />;
         }
 

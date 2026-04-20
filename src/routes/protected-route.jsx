@@ -45,7 +45,15 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     const isOnboardingPath = location.pathname === '/choice-role' || location.pathname.startsWith('/register/');
     const isProfilePath = PROFILE_PATHS.includes(location.pathname);
     const isInvestorPaymentPath = location.pathname === '/investor-payment';
-    const investorNeedsPayment = userRole === 'investor' && !user?.isLegacyUser && (!!user?.isPaymentPending || !user?.isPremium);
+    // Only redirect investors to payment onboarding when the backend has
+    // explicitly told us they are pending or non-premium. On tab restore /
+    // session refresh, the auth user can briefly exist without these fields.
+    const investorNeedsPayment =
+        userRole === 'investor' &&
+        (
+            user?.isPaymentPending === true ||
+            (user?.isLegacyUser === false && user?.isPremium === false)
+        );
 
     // Step 1: No role selected yet → choice-role (unless already there)
     if (!roleSelected && !isOnboardingPath) {
