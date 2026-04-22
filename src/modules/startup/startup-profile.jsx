@@ -382,6 +382,9 @@ export default function StartupProfile() {
                                     fetchFn={postsService.getMyPosts}
                                     fetchFn2={reelsService.getMyReels}
                                     role="startup"
+                                    canSelectForBattleground={!!authUser?.isPremium && (startup?.reels?.length || 0) > 1}
+                                    selectedBattlegroundReelId={startup?.selectedBattlegroundReelId || null}
+                                    onBattlegroundSelectionChange={fetchStartup}
                                 />
                             )}
 

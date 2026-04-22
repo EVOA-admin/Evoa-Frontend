@@ -16,9 +16,14 @@ export const markPaymentFailed = async (payload) => {
   return await apiClient.post('/battleground/mark-failed', payload);
 };
 
+export const selectPitch = async (reelId) => {
+  return await apiClient.post(`/battleground/select-pitch/${reelId}`);
+};
+
 export default {
   getOverview,
   createOrder,
   verifyPayment,
   markPaymentFailed,
+  selectPitch,
 };

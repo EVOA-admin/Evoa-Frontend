@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaEye, FaHeart, FaTrash, FaEdit, FaPlay, FaRegImages, FaSpinner } from "react-icons/fa";
 import postsService from "../../services/postsService";
 import { reelsService } from "../../services/reelsService";
+import battlegroundService from "../../services/battlegroundService";
 
 /**
  * ProfileContentGrid
@@ -17,12 +18,28 @@ import { reelsService } from "../../services/reelsService";
  *   role      : 'startup' | 'investor' | 'incubator' | 'viewer'
  *   onDeleted : (id) => void  (optional)
  */
-export default function ProfileContentGrid({ isDark, isOwner, fetchFn, fetchFn2, role, onDeleted }) {
+export default function ProfileContentGrid({
+    isDark,
+    isOwner,
+    fetchFn,
+    fetchFn2,
+    role,
+    onDeleted,
+    canSelectForBattleground = false,
+    selectedBattlegroundReelId = null,
+    onBattlegroundSelectionChange,
+}) {
     const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [deleting, setDeleting] = useState(null);
+    const [selectingReelId, setSelectingReelId] = useState(null);
+    const [localSelectedBattlegroundReelId, setLocalSelectedBattlegroundReelId] = useState(selectedBattlegroundReelId);
+
+    useEffect(() => {
+        setLocalSelectedBattlegroundReelId(selectedBattlegroundReelId);
+    }, [selectedBattlegroundReelId]);
 
     useEffect(() => {
         let mounted = true;
@@ -81,6 +98,23 @@ export default function ProfileContentGrid({ isDark, isOwner, fetchFn, fetchFn2,
         return String(n);
     };
 
+    const totalReels = items.filter(item => item._isReel).length;
+    const showBattlegroundSelection = role === "startup" && canSelectForBattleground && totalReels > 1;
+
+    const handleBattlegroundSelect = async (item) => {
+        if (!item?._isReel || !item?.id || localSelectedBattlegroundReelId === item.id) return;
+        setSelectingReelId(item.id);
+        try {
+            await battlegroundService.selectPitch(item.id);
+            setLocalSelectedBattlegroundReelId(item.id);
+            onBattlegroundSelectionChange?.();
+        } catch (err) {
+            alert(err?.message || "Failed to select pitch for Battleground.");
+        } finally {
+            setSelectingReelId(null);
+        }
+    };
+
     if (loading) return (
         <div className="flex justify-center py-14">
             <FaSpinner className="animate-spin text-[#00B8A9]" size={26} />
@@ -110,13 +144,29 @@ export default function ProfileContentGrid({ isDark, isOwner, fetchFn, fetchFn2,
                     onDelete={() => handleDelete(item)}
                     onEdit={() => navigate(`/edit-post/${item.id}`)}
                     fmt={fmt}
+                    showBattlegroundSelection={showBattlegroundSelection}
+                    isSelectedForBattleground={localSelectedBattlegroundReelId === item.id}
+                    selectingForBattleground={selectingReelId === item.id}
+                    onSelectForBattleground={() => handleBattlegroundSelect(item)}
                 />
             ))}
         </div>
     );
 }
 
-function ContentCard({ item, isDark, isOwner, deleting, onDelete, onEdit, fmt }) {
+function ContentCard({
+    item,
+    isDark,
+    isOwner,
+    deleting,
+    onDelete,
+    onEdit,
+    fmt,
+    showBattlegroundSelection,
+    isSelectedForBattleground,
+    selectingForBattleground,
+    onSelectForBattleground,
+}) {
     const [showActions, setShowActions] = useState(false);
     const ref = useRef(null);
 
@@ -186,6 +236,26 @@ function ContentCard({ item, isDark, isOwner, deleting, onDelete, onEdit, fmt })
                 <div className="absolute top-1.5 right-1.5 bg-black/50 rounded-full p-1">
                     <FaPlay size={8} className="text-white" />
                 </div>
+            )}
+
+            {isReel && showBattlegroundSelection && (
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectForBattleground?.();
+                    }}
+                    disabled={selectingForBattleground || isSelectedForBattleground}
+                    className={`absolute left-1.5 top-1.5 z-10 rounded-full px-2 py-1 text-[9px] font-semibold backdrop-blur-sm transition-all ${isSelectedForBattleground
+                        ? "bg-emerald-500/90 text-white"
+                        : "bg-black/60 text-white hover:bg-black/75"} ${selectingForBattleground ? "opacity-70" : ""}`}
+                >
+                    {selectingForBattleground
+                        ? "Selecting..."
+                        : isSelectedForBattleground
+                            ? "Selected for Battleground \u2705"
+                            : "Add to Battleground"}
+                </button>
             )}
 
             {/* Stats overlay at bottom */}
