@@ -15,23 +15,29 @@ export const clearAuthData = () => {
   localStorage.removeItem('userData');
 };
 
+const syncStoredToken = (token) => {
+  if (token) {
+    localStorage.setItem('authToken', token);
+    return token;
+  }
+
+  localStorage.removeItem('authToken');
+  return null;
+};
+
 /**
- * Get auth token. Reads from localStorage first (fast, synchronous).
- * Falls back to a live Supabase session check only when localStorage is empty.
+ * Get auth token. Always prefer the live Supabase session so stale cached tokens
+ * don't survive environment or base-URL changes.
  */
 const getAuthToken = async () => {
-  const cached = localStorage.getItem('authToken');
-  if (cached) return cached;
-
-  // Fallback: for OAuth redirect edge case where localStorage hasn't been set yet
   try {
     const { data } = await supabase.auth.getSession();
     if (data?.session?.access_token) {
-      localStorage.setItem('authToken', data.session.access_token);
-      return data.session.access_token;
+      return syncStoredToken(data.session.access_token);
     }
   } catch (_) { /* no-op */ }
-  return null;
+
+  return localStorage.getItem('authToken');
 };
 
 /**
@@ -42,10 +48,10 @@ const refreshToken = async () => {
   try {
     const { data } = await supabase.auth.refreshSession();
     if (data?.session?.access_token) {
-      localStorage.setItem('authToken', data.session.access_token);
-      return data.session.access_token;
+      return syncStoredToken(data.session.access_token);
     }
   } catch (_) { /* no-op */ }
+  syncStoredToken(null);
   return null;
 };
 
@@ -58,7 +64,14 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
 
   if (needsAuth) {
     const token = await getAuthToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    } else if (!isRetry) {
+      const refreshedToken = await refreshToken();
+      if (refreshedToken) {
+        headers.Authorization = `Bearer ${refreshedToken}`;
+      }
+    }
   }
 
   const config = { method, headers };
@@ -78,6 +91,7 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
 
     // 401: token may be expired — refresh and retry ONCE automatically
     if (response.status === 401 && needsAuth && !isRetry) {
+      syncStoredToken(null);
       console.warn('apiClient: 401 received, attempting token refresh...');
       const newToken = await refreshToken();
       if (newToken) {
