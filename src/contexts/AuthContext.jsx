@@ -49,6 +49,40 @@ export function AuthProvider({ children }) {
     // Backward compat: onboardingCompleted is true only when BOTH flags are true
     const onboardingCompleted = roleSelected && registrationCompleted;
 
+    const clearAuthState = (clearCache = false) => {
+        const uid = currentSupabaseUidRef.current;
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        if (clearCache) {
+            clearCachedOnboarding(uid);
+        }
+        currentSupabaseUidRef.current = null;
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+        setRoleSelected(false);
+        setRegistrationCompleted(false);
+        setSyncing(false);
+        isSyncingRef.current = false;
+        setLoading(false);
+    };
+
+    const recoverSession = async () => {
+        try {
+            const { data: currentSession } = await supabase.auth.getSession();
+            if (currentSession?.session) {
+                return currentSession.session;
+            }
+        } catch (_) { /* no-op */ }
+
+        try {
+            const { data: refreshedSession } = await supabase.auth.refreshSession();
+            return refreshedSession?.session ?? null;
+        } catch (_) {
+            return null;
+        }
+    };
+
     const tryApplyPendingReferral = async (session) => {
         const sessionCode = session?.user?.user_metadata?.referralCode;
         const pendingCode = sessionStorage.getItem('evoa_referral_code');
@@ -67,55 +101,69 @@ export function AuthProvider({ children }) {
     };
 
     useEffect(() => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-
-            if (session?.user) {
-                localStorage.setItem('authToken', session.access_token);
-                currentSupabaseUidRef.current = session.user.id;
-
-                // Seed from localStorage cache IMMEDIATELY so navigation works on refresh
-                // before the slow backend sync completes.
-                const cached = getCachedOnboarding(session.user.id);
-                if (cached) {
-                    setUserRole(cached.userRole);
-                    setRoleSelected(cached.roleSelected);
-                    setRegistrationCompleted(cached.registrationCompleted);
-                    // We can safely end the blocking loading state now —
-                    // the user will be routed correctly from cache while sync runs in background.
-                    setLoading(false);
+        const handleAuthStateChange = async (event, session) => {
+            if (!session?.user) {
+                if (event === 'SIGNED_OUT') {
+                    clearAuthState(false);
+                    return;
                 }
 
-                // TOKEN_REFRESHED is a silent background key rotation — no need to re-sync.
-                if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
-                    if (isSyncingRef.current) return;
-                    isSyncingRef.current = true;
-                    setSyncing(true);
-                    await syncAndFetchProfile(session);
-                    await tryApplyPendingReferral(session);
-                    setSyncing(false);
-                    isSyncingRef.current = false;
+                const recoveredSession = await recoverSession();
+                if (!recoveredSession?.user) {
+                    clearAuthState(false);
+                    return;
                 }
-            } else {
-                // User signed out — clear everything
-                const uid = currentSupabaseUidRef.current;
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('userData');
-                currentSupabaseUidRef.current = null;
-                setUserRole(null);
-                setRoleSelected(false);
-                setRegistrationCompleted(false);
-                setSyncing(false);
-                isSyncingRef.current = false;
-                setLoading(false);
-                // We intentionally do NOT clear the cache on sign-out here;
-                // clearCachedOnboarding is called explicitly in signOut() below.
-                // This prevents accidental cache wipe on TOKEN_REFRESHED events.
+
+                session = recoveredSession;
             }
+
+            setSession(session);
+            setUser(session.user);
+            localStorage.setItem('authToken', session.access_token);
+            currentSupabaseUidRef.current = session.user.id;
+
+            // Seed from localStorage cache IMMEDIATELY so navigation works on refresh
+            // before the slow backend sync completes.
+            const cached = getCachedOnboarding(session.user.id);
+            if (cached) {
+                setUserRole(cached.userRole);
+                setRoleSelected(cached.roleSelected);
+                setRegistrationCompleted(cached.registrationCompleted);
+                // We can safely end the blocking loading state now —
+                // the user will be routed correctly from cache while sync runs in background.
+                setLoading(false);
+            }
+
+            // Keep the access token in sync whenever Supabase rotates it in the background.
+            if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+                return;
+            }
+
+            if (isSyncingRef.current) return;
+            isSyncingRef.current = true;
+            setSyncing(true);
+            await syncAndFetchProfile(session);
+            await tryApplyPendingReferral(session);
+            setSyncing(false);
+            isSyncingRef.current = false;
+        };
+
+        let isMounted = true;
+
+        supabase.auth.getSession().then(({ data }) => {
+            if (!isMounted) return;
+            handleAuthStateChange('INITIAL_SESSION', data?.session ?? null);
         });
 
-        return () => subscription.unsubscribe();
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (!isMounted) return;
+            handleAuthStateChange(event, session);
+        });
+
+        return () => {
+            isMounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     const syncAndFetchProfile = async (session) => {
@@ -225,14 +273,8 @@ export function AuthProvider({ children }) {
 
     const signOut = async () => {
         const uid = currentSupabaseUidRef.current;
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
+        clearAuthState(false);
         clearCachedOnboarding(uid);
-        currentSupabaseUidRef.current = null;
-        setUserRole(null);
-        setUser(null);
-        setRoleSelected(false);
-        setRegistrationCompleted(false);
         return await supabase.auth.signOut();
     };
 

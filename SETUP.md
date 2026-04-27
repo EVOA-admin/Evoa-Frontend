@@ -17,7 +17,7 @@ cp env.example .env
 
 The `.env` file should contain:
 ```env
-VITE_API_BASE_URL=https://evoa-backend.onrender.com
+VITE_API_BASE_URL=https://evoa-backend.onrender.com/api
 ```
 
 ### 3. Start Development Server

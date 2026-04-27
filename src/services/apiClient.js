@@ -1,6 +1,36 @@
 import { supabase } from '../config/supabase';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || '';
+const normalizeApiUrl = (rawUrl) => {
+  if (!rawUrl) return '';
+
+  const trimmedUrl = rawUrl.trim().replace(/\/+$/, '');
+  if (!trimmedUrl) return '';
+
+  if (/^https?:\/\//i.test(trimmedUrl)) {
+    try {
+      const parsedUrl = new URL(trimmedUrl);
+      parsedUrl.pathname = parsedUrl.pathname.replace(/\/+$/, '');
+
+      if (!parsedUrl.pathname || parsedUrl.pathname === '/') {
+        parsedUrl.pathname = '/api';
+      } else if (!parsedUrl.pathname.endsWith('/api')) {
+        parsedUrl.pathname = `${parsedUrl.pathname}/api`;
+      }
+
+      return parsedUrl.toString().replace(/\/+$/, '');
+    } catch {
+      return trimmedUrl;
+    }
+  }
+
+  if (trimmedUrl === '/api' || trimmedUrl.endsWith('/api')) {
+    return trimmedUrl;
+  }
+
+  return `${trimmedUrl}/api`;
+};
+
+const API_URL = normalizeApiUrl(import.meta.env.VITE_API_BASE_URL || '');
 
 if (!API_URL) {
   console.warn('⚠️ VITE_API_BASE_URL not set! Add it to .env file');
@@ -12,6 +42,15 @@ export const setAuthToken = (token) => {
 
 export const clearAuthData = () => {
   localStorage.removeItem('authToken');
+  localStorage.removeItem('userData');
+};
+
+export const setUserData = (userData) => {
+  if (userData) {
+    localStorage.setItem('userData', JSON.stringify(userData));
+    return;
+  }
+
   localStorage.removeItem('userData');
 };
 
@@ -35,6 +74,14 @@ const getAuthToken = async () => {
     if (data?.session?.access_token) {
       return syncStoredToken(data.session.access_token);
     }
+
+    const refreshedToken = await refreshToken();
+    if (refreshedToken) {
+      return refreshedToken;
+    }
+
+    syncStoredToken(null);
+    return null;
   } catch (_) { /* no-op */ }
 
   return localStorage.getItem('authToken');
