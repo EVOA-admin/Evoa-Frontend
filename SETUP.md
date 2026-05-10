@@ -17,7 +17,7 @@ cp env.example .env
 
 The `.env` file should contain:
 ```env
-VITE_API_BASE_URL=https://evoa-backend.onrender.com/api
+VITE_API_BASE_URL=<your-backend-api-base-url>
 ```
 
 ### 3. Start Development Server
@@ -27,8 +27,8 @@ npm run dev
 
 ## Backend Information
 
-- **Staging Backend URL:** `https://evoa-backend.onrender.com`
-- **Swagger API Documentation:** `https://evoa-backend.onrender.com/api`
+- Set `VITE_API_BASE_URL` to your backend's `/api` base URL.
+- The frontend reads this value via `import.meta.env.VITE_API_BASE_URL`.
 
 ## API Services
 

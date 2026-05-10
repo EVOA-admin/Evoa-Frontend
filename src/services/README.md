@@ -36,19 +36,11 @@ services/
 
 2. Update the `.env` file with your API URL:
    ```env
-   # Staging Backend (Current)
-   VITE_API_BASE_URL=https://evoa-backend.onrender.com
+   VITE_API_BASE_URL=<your-backend-api-base-url>
    
-   # For local development (if running backend locally)
-   # VITE_API_BASE_URL=http://localhost:3000/api
-   
-   # For production (when ready)
-   # VITE_API_BASE_URL=https://api.evoa.com
+   # Example:
+   # VITE_API_BASE_URL=https://your-backend-host/api
    ```
-   
-   **Current Backend:**
-   - Staging URL: `https://evoa-backend.onrender.com`
-   - Swagger Docs: `https://evoa-backend.onrender.com/api`
 
 3. **Restart your development server** after creating/updating the `.env` file.
 

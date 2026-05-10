@@ -15,7 +15,7 @@ The frontend is sending:
 ```
 
 **Verify this matches your backend's expected format** by checking:
-- Swagger Docs: https://evoa-backend.onrender.com/api
+- Your backend's Swagger or API documentation
 - Look for the `/auth/login` endpoint
 - Check the request body schema
 
@@ -45,25 +45,25 @@ The frontend is sending:
    - Look for error stack traces
 
 3. **Test with Swagger/Postman:**
-   - Use the Swagger UI at https://evoa-backend.onrender.com/api
+   - Use your backend's Swagger UI or Postman collection
    - Try the login endpoint directly
    - Compare the request format
 
 4. **Verify Backend Health:**
-   - Check if backend is running: https://evoa-backend.onrender.com
-   - Check if Swagger is accessible: https://evoa-backend.onrender.com/api
+   - Check that the host in `VITE_API_BASE_URL` is reachable
+   - Check that your backend docs or health endpoint is accessible
 
 ### 4. Quick Fixes to Try
 
 1. **Verify .env file:**
    ```env
-   VITE_API_BASE_URL=https://evoa-backend.onrender.com
+   VITE_API_BASE_URL=<your-backend-origin>
    ```
 
 2. **Check if backend needs `/api` prefix:**
-   If your Swagger is at `/api`, endpoints might need the prefix:
+   If your backend is mounted under `/api`, include the prefix:
    ```env
-   VITE_API_BASE_URL=https://evoa-backend.onrender.com/api
+   VITE_API_BASE_URL=<your-backend-api-base-url>
    ```
 
 3. **Try a different endpoint:**
