@@ -4,9 +4,9 @@ const postsService = {
     /** Get all recent posts — startup posts enriched with stats */
     getAllPosts: async () => apiClient.get('/posts'),
 
-    /** Create a new post */
-    createPost: async ({ imageUrl, caption, hashtags = [] }) =>
-        apiClient.post('/posts', { imageUrl, caption, hashtags }),
+    /** Create a new post — supports single imageUrl or multi-image imageUrls[] for carousel */
+    createPost: async ({ imageUrl, imageUrls = [], caption, hashtags = [] }) =>
+        apiClient.post('/posts', { imageUrl, imageUrls, caption, hashtags }),
 
     /** Get the current user's own posts */
     getMyPosts: async () => apiClient.get('/posts/me'),

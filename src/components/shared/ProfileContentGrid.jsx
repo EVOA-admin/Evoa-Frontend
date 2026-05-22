@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaHeart, FaTrash, FaEdit, FaPlay, FaRegImages, FaSpinner } from "react-icons/fa";
+import { FaEye, FaHeart, FaTrash, FaEdit, FaPlay, FaRegImages, FaSpinner, FaClone } from "react-icons/fa";
 import postsService from "../../services/postsService";
 import { reelsService } from "../../services/reelsService";
 import battlegroundService from "../../services/battlegroundService";
@@ -193,9 +193,13 @@ function ContentCard({
         return () => obs.disconnect();
     }, [item.id, isReel]);
 
-    // Thumbnail priority: explicit thumbnailUrl → imageUrl → video element fallback
-    const thumb = item.thumbnailUrl || item.imageUrl || null;
+    // Thumbnail priority: explicit thumbnailUrl → first of imageUrls[] → imageUrl → video fallback
+    const thumb = item.thumbnailUrl
+        || (item.imageUrls?.length ? item.imageUrls[0] : null)
+        || item.imageUrl
+        || null;
     const videoUrl = item.videoUrl || null;
+    const isMultiPhoto = !item._isReel && (item.imageUrls?.length > 1);
 
     const viewCount = item.viewCount ?? item.view_count ?? 0;
     const likeCount = item.likeCount ?? item.like_count ?? 0;
@@ -235,6 +239,13 @@ function ContentCard({
             {isReel && (
                 <div className="absolute top-1.5 right-1.5 bg-black/50 rounded-full p-1">
                     <FaPlay size={8} className="text-white" />
+                </div>
+            )}
+
+            {/* Multi-photo indicator (stacked pages icon) — top-right, for carousel posts */}
+            {isMultiPhoto && (
+                <div className="absolute top-1.5 right-1.5 bg-black/55 rounded-full p-1.5">
+                    <FaClone size={9} className="text-white" />
                 </div>
             )}
 

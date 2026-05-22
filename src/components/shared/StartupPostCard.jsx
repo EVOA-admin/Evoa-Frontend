@@ -15,6 +15,7 @@ import { goToProfile } from "../../utils/profileNavigation";
 import postsService from "../../services/postsService";
 import PostCommentSheet from "./PostCommentSheet";
 import InvestorThoughtSheet from "./InvestorThoughtSheet";
+import PostCarousel from "./PostCarousel";
 
 /**
  * StartupPostCard — rendered when post._type === 'startup'.
@@ -184,17 +185,26 @@ export default function StartupPostCard({
                     </div>
                 </div>
 
-                {/* ── Hero Image ── */}
-                {post.imageUrl && (
-                    <div className="overflow-hidden aspect-[16/9]">
-                        <img
-                            src={post.imageUrl}
-                            alt={post.startupName}
-                            className="w-full h-full object-cover"
-                            onError={(e) => { e.currentTarget.style.display = "none"; }}
-                        />
-                    </div>
-                )}
+                {/* ── Hero Image / Carousel ── */}
+                {(() => {
+                    // Prefer imageUrls[] (multi-photo carousel), fall back to legacy imageUrl
+                    const images = post.imageUrls?.length
+                        ? post.imageUrls
+                        : post.imageUrl ? [post.imageUrl] : [];
+                    if (!images.length) return null;
+                    return images.length === 1 ? (
+                        <div className="overflow-hidden aspect-[16/9]">
+                            <img
+                                src={images[0]}
+                                alt={post.startupName}
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
+                        </div>
+                    ) : (
+                        <PostCarousel images={images} aspectRatio="16/9" isDark={isDark} />
+                    );
+                })()}
 
                 {/* ── Tagline + Sectors ── */}
                 {(post.tagline || post.sectors?.length > 0) && (

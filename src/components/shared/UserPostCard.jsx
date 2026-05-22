@@ -8,6 +8,7 @@ import { HiDotsHorizontal } from "react-icons/hi";
 import { goToProfile } from "../../utils/profileNavigation";
 import postsService from "../../services/postsService";
 import PostCommentSheet from "./PostCommentSheet";
+import PostCarousel from "./PostCarousel";
 
 const ROLE_META = {
     startup: { label: "Startup", color: "text-[#00B8A9]", bg: "bg-[#00B8A9]/10" },
@@ -142,17 +143,26 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
                     </div>
                 </div>
 
-                {/* ── Image ── */}
-                {post.imageUrl && (
-                    <div className="overflow-hidden aspect-[4/3]">
-                        <img
-                            src={post.imageUrl}
-                            alt="Post"
-                            className="w-full h-full object-cover"
-                            onError={(e) => { e.currentTarget.style.display = "none"; }}
-                        />
-                    </div>
-                )}
+                {/* ── Image / Carousel ── */}
+                {(() => {
+                    // Resolve images: prefer imageUrls[] (multi-photo), fall back to legacy imageUrl
+                    const images = post.imageUrls?.length
+                        ? post.imageUrls
+                        : post.imageUrl ? [post.imageUrl] : [];
+                    if (!images.length) return null;
+                    return images.length === 1 ? (
+                        <div className="overflow-hidden aspect-[4/3]">
+                            <img
+                                src={images[0]}
+                                alt="Post"
+                                className="w-full h-full object-cover"
+                                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
+                        </div>
+                    ) : (
+                        <PostCarousel images={images} aspectRatio="4/3" isDark={isDark} />
+                    );
+                })()}
 
                 {/* ── Caption + Hashtags ── */}
                 {(post.caption || post.hashtags?.length > 0) && (
