@@ -69,7 +69,9 @@ export default function Profile() {
   const [activeTab, setActiveTab]         = useState("posts");
   const [activeSection, setActiveSection] = useState("main"); // 'main' | 'ambassador'
   const [menuOpen, setMenuOpen]           = useState(false);
+  const [toastMsg, setToastMsg]           = useState("");     // transient toast message
   const menuRef = useRef(null);
+  const toastTimer = useRef(null);
 
   // Close menu on outside click
   useEffect(() => {
@@ -84,6 +86,28 @@ export default function Profile() {
   }, [menuOpen]);
 
   useEffect(() => { fetchProfileData(); }, [authUser]);
+
+  // ── Share / Copy Profile Link ────────────────────────────────────────────
+  const handleShareProfile = () => {
+    setMenuOpen(false);
+    const profileUrl = `${window.location.origin}/u/${authUser?.id}`;
+    const shareData  = { title: user?.displayName || "Evoa Profile", url: profileUrl };
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      navigator.share(shareData).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(profileUrl).then(() => {
+        showToast("Profile link copied!");
+      }).catch(() => {
+        showToast("Could not copy link.");
+      });
+    }
+  };
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToastMsg(""), 2500);
+  };
 
   const fetchProfileData = async () => {
     try {
@@ -203,6 +227,30 @@ export default function Profile() {
       <style>{MENU_CSS}</style>
       <AppHeader title="Profile" showThemeToggle={true} />
 
+      {/* ── Toast notification ── */}
+      {toastMsg && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 80,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 9999,
+            background: "#00B8A9",
+            color: "#fff",
+            padding: "9px 20px",
+            borderRadius: 24,
+            fontSize: 13,
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+            boxShadow: "0 4px 24px rgba(0,184,169,0.35)",
+            animation: "fadeIn 0.2s ease",
+          }}
+        >
+          {toastMsg}
+        </div>
+      )}
+
       <main className="pb-4">
         {/* Cover Photo */}
         <div className="relative h-36 overflow-hidden">
@@ -282,6 +330,27 @@ export default function Profile() {
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                       Ambassador Program
+                    </button>
+
+                    {/* Divider */}
+                    <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
+
+                    {/* Share Profile */}
+                    <button
+                      id="share-profile-btn"
+                      className="profile-dot-menu-item"
+                      style={{ color: menuTxt }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(0,184,169,.08)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                      onClick={handleShareProfile}
+                      role="menuitem"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                      </svg>
+                      Share Profile
                     </button>
                   </div>
                 )}

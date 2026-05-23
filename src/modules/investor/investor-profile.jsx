@@ -41,6 +41,29 @@ export default function InvestorProfile() {
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState("main"); // 'main' | 'ambassador'
+    const [toastMsg, setToastMsg] = useState("");
+    const toastTimer = useRef(null);
+
+    const showToast = (msg) => {
+        setToastMsg(msg);
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        toastTimer.current = setTimeout(() => setToastMsg(""), 2500);
+    };
+
+    const handleShareProfile = () => {
+        setMenuOpen(false);
+        const profileUrl = `${window.location.origin}/u/${authUser?.id}`;
+        const shareData = { title: profile?.name || "Evoa Profile", url: profileUrl };
+        if (navigator.share && navigator.canShare?.(shareData)) {
+            navigator.share(shareData).catch(() => {});
+        } else {
+            navigator.clipboard?.writeText(profileUrl).then(() => {
+                showToast("Profile link copied!");
+            }).catch(() => {
+                showToast("Could not copy link.");
+            });
+        }
+    };
 
     useEffect(() => {
         fetchInvestorProfile();
@@ -119,6 +142,20 @@ export default function InvestorProfile() {
                         Ambassador Program
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    {/* Share Profile */}
+                    <button
+                        id="investor-share-profile-btn"
+                        onClick={handleShareProfile}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"}`}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                        Share Profile
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button
                         onClick={() => {
                             setMenuOpen(false);
@@ -169,6 +206,16 @@ export default function InvestorProfile() {
 
     return (
         <>
+            {/* ── Toast ── */}
+            {toastMsg && (
+                <div style={{
+                    position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
+                    zIndex: 9999, background: "#00B8A9", color: "#fff",
+                    padding: "9px 20px", borderRadius: 24, fontSize: 13, fontWeight: 600,
+                    whiteSpace: "nowrap", boxShadow: "0 4px 24px rgba(0,184,169,0.35)",
+                    animation: "fadeIn 0.2s ease",
+                }}>{toastMsg}</div>
+            )}
             <AppShell>
                 <AppHeader title="My Profile" actions={headerActions} />
 
