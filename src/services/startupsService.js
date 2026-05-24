@@ -24,6 +24,10 @@ export const getMyStartup = async () => {
   return await apiClient.get('/startups/my');
 };
 
+export const getRankedStartups = async () => {
+  return await apiClient.get('/startups/ranked');
+};
+
 export const updateStartup = async (startupId, data) => {
   return await apiClient.patch(`/startups/${startupId}`, data);
 };
@@ -43,6 +47,7 @@ export default {
   getFollowedStartups,
   createStartup,
   getMyStartup,
+  getRankedStartups,
   updateStartup,
   publishPitchReel,
   analyzeStartup,

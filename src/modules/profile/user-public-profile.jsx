@@ -600,6 +600,12 @@ export default function UserPublicProfile() {
     const role = profile?.role;
     const startup = profile?.startups?.[0];
 
+    useEffect(() => {
+        if (!startup?.id || !currentUser?.id) return;
+        if (startup.founderId === currentUser.id || profile?.id === currentUser.id) return;
+        startupService.recordProfileVisit(startup.id).catch(() => { });
+    }, [startup?.id, startup?.founderId, currentUser?.id, profile?.id]);
+
     const handleMessage = async () => {
         if (!profile?.id || messageLoading) return;
         setMessageLoading(true);

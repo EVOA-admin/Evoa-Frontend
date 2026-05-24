@@ -5,6 +5,7 @@ const startupService = {
     followStartup: (id) => apiClient.post(`/startups/${id}/follow`),
     unfollowStartup: (id) => apiClient.delete(`/startups/${id}/follow`),
     getFollowStatus: (id) => apiClient.get(`/startups/${id}/follow-status`),
+    recordProfileVisit: (id) => apiClient.post(`/startups/${id}/profile-visit`),
 };
 
 export default startupService;

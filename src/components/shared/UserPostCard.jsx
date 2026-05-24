@@ -32,7 +32,7 @@ const roleColors = { startup: "#00B8A9", investor: "#3B82F6", incubator: "#A855F
  * UserPostCard — for investor, incubator, and viewer posts.
  * Includes three-dot menu, PostCommentSheet, and share via Web Share API / clipboard.
  */
-export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp, onDeleted }) {
+export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp, onDeleted, onEngagementChange }) {
     const { theme } = useTheme();
     const isDark = isDarkProp ?? theme === "dark";
     const navigate = useNavigate();
@@ -61,6 +61,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
 
     const handleShare = () => {
         const url = `${window.location.origin}/post/${post.id}`;
+        postsService.sharePost(post.id).then(() => onEngagementChange?.()).catch(() => { });
         if (navigator.share) {
             navigator.share({ title: post.authorName || "Post", url }).catch(() => { });
         } else {
@@ -216,7 +217,10 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
                 onClose={() => setCommentOpen(false)}
                 postId={post.id}
                 postTitle={post.authorName}
-                onCommentAdded={() => setCommentCount(c => c + 1)}
+                onCommentAdded={() => {
+                    setCommentCount(c => c + 1);
+                    onEngagementChange?.();
+                }}
             />
         </>
     );

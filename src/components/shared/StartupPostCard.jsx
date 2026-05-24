@@ -33,6 +33,7 @@ export default function StartupPostCard({
     onShare,
     isDark: isDarkProp,
     onDeleted,   // optional: called after successful delete so parent can refetch
+    onEngagementChange,
 }) {
     const { theme } = useTheme();
     const isDark = isDarkProp ?? theme === "dark";
@@ -77,6 +78,7 @@ export default function StartupPostCard({
     // Share
     const handleShare = () => {
         const url = `${window.location.origin}/post/${post.id}`;
+        postsService.sharePost(post.id).then(() => onEngagementChange?.()).catch(() => { });
         if (navigator.share) {
             navigator.share({ title: post.startupName || "Startup Post", url }).catch(() => { });
         } else {
@@ -299,7 +301,10 @@ export default function StartupPostCard({
                 onClose={() => setCommentOpen(false)}
                 postId={post.id}
                 postTitle={post.startupName}
-                onCommentAdded={() => setCommentCount(c => c + 1)}
+                onCommentAdded={() => {
+                    setCommentCount(c => c + 1);
+                    onEngagementChange?.();
+                }}
             />
 
             {/* ── Investor Thought Sheet (read-only, investor comments only) ── */}

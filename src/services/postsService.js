@@ -4,6 +4,9 @@ const postsService = {
     /** Get all recent posts — startup posts enriched with stats */
     getAllPosts: async () => apiClient.get('/posts'),
 
+    /** Get platform-wide startup rankings from the last 7 days of database activity */
+    getRisingStartups: async () => apiClient.get('/posts/rising-startups'),
+
     /** Create a new post — supports single imageUrl or multi-image imageUrls[] for carousel */
     createPost: async ({ imageUrl, imageUrls = [], caption, hashtags = [] }) =>
         apiClient.post('/posts', { imageUrl, imageUrls, caption, hashtags }),
@@ -35,6 +38,10 @@ const postsService = {
      */
     recordWebsiteClick: async (postId) =>
         apiClient.post(`/posts/${postId}/website-click`),
+
+    /** Record a post share with lightweight duplicate protection */
+    sharePost: async (postId, platform = 'copy_link') =>
+        apiClient.post(`/posts/${postId}/share`, { platform }),
 
     /** Add a comment to a post */
     addComment: async (postId, content) =>

@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import PitchCard from "../../components/shared/PitchCard";
 import { FaRegNewspaper } from "react-icons/fa";
 import EmptyState from "../../components/shared/EmptyState";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import reelsService from "../../services/reelsService";
-import { followStartup, unfollowStartup } from "../../services/startupsService";
+import { followStartup, unfollowStartup, getRankedStartups } from "../../services/startupsService";
 import { getNotifications } from "../../services/notificationsService";
 import CreateContentModal from "../../components/shared/CreateContentModal";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
+import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
 import postsService from "../../services/postsService";
 import { FaPlus } from "react-icons/fa";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
@@ -19,6 +21,7 @@ import { getUnreadCount } from "../../services/chatService";
 
 export default function Incubator() {
   const { theme } = useTheme();
+  const { loading: authLoading } = useAuth();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
 
@@ -28,12 +31,46 @@ export default function Incubator() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
+  const [risingStartups, setRisingStartups] = useState([]);
+  const [risingLoading, setRisingLoading] = useState(true);
+  const showPitchFeed = loading || pitches.length > 0 || (!loading && userPosts.length === 0);
 
   useEffect(() => {
     fetchFeed();
     fetchUnreadCount();
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+    fetchRisingStartups();
+  }, [authLoading]);
+
+  const fetchRisingStartups = async () => {
+    if (authLoading) return;
+    try {
+      setRisingLoading(true);
+      const res = await postsService.getRisingStartups();
+      const data = res?.data?.data || res?.data || [];
+      if (Array.isArray(data) && data.length > 0) {
+        setRisingStartups(data);
+        return;
+      }
+      const fallbackRes = await getRankedStartups();
+      const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
+      setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
+    } catch (_) {
+      try {
+        const fallbackRes = await getRankedStartups();
+        const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
+        setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
+      } catch (_) {
+        setRisingStartups([]);
+      }
+    } finally {
+      setRisingLoading(false);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -91,6 +128,8 @@ export default function Incubator() {
         caption: reel.description,
         hashtags: reel.hashtags ? reel.hashtags.join(' ') : '',
         likes: reel.likeCount,
+        comments: reel.commentCount || 0,
+        shares: reel.shareCount || 0,
         views: reel.viewCount,
         clickthroughs: 0,
         liked: reel.isLiked,
@@ -242,33 +281,40 @@ export default function Incubator() {
     <AppShell>
       <AppHeader actions={plusAction} />
       <main>
-        <div className="px-0 pt-0 pb-4">
-          <div className="mt-2">
-            {!loading && pitches.length === 0 && userPosts.length === 0 && (
-              <EmptyState
-                icon={FaRegNewspaper}
-                title="No Pitches Yet"
-                description="Your feed is currently empty. Explore startups to see content here."
-                actionLabel="Explore Startups"
-                onAction={() => navigate('/explore')}
-              />
-            )}
-            {pitches.map((pitch) => (
-              <PitchCard
-                key={pitch.id}
-                pitch={pitch}
-                onLike={handleLike}
-                onComment={handleComment}
-                onShare={handleShare}
-                onSave={handleSave}
-                onFollow={handleFollow}
-              />
-            ))}
+        <RisingStartupsSection
+          startups={risingStartups}
+          loading={risingLoading}
+          onRefresh={fetchRisingStartups}
+        />
+        {showPitchFeed && (
+          <div className="px-0 pt-0 pb-4">
+            <div className="mt-2">
+              {!loading && pitches.length === 0 && userPosts.length === 0 && (
+                <EmptyState
+                  icon={FaRegNewspaper}
+                  title="No Pitches Yet"
+                  description="Your feed is currently empty. Explore startups to see content here."
+                  actionLabel="Explore Startups"
+                  onAction={() => navigate('/explore')}
+                />
+              )}
+              {pitches.map((pitch) => (
+                <PitchCard
+                  key={pitch.id}
+                  pitch={pitch}
+                  onLike={handleLike}
+                  onComment={handleComment}
+                  onShare={handleShare}
+                  onSave={handleSave}
+                  onFollow={handleFollow}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         {/* ── User Posts Feed ── */}
         {userPosts.length > 0 && (
-          <div className="mt-4 pb-4">
+          <div className={`${pitches.length > 0 ? "mt-4" : ""} pb-4`}>
             {userPosts.map(post => {
               const handleLike = () => {
                 setUserPosts(prev => prev.map(p =>
@@ -276,12 +322,13 @@ export default function Incubator() {
                     ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
                     : p
                 ));
-                post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                request.then(() => fetchRisingStartups()).catch(() => {});
               };
               if (post._type === 'startup') {
-                return <StartupPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} />;
+                return <StartupPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} onEngagementChange={fetchRisingStartups} />;
               }
-              return <UserPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} />;
+              return <UserPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} onEngagementChange={fetchRisingStartups} />;
             })}
           </div>
         )}
@@ -290,7 +337,10 @@ export default function Incubator() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         canUploadReel={false}
-        onCreated={() => { }}
+        onCreated={() => {
+          fetchPosts();
+          fetchRisingStartups();
+        }}
       />
     </AppShell>
   );

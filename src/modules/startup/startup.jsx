@@ -11,7 +11,9 @@ import { getNotifications } from "../../services/notificationsService";
 import CreateContentModal from "../../components/shared/CreateContentModal";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
+import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
 import postsService from "../../services/postsService";
+import { getRankedStartups } from "../../services/startupsService";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { getUnreadCount } from "../../services/chatService";
 
@@ -25,6 +27,8 @@ export default function Startup() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [risingStartups, setRisingStartups] = useState([]);
+  const [risingLoading, setRisingLoading] = useState(true);
 
   useEffect(() => {
     fetchPosts();
@@ -33,6 +37,36 @@ export default function Startup() {
       setUnreadCount((d.unreadMessages || 0) + (d.pendingRequests || 0));
     }).catch(() => { });
   }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    fetchRisingStartups();
+  }, [loading]);
+
+  const fetchRisingStartups = async () => {
+    try {
+      setRisingLoading(true);
+      const res = await postsService.getRisingStartups();
+      const data = res?.data?.data || res?.data || [];
+      if (Array.isArray(data) && data.length > 0) {
+        setRisingStartups(data);
+        return;
+      }
+      const fallbackRes = await getRankedStartups();
+      const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
+      setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
+    } catch (_) {
+      try {
+        const fallbackRes = await getRankedStartups();
+        const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
+        setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
+      } catch (_) {
+        setRisingStartups([]);
+      }
+    } finally {
+      setRisingLoading(false);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -104,7 +138,12 @@ export default function Startup() {
     <AppShell>
       <AppHeader actions={uploadAction} />
       <main>
-        <div className="px-0 pt-0 pb-4">
+        <RisingStartupsSection
+          startups={risingStartups}
+          loading={risingLoading}
+          onRefresh={fetchRisingStartups}
+        />
+        <div className="pb-4">
           <div className="mt-2">
             {!loading && userPosts.length === 0 && (
               <EmptyState
@@ -124,7 +163,8 @@ export default function Startup() {
                       : p
                   )
                 );
-                post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                request.then(() => fetchRisingStartups()).catch(() => { });
               };
 
               const handleSave = () => {
@@ -161,10 +201,10 @@ export default function Startup() {
 
               if (post._type === 'startup') {
                 return <StartupPostCard key={post.id} post={post} isDark={isDark}
-                  onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} />;
+                  onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} onEngagementChange={fetchRisingStartups} />;
               }
               return <UserPostCard key={post.id} post={post} isDark={isDark}
-                onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} />;
+                onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} onEngagementChange={fetchRisingStartups} />;
             })}
           </div>
         </div>
@@ -180,6 +220,7 @@ export default function Startup() {
             navigate('/pitch');
           } else {
             fetchPosts();
+            fetchRisingStartups();
           }
         }}
       />
