@@ -2,8 +2,9 @@ import apiClient from './apiClient';
 
 export const reelsService = {
   // Get feed (for you or following) — uses cursor-based pagination to match backend
-  getFeed: async (type = 'foryou', cursor = null, limit = 20) => {
-    const params = new URLSearchParams({ type, limit });
+  getFeed: async (type = 'for_you', cursor = null, limit = 20) => {
+    const normalizedType = type === 'foryou' ? 'for_you' : type;
+    const params = new URLSearchParams({ type: normalizedType, limit });
     if (cursor) params.append('cursor', cursor);
     return await apiClient.get(`/reels?${params.toString()}`);
   },

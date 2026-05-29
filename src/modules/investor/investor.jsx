@@ -21,7 +21,7 @@ import { getUnreadCount } from "../../services/chatService";
 
 export default function Investor() {
   const { theme } = useTheme();
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading, user } = useAuth();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
 
@@ -30,24 +30,22 @@ export default function Investor() {
   const [cursor, setCursor] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [risingStartups, setRisingStartups] = useState([]);
   const [risingLoading, setRisingLoading] = useState(true);
   const showPitchFeed = loading || pitches.length > 0 || (!loading && userPosts.length === 0);
 
   useEffect(() => {
+    if (authLoading || !user?.id) return;
     fetchFeed();
     fetchUnreadCount();
     fetchPosts();
-  }, []);
-
-  useEffect(() => {
-    if (authLoading) return;
     fetchRisingStartups();
-  }, [authLoading]);
+  }, [authLoading, user?.id]);
 
   const fetchRisingStartups = async () => {
-    if (authLoading) return;
+    if (authLoading || !user?.id) return;
     try {
       setRisingLoading(true);
       const res = await postsService.getRisingStartups();
@@ -126,9 +124,10 @@ export default function Investor() {
   };
 
   const fetchFeed = async () => {
+    if (authLoading || !user?.id) return;
     try {
       setLoading(true);
-      const { data, error } = await reelsService.getFeed('foryou', cursor);
+      const { data, error } = await reelsService.getFeed('for_you', cursor);
       if (error) throw error;
 
       const feedData = data?.reels || data || [];
@@ -273,6 +272,13 @@ export default function Investor() {
 
   const plusAction = (
     <div className="flex items-center gap-1">
+      <RisingStartupsSection
+        startups={risingStartups}
+        loading={risingLoading}
+        onRefresh={fetchRisingStartups}
+        triggerOnly
+        onOpen={() => setShowRisingStartups(true)}
+      />
       <button
         onClick={() => setShowModal(true)}
         className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100"}`}
@@ -303,6 +309,9 @@ export default function Investor() {
           startups={risingStartups}
           loading={risingLoading}
           onRefresh={fetchRisingStartups}
+          panelOnly
+          isOpen={showRisingStartups}
+          onClose={() => setShowRisingStartups(false)}
         />
         {showPitchFeed && (
           <div className="px-0 pt-0 pb-4">

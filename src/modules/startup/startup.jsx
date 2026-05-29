@@ -21,29 +21,32 @@ export default function Startup() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [risingStartups, setRisingStartups] = useState([]);
   const [risingLoading, setRisingLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading || !user?.id) return;
     fetchPosts();
     getUnreadCount().then(r => {
       const d = r?.data?.data || r?.data || {};
       setUnreadCount((d.unreadMessages || 0) + (d.pendingRequests || 0));
     }).catch(() => { });
-  }, []);
+  }, [authLoading, user?.id]);
 
   useEffect(() => {
-    if (loading) return;
+    if (authLoading || !user?.id || loading) return;
     fetchRisingStartups();
-  }, [loading]);
+  }, [authLoading, user?.id, loading]);
 
   const fetchRisingStartups = async () => {
+    if (authLoading || !user?.id) return;
     try {
       setRisingLoading(true);
       const res = await postsService.getRisingStartups();
@@ -112,6 +115,13 @@ export default function Startup() {
 
   const uploadAction = (
     <div className="flex items-center gap-1">
+      <RisingStartupsSection
+        startups={risingStartups}
+        loading={risingLoading}
+        onRefresh={fetchRisingStartups}
+        triggerOnly
+        onOpen={() => setShowRisingStartups(true)}
+      />
       <button
         onClick={() => setShowUploadModal(true)}
         className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100"}`}
@@ -142,6 +152,9 @@ export default function Startup() {
           startups={risingStartups}
           loading={risingLoading}
           onRefresh={fetchRisingStartups}
+          panelOnly
+          isOpen={showRisingStartups}
+          onClose={() => setShowRisingStartups(false)}
         />
         <div className="pb-4">
           <div className="mt-2">
