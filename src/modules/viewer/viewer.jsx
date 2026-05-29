@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -8,7 +8,7 @@ import EmptyState from "../../components/shared/EmptyState";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import reelsService from "../../services/reelsService";
-import { followStartup, unfollowStartup, getRankedStartups } from "../../services/startupsService";
+import { followStartup, unfollowStartup } from "../../services/startupsService";
 import { getNotifications } from "../../services/notificationsService";
 import CreateContentModal from "../../components/shared/CreateContentModal";
 import UserPostCard from "../../components/shared/UserPostCard";
@@ -35,6 +35,7 @@ export default function Viewer() {
   const [userPosts, setUserPosts] = useState([]);
   const [risingStartups, setRisingStartups] = useState([]);
   const [risingLoading, setRisingLoading] = useState(true);
+  const risingDebounceRef = useRef(null);
   const showPitchFeed = loading || pitches.length > 0 || (!loading && userPosts.length === 0);
 
   useEffect(() => {
@@ -54,28 +55,24 @@ export default function Viewer() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [authLoading, user?.id]);
 
-  const fetchRisingStartups = async () => {
+  const fetchRisingStartups = (debounce = false) => {
     if (authLoading || !user?.id) return;
+    if (debounce) {
+      if (risingDebounceRef.current) clearTimeout(risingDebounceRef.current);
+      risingDebounceRef.current = setTimeout(() => _doFetchRising(), 600);
+    } else {
+      _doFetchRising();
+    }
+  };
+
+  const _doFetchRising = async () => {
     try {
       setRisingLoading(true);
       const res = await postsService.getRisingStartups();
       const data = res?.data?.data || res?.data || [];
-      if (Array.isArray(data) && data.length > 0) {
-        setRisingStartups(data);
-        return;
-      }
-      const fallbackRes = await getRankedStartups();
-      const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
-      setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
-    } catch (err) {
-      try {
-        const fallbackRes = await getRankedStartups();
-        const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
-        setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
-      } catch (fallbackErr) {
-        console.error("Failed to load rising startups:", fallbackErr);
-        setRisingStartups([]);
-      }
+      if (Array.isArray(data)) setRisingStartups(data);
+    } catch (_) {
+      // Keep stale data on error
     } finally {
       setRisingLoading(false);
     }
@@ -350,7 +347,7 @@ export default function Viewer() {
                     : p
                 ));
                 const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
-                request.then(() => fetchRisingStartups()).catch(() => {});
+                request.then(() => fetchRisingStartups(true)).catch(() => {});
               };
 
               const handleSave = () => {
@@ -368,7 +365,7 @@ export default function Viewer() {
                   setUserPosts(prev => prev.map(p =>
                     p.id === post.id ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
                   ));
-                  fetchRisingStartups();
+                  fetchRisingStartups(true);
                 } catch (e) { /* silent */ }
               };
 

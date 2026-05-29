@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -13,7 +13,7 @@ import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
 import postsService from "../../services/postsService";
-import { getRankedStartups } from "../../services/startupsService";
+
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { getUnreadCount } from "../../services/chatService";
 
@@ -29,6 +29,7 @@ export default function Startup() {
   const [userPosts, setUserPosts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [risingStartups, setRisingStartups] = useState([]);
+  const risingDebounceRef = useRef(null);
   const [risingLoading, setRisingLoading] = useState(true);
 
   useEffect(() => {
@@ -45,27 +46,28 @@ export default function Startup() {
     fetchRisingStartups();
   }, [authLoading, user?.id, loading]);
 
-  const fetchRisingStartups = async () => {
+  const fetchRisingStartups = (debounce = false) => {
     if (authLoading || !user?.id) return;
+    if (debounce) {
+      if (risingDebounceRef.current) clearTimeout(risingDebounceRef.current);
+      risingDebounceRef.current = setTimeout(() => _doFetchRising(), 600);
+    } else {
+      _doFetchRising();
+    }
+  };
+
+  const _doFetchRising = async () => {
     try {
       setRisingLoading(true);
+      console.log('Fetching rising startups...');
       const res = await postsService.getRisingStartups();
+      console.log('Rising startups response:', res);
       const data = res?.data?.data || res?.data || [];
-      if (Array.isArray(data) && data.length > 0) {
-        setRisingStartups(data);
-        return;
-      }
-      const fallbackRes = await getRankedStartups();
-      const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
-      setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
-    } catch (_) {
-      try {
-        const fallbackRes = await getRankedStartups();
-        const fallbackData = fallbackRes?.data?.data || fallbackRes?.data || [];
-        setRisingStartups(Array.isArray(fallbackData) ? fallbackData : []);
-      } catch (_) {
-        setRisingStartups([]);
-      }
+      console.log('Rising startups data:', data);
+      if (Array.isArray(data)) setRisingStartups(data);
+    } catch (e) {
+      console.error('Error fetching rising startups:', e);
+      // Keep stale data on error — don't blank the list
     } finally {
       setRisingLoading(false);
     }
@@ -177,7 +179,7 @@ export default function Startup() {
                   )
                 );
                 const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
-                request.then(() => fetchRisingStartups()).catch(() => { });
+                request.then(() => fetchRisingStartups(true)).catch(() => { });
               };
 
               const handleSave = () => {
