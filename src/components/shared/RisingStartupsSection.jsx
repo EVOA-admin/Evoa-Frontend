@@ -368,9 +368,9 @@ export default function RisingStartupsSection({
         </div>
 
         {/* Scrollable list — min-h-0 is CRITICAL for flex-child scroll to work */}
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+        <div className="flex-1 overflow-y-auto min-h-0 bg-transparent scrollbar-hide pb-4">
           {loading ? (
-            <div className="px-3 py-3 space-y-2 sm:px-4 sm:py-4">
+            <div className="px-3 pb-3 space-y-2 sm:px-4 sm:pb-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
