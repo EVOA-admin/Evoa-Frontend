@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { FaHome, FaSearch, FaPlay, FaBell, FaUser } from "react-icons/fa";
 import { getNotifications } from "../../services/notificationsService";
 
-/* ─── EVOA BottomNav ─── */
+/* ─── EVOA BottomNav — Apple Glassmorphism Design System ─── */
 const NAV_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
 
@@ -14,15 +14,33 @@ const NAV_CSS = `
   bottom: 0;
   z-index: 40;
   border-top: 1px solid transparent;
-  transition: background .3s, border-color .3s;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  transition: background .3s, border-color .3s, box-shadow .3s;
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-.evoa-bnav.dark  { background: rgba(6,6,7,.97); border-color: rgba(244,240,232,.06); }
-.evoa-bnav.light { background: rgba(250,248,245,.97); border-color: rgba(26,26,26,.08); }
 
-.evoa-bnav-inner { display: flex; align-items: center; justify-content: space-around; padding: 4px 8px; }
+/* Dark: deep frosted glass dock */
+.evoa-bnav.dark {
+  background: rgba(10,10,16,0.80);
+  border-color: rgba(255,255,255,0.07);
+  box-shadow:
+    0 -1px 0 rgba(0,184,169,0.10),
+    0 -8px 32px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* Light: frosted white glass with subtle shadow */
+.evoa-bnav.light {
+  background: rgba(255,255,255,0.84);
+  border-color: rgba(255,255,255,0.92);
+  box-shadow:
+    0 -1px 0 rgba(0,184,169,0.07),
+    0 -8px 32px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+}
+
+.evoa-bnav-inner { display: flex; align-items: center; justify-content: space-around; padding: 6px 8px 4px; }
 
 .evoa-bnav-tab {
   position: relative;
@@ -30,22 +48,41 @@ const NAV_CSS = `
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 6px 16px;
+  border-radius: 18px;
   border: none;
   background: none;
   cursor: pointer;
-  transition: all .2s;
+  transition: all .25s cubic-bezier(0.22, 1, 0.36, 1);
   -webkit-tap-highlight-color: transparent;
+  min-width: 52px;
 }
-.evoa-bnav-tab:active { transform: scale(.88); }
+.evoa-bnav-tab:active { transform: scale(0.86); opacity: 0.85; }
 
 /* default (inactive) */
-.evoa-bnav.dark  .evoa-bnav-tab { color: rgba(244,240,232,.28); }
-.evoa-bnav.light .evoa-bnav-tab { color: rgba(26,26,26,.3); }
+.evoa-bnav.dark  .evoa-bnav-tab { color: rgba(244,240,232,.3); }
+.evoa-bnav.light .evoa-bnav-tab { color: rgba(26,26,26,.32); }
 
-/* active */
-.evoa-bnav-tab.active { color: #00B8A9 !important; }
+/* active — glass pill background + teal */
+.evoa-bnav-tab.active {
+  color: #00B8A9 !important;
+}
+
+/* Active glass pill highlight */
+.evoa-bnav-tab.active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: rgba(0,184,169,0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(0,184,169,0.20),
+    0 0 14px rgba(0,184,169,0.12);
+}
+
+/* Hover states */
+.evoa-bnav.dark  .evoa-bnav-tab:not(.active):hover { color: rgba(244,240,232,.6); }
+.evoa-bnav.light .evoa-bnav-tab:not(.active):hover { color: rgba(26,26,26,.6); }
 
 .evoa-bnav-label {
   font-family: 'DM Mono', monospace;
@@ -53,50 +90,70 @@ const NAV_CSS = `
   letter-spacing: .12em;
   text-transform: uppercase;
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
-/* Active indicator dot */
+.evoa-bnav-icon {
+  position: relative;
+  z-index: 1;
+}
+
+/* Active indicator dot — glowing teal */
 .evoa-bnav-dot {
   position: absolute;
-  bottom: 2px;
+  bottom: 3px;
   left: 50%;
   transform: translateX(-50%);
-  width: 3px;
-  height: 3px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: #00B8A9;
+  box-shadow: 0 0 6px rgba(0,184,169,0.8), 0 0 12px rgba(0,184,169,0.4);
+  animation: nav-dot-expand 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Centre Pitch button */
+/* Centre Pitch button — dramatic gradient with glow ring */
 .evoa-bnav-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #00B8A9, #007a73);
-  box-shadow: 0 4px 16px rgba(0,184,169,.35);
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #00E5D3 0%, #00B8A9 50%, #007a73 100%);
+  box-shadow:
+    0 0 0 1px rgba(0,184,169,0.35),
+    0 4px 20px rgba(0,184,169,0.45),
+    0 8px 32px rgba(0,184,169,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.25);
   color: #fff !important;
-  margin-top: -10px;
+  margin-top: -12px;
   gap: 0;
   padding: 0;
   border: none;
   cursor: pointer;
-  transition: transform .2s, box-shadow .2s;
+  transition: transform .25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .25s;
   -webkit-tap-highlight-color: transparent;
 }
-.evoa-bnav-center:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,184,169,.5); }
-.evoa-bnav-center:active { transform: scale(.9); }
+.evoa-bnav-center:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 0 0 1px rgba(0,184,169,0.5),
+    0 6px 24px rgba(0,184,169,0.6),
+    0 12px 40px rgba(0,184,169,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.evoa-bnav-center:active { transform: scale(0.90); }
 
 /* Badge */
 .evoa-bnav-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: 0px;
+  right: 4px;
   min-width: 15px;
   height: 15px;
-  background: #E8341A;
+  background: linear-gradient(135deg, #E8341A, #c02810);
   color: #fff;
   font-size: 8px;
   font-weight: 700;
@@ -106,6 +163,10 @@ const NAV_CSS = `
   justify-content: center;
   padding: 0 3px;
   font-family: 'DM Mono', monospace;
+  box-shadow:
+    0 0 0 1.5px rgba(10,10,16,0.8),
+    0 2px 8px rgba(232,52,26,0.5);
+  animation: badge-pulse-glow 2s ease-in-out infinite;
 }
 `;
 
@@ -121,8 +182,8 @@ export default function BottomNav() {
   const { user, userRole } = useAuth();
   const role = userRole || user?.role || "viewer";
 
-  const [unread, setUnread] = useState(0);
-  useEffect(() => {
+  const [unread, setUnread] = React.useState(0);
+  React.useEffect(() => {
     getNotifications()
       .then(res => {
         const data = res?.data?.data || res?.data || [];
@@ -157,7 +218,7 @@ export default function BottomNav() {
           if (center) {
             return (
               <button key={key} className="evoa-bnav-center" onClick={() => navigate(path)} title={label} aria-label={label}>
-                <Icon size={17} />
+                <Icon size={18} />
               </button>
             );
           }
@@ -168,7 +229,7 @@ export default function BottomNav() {
               onClick={() => navigate(path)}
               aria-label={label}
             >
-              <div style={{ position:"relative" }}>
+              <div className="evoa-bnav-icon" style={{ position:"relative" }}>
                 <Icon size={19} />
                 {badge > 0 && (
                   <span className="evoa-bnav-badge">{badge > 9 ? "9+" : badge}</span>

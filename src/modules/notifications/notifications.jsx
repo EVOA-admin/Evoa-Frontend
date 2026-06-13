@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { FaBell, FaFire, FaDollarSign, FaRocket, FaCog, FaCheck } from "react-icons/fa";
+import { FaBell, FaFire, FaDollarSign, FaRocket, FaCog, FaCheck, FaCircle } from "react-icons/fa";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import {
@@ -12,9 +12,161 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { goToProfile } from "../../utils/profileNavigation";
 
+/* ─── Desktop CSS ─── */
+const NOTIF_CSS = `
+/* Desktop 2-column layout */
+.notif-desktop-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.notif-main-col { flex: 1; min-width: 0; }
+.notif-right-panel { display: none; }
+
+@media (min-width: 1024px) {
+  .notif-desktop-wrap {
+    flex-direction: row;
+    align-items: flex-start;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 16px;
+    gap: 24px;
+  }
+  .notif-main-col { flex: 1; min-width: 0; }
+  .notif-right-panel {
+    display: flex;
+    flex-direction: column;
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    padding-top: 4px;
+    gap: 12px;
+  }
+  /* Desktop page title */
+  .notif-desktop-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px 0;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+}
+
+/* Glass panel card */
+.notif-panel-card {
+  border-radius: 20px;
+  border: 1px solid;
+  overflow: hidden;
+}
+.notif-panel-card.dark {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.09);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.notif-panel-card.light {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.9);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95);
+}
+
+/* Notification item — left accent border on unread */
+.notif-item {
+  position: relative;
+  padding: 14px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all .2s;
+  border: 1px solid transparent;
+}
+.notif-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #00B8A9;
+  opacity: 0;
+  transition: opacity .2s;
+}
+.notif-item.unread::before { opacity: 1; }
+
+.notif-item.dark { border-color: rgba(255,255,255,0.05); }
+.notif-item.dark.unread {
+  background: rgba(0,184,169,0.08);
+  border-color: rgba(0,184,169,0.2);
+}
+.notif-item.dark:hover { background: rgba(255,255,255,0.06); }
+
+.notif-item.light { border-color: rgba(0,0,0,0.04); background: #fff; }
+.notif-item.light.unread {
+  background: rgba(0,184,169,0.04);
+  border-color: rgba(0,184,169,0.2);
+}
+.notif-item.light:hover { background: rgba(0,0,0,0.03); }
+
+/* Date group headers */
+.notif-date-hdr {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 20px 0 8px;
+}
+
+/* Stat mini tiles in right panel */
+.notif-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+}
+.notif-stat-tile {
+  border-radius: 14px;
+  padding: 10px;
+  text-align: center;
+  border: 1px solid;
+}
+.notif-panel-card.dark  .notif-stat-tile { background: rgba(0,184,169,0.05); border-color: rgba(0,184,169,0.14); }
+.notif-panel-card.light .notif-stat-tile { background: rgba(0,184,169,0.04); border-color: rgba(0,184,169,0.12); }
+`;
+
+const TABS = [
+  { id: 'all',         label: 'All',          icon: FaBell       },
+  { id: 'battleground',label: 'Battleground', icon: FaFire       },
+  { id: 'investor',    label: 'Investor',      icon: FaDollarSign },
+  { id: 'pitch',       label: 'Pitch',         icon: FaRocket     },
+  { id: 'system',      label: 'System',        icon: FaCog        },
+];
+
+function groupByDate(notifications) {
+  const now = new Date();
+  const groups = {};
+  notifications.forEach(n => {
+    const d = n.createdAt ? new Date((/[Zz]|[+-]\d{2}:\d{2}$/.test(n.createdAt) ? n.createdAt : n.createdAt + 'Z')) : null;
+    let label = 'Earlier';
+    if (d) {
+      const diff = now - d;
+      if (diff < 86400000) label = 'Today';
+      else if (diff < 172800000) label = 'Yesterday';
+      else if (diff < 604800000) label = 'This Week';
+    }
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(n);
+  });
+  return groups;
+}
+
 export default function Notifications() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const cls = isDark ? 'dark' : 'light';
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
@@ -22,17 +174,7 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
 
-  const tabs = [
-    { id: 'all', label: 'All', icon: FaBell },
-    { id: 'battleground', label: 'Battleground', icon: FaFire },
-    { id: 'investor', label: 'Investor', icon: FaDollarSign },
-    { id: 'pitch', label: 'Pitch', icon: FaRocket },
-    { id: 'system', label: 'System', icon: FaCog }
-  ];
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [activeTab]);
+  useEffect(() => { fetchNotifications(); }, [activeTab]);
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -42,7 +184,6 @@ export default function Notifications() {
       const data = res?.data?.data || res?.data || [];
       setNotifications(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
       setNotifications([]);
     } finally {
       setLoading(false);
@@ -53,19 +194,11 @@ export default function Notifications() {
     if (!notification.isRead) {
       try {
         await markNotificationAsRead(notification.id);
-        setNotifications((prev) =>
-          prev.map((n) => n.id === notification.id ? { ...n, isRead: true } : n)
-        );
-      } catch (err) {
-        console.error('Failed to mark as read:', err);
-      }
+        setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n));
+      } catch (_) {}
     }
-
-    // Derive actor ID: prefer explicit actorId field (new), fall back to /u/<id> link
-    const actorId =
-      notification.actorId ||
-      (notification.link?.startsWith('/u/') ? notification.link.split('/')[2] : null);
-
+    const actorId = notification.actorId
+      || (notification.link?.startsWith('/u/') ? notification.link.split('/')[2] : null);
     if (actorId) {
       goToProfile(actorId, currentUser, navigate);
     } else if (notification.link) {
@@ -81,20 +214,15 @@ export default function Notifications() {
     setMarkingAll(true);
     try {
       await markAllNotificationsAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-    } finally {
-      setMarkingAll(false);
-    }
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch (_) {}
+    finally { setMarkingAll(false); }
   };
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const formatTime = (dateStr) => {
     if (!dateStr) return '';
-    // Force UTC parsing — if the string has no timezone indicator ('Z' or '+'/'-' after date part),
-    // JS would treat it as local IST, making all times appear 5h30m older than actual.
     const utcStr = /[Zz]|[+-]\d{2}:\d{2}$/.test(dateStr) ? dateStr : dateStr + 'Z';
     const date = new Date(utcStr);
     const now = new Date();
@@ -109,21 +237,10 @@ export default function Notifications() {
     return date.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
   };
 
-
-  /**
-   * Renders the notification message with the actor username as a teal clickable button.
-   * Uses actorId (new backend field) to navigate to their profile on click.
-   * Falls back to extracting actorId from notification.link if actorId not present.
-   */
   const renderMessage = (notification) => {
     const msg = notification.message || '';
-
-    // Prefer explicit actorId field; fall back to /u/<id> link extraction
-    const actorId =
-      notification.actorId ||
-      (notification.link?.startsWith('/u/') ? notification.link.split('/')[2] : null);
-
-    // Extract the leading name-like phrase (1–3 capitalised words at the start)
+    const actorId = notification.actorId
+      || (notification.link?.startsWith('/u/') ? notification.link.split('/')[2] : null);
     const leadingName = msg.match(/^([A-Z][a-zA-Z'-]+(?: [A-Z][a-zA-Z'-]+){0,2})\b/);
     if (leadingName) {
       const name = leadingName[1];
@@ -131,10 +248,7 @@ export default function Notifications() {
       return (
         <>
           <button
-            onClick={(e) => {
-              e.stopPropagation(); // prevent card's handleNotificationClick
-              if (actorId) goToProfile(actorId, currentUser, navigate);
-            }}
+            onClick={e => { e.stopPropagation(); if (actorId) goToProfile(actorId, currentUser, navigate); }}
             className="font-bold text-[#00B8A9] hover:underline bg-transparent border-none p-0 cursor-pointer"
             style={{ font: 'inherit', display: 'inline' }}
           >
@@ -144,116 +258,212 @@ export default function Notifications() {
         </>
       );
     }
-
     return msg;
   };
 
+  const grouped = groupByDate(notifications);
+  const groupOrder = ['Today', 'Yesterday', 'This Week', 'Earlier'];
+
+  // Category breakdown for right panel
+  const catCounts = TABS.filter(t => t.id !== 'all').map(t => ({
+    ...t,
+    count: notifications.filter(n => n.type === t.id).length
+  }));
+
   return (
     <AppShell>
+      <style>{NOTIF_CSS}</style>
       <AppHeader title="Notifications" />
-      <div className="px-3 py-4">
-        {/* Unread count + mark all */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+
+      {/* Desktop page title */}
+      <div className="notif-desktop-title" style={{ display: 'none' }}
+        ref={el => { if (el) el.style.display = window.innerWidth >= 1024 ? 'flex' : 'none'; }}>
+        <div>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Notifications</h1>
+          <p className={`text-sm mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
+            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+          </p>
+        </div>
+        {unreadCount > 0 && (
+          <button
+            onClick={handleMarkAllRead}
+            disabled={markingAll}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl transition-all ${isDark
+              ? 'text-[#00B8A9] bg-[#00B8A9]/10 hover:bg-[#00B8A9]/20 border border-[#00B8A9]/25'
+              : 'text-[#00B8A9] bg-[#00B8A9]/8 hover:bg-[#00B8A9]/15 border border-[#00B8A9]/20'
+            }`}
+          >
+            <FaCheck size={10} /> Mark all read
+          </button>
+        )}
+      </div>
+
+      <div className="notif-desktop-wrap px-3 py-4">
+        {/* ── Left: main notification list ── */}
+        <div className="notif-main-col">
+          {/* Mobile unread + mark all (hidden on desktop via title bar above) */}
+          <div className="flex items-center justify-between mb-4 lg:hidden">
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <span className="bg-[#00B8A9] text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
             {unreadCount > 0 && (
-              <span className="bg-[#00B8A9] text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                {unreadCount}
-              </span>
+              <button
+                onClick={handleMarkAllRead}
+                disabled={markingAll}
+                className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${isDark
+                  ? 'text-[#00B8A9] hover:bg-white/10'
+                  : 'text-[#00B8A9] hover:bg-[#00B8A9]/10'
+                }`}
+              >
+                <FaCheck size={10} /> Mark all read
+              </button>
             )}
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              disabled={markingAll}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${isDark
-                ? 'text-[#00B8A9] hover:bg-white/10'
-                : 'text-[#00B8A9] hover:bg-[#00B8A9]/10'
-                }`}
-            >
-              <FaCheck size={10} />
-              Mark all read
-            </button>
+
+          {/* Tabs */}
+          <div className="flex gap-2 mb-5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${activeTab === tab.id
+                    ? 'bg-[#00B8A9] text-white shadow-lg shadow-[#00B8A9]/30'
+                    : isDark
+                      ? 'bg-white/8 text-white/60 hover:bg-white/15'
+                      : 'bg-black/8 text-black/60 hover:bg-black/15'
+                  }`}
+                >
+                  <Icon size={13} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Notifications List */}
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className={`h-[72px] rounded-xl animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+              ))}
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className={`text-center py-16 ${isDark ? 'text-white/60' : 'text-black/60'}`}>
+              <FaBell size={40} className="mx-auto mb-3 opacity-30" />
+              <p className="font-semibold">No notifications</p>
+              <p className="text-sm mt-1 opacity-70">You're all caught up!</p>
+            </div>
+          ) : (
+            <div className="space-y-0.5">
+              {groupOrder.map(groupLabel => {
+                const items = grouped[groupLabel];
+                if (!items?.length) return null;
+                return (
+                  <div key={groupLabel}>
+                    <p className={`notif-date-hdr ${isDark ? 'text-white/30' : 'text-gray-400'}`}>{groupLabel}</p>
+                    <div className="space-y-1.5">
+                      {items.map(notification => (
+                        <div
+                          key={notification.id}
+                          onClick={() => handleNotificationClick(notification)}
+                          className={`notif-item ${cls} ${!notification.isRead ? 'unread' : ''}`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              {notification.title && (
+                                <p className={`text-sm font-semibold mb-0.5 ${isDark ? 'text-white' : 'text-black'}`}>
+                                  {notification.title}
+                                </p>
+                              )}
+                              <p className={`text-sm ${isDark ? 'text-white/80' : 'text-black/80'}`}>
+                                {renderMessage(notification)}
+                              </p>
+                              <p className={`text-xs mt-1 ${isDark ? 'text-white/35' : 'text-black/40'}`}>
+                                {formatTime(notification.createdAt)}
+                              </p>
+                            </div>
+                            {!notification.isRead && (
+                              <div className="w-2 h-2 rounded-full bg-[#00B8A9] flex-shrink-0 mt-1.5 shadow-[0_0_6px_rgba(0,184,169,0.6)]" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${activeTab === tab.id
-                  ? 'bg-[#00B8A9] text-white shadow-lg shadow-[#00B8A9]/30'
-                  : isDark
-                    ? 'bg-white/8 text-white/60 hover:bg-white/15'
-                    : 'bg-black/8 text-black/60 hover:bg-black/15'
-                  }`}
-              >
-                <Icon size={13} />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Notifications List */}
-        {loading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className={`p-4 rounded-xl animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`}
-                style={{ height: '72px' }}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                onClick={() => handleNotificationClick(notification)}
-                className={`p-4 rounded-xl cursor-pointer transition-all ${notification.isRead
-                  ? isDark
-                    ? 'bg-white/5 border border-white/5'
-                    : 'bg-white border border-gray-200'
-                  : isDark
-                    ? 'bg-[#00B8A9]/10 border border-[#00B8A9]/30'
-                    : 'bg-[#00B8A9]/5 border border-[#00B8A9]/30'
-                  }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    {notification.title && (
-                      <p className={`text-sm font-semibold mb-0.5 ${isDark ? 'text-white' : 'text-black'}`}>
-                        {notification.title}
-                      </p>
-                    )}
-                    <p className={`text-sm ${isDark ? 'text-white/80' : 'text-black/80'}`}>
-                      {renderMessage(notification)}
-                    </p>
-                    <p className={`text-xs mt-1 ${isDark ? 'text-white/50' : 'text-black/50'}`}>
-                      {formatTime(notification.createdAt)}
-                    </p>
-                  </div>
-                  {!notification.isRead && (
-                    <div className="w-2 h-2 rounded-full bg-[#00B8A9] flex-shrink-0 mt-1.5" />
-                  )}
-                </div>
+        {/* ── Right panel (desktop only) ── */}
+        <div className="notif-right-panel">
+          {/* Summary card */}
+          <div className={`notif-panel-card ${cls}`}>
+            <div className="px-4 py-3 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
+              <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Summary</p>
+            </div>
+            <div className="notif-stat-grid">
+              <div className="notif-stat-tile">
+                <p className="text-lg font-black" style={{ background: 'linear-gradient(135deg,#00E5D3,#00B8A9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  {unreadCount}
+                </p>
+                <p className={`text-[10px] font-500 uppercase tracking-wide ${isDark ? 'text-white/35' : 'text-gray-400'}`}>Unread</p>
               </div>
-            ))}
+              <div className="notif-stat-tile">
+                <p className="text-lg font-black" style={{ background: 'linear-gradient(135deg,#00E5D3,#00B8A9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                  {notifications.length}
+                </p>
+                <p className={`text-[10px] font-500 uppercase tracking-wide ${isDark ? 'text-white/35' : 'text-gray-400'}`}>Total</p>
+              </div>
+            </div>
+            {unreadCount > 0 && (
+              <div className="px-3 pb-3">
+                <button
+                  onClick={handleMarkAllRead}
+                  disabled={markingAll}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all bg-[#00B8A9] text-white hover:bg-[#009e96] shadow-lg shadow-[#00B8A9]/30"
+                >
+                  <FaCheck size={11} /> Mark all read
+                </button>
+              </div>
+            )}
           </div>
-        )}
 
-        {!loading && notifications.length === 0 && (
-          <div className={`text-center py-16 ${isDark ? 'text-white/60' : 'text-black/60'}`}>
-            <FaBell size={40} className="mx-auto mb-3 opacity-30" />
-            <p className="font-semibold">No notifications</p>
-            <p className="text-sm mt-1 opacity-70">You're all caught up!</p>
+          {/* Category breakdown */}
+          <div className={`notif-panel-card ${cls}`}>
+            <div className="px-4 py-3 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
+              <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Categories</p>
+            </div>
+            <div className="py-1 px-2">
+              {catCounts.map(({ id, label, icon: Icon, count }) => (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${activeTab === id
+                    ? (isDark ? 'bg-[#00B8A9]/12 text-[#00B8A9]' : 'bg-[#00B8A9]/10 text-[#00B8A9]')
+                    : (isDark ? 'text-white/60 hover:bg-white/5' : 'text-gray-600 hover:bg-black/4')
+                  }`}
+                >
+                  <Icon size={13} />
+                  <span className="text-sm font-medium flex-1">{label}</span>
+                  {count > 0 && (
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === id
+                      ? 'bg-[#00B8A9] text-white'
+                      : (isDark ? 'bg-white/10 text-white/60' : 'bg-black/8 text-gray-500')
+                    }`}>{count}</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </AppShell>
   );

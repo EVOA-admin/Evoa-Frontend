@@ -478,3 +478,139 @@ option:focus {
 @media (min-width: 1024px) {
   .responsive-grid-pattern { background-size: 40px 40px; }
 }
+
+/* ============================================================
+   GLASSMORPHISM DESIGN SYSTEM — EVOA Internal App
+   Apple-inspired glass effects, micro-animations, glow states
+   ============================================================ */
+
+/* ── Card entrance animation ── */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass-card-enter {
+  animation: card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Like / heart bloom ── */
+@keyframes like-bloom {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.45); }
+  55%  { transform: scale(0.92); }
+  80%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.animate-like-bloom {
+  animation: like-bloom 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+/* ── Notification badge pulse glow ── */
+@keyframes badge-pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(232, 52, 26, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(232, 52, 26, 0);
+  }
+}
+
+.glass-badge-pulse {
+  animation: badge-pulse-glow 2s ease-in-out infinite;
+}
+
+/* ── Glass shimmer sweep ── */
+@keyframes glass-shimmer-sweep {
+  0%   { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateX(320%) skewX(-12deg); opacity: 0; }
+}
+
+.glass-shimmer-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-shimmer-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.07) 50%,
+    transparent 65%
+  );
+  animation: glass-shimmer-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ── Teal glow pulse (for active elements) ── */
+@keyframes teal-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 184, 169, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(0, 184, 169, 0);
+  }
+}
+
+.animate-teal-glow-pulse {
+  animation: teal-glow-pulse 2s ease-in-out infinite;
+}
+
+/* ── Glass card utility class ── */
+.glass-card-dark {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.glass-card-light {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+/* ── Bottom nav active glow dot ── */
+@keyframes nav-dot-expand {
+  0%   { transform: translateX(-50%) scale(0); opacity: 0; }
+  60%  { transform: translateX(-50%) scale(1.4); }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+.glass-nav-dot-enter {
+  animation: nav-dot-expand 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ── Thought strip hover glow ── */
+@keyframes thought-hover-glow {
+  from { box-shadow: 0 2px 12px rgba(0, 184, 169, 0); }
+  to   { box-shadow: 0 4px 20px rgba(0, 184, 169, 0.22); }
+}
+
+/* ── Stat pill pop-in ── */
+@keyframes stat-pop {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.animate-stat-pop {
+  animation: stat-pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

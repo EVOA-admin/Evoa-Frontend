@@ -7,6 +7,7 @@ import { FaRegNewspaper } from "react-icons/fa";
 import EmptyState from "../../components/shared/EmptyState";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
+import DesktopFeedLayout from "../../components/layout/DesktopFeedLayout";
 import reelsService from "../../services/reelsService";
 import { followStartup, unfollowStartup } from "../../services/startupsService";
 import { getNotifications } from "../../services/notificationsService";
@@ -18,6 +19,7 @@ import postsService from "../../services/postsService";
 import { FaPlus } from "react-icons/fa";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { getUnreadCount } from "../../services/chatService";
+
 
 export default function Incubator() {
   const { theme } = useTheme();
@@ -282,64 +284,66 @@ export default function Incubator() {
   );
 
   return (
-    <AppShell>
+    <AppShell onCreatePost={() => setShowModal(true)}>
       <AppHeader actions={plusAction} />
-      <main>
-        <RisingStartupsSection
-          startups={risingStartups}
-          loading={risingLoading}
-          onRefresh={fetchRisingStartups}
-          panelOnly
-          isOpen={showRisingStartups}
-          onClose={() => setShowRisingStartups(false)}
-        />
-        {showPitchFeed && (
-          <div className="px-0 pt-0 pb-4">
-            <div className="mt-2">
-              {!loading && pitches.length === 0 && userPosts.length === 0 && (
-                <EmptyState
-                  icon={FaRegNewspaper}
-                  title="No Pitches Yet"
-                  description="Your feed is currently empty. Explore startups to see content here."
-                  actionLabel="Explore Startups"
-                  onAction={() => navigate('/explore')}
-                />
-              )}
-              {pitches.map((pitch) => (
-                <PitchCard
-                  key={pitch.id}
-                  pitch={pitch}
-                  onLike={handleLike}
-                  onComment={handleComment}
-                  onShare={handleShare}
-                  onSave={handleSave}
-                  onFollow={handleFollow}
-                />
-              ))}
+      <DesktopFeedLayout>
+        <main>
+          <RisingStartupsSection
+            startups={risingStartups}
+            loading={risingLoading}
+            onRefresh={fetchRisingStartups}
+            panelOnly
+            isOpen={showRisingStartups}
+            onClose={() => setShowRisingStartups(false)}
+          />
+          {showPitchFeed && (
+            <div className="px-0 pt-0 pb-4">
+              <div className="mt-2">
+                {!loading && pitches.length === 0 && userPosts.length === 0 && (
+                  <EmptyState
+                    icon={FaRegNewspaper}
+                    title="No Pitches Yet"
+                    description="Your feed is currently empty. Explore startups to see content here."
+                    actionLabel="Explore Startups"
+                    onAction={() => navigate('/explore')}
+                  />
+                )}
+                {pitches.map((pitch) => (
+                  <PitchCard
+                    key={pitch.id}
+                    pitch={pitch}
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    onShare={handleShare}
+                    onSave={handleSave}
+                    onFollow={handleFollow}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-        {/* ── User Posts Feed ── */}
-        {userPosts.length > 0 && (
-          <div className={`${pitches.length > 0 ? "mt-4" : ""} pb-4`}>
-            {userPosts.map(post => {
-              const handleLike = () => {
-                setUserPosts(prev => prev.map(p =>
-                  p.id === post.id
-                    ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
-                    : p
-                ));
-                const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
-                request.then(() => fetchRisingStartups(true)).catch(() => {});
-              };
-              if (post._type === 'startup') {
-                return <StartupPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} onEngagementChange={fetchRisingStartups} />;
-              }
-              return <UserPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} onEngagementChange={fetchRisingStartups} />;
-            })}
-          </div>
-        )}
-      </main>
+          )}
+          {/* ── User Posts Feed ── */}
+          {userPosts.length > 0 && (
+            <div className={`${pitches.length > 0 ? "mt-4" : ""} pb-4`}>
+              {userPosts.map(post => {
+                const handleLike = () => {
+                  setUserPosts(prev => prev.map(p =>
+                    p.id === post.id
+                      ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
+                      : p
+                  ));
+                  const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                  request.then(() => fetchRisingStartups(true)).catch(() => {});
+                };
+                if (post._type === 'startup') {
+                  return <StartupPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} onEngagementChange={fetchRisingStartups} />;
+                }
+                return <UserPostCard key={post.id} post={post} isDark={isDark} onLike={handleLike} onEngagementChange={fetchRisingStartups} />;
+              })}
+            </div>
+          )}
+        </main>
+      </DesktopFeedLayout>
       <CreateContentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}

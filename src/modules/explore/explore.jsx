@@ -1,13 +1,63 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay } from "react-icons/fa";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
 import VideoThumbnail from "../../components/shared/VideoThumbnail";
-import { useAuth } from "../../contexts/AuthContext";
 import { goToProfile } from "../../utils/profileNavigation";
+
+/* ─── Desktop Explore CSS ─── */
+const EXPLORE_DESKTOP_CSS = `
+/* Desktop page header — only shown at lg+ (AppHeader is hidden) */
+.exp-desktop-header {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .exp-desktop-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px 8px;
+    gap: 16px;
+  }
+  .exp-page-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  .exp-search-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 12px 16px;
+    margin: 0;
+  }
+  /* 2-column search results on desktop */
+  .exp-search-people-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  /* Wider pitch grid on desktop */
+  .exp-pitch-grid-lg {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  /* Larger aspect ratio for desktop pitch tiles */
+  .exp-pitch-tile-lg {
+    aspect-ratio: 9/14 !important;
+  }
+  .exp-startup-grid-lg {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  .exp-investor-grid-lg {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+`;
+
 
 // Debounce helper — avoids API call on every keystroke
 function useDebounce(value, delay) {
@@ -109,26 +159,40 @@ export default function Explore() {
 
   return (
     <AppShell>
+      <style>{EXPLORE_DESKTOP_CSS}</style>
       <AppHeader title="Explore" />
-      <div className="px-3 py-4">
 
-        {/* Search Bar */}
-        <div className="relative mb-5">
-          <FaSearch className={`absolute left-4 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-gray-500'}`} size={15} />
-          <input
-            type="text"
-            placeholder="Search investors, startups, hashtags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-11 pr-4 py-3 rounded-xl text-sm border transition-all focus:outline-none focus:ring-1 ${isDark
-              ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-              : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 shadow-sm'
-              }`}
-          />
-          {searchLoading && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
-          )}
+      {/* Desktop-only page title (AppHeader hidden on desktop) */}
+      <div className="exp-desktop-header">
+        <div>
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Explore</h1>
+          <p className={`text-sm mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-500'}`}>Discover startups, investors & pitches</p>
         </div>
+      </div>
+
+      <div className="exp-page-wrap">
+        <div className="px-3 py-4">
+
+          {/* Search Bar */}
+          <div className="exp-search-wrap">
+            <div className="relative">
+              <FaSearch className={`absolute left-4 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-white/50' : 'text-gray-500'}`} size={15} />
+              <input
+                type="text"
+                placeholder="Search investors, startups, hashtags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`w-full pl-11 pr-4 py-3 rounded-xl text-sm border transition-all focus:outline-none focus:ring-1 ${isDark
+                  ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
+                  : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 shadow-sm'
+                }`}
+              />
+              {searchLoading && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+              )}
+            </div>
+          </div>
+
 
         {/* Search Results */}
         {searchQuery.trim() && (
@@ -194,12 +258,12 @@ export default function Explore() {
                 {searchResults.startups?.length > 0 && (
                   <div>
                     <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Startups</p>
-                    <div className="space-y-2">
+                    <div className="exp-search-people-grid space-y-0 gap-2">
                       {searchResults.startups.map((item) => (
                         <div
                           key={item.id}
                           onClick={() => goToProfile(item.founder?.id || item.id, currentUser, navigate)}
-                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01] ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                         >
                           <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                             {item.logoUrl
@@ -221,7 +285,7 @@ export default function Explore() {
                 {searchResults.investors?.length > 0 && (
                   <div>
                     <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Investors</p>
-                    <div className="space-y-2">
+                    <div className="exp-search-people-grid gap-2">
                       {searchResults.investors.map((item) => {
                         const avatarSrc = item.logoUrl || item.user?.avatarUrl;
                         const displayName = item.name || item.user?.fullName || 'Investor';
@@ -229,7 +293,7 @@ export default function Explore() {
                           <div
                             key={item.id}
                             onClick={() => goToProfile(item.userId || item.user?.id || item.id, currentUser, navigate)}
-                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01] ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                           >
                             <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                               {avatarSrc
@@ -352,161 +416,163 @@ export default function Explore() {
               </div>
             </div>
 
-            {/* Top Performing Pitches */}
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Top Performing Pitches
-                </h2>
-              </div>
-              {loadingData ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className={`rounded-xl aspect-[9/16] animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
-                  ))}
+              {/* Top Performing Pitches */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Top Performing Pitches
+                  </h2>
                 </div>
-              ) : topPitches.length === 0 ? (
-                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No top pitches yet.</p>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {topPitches.map((pitch) => (
-                    <div
-                      key={pitch.id}
-                      onClick={() => navigate(`/pitch/${pitch.id}`)}
-                      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] aspect-[9/16] ${isDark
-                        ? 'bg-white/5 border border-white/10'
-                        : 'bg-white border border-gray-200 shadow-sm'
+                {loadingData ? (
+                  <div className="grid grid-cols-3 exp-pitch-grid-lg gap-2">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className={`rounded-xl aspect-[9/16] exp-pitch-tile-lg animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+                    ))}
+                  </div>
+                ) : topPitches.length === 0 ? (
+                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No top pitches yet.</p>
+                ) : (
+                  <div className="grid grid-cols-3 exp-pitch-grid-lg gap-2">
+                    {topPitches.map((pitch) => (
+                      <div
+                        key={pitch.id}
+                        onClick={() => navigate(`/pitch/${pitch.id}`)}
+                        className={`relative rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.03] hover:shadow-2xl aspect-[9/16] exp-pitch-tile-lg ${isDark
+                          ? 'bg-white/5 border border-white/10'
+                          : 'bg-white border border-gray-200 shadow-sm'
                         }`}
-                    >
-                      <div className="absolute inset-0">
-                        {pitch.thumbnailUrl || pitch.image ? (
-                          <img
-                            src={pitch.thumbnailUrl || pitch.image}
-                            alt={pitch.title || pitch.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : pitch.videoUrl ? (
-                          <VideoThumbnail
-                            videoUrl={pitch.videoUrl}
-                            alt={pitch.title || pitch.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-800" />
-                        )}
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-2 pb-2.5">
-                        <div className="w-full">
-                          <h3 className="text-white font-bold text-[11px] leading-tight line-clamp-2 mb-0.5">{pitch.title || pitch.name}</h3>
-                          <p className="text-white/80 text-[9px] truncate">{pitch.startup?.name || pitch.company}</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <FaEye className="text-white/70" size={9} />
-                            <span className="text-white/70 text-[9px] font-medium">{getPitchViewCount(pitch).toLocaleString()} views</span>
+                      >
+                        <div className="absolute inset-0">
+                          {pitch.thumbnailUrl || pitch.image ? (
+                            <img
+                              src={pitch.thumbnailUrl || pitch.image}
+                              alt={pitch.title || pitch.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : pitch.videoUrl ? (
+                            <VideoThumbnail
+                              videoUrl={pitch.videoUrl}
+                              alt={pitch.title || pitch.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-800" />
+                          )}
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-2 pb-2.5">
+                          <div className="w-full">
+                            <h3 className="text-white font-bold text-[11px] leading-tight line-clamp-2 mb-0.5">{pitch.title || pitch.name}</h3>
+                            <p className="text-white/80 text-[9px] truncate">{pitch.startup?.name || pitch.company}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <FaEye className="text-white/70" size={9} />
+                              <span className="text-white/70 text-[9px] font-medium">{getPitchViewCount(pitch).toLocaleString()} views</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="absolute top-1.5 right-1.5">
+                          <div className="bg-black/50 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
+                            <FaPlay className="text-white" size={12} />
                           </div>
                         </div>
                       </div>
-                      <div className="absolute top-1.5 right-1.5">
-                        <div className="bg-black/50 backdrop-blur-sm rounded-full p-1.5 shadow-lg">
-                          <FaPlay className="text-white" size={12} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
             {/* Startups of the Week */}
-            <div className="mb-8">
-              <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Startups of the Week
-              </h2>
-              {loadingData ? (
-                <div className="grid grid-cols-2 gap-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className={`rounded-xl h-28 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
-                  ))}
-                </div>
-              ) : startupsOfWeek.length === 0 ? (
-                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No featured startups this week.</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {startupsOfWeek.map((startup) => (
-                    <div
-                      key={startup.id}
-                      onClick={() => navigate(`/profile/${startup.id}`)}
-                      className={`rounded-xl p-4 cursor-pointer transition-all hover:scale-105 ${isDark
-                        ? 'bg-white/5 border border-white/10'
-                        : 'bg-white border border-gray-200 shadow-sm'
+              <div className="mb-8">
+                <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Startups of the Week
+                </h2>
+                {loadingData ? (
+                  <div className="grid grid-cols-2 exp-startup-grid-lg gap-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className={`rounded-xl h-28 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+                    ))}
+                  </div>
+                ) : startupsOfWeek.length === 0 ? (
+                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No featured startups this week.</p>
+                ) : (
+                  <div className="grid grid-cols-2 exp-startup-grid-lg gap-3">
+                    {startupsOfWeek.map((startup) => (
+                      <div
+                        key={startup.id}
+                        onClick={() => navigate(`/profile/${startup.id}`)}
+                        className={`rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl ${isDark
+                          ? 'bg-white/5 border border-white/10'
+                          : 'bg-white border border-gray-200 shadow-sm'
                         }`}
-                    >
-                      <div className="w-12 h-12 rounded-full overflow-hidden mx-auto mb-2 bg-gradient-to-br from-[#00B8A9] to-[#00A89A]">
-                        {startup.logoUrl ? (
-                          <img src={startup.logoUrl} alt={startup.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
-                            {(startup.name || 'S')[0].toUpperCase()}
-                          </div>
-                        )}
+                      >
+                        <div className="w-12 h-12 rounded-full overflow-hidden mx-auto mb-2 bg-gradient-to-br from-[#00B8A9] to-[#00A89A]">
+                          {startup.logoUrl ? (
+                            <img src={startup.logoUrl} alt={startup.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                              {(startup.name || 'S')[0].toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {startup.name}
+                        </h3>
+                        <p className={`text-center text-[10px] truncate ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
+                          {startup.sector || startup.industry}
+                        </p>
                       </div>
-                      <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {startup.name}
-                      </h3>
-                      <p className={`text-center text-[10px] truncate ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
-                        {startup.sector || startup.industry}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-            {/* Investor Spotlight */}
-            <div className="mb-8">
-              <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Investor Spotlight
-              </h2>
-              {loadingData ? (
-                <div className="grid grid-cols-2 gap-3">
-                  {[1, 2].map((i) => (
-                    <div key={i} className={`rounded-xl h-36 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
-                  ))}
-                </div>
-              ) : investorSpotlight.length === 0 ? (
-                <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No investor spotlight this week.</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  {investorSpotlight.map((investor) => (
-                    <div
-                      key={investor.id}
-                      className={`rounded-xl p-4 transition-all ${isDark
-                        ? 'bg-white/5 border border-white/10'
-                        : 'bg-white border border-gray-200 shadow-sm'
+              {/* Investor Spotlight */}
+              <div className="mb-8">
+                <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  Investor Spotlight
+                </h2>
+                {loadingData ? (
+                  <div className="grid grid-cols-2 exp-investor-grid-lg gap-3">
+                    {[1, 2].map((i) => (
+                      <div key={i} className={`rounded-xl h-36 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-200'}`} />
+                    ))}
+                  </div>
+                ) : investorSpotlight.length === 0 ? (
+                  <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No investor spotlight this week.</p>
+                ) : (
+                  <div className="grid grid-cols-2 exp-investor-grid-lg gap-3">
+                    {investorSpotlight.map((investor) => (
+                      <div
+                        key={investor.id}
+                        className={`rounded-xl p-4 transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer ${isDark
+                          ? 'bg-white/5 border border-white/10'
+                          : 'bg-white border border-gray-200 shadow-sm'
                         }`}
-                    >
-                      <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
-                        {investor.avatarUrl ? (
-                          <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-xl">
-                            {(investor.fullName || 'I')[0].toUpperCase()}
-                          </div>
-                        )}
+                        onClick={() => goToProfile(investor.userId || investor.id, currentUser, navigate)}
+                      >
+                        <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
+                          {investor.avatarUrl ? (
+                            <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-xl">
+                              {(investor.fullName || 'I')[0].toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {investor.fullName}
+                        </h3>
+                        <p className={`text-center text-[10px] ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                          {investor.investorProfile?.investorType || 'Investor'}
+                        </p>
                       </div>
-                      <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {investor.fullName}
-                      </h3>
-                      <p className={`text-center text-[10px] ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
-                        {investor.investorProfile?.investorType || 'Investor'}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                    ))}
+                  </div>
+                )}
+              </div>
           </>
         )}
+        </div>
       </div>
-    </AppShell >
+    </AppShell>
   );
 }

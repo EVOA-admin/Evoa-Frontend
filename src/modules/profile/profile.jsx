@@ -56,7 +56,46 @@ const MENU_CSS = `
   font-size: 13px; font-weight: 500; text-align: left;
   transition: background .15s;
 }
+
+/* Desktop profile layout */
+.profile-desktop-wrap { display: flex; flex-direction: column; }
+.profile-left-col { display: none; }
+.profile-right-col { flex: 1; min-width: 0; }
+
+@media (min-width: 1024px) {
+  .profile-desktop-wrap {
+    flex-direction: row;
+    align-items: flex-start;
+    max-width: 1000px;
+    margin: 0 auto;
+    gap: 0;
+  }
+  .profile-left-col {
+    display: flex;
+    flex-direction: column;
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    max-height: 100dvh;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding: 24px 20px 24px 16px;
+    gap: 16px;
+  }
+  .profile-left-col::-webkit-scrollbar { display: none; }
+  .profile-right-col {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+  }
+  /* On desktop: avatar + buttons stay in left col, not over the cover */
+  .profile-mobile-header { display: none !important; }
+  .profile-cover-desktop { height: 180px !important; }
+  .profile-grid-lg { grid-template-columns: repeat(4, 1fr) !important; }
+}
 `;
+
 
 export default function Profile() {
   const { theme } = useTheme();
@@ -253,98 +292,81 @@ export default function Profile() {
 
       <main className="pb-4">
         {/* Cover Photo */}
-        <div className="relative h-36 overflow-hidden">
+        <div className="relative h-36 profile-cover-desktop overflow-hidden">
           <img src={user.coverPhoto} alt="Cover" className="w-full h-full object-cover" />
           <button className="absolute top-3 right-3 p-2 rounded-full backdrop-blur-md bg-black/50 text-white">
             <FaCamera size={14} />
           </button>
         </div>
 
-        <div className="px-4">
-          {/* Profile Header */}
-          <div className="flex items-end justify-between -mt-10 mb-4">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full overflow-hidden ring-3 ring-black border-2 border-[#00B8A9]">
+        {/* Desktop 2-column layout */}
+        <div className="profile-desktop-wrap">
+
+          {/* ── LEFT COLUMN (desktop only) ── */}
+          <div className="profile-left-col">
+            {/* Avatar */}
+            <div className="relative -mt-12">
+              <div className="w-24 h-24 rounded-full overflow-hidden ring-3 ring-black border-2 border-[#00B8A9] shadow-xl">
                 <img src={user.profilePhoto} alt={user.displayName} className="w-full h-full object-cover" />
               </div>
-              <button className="absolute bottom-0 right-0 p-1 rounded-full bg-black/70 text-white">
+              <button className="absolute bottom-0 right-0 p-1.5 rounded-full bg-black/70 text-white">
                 <FaCamera size={10} />
               </button>
             </div>
 
-            {/* Edit Profile + 3-dot Menu */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Name + handle */}
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`}>{user.displayName}</h1>
+                {user.isVerified && <MdVerified className="text-[#00B8A9]" size={18} />}
+              </div>
+              <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>@{user.username}</p>
+              {user.bio && (
+                <p className={`text-sm mt-2 leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.bio}</p>
+              )}
+            </div>
+
+            {/* Edit + menu */}
+            <div className="flex items-center gap-2">
               <button
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isDark
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold flex-1 justify-center transition-all ${isDark
                   ? "bg-white/5 text-white hover:bg-white/10 border border-white/10"
                   : "bg-gray-100 text-gray-900 hover:bg-gray-200"}`}
               >
                 <FaEdit size={12} />
                 Edit Profile
               </button>
-
-              {/* ⋮ 3-dot button */}
               <div style={{ position: "relative" }} ref={menuRef}>
                 <button
-                  id="profile-menu-btn"
                   className="profile-dot-btn"
                   style={{ color: btnColor, background: btnBg }}
-                  onClick={() => setMenuOpen((o) => !o)}
+                  onClick={() => setMenuOpen(o => !o)}
                   aria-label="More options"
-                  aria-expanded={menuOpen}
                 >
                   ⋮
                 </button>
-
                 {menuOpen && (
-                  <div
-                    className="profile-dot-menu"
-                    style={{ background: menuBg, border: `1px solid ${menuBdr}` }}
-                    role="menu"
-                  >
-                    {/* Edit Profile */}
-                    <button
-                      className="profile-dot-menu-item"
-                      style={{ color: menuTxt }}
+                  <div className="profile-dot-menu" style={{ background: menuBg, border: `1px solid ${menuBdr}` }} role="menu">
+                    <button className="profile-dot-menu-item" style={{ color: menuTxt }}
                       onMouseEnter={e => e.currentTarget.style.background = menuHov}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      onClick={() => setMenuOpen(false)}
-                      role="menuitem"
-                    >
+                      onClick={() => setMenuOpen(false)} role="menuitem">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       Edit Profile
                     </button>
-
-                    {/* Divider */}
                     <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
-
-                    {/* Ambassador Program */}
-                    <button
-                      id="open-ambassador-btn"
-                      className="profile-dot-menu-item"
-                      style={{ color: "#C9A84C" }}
+                    <button className="profile-dot-menu-item" style={{ color: "#C9A84C" }}
                       onMouseEnter={e => e.currentTarget.style.background = "rgba(201,168,76,.08)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      onClick={() => { setActiveSection("ambassador"); setMenuOpen(false); }}
-                      role="menuitem"
-                    >
+                      onClick={() => { setActiveSection("ambassador"); setMenuOpen(false); }} role="menuitem">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                       Ambassador Program
                     </button>
-
-                    {/* Divider */}
                     <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
-
-                    {/* Share Profile */}
-                    <button
-                      id="share-profile-btn"
-                      className="profile-dot-menu-item"
-                      style={{ color: menuTxt }}
+                    <button className="profile-dot-menu-item" style={{ color: menuTxt }}
                       onMouseEnter={e => e.currentTarget.style.background = "rgba(0,184,169,.08)"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                      onClick={handleShareProfile}
-                      role="menuitem"
-                    >
+                      onClick={handleShareProfile} role="menuitem">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                         <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
@@ -356,131 +378,231 @@ export default function Profile() {
                 )}
               </div>
             </div>
-          </div>
 
-          {/* ── AMBASSADOR SECTION ── */}
-          {activeSection === "ambassador" ? (
-            <Suspense fallback={
-              <div style={{ padding: "32px 0", textAlign: "center" }}>
-                <div style={{ width: 32, height: 32, border: "3px solid rgba(201,168,76,.2)", borderTopColor: "#C9A84C", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
-                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-              </div>
-            }>
-              <AmbassadorDashboard onBack={() => setActiveSection("main")} />
-            </Suspense>
-          ) : (
-            <>
-              {/* Name + handle */}
-              <div className="mb-3">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h1 className={`text-lg font-bold ${isDark ? "text-white" : "text-black"}`}>{user.displayName}</h1>
-                  {user.isVerified && <MdVerified className="text-[#00B8A9]" size={18} />}
+            {/* Stats — glass tiles */}
+            <div className={`grid grid-cols-3 gap-2 p-3 rounded-2xl border ${isDark ? "bg-white/4 border-white/8" : "bg-gray-50 border-gray-200"}`}>
+              {[{ label: "Posts", value: user.posts }, { label: "Followers", value: user.followers }, { label: "Following", value: user.following }].map(s => (
+                <div key={s.label} className="text-center">
+                  <p className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{formatNumber(s.value)}</p>
+                  <p className={`text-[10px] ${isDark ? "text-white/40" : "text-gray-500"}`}>{s.label}</p>
                 </div>
-                <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>@{user.username}</p>
-                {user.bio && (
-                  <p className={`text-sm mt-2 leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.bio}</p>
+              ))}
+            </div>
+
+            {/* Meta info */}
+            <div className={`flex flex-col gap-2 text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
+              {user.location && <span className="flex items-center gap-1.5"><FaMapMarkerAlt size={11} />{user.location}</span>}
+              {user.website && (
+                <a href={ensureUrl(user.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#00B8A9]">
+                  <FaLink size={11} />{user.website.replace(/^https?:\/\//, "").slice(0, 28)}
+                </a>
+              )}
+              <span className="flex items-center gap-1.5"><FaCalendarAlt size={11} />Joined {user.joinedDate}</span>
+            </div>
+
+            {/* Contact info */}
+            {(user.email || user.phone) && (
+              <div className={`rounded-xl p-3 space-y-2 ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
+                {user.email && (
+                  <div className="flex items-center gap-2">
+                    <FaEnvelope size={12} className="text-[#00B8A9]" />
+                    <p className={`text-xs truncate ${isDark ? "text-white/75" : "text-gray-700"}`}>{user.email}</p>
+                  </div>
+                )}
+                {user.phone && (
+                  <div className="flex items-center gap-2">
+                    <FaPhone size={12} className="text-[#00B8A9]" />
+                    <p className={`text-xs ${isDark ? "text-white/75" : "text-gray-700"}`}>{user.phone}</p>
+                  </div>
                 )}
               </div>
+            )}
 
-              {/* Meta info */}
-              <div className={`flex flex-wrap gap-x-4 gap-y-1 text-xs mb-4 ${isDark ? "text-white/50" : "text-gray-500"}`}>
-                {user.location && <span className="flex items-center gap-1"><FaMapMarkerAlt size={11} />{user.location}</span>}
-                {user.website && (
-                  <a href={ensureUrl(user.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00B8A9]">
-                    <FaLink size={11} />{user.website.replace(/^https?:\/\//, "").slice(0, 28)}
+            {/* Social links */}
+            {(user.links.linkedin || user.links.twitter || user.links.instagram) && (
+              <div className="flex flex-col gap-2">
+                {user.links.linkedin && (
+                  <a href={ensureUrl(user.links.linkedin)} target="_blank" rel="noopener noreferrer"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}>
+                    <FaLinkedin size={15} /> LinkedIn
                   </a>
                 )}
-                <span className="flex items-center gap-1"><FaCalendarAlt size={11} />Joined {user.joinedDate}</span>
-              </div>
-
-              {/* Stats */}
-              <div className={`flex gap-6 py-3 border-y mb-4 ${isDark ? "border-white/10" : "border-gray-200"}`}>
-                {[{ label: "Posts", value: user.posts }, { label: "Followers", value: user.followers }, { label: "Following", value: user.following }].map(s => (
-                  <div key={s.label}>
-                    <p className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{formatNumber(s.value)}</p>
-                    <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{s.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Contact info */}
-              {(user.email || user.phone) && (
-                <div className={`rounded-xl p-3.5 mb-4 space-y-2.5 ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
-                  {user.email && (
-                    <div className="flex items-center gap-2">
-                      <FaEnvelope size={13} className="text-[#00B8A9]" />
-                      <p className={`text-sm truncate ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.email}</p>
-                    </div>
-                  )}
-                  {user.phone && (
-                    <div className="flex items-center gap-2">
-                      <FaPhone size={13} className="text-[#00B8A9]" />
-                      <p className={`text-sm ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.phone}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Social links */}
-              {(user.links.linkedin || user.links.twitter || user.links.instagram) && (
-                <div className="flex gap-2 mb-4">
-                  {user.links.linkedin && (
-                    <a href={ensureUrl(user.links.linkedin)} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium flex-1 justify-center ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}>
-                      <FaLinkedin size={15} /> LinkedIn
-                    </a>
-                  )}
-                  {user.links.twitter && (
-                    <a href={ensureUrl(user.links.twitter)} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium flex-1 justify-center ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}>
-                      <FaTwitter size={15} /> Twitter
-                    </a>
-                  )}
-                  {user.links.instagram && (
-                    <a href={ensureUrl(user.links.instagram)} target="_blank" rel="noopener noreferrer"
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium flex-1 justify-center ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}>
-                      <FaInstagram size={15} /> Instagram
-                    </a>
-                  )}
-                </div>
-              )}
-
-              {/* Tabs */}
-              <div className={`flex border-b mb-4 ${isDark ? "border-white/10" : "border-gray-200"}`}>
-                {["posts", "saved"].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition-all ${activeTab === tab
-                      ? "border-[#00B8A9] text-[#00B8A9]"
-                      : isDark ? "border-transparent text-white/50 hover:text-white" : "border-transparent text-gray-400 hover:text-black"}`}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              {/* Posts grid */}
-              <div className="grid grid-cols-3 gap-1 pb-4">
-                {posts.map((post) => (
-                  <div key={post.id} className="aspect-square rounded-lg overflow-hidden relative cursor-pointer group">
-                    <img src={post.image} alt={post.caption} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="flex items-center gap-3 text-white text-xs font-semibold">
-                        <span className="flex items-center gap-1"><FaHeart size={13} />{formatNumber(post.likes)}</span>
-                        <span className="flex items-center gap-1"><FaRegComment size={13} />{formatNumber(post.comments)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {posts.length === 0 && (
-                  <div className={`col-span-3 py-12 text-center text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
-                    No posts yet
-                  </div>
+                {user.links.twitter && (
+                  <a href={ensureUrl(user.links.twitter)} target="_blank" rel="noopener noreferrer"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}>
+                    <FaTwitter size={15} /> Twitter
+                  </a>
+                )}
+                {user.links.instagram && (
+                  <a href={ensureUrl(user.links.instagram)} target="_blank" rel="noopener noreferrer"
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}>
+                    <FaInstagram size={15} /> Instagram
+                  </a>
                 )}
               </div>
-            </>
-          )}
+            )}
+          </div>
+
+          {/* ── RIGHT COLUMN ── */}
+          <div className="profile-right-col">
+            <div className="px-4">
+              {/* Mobile-only profile header (hidden on desktop — left col handles it) */}
+              <div className="profile-mobile-header flex items-end justify-between -mt-10 mb-4">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-full overflow-hidden ring-3 ring-black border-2 border-[#00B8A9]">
+                    <img src={user.profilePhoto} alt={user.displayName} className="w-full h-full object-cover" />
+                  </div>
+                  <button className="absolute bottom-0 right-0 p-1 rounded-full bg-black/70 text-white">
+                    <FaCamera size={10} />
+                  </button>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isDark
+                      ? "bg-white/5 text-white hover:bg-white/10 border border-white/10"
+                      : "bg-gray-100 text-gray-900 hover:bg-gray-200"}`}
+                  >
+                    <FaEdit size={12} />
+                    Edit Profile
+                  </button>
+                  <div style={{ position: "relative" }} ref={menuRef}>
+                    <button id="profile-menu-btn" className="profile-dot-btn"
+                      style={{ color: btnColor, background: btnBg }}
+                      onClick={() => setMenuOpen(o => !o)}
+                      aria-label="More options" aria-expanded={menuOpen}>
+                      ⋮
+                    </button>
+                    {menuOpen && (
+                      <div className="profile-dot-menu" style={{ background: menuBg, border: `1px solid ${menuBdr}` }} role="menu">
+                        <button className="profile-dot-menu-item" style={{ color: menuTxt }}
+                          onMouseEnter={e => e.currentTarget.style.background = menuHov}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          onClick={() => setMenuOpen(false)} role="menuitem">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          Edit Profile
+                        </button>
+                        <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
+                        <button id="open-ambassador-btn" className="profile-dot-menu-item" style={{ color: "#C9A84C" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(201,168,76,.08)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          onClick={() => { setActiveSection("ambassador"); setMenuOpen(false); }} role="menuitem">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                          Ambassador Program
+                        </button>
+                        <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
+                        <button id="share-profile-btn" className="profile-dot-menu-item" style={{ color: menuTxt }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(0,184,169,.08)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                          onClick={handleShareProfile} role="menuitem">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                          </svg>
+                          Share Profile
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ── AMBASSADOR SECTION ── */}
+              {activeSection === "ambassador" ? (
+                <Suspense fallback={
+                  <div style={{ padding: "32px 0", textAlign: "center" }}>
+                    <div style={{ width: 32, height: 32, border: "3px solid rgba(201,168,76,.2)", borderTopColor: "#C9A84C", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto" }} />
+                    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                  </div>
+                }>
+                  <AmbassadorDashboard onBack={() => setActiveSection("main")} />
+                </Suspense>
+              ) : (
+                <>
+                  {/* Mobile-only: name + bio */}
+                  <div className="profile-mobile-header mb-3">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h1 className={`text-lg font-bold ${isDark ? "text-white" : "text-black"}`}>{user.displayName}</h1>
+                      {user.isVerified && <MdVerified className="text-[#00B8A9]" size={18} />}
+                    </div>
+                    <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>@{user.username}</p>
+                    {user.bio && (
+                      <p className={`text-sm mt-2 leading-relaxed ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.bio}</p>
+                    )}
+                  </div>
+
+                  {/* Mobile-only meta + stats + contact + links */}
+                  <div className="profile-mobile-header">
+                    <div className={`flex flex-wrap gap-x-4 gap-y-1 text-xs mb-4 ${isDark ? "text-white/50" : "text-gray-500"}`}>
+                      {user.location && <span className="flex items-center gap-1"><FaMapMarkerAlt size={11} />{user.location}</span>}
+                      {user.website && (
+                        <a href={ensureUrl(user.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00B8A9]">
+                          <FaLink size={11} />{user.website.replace(/^https?:\/\//, "").slice(0, 28)}
+                        </a>
+                      )}
+                      <span className="flex items-center gap-1"><FaCalendarAlt size={11} />Joined {user.joinedDate}</span>
+                    </div>
+                    <div className={`flex gap-6 py-3 border-y mb-4 ${isDark ? "border-white/10" : "border-gray-200"}`}>
+                      {[{ label: "Posts", value: user.posts }, { label: "Followers", value: user.followers }, { label: "Following", value: user.following }].map(s => (
+                        <div key={s.label}>
+                          <p className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>{formatNumber(s.value)}</p>
+                          <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{s.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {(user.email || user.phone) && (
+                      <div className={`rounded-xl p-3.5 mb-4 space-y-2.5 ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
+                        {user.email && (<div className="flex items-center gap-2"><FaEnvelope size={13} className="text-[#00B8A9]" /><p className={`text-sm truncate ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.email}</p></div>)}
+                        {user.phone && (<div className="flex items-center gap-2"><FaPhone size={13} className="text-[#00B8A9]" /><p className={`text-sm ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.phone}</p></div>)}
+                      </div>
+                    )}
+                    {(user.links.linkedin || user.links.twitter || user.links.instagram) && (
+                      <div className="flex gap-2 mb-4">
+                        {user.links.linkedin && (<a href={ensureUrl(user.links.linkedin)} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium flex-1 justify-center ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}><FaLinkedin size={15} /> LinkedIn</a>)}
+                        {user.links.twitter && (<a href={ensureUrl(user.links.twitter)} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium flex-1 justify-center ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}><FaTwitter size={15} /> Twitter</a>)}
+                        {user.links.instagram && (<a href={ensureUrl(user.links.instagram)} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium flex-1 justify-center ${isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-white text-gray-900 hover:bg-gray-50 border border-gray-200"}`}><FaInstagram size={15} /> Instagram</a>)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tabs — shown in right col on desktop */}
+                  <div className={`flex border-b mb-4 ${isDark ? "border-white/10" : "border-gray-200"}`}>
+                    {["posts", "saved"].map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition-all ${activeTab === tab
+                          ? "border-[#00B8A9] text-[#00B8A9]"
+                          : isDark ? "border-transparent text-white/50 hover:text-white" : "border-transparent text-gray-400 hover:text-black"}`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Posts grid — 3-col mobile, 4-col desktop */}
+                  <div className="grid grid-cols-3 profile-grid-lg gap-1 pb-4">
+                    {posts.map((post) => (
+                      <div key={post.id} className="aspect-square rounded-lg overflow-hidden relative cursor-pointer group">
+                        <img src={post.image} alt={post.caption} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <div className="flex items-center gap-3 text-white text-xs font-semibold">
+                            <span className="flex items-center gap-1"><FaHeart size={13} />{formatNumber(post.likes)}</span>
+                            <span className="flex items-center gap-1"><FaRegComment size={13} />{formatNumber(post.comments)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {posts.length === 0 && (
+                      <div className={`col-span-3 py-12 text-center text-sm ${isDark ? "text-white/40" : "text-gray-400"}`}>
+                        No posts yet
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </main>
     </AppShell>

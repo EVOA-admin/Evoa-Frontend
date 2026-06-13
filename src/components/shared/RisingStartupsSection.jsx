@@ -5,6 +5,261 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { goToProfile } from "../../utils/profileNavigation";
 
+/* ─── Glassmorphism styles for RisingStartupsSection ─── */
+const RSS_CSS = `
+/* ── Inline section glass card ── */
+.rss-inline {
+  margin: 8px 10px;
+  border-radius: 22px;
+  border: 1px solid;
+  overflow: hidden;
+  animation: card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.rss-inline.dark {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.09);
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.rss-inline.light {
+  background: rgba(255,255,255,0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.88);
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+}
+
+/* ── Section header icon ── */
+.rss-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(0,184,169,0.14);
+  border: 1px solid rgba(0,184,169,0.25);
+  color: #00B8A9;
+  box-shadow: 0 0 10px rgba(0,184,169,0.2);
+}
+
+/* ── View All button ── */
+.rss-view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,184,169,0.3);
+  background: rgba(0,184,169,0.10);
+  color: #00B8A9;
+  transition: background .2s, box-shadow .2s;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.rss-view-all-btn:hover {
+  background: rgba(0,184,169,0.18);
+  box-shadow: 0 0 10px rgba(0,184,169,0.2);
+}
+
+/* ── Row hover ── */
+.rss-row-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background .2s;
+  border-radius: 14px;
+}
+.rss-inline.dark  .rss-row-btn:hover { background: rgba(0,184,169,0.06); }
+.rss-inline.light .rss-row-btn:hover { background: rgba(0,184,169,0.05); }
+
+/* ── Rank badge ── */
+.rss-rank {
+  font-size: 11px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #00E5D3, #00B8A9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ── Score chip ── */
+.rss-score-chip {
+  text-align: right;
+  flex-shrink: 0;
+  width: 48px;
+}
+.rss-score-value {
+  font-size: 13px;
+  font-weight: 700;
+}
+.rss-inline.dark  .rss-score-value { color: rgba(255,255,255,0.85); }
+.rss-inline.light .rss-score-value { color: rgba(0,0,0,0.8); }
+.rss-score-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.rss-inline.dark  .rss-score-label { color: rgba(255,255,255,0.3); }
+.rss-inline.light .rss-score-label { color: rgba(0,0,0,0.35); }
+
+/* ── Logo ring in rows ── */
+.rss-logo-ring {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(0,184,169,0.3);
+  flex-shrink: 0;
+}
+
+/* ── Full panel backdrop ── */
+.rss-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+@media (min-width: 640px) {
+  .rss-backdrop {
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.rss-panel-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ── Full panel glass sheet ── */
+.rss-panel {
+  position: relative;
+  width: 100%;
+  border-radius: 28px 28px 0 0;
+  max-height: 88svh;
+  display: flex;
+  flex-direction: column;
+}
+@media (min-width: 640px) {
+  .rss-panel {
+    max-width: 560px;
+    border-radius: 28px;
+    max-height: 80vh;
+    margin: auto;
+  }
+}
+.rss-panel.dark {
+  background: rgba(14,14,20,0.94);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 -2px 0 rgba(0,184,169,0.15),
+    0 24px 80px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.rss-panel.light {
+  background: rgba(250,249,247,0.96);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255,255,255,0.95);
+  box-shadow:
+    0 -2px 0 rgba(0,184,169,0.10),
+    0 24px 80px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,1);
+}
+
+/* ── Drag handle ── */
+.rss-drag-handle {
+  width: 40px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(0,184,169,0.4);
+  box-shadow: 0 0 8px rgba(0,184,169,0.35);
+  margin: 0 auto;
+}
+
+/* ── Panel divider ── */
+.rss-panel-divider {
+  height: 1px;
+}
+.rss-panel.dark  .rss-panel-divider { background: rgba(255,255,255,0.08); }
+.rss-panel.light .rss-panel-divider { background: rgba(0,0,0,0.07); }
+
+/* ── Panel card rows ── */
+.rss-panel-row {
+  border-radius: 18px;
+  border: 1px solid;
+  overflow: hidden;
+  transition: box-shadow .25s, transform .2s;
+}
+.rss-panel.dark .rss-panel-row {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+}
+.rss-panel.dark .rss-panel-row:hover {
+  background: rgba(0,184,169,0.06);
+  box-shadow: 0 4px 16px rgba(0,184,169,0.15);
+}
+.rss-panel.light .rss-panel-row {
+  background: rgba(255,255,255,0.8);
+  border-color: rgba(0,0,0,0.07);
+}
+.rss-panel.light .rss-panel-row:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+/* ── Panel row button (inside card) ── */
+.rss-panel-row-btn {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ── Refresh button ── */
+.rss-refresh-btn {
+  width: 100%;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #00E5D3 0%, #00B8A9 50%, #007a73 100%);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+  box-shadow: 0 4px 20px rgba(0,184,169,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.rss-refresh-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(0,184,169,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.rss-refresh-btn:active { transform: scale(0.98); }
+`;
+
 /* ─── Helpers ───────────────────────────────────────────────────────────────── */
 
 const logoFallback = (name = "Startup") =>
@@ -67,37 +322,24 @@ function formatStartupDisplayName(startup) {
   return "Startup";
 }
 
-/* ─── StartupRow ─────────────────────────────────────────────────────────────
-   Renders a single startup entry. Designed to be safe at any screen width.    */
-function StartupRow({ startup, onOpenProfile, isDark, detailed = false }) {
+/* ─── StartupRow ─────────────────────────────────────────────────────────────── */
+function StartupRow({ startup, onOpenProfile, isDark, detailed = false, panelMode = false }) {
   const displayName = formatStartupDisplayName(startup);
   const score = startup.trendingScore ?? 0;
+  const btnCls = panelMode ? "rss-panel-row-btn" : "rss-row-btn";
 
   return (
     <button
       type="button"
       onClick={() => onOpenProfile(startup)}
-      className={`w-full text-left px-3 py-3 sm:px-4 transition-colors ${
-        detailed ? "rounded-2xl hover:bg-black/5 dark:hover:bg-white/5" : ""
-      }`}
+      className={btnCls}
     >
-      {/* flex row — all children have explicit shrink/grow rules so nothing overflows */}
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0">
+        {/* Rank */}
+        <span className="rss-rank" aria-label={`Rank ${startup.rank}`}>#{startup.rank}</span>
 
-        {/* Rank — fixed width, no shrink */}
-        <div
-          className="flex-shrink-0 w-8 text-xs font-bold text-[#00B8A9] text-center leading-none"
-          aria-label={`Rank ${startup.rank}`}
-        >
-          #{startup.rank}
-        </div>
-
-        {/* Logo — fixed size, no shrink */}
-        <div
-          className={`flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden ${
-            isDark ? "bg-gray-800" : "bg-gray-100"
-          }`}
-        >
+        {/* Logo */}
+        <div className="rss-logo-ring">
           <img
             src={startup.logoUrl || logoFallback(displayName)}
             alt={displayName}
@@ -106,49 +348,29 @@ function StartupRow({ startup, onOpenProfile, isDark, detailed = false }) {
           />
         </div>
 
-        {/* Name — takes remaining space, truncates */}
+        {/* Name */}
         <div className="flex-1 min-w-0">
-          <p
-            className={`truncate text-sm font-bold leading-snug ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
+          <p className={`truncate text-sm font-bold leading-snug ${isDark ? "text-white" : "text-gray-900"}`}>
             {displayName}
           </p>
           {detailed && startup.tagline && (
-            <p
-              className={`truncate text-xs mt-0.5 ${
-                isDark ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
+            <p className={`truncate text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-500"}`}>
               {startup.tagline}
             </p>
           )}
         </div>
 
-        {/* Score — fixed, no shrink */}
-        <div className="flex-shrink-0 text-right w-12 sm:w-14">
-          <p
-            className={`text-sm font-semibold tabular-nums ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}
-          >
-            {score}
-          </p>
-          <p
-            className={`text-[10px] leading-none mt-0.5 ${
-              isDark ? "text-gray-500" : "text-gray-400"
-            }`}
-          >
-            score
-          </p>
+        {/* Score */}
+        <div className="rss-score-chip">
+          <p className="rss-score-value">{score}</p>
+          <p className="rss-score-label">score</p>
         </div>
       </div>
     </button>
   );
 }
 
-/* ─── Main component ─────────────────────────────────────────────────────────  */
+/* ─── Main component ─────────────────────────────────────────────────────────── */
 export default function RisingStartupsSection({
   startups = [],
   loading = false,
@@ -163,6 +385,7 @@ export default function RisingStartupsSection({
   const { theme } = useTheme();
   const { user: currentUser } = useAuth();
   const isDark = theme === "dark";
+  const panelCls = isDark ? "dark" : "light";
 
   const [internalOpen, setInternalOpen] = React.useState(false);
   const isControlled = typeof isOpenProp === "boolean";
@@ -195,86 +418,62 @@ export default function RisingStartupsSection({
 
   const topFive = startups.slice(0, 5);
 
-  /* ── Fire-icon trigger (used in header bars, etc.) ── */
+  /* ── Fire-icon trigger ── */
   const triggerButton = (
     <button
       type="button"
       onClick={openPanel}
-      className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${
-        isDark
-          ? "text-[#ff9f43] hover:text-[#ffb36b] hover:bg-white/8"
-          : "text-[#f97316] hover:text-[#ea580c] hover:bg-orange-50"
-      }`}
+      className={`evoa-header-action-btn ${isDark ? "" : ""}`}
       title="Rising Startups"
       aria-label="Open Rising Startups"
     >
-      <FaFire size={16} />
+      <FaFire size={16} style={{ color: isDark ? "#ff9f43" : "#f97316" }} />
     </button>
   );
 
-  /* ── Inline preview section (shown in feed / dashboard) ── */
+  /* ── Skeleton ── */
+  const skeletonRows = (count) =>
+    Array.from({ length: count }).map((_, i) => (
+      <div key={i} className={`h-14 rounded-2xl animate-pulse mx-2 my-1 ${isDark ? "bg-white/5" : "bg-black/5"}`} />
+    ));
+
+  /* ── Inline preview section ── */
   const inlineSection = (
-    <section
-      className={`overflow-hidden border-b ${
-        isDark ? "bg-gray-900 border-white/8" : "bg-white border-gray-100"
-      }`}
-    >
+    <section className={`rss-inline ${panelCls}`}>
+      <style>{RSS_CSS}</style>
+
       {/* Header row */}
-      <div className="flex items-center justify-between px-3 py-3 sm:px-4">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="flex-shrink-0 w-9 h-9 rounded-full bg-[#00B8A9]/10 text-[#00B8A9] flex items-center justify-center">
+      <div className="flex items-center justify-between px-3 py-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="rss-icon-wrap">
             <FaChartLine size={15} />
           </span>
           <div className="min-w-0">
-            <p
-              className={`text-sm font-bold truncate ${
-                isDark ? "text-white" : "text-gray-900"
-              }`}
-            >
+            <p className={`text-sm font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
               Rising Startups
             </p>
-            <p
-              className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}
-            >
+            <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-500"}`}>
               Top 5 this week
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={openPanel}
-          className="flex-shrink-0 inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-[#00B8A9] ml-2"
-        >
+        <button type="button" onClick={openPanel} className="rss-view-all-btn">
           View All
-          <FaArrowRight size={10} />
+          <FaArrowRight size={9} />
         </button>
       </div>
 
+      {/* Divider */}
+      <div className="rss-panel-divider" />
+
       {/* List */}
       {loading ? (
-        <div className="px-3 pb-3 space-y-2 sm:px-4 sm:pb-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-14 rounded-2xl animate-pulse ${
-                isDark ? "bg-white/5" : "bg-gray-100"
-              }`}
-            />
-          ))}
-        </div>
+        <div className="py-2">{skeletonRows(3)}</div>
       ) : topFive.length > 0 ? (
-        <div className="pb-1">
+        <div className="py-1 px-1">
           {topFive.map((startup, index) => (
-            <div
-              key={startup.startupId}
-              className={
-                index !== 0
-                  ? isDark
-                    ? "border-t border-white/8"
-                    : "border-t border-gray-100"
-                  : ""
-              }
-            >
+            <div key={startup.startupId}>
+              {index !== 0 && <div className={`h-px mx-3 ${isDark ? "bg-white/5" : "bg-black/5"}`} />}
               <StartupRow
                 startup={startup}
                 onOpenProfile={openProfile}
@@ -284,12 +483,8 @@ export default function RisingStartupsSection({
           ))}
         </div>
       ) : (
-        <div className="px-3 pb-3 sm:px-4 sm:pb-4">
-          <div
-            className={`rounded-2xl px-4 py-5 text-center text-sm ${
-              isDark ? "bg-white/5 text-gray-400" : "bg-gray-50 text-gray-500"
-            }`}
-          >
+        <div className="px-3 pb-3">
+          <div className={`rounded-2xl px-4 py-5 text-center text-sm ${isDark ? "bg-white/5 text-white/40" : "bg-black/4 text-gray-500"}`}>
             No startups available yet.
           </div>
         </div>
@@ -297,59 +492,28 @@ export default function RisingStartupsSection({
     </section>
   );
 
-  /* ── Full-screen panel (bottom-sheet on mobile, centered modal on sm+) ── */
+  /* ── Full-screen panel ── */
   const panel = isOpen && (
-    <div
-      className="fixed inset-0 z-50 flex flex-col justify-end sm:items-center sm:justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Rising Startups"
-    >
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={closePanel}
-      />
+    <div className="rss-backdrop" role="dialog" aria-modal="true" aria-label="Rising Startups">
+      <style>{RSS_CSS}</style>
 
-      {/* Sheet / Modal container
-          Mobile  : bottom-sheet, slides up, max 88 vh, rounded top corners
-          Desktop : centered card, max 560px wide, max 80vh, fully rounded      */}
-      <div
-        className={`
-          relative w-full
-          rounded-t-[24px]
-          max-h-[88svh]
-          sm:max-w-[560px] sm:rounded-[24px] sm:mx-auto sm:max-h-[80vh]
-          flex flex-col
-          ${isDark ? "bg-gray-900" : "bg-white"}
-        `}
-      >
+      {/* Backdrop */}
+      <div className="rss-panel-overlay" onClick={closePanel} />
+
+      {/* Sheet */}
+      <div className={`rss-panel ${panelCls}`}>
         {/* Drag handle (mobile only) */}
         <div className="flex-shrink-0 flex justify-center pt-3 pb-1 sm:hidden">
-          <div
-            className={`h-1 w-12 rounded-full ${
-              isDark ? "bg-white/15" : "bg-gray-200"
-            }`}
-          />
+          <div className="rss-drag-handle" />
         </div>
 
         {/* Header */}
-        <div
-          className={`flex-shrink-0 flex items-center justify-between gap-3 px-4 py-3 border-b ${
-            isDark ? "border-white/8" : "border-gray-100"
-          }`}
-        >
+        <div className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <p
-              className={`text-base font-bold truncate ${
-                isDark ? "text-white" : "text-gray-900"
-              }`}
-            >
+            <p className={`text-base font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
               Rising Startups
             </p>
-            <p
-              className={`text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}
-            >
+            <p className={`text-xs ${isDark ? "text-white/35" : "text-gray-500"}`}>
               Live ranking across EVOA
             </p>
           </div>
@@ -358,8 +522,8 @@ export default function RisingStartupsSection({
             onClick={closePanel}
             className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
               isDark
-                ? "text-white hover:bg-white/10"
-                : "text-gray-600 hover:bg-gray-100"
+                ? "text-white/60 hover:bg-white/10"
+                : "text-gray-600 hover:bg-black/8"
             }`}
             aria-label="Close"
           >
@@ -367,78 +531,52 @@ export default function RisingStartupsSection({
           </button>
         </div>
 
-        {/* Scrollable list — min-h-0 is CRITICAL for flex-child scroll to work */}
-        <div className="flex-1 overflow-y-auto min-h-0 bg-transparent scrollbar-hide pb-4">
+        {/* Divider */}
+        <div className="rss-panel-divider flex-shrink-0" />
+
+        {/* Scrollable list */}
+        <div className="flex-1 overflow-y-auto min-h-0 scrollbar-hide py-2 px-2">
           {loading ? (
-            <div className="px-3 pb-3 space-y-2 sm:px-4 sm:pb-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-14 rounded-2xl animate-pulse ${
-                    isDark ? "bg-white/5" : "bg-gray-100"
-                  }`}
-                />
-              ))}
-            </div>
+            <div className="space-y-2 p-2">{skeletonRows(6)}</div>
           ) : startups.length > 0 ? (
-            <div className="px-2 py-2 sm:px-3 sm:py-3 space-y-1.5">
+            <div className="space-y-2 p-1">
               {startups.map((startup) => (
-                <div
-                  key={startup.startupId}
-                  className={`rounded-2xl border ${
-                    isDark
-                      ? "border-white/8 bg-white/[0.03]"
-                      : "border-gray-100 bg-gray-50/70"
-                  }`}
-                >
+                <div key={startup.startupId} className={`rss-panel-row ${panelCls}`}>
                   <StartupRow
                     startup={startup}
                     onOpenProfile={openProfile}
                     isDark={isDark}
                     detailed
+                    panelMode
                   />
                 </div>
               ))}
             </div>
           ) : (
             <div className="px-4 py-10">
-              <div
-                className={`rounded-2xl px-4 py-8 text-center text-sm ${
-                  isDark
-                    ? "bg-white/5 text-gray-400"
-                    : "bg-gray-50 text-gray-500"
-                }`}
-              >
+              <div className={`rounded-2xl px-4 py-8 text-center text-sm ${isDark ? "bg-white/5 text-white/40" : "bg-black/4 text-gray-500"}`}>
                 There are no ranked startups yet.
               </div>
             </div>
           )}
         </div>
 
-        {/* Footer — refresh button + iOS home-bar spacing */}
+        {/* Footer */}
         {onRefresh && (
           <div
-            className={`flex-shrink-0 px-4 py-3 border-t pb-safe ${
-              isDark ? "border-white/8" : "border-gray-100"
-            }`}
+            className="flex-shrink-0 px-4 py-3"
             style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
           >
-            <button
-              type="button"
-              onClick={onRefresh}
-              className="w-full rounded-xl bg-[#00B8A9] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#009f93] active:scale-[0.98] transition-all"
-            >
+            <div className="rss-panel-divider mb-3" />
+            <button type="button" onClick={onRefresh} className="rss-refresh-btn">
               Refresh Ranking
             </button>
           </div>
         )}
 
-        {/* iOS safe-area spacer when there's no refresh button */}
+        {/* iOS safe-area spacer */}
         {!onRefresh && (
-          <div
-            style={{ height: "env(safe-area-inset-bottom, 0px)" }}
-            className="flex-shrink-0"
-          />
+          <div style={{ height: "env(safe-area-inset-bottom, 0px)" }} className="flex-shrink-0" />
         )}
       </div>
     </div>

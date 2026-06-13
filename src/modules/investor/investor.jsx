@@ -6,6 +6,7 @@ import PitchCard from "../../components/shared/PitchCard";
 import { FaRegNewspaper } from "react-icons/fa";
 import EmptyState from "../../components/shared/EmptyState";
 import AppShell from "../../components/layout/AppShell";
+import DesktopFeedLayout from "../../components/layout/DesktopFeedLayout";
 import AppHeader from "../../components/layout/AppHeader";
 import reelsService from "../../services/reelsService";
 import { getStartupDetails, followStartup, unfollowStartup } from "../../services/startupsService";
@@ -89,6 +90,7 @@ export default function Investor() {
             website: p.website || null,
             sectors: p.sectors || p.hashtags || [],
             imageUrl: p.imageUrl,
+            imageUrls: p.imageUrls || [],
             timeAgo,
             pitchViews: p.pitchViews ?? 0,
             supporters: p.supporters ?? 0,
@@ -110,6 +112,7 @@ export default function Investor() {
           authorRole: p.user?.role || 'viewer',
           timeAgo,
           imageUrl: p.imageUrl,
+          imageUrls: p.imageUrls || [],
           caption: p.caption,
           hashtags: p.hashtags || [],
           isLiked: p.isLiked ?? false,
@@ -118,7 +121,9 @@ export default function Investor() {
           commentCount: p.commentCount || 0,
         };
       }) : []);
-    } catch (_) { }
+    } catch (e) {
+      window.__evoaDebug = e.message;
+    }
   };
 
   const fetchFeed = async () => {
@@ -162,11 +167,12 @@ export default function Investor() {
       if (!cursor) {
         setPitches(mappedPitches);
       } else {
-        setPitches(prev => [...prev, ...mappedPitches]);
+        setPitches(prev => cursor ? [...prev, ...mappedPitches] : mappedPitches);
       }
+      setHasMore(data?.hasMore ?? false);
       setCursor(nextCursor);
-    } catch (err) {
-      console.error('Error fetching feed:', err);
+    } catch (e) {
+      window.__evoaDebug = (window.__evoaDebug || '') + ' | FeedError: ' + e.message;
     } finally {
       setLoading(false);
     }
@@ -300,7 +306,7 @@ export default function Investor() {
   );
 
   return (
-    <AppShell>
+    <AppShell onCreatePost={() => setShowModal(true)}>
       <AppHeader actions={plusAction} />
       <main>
         <RisingStartupsSection
@@ -311,83 +317,84 @@ export default function Investor() {
           isOpen={showRisingStartups}
           onClose={() => setShowRisingStartups(false)}
         />
-        {showPitchFeed && (
-          <div className="px-0 pt-0 pb-4">
-            <div className="mt-2">
-              {!loading && pitches.length === 0 && userPosts.length === 0 && (
-                <EmptyState
-                  icon={FaRegNewspaper}
-                  title="No Pitches Yet"
-                  description="Your feed is currently empty. Follow some startups to see their pitches here."
-                  actionLabel="Find Startups"
-                  onAction={() => navigate('/explore')}
-                />
-              )}
-              {pitches.map((pitch) => (
-                <PitchCard
-                  key={pitch.id}
-                  pitch={pitch}
-                  onLike={handleLike}
-                  onComment={handleComment}
-                  onShare={handleShare}
-                  onSave={handleSave}
-                  onFollow={handleFollow}
-                />
-              ))}
+        <DesktopFeedLayout>
+          {showPitchFeed && (
+            <div className="px-0 pt-0 pb-4">
+              <div className="mt-2">
+                {!loading && pitches.length === 0 && userPosts.length === 0 && (
+                  <EmptyState
+                    icon={FaRegNewspaper}
+                    title="No Pitches Yet"
+                    description="Your feed is currently empty. Follow some startups to see their pitches here."
+                    actionLabel="Find Startups"
+                    onAction={() => navigate('/explore')}
+                  />
+                )}
+                {pitches.map((pitch) => (
+                  <PitchCard
+                    key={pitch.id}
+                    pitch={pitch}
+                    onLike={handleLike}
+                    onComment={handleComment}
+                    onShare={handleShare}
+                    onSave={handleSave}
+                    onFollow={handleFollow}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-        {/* ── User Posts Feed ────────────────────────────────── */}
-        {userPosts.length > 0 && (
-          <div className={`${pitches.length > 0 ? "mt-4" : ""} pb-4`}>
-            {userPosts.map(post => {
-              const handleLike = () => {
-                setUserPosts(prev => prev.map(p =>
-                  p.id === post.id
-                    ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
-                    : p
-                ));
-                const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
-                request.then(() => fetchRisingStartups(true)).catch(() => {});
-              };
-
-              const handleSave = () => {
-                setUserPosts(prev => prev.map(p =>
-                  p.id === post.id ? { ...p, isSaved: !p.isSaved } : p
-                ));
-                post.isSaved ? postsService.unsavePost(post.id) : postsService.savePost(post.id);
-              };
-
-              const handleComment = async () => {
-                const text = window.prompt('Add a comment:');
-                if (!text?.trim()) return;
-                try {
-                  await postsService.addComment(post.id, text.trim());
+          )}
+          {userPosts.length > 0 && (
+            <div className={`${pitches.length > 0 ? "mt-4" : ""} pb-4`}>
+              {userPosts.map(post => {
+                const handleLike = () => {
                   setUserPosts(prev => prev.map(p =>
-                    p.id === post.id ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
+                    p.id === post.id
+                      ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
+                      : p
                   ));
-                } catch (e) { /* silent */ }
-              };
+                  const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                  request.then(() => fetchRisingStartups(true)).catch(() => {});
+                };
 
-              const handleShare = () => {
-                const url = `${window.location.origin}/post/${post.id}`;
-                if (navigator.share) {
-                  navigator.share({ title: post.startupName || post.authorName || 'Post', url });
-                } else {
-                  navigator.clipboard?.writeText(url);
-                  alert('Link copied to clipboard!');
+                const handleSave = () => {
+                  setUserPosts(prev => prev.map(p =>
+                    p.id === post.id ? { ...p, isSaved: !p.isSaved } : p
+                  ));
+                  post.isSaved ? postsService.unsavePost(post.id) : postsService.savePost(post.id);
+                };
+
+                const handleComment = async () => {
+                  const text = window.prompt('Add a comment:');
+                  if (!text?.trim()) return;
+                  try {
+                    await postsService.addComment(post.id, text.trim());
+                    setUserPosts(prev => prev.map(p =>
+                      p.id === post.id ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
+                    ));
+                  } catch (e) { /* silent */ }
+                };
+
+                const handleShare = () => {
+                  const url = `${window.location.origin}/post/${post.id}`;
+                  if (navigator.share) {
+                    navigator.share({ title: post.startupName || post.authorName || 'Post', url });
+                  } else {
+                    navigator.clipboard?.writeText(url);
+                    alert('Link copied to clipboard!');
+                  }
+                };
+
+                if (post._type === 'startup') {
+                  return <StartupPostCard key={post.id} post={post} isDark={isDark}
+                    onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} onEngagementChange={fetchRisingStartups} />;
                 }
-              };
-
-              if (post._type === 'startup') {
-                return <StartupPostCard key={post.id} post={post} isDark={isDark}
+                return <UserPostCard key={post.id} post={post} isDark={isDark}
                   onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} onEngagementChange={fetchRisingStartups} />;
-              }
-              return <UserPostCard key={post.id} post={post} isDark={isDark}
-                onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} onEngagementChange={fetchRisingStartups} />;
-            })}
-          </div>
-        )}
+              })}
+            </div>
+          )}
+        </DesktopFeedLayout>
       </main>
       <CreateContentModal
         isOpen={showModal}

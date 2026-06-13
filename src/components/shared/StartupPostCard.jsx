@@ -17,14 +17,217 @@ import PostCommentSheet from "./PostCommentSheet";
 import InvestorThoughtSheet from "./InvestorThoughtSheet";
 import PostCarousel from "./PostCarousel";
 
+/* ─── Glassmorphism styles for StartupPostCard ─── */
+const CARD_CSS = `
+/* ── Glass card container ── */
+.spc-card {
+  margin: 8px 10px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid;
+  transition: box-shadow .3s, transform .2s;
+  animation: card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.spc-card.dark {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.09);
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.spc-card.light {
+  background: rgba(255,255,255,0.80);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.88);
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.07),
+    inset 0 1px 0 rgba(255,255,255,0.95);
+}
+
+/* ── Startup badge ── */
+.spc-startup-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,184,169,0.3);
+  background: rgba(0,184,169,0.12);
+  color: #00B8A9;
+  letter-spacing: 0.02em;
+}
+
+/* ── Logo avatar ring ── */
+.spc-logo-ring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1.5px solid rgba(0,184,169,0.45);
+  box-shadow: 0 0 10px rgba(0,184,169,0.25);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: box-shadow .2s;
+}
+.spc-logo-ring:hover {
+  box-shadow: 0 0 16px rgba(0,184,169,0.45);
+}
+
+/* ── Image area ── */
+.spc-image-wrap {
+  margin: 0 10px 0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+/* ── Sector tags ── */
+.spc-sector-tag {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.spc-card.dark  .spc-sector-tag { border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.45); }
+.spc-card.light .spc-sector-tag { border-color: rgba(0,0,0,0.12); color: rgba(0,0,0,0.5); }
+
+/* ── Stats row — glassy tiles ── */
+.spc-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 0 10px 10px;
+}
+
+.spc-stat-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 8px;
+  border-radius: 14px;
+  border: 1px solid;
+  text-align: center;
+}
+.spc-card.dark .spc-stat-tile {
+  background: rgba(0,184,169,0.05);
+  border-color: rgba(0,184,169,0.15);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.spc-card.light .spc-stat-tile {
+  background: rgba(0,184,169,0.04);
+  border-color: rgba(0,184,169,0.12);
+}
+
+.spc-stat-value {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #00E5D3, #00B8A9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.spc-stat-label {
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+.spc-card.dark  .spc-stat-label { color: rgba(255,255,255,0.35); }
+.spc-card.light .spc-stat-label { color: rgba(0,0,0,0.4); }
+
+/* ── Investor thoughts strip ── */
+.spc-thoughts-strip {
+  margin: 0 10px 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: box-shadow .25s, transform .2s, background .2s;
+}
+.spc-card.dark .spc-thoughts-strip {
+  background: rgba(0,184,169,0.04);
+  border-color: rgba(0,184,169,0.15);
+}
+.spc-card.dark .spc-thoughts-strip:hover {
+  background: rgba(0,184,169,0.08);
+  box-shadow: 0 4px 20px rgba(0,184,169,0.18);
+  transform: translateY(-1px);
+}
+.spc-card.light .spc-thoughts-strip {
+  background: rgba(0,184,169,0.04);
+  border-color: rgba(0,184,169,0.12);
+}
+.spc-card.light .spc-thoughts-strip:hover {
+  background: rgba(0,184,169,0.08);
+  box-shadow: 0 4px 16px rgba(0,184,169,0.12);
+  transform: translateY(-1px);
+}
+
+/* ── Action divider ── */
+.spc-action-divider {
+  height: 1px;
+  margin: 0;
+}
+.spc-card.dark  .spc-action-divider { background: rgba(255,255,255,0.07); }
+.spc-card.light .spc-action-divider { background: rgba(0,0,0,0.06); }
+
+/* ── Action buttons ── */
+.spc-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.spc-action-btn:active { transform: scale(0.88); }
+.spc-card.dark  .spc-action-btn:hover { background: rgba(255,255,255,0.07); }
+.spc-card.light .spc-action-btn:hover { background: rgba(0,0,0,0.05); }
+
+/* ── Glass dropdown menu ── */
+.spc-menu {
+  position: absolute;
+  right: 0;
+  top: 42px;
+  z-index: 50;
+  width: 192px;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid;
+  animation: card-enter 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.spc-menu.dark {
+  background: rgba(18,18,24,0.92);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.spc-menu.light {
+  background: rgba(255,255,255,0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-color: rgba(255,255,255,0.9);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,1);
+}
+`;
+
 /**
  * StartupPostCard — rendered when post._type === 'startup'.
- * Includes:
- *  - Three-dot menu with edit / delete / report / copy link
- *  - Inline comment bottom sheet (matching reel style)
- *  - Share via navigator.share / clipboard
- *
- * Props: post, onLike, onSave, onComment(unused — handled internally), onShare(unused), isDark
+ * Full Apple Glassmorphism redesign — glass card, logo glow ring, glass stat tiles,
+ * elevated investor thoughts strip, glass menu.
  */
 export default function StartupPostCard({
     post,
@@ -32,13 +235,14 @@ export default function StartupPostCard({
     onSave,
     onShare,
     isDark: isDarkProp,
-    onDeleted,   // optional: called after successful delete so parent can refetch
+    onDeleted,
     onEngagementChange,
 }) {
     const { theme } = useTheme();
     const isDark = isDarkProp ?? theme === "dark";
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
+    const cardCls = isDark ? "dark" : "light";
 
     // Three-dot menu
     const [menuOpen, setMenuOpen] = useState(false);
@@ -50,6 +254,9 @@ export default function StartupPostCard({
 
     // Investor Thought sheet (read-only)
     const [thoughtOpen, setThoughtOpen] = useState(false);
+
+    // Like bloom
+    const [likeAnimating, setLikeAnimating] = useState(false);
 
     // --- Close menu on outside click ---
     useEffect(() => {
@@ -82,9 +289,7 @@ export default function StartupPostCard({
         if (navigator.share) {
             navigator.share({ title: post.startupName || "Startup Post", url }).catch(() => { });
         } else {
-            navigator.clipboard?.writeText(url).then(() => {
-                // Brief visual feedback via onShare from parent if provided
-            }).catch(() => { });
+            navigator.clipboard?.writeText(url).catch(() => { });
             onShare?.();
         }
     };
@@ -109,17 +314,24 @@ export default function StartupPostCard({
         navigator.clipboard?.writeText(url);
     };
 
+    const handleLikeWithBloom = () => {
+        setLikeAnimating(true);
+        setTimeout(() => setLikeAnimating(false), 500);
+        onLike?.();
+    };
+
     const logoFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(post.startupName || "S")}&background=00B8A9&color=fff&size=72`;
 
     return (
         <>
-            <div className={`overflow-hidden border-b ${isDark ? "bg-gray-900 border-white/8" : "bg-white border-gray-100"}`}>
+            <style>{CARD_CSS}</style>
+            <div className={`spc-card ${cardCls}`}>
 
                 {/* ── Header ── */}
-                <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center justify-between px-3 py-3">
                     <div className="flex items-center gap-3">
                         <div
-                            className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ${isDark ? "bg-gray-800" : "bg-gray-100"} cursor-pointer`}
+                            className="spc-logo-ring"
                             onClick={() => goToProfile(post.authorId, currentUser, navigate)}
                         >
                             <img
@@ -141,17 +353,17 @@ export default function StartupPostCard({
                                 {post.website && (
                                     <button
                                         onClick={handleWebsiteClick}
-                                        className="flex items-center text-[#00B8A9] hover:text-[#00968a] transition-colors flex-shrink-0"
+                                        className="flex items-center text-[#00B8A9] hover:text-[#00E5D3] transition-colors flex-shrink-0"
                                         title={post.website}
                                     >
-                                        <FaLink size={12} />
+                                        <FaLink size={11} />
                                     </button>
                                 )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[11px] px-1.5 py-0.5 rounded-md font-medium bg-[#00B8A9]/10 text-[#00B8A9]">Startup</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="spc-startup-badge">Startup</span>
                                 {post.timeAgo && (
-                                    <span className={`text-[11px] ${isDark ? "text-gray-600" : "text-gray-400"}`}>· {post.timeAgo}</span>
+                                    <span className={`text-[11px] ${isDark ? "text-white/30" : "text-gray-400"}`}>· {post.timeAgo}</span>
                                 )}
                             </div>
                         </div>
@@ -161,13 +373,13 @@ export default function StartupPostCard({
                     <div className="relative" ref={menuRef}>
                         <button
                             onClick={() => setMenuOpen(o => !o)}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? "hover:bg-white/10 text-white/60" : "hover:bg-gray-100 text-gray-500"}`}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isDark ? "hover:bg-white/10 text-white/30" : "hover:bg-black/5 text-gray-400"}`}
                         >
                             <HiDotsHorizontal size={18} />
                         </button>
 
                         {menuOpen && (
-                            <div className={`absolute right-0 top-10 z-30 w-48 rounded-2xl shadow-xl overflow-hidden border ${isDark ? "bg-gray-900 border-white/10" : "bg-white border-gray-100"}`}>
+                            <div className={`spc-menu ${cardCls}`}>
                                 {isOwner && (
                                     <>
                                         <MenuItem icon={<FaEdit size={14} />} label="Edit post"
@@ -189,13 +401,12 @@ export default function StartupPostCard({
 
                 {/* ── Hero Image / Carousel ── */}
                 {(() => {
-                    // Prefer imageUrls[] (multi-photo carousel), fall back to legacy imageUrl
                     const images = post.imageUrls?.length
                         ? post.imageUrls
                         : post.imageUrl ? [post.imageUrl] : [];
                     if (!images.length) return null;
                     return images.length === 1 ? (
-                        <div className="overflow-hidden aspect-[16/9]">
+                        <div className="spc-image-wrap aspect-[16/9] mb-2">
                             <img
                                 src={images[0]}
                                 alt={post.startupName}
@@ -204,39 +415,48 @@ export default function StartupPostCard({
                             />
                         </div>
                     ) : (
-                        <PostCarousel images={images} aspectRatio="16/9" isDark={isDark} />
+                        <div className="mx-2.5 mb-2">
+                            <PostCarousel images={images} aspectRatio="16/9" isDark={isDark} />
+                        </div>
                     );
                 })()}
 
                 {/* ── Tagline + Sectors ── */}
                 {(post.tagline || post.sectors?.length > 0) && (
-                    <div className="px-4 pt-2 pb-1">
+                    <div className="px-4 pt-1 pb-2">
                         {post.tagline && (
-                            <p className={`text-sm leading-snug mb-1.5 ${isDark ? "text-gray-400" : "text-gray-600"}`}>{post.tagline}</p>
+                            <p className={`text-sm leading-snug mb-2 ${isDark ? "text-white/55" : "text-gray-600"}`}>{post.tagline}</p>
                         )}
                         {post.sectors?.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mb-2">
+                            <div className="flex flex-wrap gap-1.5 mb-1">
                                 {post.sectors.map((s, i) => (
-                                    <span key={i} className={`text-xs px-2.5 py-0.5 rounded-full border ${isDark ? "border-white/15 text-gray-400" : "border-gray-200 text-gray-500"}`}>
-                                        #{s}
-                                    </span>
+                                    <span key={i} className="spc-sector-tag">#{s}</span>
                                 ))}
                             </div>
                         )}
                     </div>
                 )}
 
-                {/* ── Stats Row ── */}
-                <div className={`mx-4 grid grid-cols-3 divide-x border rounded-2xl py-3 mb-2 ${isDark ? "border-white/10 divide-white/10 bg-gray-800/60" : "border-gray-100 divide-gray-100 bg-gray-50"}`}>
-                    <StatCol label="Pitch Views" value={fmt(post.pitchViews)} />
-                    <StatCol label="Supporters" value={fmt(post.supporters)} />
-                    <StatCol label="Click Through" value={fmt(post.clickThrough)} />
+                {/* ── Stats Row — glass tiles ── */}
+                <div className="spc-stats-row">
+                    <div className="spc-stat-tile">
+                        <span className="spc-stat-value">{fmt(post.pitchViews)}</span>
+                        <span className="spc-stat-label">Pitch Views</span>
+                    </div>
+                    <div className="spc-stat-tile">
+                        <span className="spc-stat-value">{fmt(post.supporters)}</span>
+                        <span className="spc-stat-label">Supporters</span>
+                    </div>
+                    <div className="spc-stat-tile">
+                        <span className="spc-stat-value">{fmt(post.clickThrough)}</span>
+                        <span className="spc-stat-label">Click Through</span>
+                    </div>
                 </div>
 
                 {/* ── Investor Thoughts ── */}
                 {post.investorThoughts?.length > 0 && (
                     <div
-                        className={`mx-4 mb-3 flex items-center gap-3 px-3 py-2.5 rounded-2xl border cursor-pointer ${isDark ? "border-white/10 bg-gray-800/60 active:bg-white/5" : "border-gray-100 bg-gray-50 active:bg-gray-100"}`}
+                        className={`spc-thoughts-strip ${cardCls}`}
                         onClick={() => setThoughtOpen(true)}
                     >
                         <div className="flex -space-x-2">
@@ -251,7 +471,7 @@ export default function StartupPostCard({
                             ))}
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <span className={`text-xs font-semibold truncate ${isDark ? "text-gray-200" : "text-gray-700"}`}>
+                            <span className={`text-xs font-semibold truncate ${isDark ? "text-white/80" : "text-gray-700"}`}>
                                 {(() => {
                                     const names = post.investorThoughts.map(t => t.name || t.user?.fullName).filter(Boolean);
                                     if (names.length === 0) return "Investor";
@@ -260,37 +480,43 @@ export default function StartupPostCard({
                                     return shown.join(", ") + (extra > 0 ? ` +${extra} more` : "");
                                 })()}
                             </span>
-                            <span className={`text-[10px] ${isDark ? "text-gray-500" : "text-gray-400"}`}>Investor's Thought</span>
+                            <span className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-400"}`}>Investor's Thought</span>
                         </div>
+                        <svg className="ml-auto flex-shrink-0 text-[#00B8A9]" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                     </div>
                 )}
 
                 {/* ── Action Row ── */}
-                <div className={`flex items-center gap-1 px-3 py-2 border-t ${isDark ? "border-white/8" : "border-gray-100"}`}>
-                    <button onClick={onLike} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all active:scale-90">
-                        {post.isLiked
-                            ? <FaHeart className="text-[#00B8A9]" size={16} />
-                            : <FaRegHeart size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />}
+                <div className="spc-action-divider" />
+                <div className="flex items-center gap-0.5 px-2 py-1.5">
+                    <button onClick={handleLikeWithBloom} className="spc-action-btn">
+                        <span className={likeAnimating ? "animate-like-bloom" : ""} style={{ display: "inline-flex" }}>
+                            {post.isLiked
+                                ? <FaHeart className="text-[#00B8A9]" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
+                                : <FaRegHeart size={16} className={isDark ? "text-white/40" : "text-gray-400"} />}
+                        </span>
                         {post.likeCount > 0 && (
-                            <span className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmt(post.likeCount)}</span>
+                            <span className={`text-xs font-semibold ${isDark ? "text-white/50" : "text-gray-500"}`}>{fmt(post.likeCount)}</span>
                         )}
                     </button>
 
-                    <button onClick={onSave} className="p-2 rounded-xl transition-all active:scale-90">
+                    <button onClick={onSave} className="spc-action-btn">
                         {post.isSaved
-                            ? <FaBookmark className="text-[#00B8A9]" size={16} />
-                            : <FaRegBookmark size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />}
+                            ? <FaBookmark className="text-[#00B8A9]" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
+                            : <FaRegBookmark size={16} className={isDark ? "text-white/40" : "text-gray-400"} />}
                     </button>
 
-                    <button onClick={() => setCommentOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all active:scale-90">
-                        <FaRegComment size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />
+                    <button onClick={() => setCommentOpen(true)} className="spc-action-btn">
+                        <FaRegComment size={16} className={isDark ? "text-white/40" : "text-gray-400"} />
                         {commentCount > 0 && (
-                            <span className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>{fmt(commentCount)}</span>
+                            <span className={`text-xs font-semibold ${isDark ? "text-white/50" : "text-gray-500"}`}>{fmt(commentCount)}</span>
                         )}
                     </button>
 
-                    <button onClick={handleShare} className="ml-auto p-2 rounded-xl transition-all active:scale-90">
-                        <FaShare size={16} className={isDark ? "text-gray-400" : "text-gray-500"} />
+                    <button onClick={handleShare} className="spc-action-btn ml-auto">
+                        <FaShare size={15} className={isDark ? "text-white/40" : "text-gray-400"} />
                     </button>
                 </div>
             </div>
@@ -318,41 +544,16 @@ export default function StartupPostCard({
     );
 }
 
-function StatCol({ label, value }) {
-    return (
-        <div className="flex flex-col items-center px-2">
-            <span className="text-lg font-black text-[#00B8A9]">{value}</span>
-            <span className="text-[10px] text-gray-400 font-medium">{label}</span>
-        </div>
-    );
-}
-
-function ActionBtn({ icon, label, onPress, isDark }) {
-    return (
-        <button
-            onClick={onPress}
-            className="flex items-center gap-1.5 p-2 rounded-xl transition-all active:scale-90"
-        >
-            {icon}
-            {label && (
-                <span className={`text-xs font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-                    {label}
-                </span>
-            )}
-        </button>
-    );
-}
-
 function MenuItem({ icon, label, onClick, isDark, danger }) {
     return (
         <button
             onClick={onClick}
             className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${danger
                 ? (isDark ? "text-red-400 hover:bg-red-500/10" : "text-red-500 hover:bg-red-50")
-                : (isDark ? "text-white/80 hover:bg-white/[0.08]" : "text-gray-700 hover:bg-gray-50")
+                : (isDark ? "text-white/80 hover:bg-white/[0.08]" : "text-gray-700 hover:bg-black/[0.04]")
                 }`}
         >
-            <span className={danger ? (isDark ? "text-red-400" : "text-red-500") : (isDark ? "text-white/50" : "text-gray-400")}>
+            <span className={danger ? (isDark ? "text-red-400" : "text-red-500") : (isDark ? "text-white/40" : "text-gray-400")}>
                 {icon}
             </span>
             {label}

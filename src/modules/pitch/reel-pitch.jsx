@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -6,16 +6,176 @@ import reelsService from "../../services/reelsService";
 import startupsService from "../../services/startupsService";
 import { askStartupAI } from "../../services/aiService";
 import apiClient from "../../services/apiClient";
+import DesktopSidebar from "../../components/layout/DesktopSidebar";
 import {
   FaHandshake, FaRegComment, FaComment, FaRegPaperPlane,
   FaVolumeUp, FaVolumeMute, FaArrowLeft, FaVideo,
-  FaRobot, FaTimes, FaPaperPlane, FaSpinner, FaHashtag
+  FaRobot, FaTimes, FaPaperPlane, FaSpinner, FaHashtag,
+  FaEye, FaShare, FaBookmark
 } from "react-icons/fa";
 import { IoChatbubbleOutline, IoPaperPlaneOutline } from "react-icons/io5";
 import { FiCalendar, FiVolume2, FiVolumeX, FiSend } from "react-icons/fi";
+import { MdVerified } from "react-icons/md";
 import O21Icon from "../../components/shared/O21Icon";
 import { goToProfile } from "../../utils/profileNavigation";
 import ScheduleMeetingModal from "../../components/shared/ScheduleMeetingModal";
+
+
+/* ─── Desktop reel-pitch CSS ─── */
+const REEL_DESKTOP_CSS = `
+/* Mobile: video fills full width, panels hidden */
+.reel-desktop-shell { width: 100%; height: 100%; position: relative; }
+.reel-left-panel  { display: none !important; }
+.reel-right-panel { display: none !important; }
+.reel-video-col   { width: 100%; height: 100%; }
+
+/*
+  Desktop (≥1024px): video centred exactly at 50vw, right panel fixed.
+  No sidebar in the reel overlay — 50vw is the true viewport centre.
+  Video width: 430px, so left edge = 50vw - 215px.
+*/
+@media (min-width: 1024px) {
+  .reel-desktop-shell {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  /* Video column — exactly centred at 50vw.
+     The reel overlay spans the full viewport (left:0), so
+     50vw - half-video-width lands the centre at exactly 50vw.
+     No sidebar offset needed here. */
+  .reel-video-col {
+    width: 430px;
+    height: 100%;
+    position: absolute;
+    left: calc(50vw - 215px);
+    top: 0;
+    bottom: 0;
+  }
+
+  /* Right panel — fixed glass sidebar (same style as home feed) */
+  .reel-right-panel {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed;
+    right: 20px;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    padding: 20px 0;
+    gap: 12px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    z-index: 60;
+  }
+  .reel-right-panel::-webkit-scrollbar { display: none; }
+}
+
+/* Glass panel card (same as dfl-panel-card) */
+.reel-panel-card {
+  border-radius: 20px;
+  border: 1px solid;
+  overflow: hidden;
+  animation: reel-card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes reel-card-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+.reel-panel-card.dark {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.09);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.reel-panel-card.light {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-color: rgba(255,255,255,0.9);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.95);
+}
+
+/* Panel header */
+.reel-panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+}
+.reel-panel-hdr-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reel-panel-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,184,169,0.14);
+  border: 1px solid rgba(0,184,169,0.25);
+  color: #00B8A9;
+  flex-shrink: 0;
+}
+.reel-panel-div {
+  height: 1px;
+  margin: 0 14px;
+}
+.reel-panel-card.dark  .reel-panel-div { background: rgba(255,255,255,0.07); }
+.reel-panel-card.light .reel-panel-div { background: rgba(0,0,0,0.06); }
+
+/* Action row button (inside glass card) */
+.reel-panel-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background .2s;
+  font-size: 13px;
+  font-weight: 600;
+}
+.reel-panel-card.dark  .reel-panel-action-btn { color: rgba(255,255,255,0.85); }
+.reel-panel-card.light .reel-panel-action-btn { color: rgba(26,26,26,0.85); }
+.reel-panel-card.dark  .reel-panel-action-btn:hover { background: rgba(255,255,255,0.06); }
+.reel-panel-card.light .reel-panel-action-btn:hover { background: rgba(0,0,0,0.04); }
+.reel-panel-action-btn.active { color: #00E5D3 !important; }
+.reel-panel-card.dark  .reel-panel-action-btn.active { background: rgba(0,184,169,0.1) !important; }
+.reel-panel-card.light .reel-panel-action-btn.active { background: rgba(0,184,169,0.08) !important; }
+
+/* Keyboard nav hint */
+.reel-kbd-hint {
+  display: none;
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 6px 14px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+  pointer-events: none;
+}
+@media (min-width: 1024px) {
+  .reel-kbd-hint { display: block; }
+}
+`;
+
+
 
 // ── Fisher-Yates shuffle (in-place clone) ─────────────────────────────────────
 // Uses a session-stable seed so every page load / refresh gets a
@@ -182,7 +342,24 @@ export default function ReelPitch() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reelStates, setReelStates] = useState({});
-  const [expandedDescs, setExpandedDescs] = useState({}); // keyed by pitch.id — tap-to-expand description
+  const [expandedDescs, setExpandedDescs] = useState({});
+
+  // Keyboard navigation (desktop) — ArrowUp/ArrowDown to switch reels
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (!containerRef.current || pitches.length === 0) return;
+      const itemH = containerRef.current.clientHeight;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        containerRef.current.scrollBy({ top: itemH, behavior: 'smooth' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        containerRef.current.scrollBy({ top: -itemH, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [pitches]);
 
   // AI Chat State
   const [isAIOpen, setIsAIOpen] = useState(false);
@@ -687,9 +864,8 @@ export default function ReelPitch() {
           {/* Description — Instagram-style tap to expand */}
           {pitch.description && (
             <p
-              className={`text-xs text-white/85 leading-relaxed mb-2.5 cursor-pointer select-none ${
-                expandedDescs[pitch.id] ? '' : 'line-clamp-2'
-              }`}
+              className={`text-xs text-white/85 leading-relaxed mb-2.5 cursor-pointer select-none ${expandedDescs[pitch.id] ? '' : 'line-clamp-2'
+                }`}
               onClick={(e) => {
                 e.stopPropagation();
                 setExpandedDescs(prev => ({ ...prev, [pitch.id]: !prev[pitch.id] }));
@@ -732,9 +908,14 @@ export default function ReelPitch() {
 
   return (
     <>
-      {/* Outer gutter wrapper — matches AppShell aesthetic */}
-      <div className={`fixed inset-0 z-50 flex justify-center ${isDark ? 'bg-[#0d0d0d]' : 'bg-[#e8e8e8]'}`}>
-        <div className="relative w-full h-full overflow-hidden" style={{ maxWidth: '430px' }}>
+      <style>{REEL_DESKTOP_CSS}</style>
+
+      {/* Desktop sidebar — stays visible above the reel overlay (z-55 > z-50) */}
+      <DesktopSidebar />
+
+      {/* Outer reel overlay */}
+      <div className={`fixed inset-0 z-50 ${isDark ? 'bg-[#000000]' : 'bg-gray-50'}`}>
+        <div className="relative w-full h-full overflow-hidden">
           {/* Header */}
           <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 min-h-[56px] bg-gradient-to-b from-black/80 to-transparent">
             <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-95">
@@ -753,21 +934,166 @@ export default function ReelPitch() {
               <FaSpinner className="animate-spin text-[#00B8A9]" size={32} />
             </div>
           ) : pitches.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-white/60 px-8 text-center">
+            <div className={`flex flex-col items-center justify-center h-full gap-4 px-8 text-center ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
               <FaVideo size={48} className="opacity-30" />
               <p className="text-base font-semibold">No pitch videos yet</p>
               <p className="text-sm opacity-60">Startups that register with a pitch video will appear here.</p>
             </div>
           ) : (
-            <div ref={containerRef} className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
-              {pitches.map((pitch) => (
-                <div key={pitch.id} className="snap-start snap-always">
-                  {renderReel(pitch)}
+            /* ── Desktop: centred video + fixed right glass-card panel ── */
+            <div className="reel-desktop-shell">
+
+              {/* VIDEO COLUMN — centred at 50vw */}
+              <div className="reel-video-col">
+                <div ref={containerRef} className="w-full h-full overflow-y-scroll snap-y snap-mandatory"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+                  {pitches.map((pitch) => (
+                    <div key={pitch.id} className="snap-start snap-always">
+                      {renderReel(pitch)}
+                    </div>
+                  ))}
+                  <div ref={sentinelRef} style={{ height: '1px', flexShrink: 0 }} />
                 </div>
-              ))}
-              {/* Infinite-loop sentinel — 1px div observed; triggers scroll-to-top */}
-              <div ref={sentinelRef} style={{ height: '1px', flexShrink: 0 }} />
+                <div className="reel-kbd-hint">↑ ↓ to navigate · Space to play/pause</div>
+              </div>
+
+              {/* RIGHT PANEL — fixed glass cards, same style as home feed */}
+              {pitches[currentIndex] && (() => {
+                const pitch = pitches[currentIndex];
+                const state = reelStates[pitch.id] || {};
+                return (
+                  <div className="reel-right-panel">
+
+                    {/* Card 1: Startup Info */}
+                    <div className={`reel-panel-card ${isDark ? 'dark' : 'light'}`}>
+                      <div className="reel-panel-hdr">
+                        <div
+                          className="reel-panel-hdr-left cursor-pointer group"
+                          onClick={() => pitch.founderId && goToProfile(pitch.founderId, currentUser, navigate)}
+                        >
+                          <div className="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-[#00B8A9]/40 flex-shrink-0">
+                            {pitch.profilePhoto
+                              ? <img src={pitch.profilePhoto} alt="" className="w-full h-full object-cover" />
+                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center text-white text-sm font-bold">{pitch.name?.[0]}</div>
+                            }
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1">
+                              <p className={`text-sm font-bold truncate group-hover:text-[#00B8A9] transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{pitch.name}</p>
+                              <MdVerified size={12} className="text-[#00B8A9] flex-shrink-0" />
+                            </div>
+                            {pitch.category && <p className={`text-[10px] ${isDark ? 'text-white/40' : 'text-gray-500'}`}>{pitch.category}</p>}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="reel-panel-div" />
+
+                      {/* Deal terms */}
+                      {(pitch.dealInfo?.ask !== '\u2014' || pitch.dealInfo?.equity !== '\u2014') && (
+                        <div className="px-3 py-2">
+                          <p className={`text-[9px] uppercase tracking-widest font-semibold mb-2 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>Deal Terms</p>
+                          <div className="grid grid-cols-3 gap-1">
+                            {[{ lbl: 'Ask', val: pitch.dealInfo?.ask }, { lbl: 'Equity', val: pitch.dealInfo?.equity }, { lbl: 'Revenue', val: pitch.dealInfo?.revenue }].map(({ lbl, val }) => (
+                              <div key={lbl} className={`rounded-xl p-2 text-center border ${isDark ? 'bg-[#00B8A9]/05 border-[#00B8A9]/14' : 'bg-[#00B8A9]/04 border-[#00B8A9]/12'}`}>
+                                <p className="text-[9px] uppercase tracking-wide font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)' }}>{lbl}</p>
+                                <p className="text-xs font-bold mt-0.5" style={{ background: 'linear-gradient(135deg,#00E5D3,#00B8A9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{val || '—'}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Description */}
+                      {pitch.description && (
+                        <div className="px-3 pb-3">
+                          <p className={`text-[10px] uppercase tracking-widest font-semibold mb-1 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>About</p>
+                          <p className={`text-xs leading-relaxed line-clamp-4 ${isDark ? 'text-white/70' : 'text-gray-600'}`}>{pitch.description}</p>
+                        </div>
+                      )}
+
+                      {/* Stats row */}
+                      <div className="flex items-center gap-4 px-3 pb-3">
+                        <span className={`flex items-center gap-1 text-xs ${isDark ? 'text-white/35' : 'text-gray-400'}`}>
+                          <FaEye size={11} />{(pitch.views || 0).toLocaleString()}
+                        </span>
+                        {pitch.hashtag && pitch.hashtag.split(' ').filter(Boolean).slice(0, 2).map((h, i) => (
+                          <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00B8A9]/12 text-[#00B8A9] border border-[#00B8A9]/20">{h}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Card 2: Actions */}
+                    <div className={`reel-panel-card ${isDark ? 'dark' : 'light'}`}>
+                      <div className="reel-panel-hdr">
+                        <div className="reel-panel-hdr-left">
+                          <span className="reel-panel-icon"><FaHandshake size={13} /></span>
+                          <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Actions</p>
+                        </div>
+                      </div>
+                      <div className="reel-panel-div" />
+                      <div className="py-1 px-2">
+                        <button
+                          className={`reel-panel-action-btn ${state.isLiked ? 'active' : ''}`}
+                          onClick={() => handleSupport(pitch.id)}
+                        >
+                          <FaHandshake size={15} />
+                          <span className="flex-1">{state.isLiked ? 'Supported' : 'Support'}</span>
+                          <span className="text-[11px] opacity-50">{formatNum(pitch.likes)}</span>
+                        </button>
+                        <button className="reel-panel-action-btn" onClick={() => openComments(pitch)}>
+                          <IoChatbubbleOutline size={15} style={{ transform: 'scaleX(-1)' }} />
+                          <span className="flex-1">Comment</span>
+                          <span className="text-[11px] opacity-50">{formatNum(pitch.comments)}</span>
+                        </button>
+                        <button
+                          className="reel-panel-action-btn"
+                          onClick={() => {
+                            const url = `${window.location.origin}/pitch?id=${pitch.id}`;
+                            if (navigator.share) navigator.share({ title: pitch.name || 'Pitch Reel', url }).catch(() => { });
+                            else navigator.clipboard?.writeText(url);
+                          }}
+                        >
+                          <IoPaperPlaneOutline size={15} />
+                          <span className="flex-1">Share</span>
+                          <span className="text-[11px] opacity-50">{formatNum(pitch.shares)}</span>
+                        </button>
+                        <button className="reel-panel-action-btn" onClick={() => toggleMute(pitch.id)}>
+                          {state.isMuted ? <FiVolumeX size={15} strokeWidth={2.5} /> : <FiVolume2 size={15} strokeWidth={2.5} />}
+                          <span className="flex-1">{state.isMuted ? 'Unmute' : 'Mute'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Card 3: Investor Tools */}
+                    {canSeeInvestorFeatures && (
+                      <div className={`reel-panel-card ${isDark ? 'dark' : 'light'}`}>
+                        <div className="reel-panel-hdr">
+                          <div className="reel-panel-hdr-left">
+                            <span className="reel-panel-icon"><FiCalendar size={13} strokeWidth={2.5} /></span>
+                            <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Investor Tools</p>
+                          </div>
+                        </div>
+                        <div className="reel-panel-div" />
+                        <div className="py-1 px-2">
+                          <button
+                            className="reel-panel-action-btn"
+                            onClick={() => { setSchedulePitch(pitch); setShowScheduleModal(true); }}
+                          >
+                            <FiCalendar size={15} strokeWidth={2.5} />
+                            <span>Schedule Meeting</span>
+                          </button>
+                          <button className="reel-panel-action-btn" onClick={() => handleAIClick(pitch)}>
+                            <O21Icon size={18} color="#00B8A9" />
+                            <span>Investor AI</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
