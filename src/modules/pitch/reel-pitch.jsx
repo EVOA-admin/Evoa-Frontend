@@ -119,7 +119,7 @@ const REEL_DESKTOP_CSS = `
   justify-content: center;
   background: rgba(0,184,169,0.14);
   border: 1px solid rgba(0,184,169,0.25);
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   flex-shrink: 0;
 }
 .reel-panel-div {
@@ -149,7 +149,7 @@ const REEL_DESKTOP_CSS = `
 .reel-panel-card.light .reel-panel-action-btn { color: rgba(26,26,26,0.85); }
 .reel-panel-card.dark  .reel-panel-action-btn:hover { background: rgba(255,255,255,0.06); }
 .reel-panel-card.light .reel-panel-action-btn:hover { background: rgba(0,0,0,0.04); }
-.reel-panel-action-btn.active { color: #00E5D3 !important; }
+.reel-panel-action-btn.active { color: var(--evoa-accent-light) !important; }
 .reel-panel-card.dark  .reel-panel-action-btn.active { background: rgba(0,184,169,0.1) !important; }
 .reel-panel-card.light .reel-panel-action-btn.active { background: rgba(0,184,169,0.08) !important; }
 
@@ -782,9 +782,9 @@ export default function ReelPitch() {
         <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10 pointer-events-none" />
 
         {/* ══ RIGHT SIDE BUTTONS (bottom-right, Instagram style) ══ */}
-        <div className="absolute right-3 bottom-24 z-30 flex flex-col items-center gap-3">
+        <div className="absolute right-3 bottom-24 z-30 flex flex-col items-center gap-3 md:hidden">
           <button onClick={() => handleSupport(pitch.id)} className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
-            <FaHandshake size={26} className={state.isLiked ? 'text-[#00B8A9] drop-shadow-lg' : 'text-white drop-shadow-lg'} />
+            <FaHandshake size={26} className={state.isLiked ? 'text-evoa drop-shadow-lg' : 'text-white drop-shadow-lg'} />
             <span className="text-[10px] font-semibold text-white drop-shadow-md">{formatNum(pitch.likes)}</span>
           </button>
 
@@ -839,7 +839,7 @@ export default function ReelPitch() {
         </div>
 
         {/* ══ BOTTOM-LEFT INFO ══ */}
-        <div className="absolute bottom-0 left-0 right-20 z-30 px-4 pb-6">
+        <div className="absolute bottom-0 left-0 right-20 md:right-0 z-30 px-4 md:px-4 pb-6 w-full md:w-full">
 
           {/* Startup name + handle */}
           <div
@@ -849,7 +849,7 @@ export default function ReelPitch() {
               if (pitch.founderId) goToProfile(pitch.founderId, currentUser, navigate);
             }}
           >
-            <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-[#00B8A9] flex-shrink-0">
+            <div className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-evoa flex-shrink-0">
               {pitch.profilePhoto
                 ? <img src={pitch.profilePhoto} alt="" className="w-full h-full object-cover" />
                 : <div className="w-full h-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold">{pitch.name?.[0]}</div>
@@ -857,30 +857,43 @@ export default function ReelPitch() {
             </div>
             <div>
               <h3 className="text-sm font-bold text-white leading-tight">{pitch.name}</h3>
-              <p className="text-xs text-white/60 leading-tight">{pitch.hashtag}</p>
             </div>
           </div>
 
-          {/* Description — Instagram-style tap to expand */}
-          {pitch.description && (
-            <p
-              className={`text-xs text-white/85 leading-relaxed mb-2.5 cursor-pointer select-none ${expandedDescs[pitch.id] ? '' : 'line-clamp-2'
-                }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpandedDescs(prev => ({ ...prev, [pitch.id]: !prev[pitch.id] }));
-              }}
+          {/* Description & Hashtags — expandable */}
+          <div 
+            className="mb-3 cursor-pointer select-none"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpandedDescs(prev => ({ ...prev, [pitch.id]: !prev[pitch.id] }));
+            }}
+          >
+            <div 
+              className={`text-xs text-white/90 leading-relaxed overflow-hidden transition-all duration-300 ease-in-out ${expandedDescs[pitch.id] ? 'max-h-[500px]' : 'max-h-[36px] line-clamp-2'}`}
             >
               {pitch.description}
-              {!expandedDescs[pitch.id] && (
-                <span className="text-white/50 font-semibold ml-1">more</span>
-              )}
-            </p>
-          )}
+            </div>
+            
+            {/* Hashtags (only show when expanded) */}
+            <div 
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedDescs[pitch.id] ? 'max-h-[200px] mt-1.5 opacity-100' : 'max-h-0 opacity-0'}`}
+            >
+              <p className="text-xs text-white/60 leading-relaxed">
+                {pitch.hashtag}
+              </p>
+            </div>
+            
+            {/* More/Less Button */}
+            {(pitch.description?.length > 80 || pitch.hashtag) && (
+              <span className="text-white/50 font-semibold text-xs mt-1 inline-block">
+                {expandedDescs[pitch.id] ? 'less' : 'more'}
+              </span>
+            )}
+          </div>
 
           {/* Deal info — full-width Ask banner */}
           {(pitch.dealInfo.ask !== '\u2014' || pitch.dealInfo.revenue !== '\u2014') && (
-            <div className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-[#00B8A9] to-[#008C81] px-4 py-2.5">
+            <div className="w-full flex items-center justify-between rounded-xl bg-gradient-to-r from-evoa to-evoa-dark px-4 py-2.5 shadow-lg mx-auto">
               <div>
                 <p className="text-[9px] text-white/70 uppercase tracking-widest mb-0.5">Ask</p>
                 <p className="font-bold text-[12px] text-white">{pitch.dealInfo.ask}</p>
@@ -923,7 +936,7 @@ export default function ReelPitch() {
             </button>
             <h1 className="text-lg font-bold text-white flex items-center gap-1.5">
               {hashtagFilter ? (
-                <><FaHashtag size={14} className="text-[#00B8A9]" />{hashtagFilter}</>
+                <><FaHashtag size={14} className="text-evoa" />{hashtagFilter}</>
               ) : 'Pitch Reels'}
             </h1>
             <div className="w-11" />
@@ -931,7 +944,7 @@ export default function ReelPitch() {
 
           {loading ? (
             <div className="flex items-center justify-center h-full">
-              <FaSpinner className="animate-spin text-[#00B8A9]" size={32} />
+              <FaSpinner className="animate-spin text-evoa" size={32} />
             </div>
           ) : pitches.length === 0 ? (
             <div className={`flex flex-col items-center justify-center h-full gap-4 px-8 text-center ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
@@ -971,16 +984,16 @@ export default function ReelPitch() {
                           className="reel-panel-hdr-left cursor-pointer group"
                           onClick={() => pitch.founderId && goToProfile(pitch.founderId, currentUser, navigate)}
                         >
-                          <div className="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-[#00B8A9]/40 flex-shrink-0">
+                          <div className="w-9 h-9 rounded-xl overflow-hidden ring-2 ring-evoa/40 flex-shrink-0">
                             {pitch.profilePhoto
                               ? <img src={pitch.profilePhoto} alt="" className="w-full h-full object-cover" />
-                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center text-white text-sm font-bold">{pitch.name?.[0]}</div>
+                              : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-darker flex items-center justify-center text-white text-sm font-bold">{pitch.name?.[0]}</div>
                             }
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1">
-                              <p className={`text-sm font-bold truncate group-hover:text-[#00B8A9] transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{pitch.name}</p>
-                              <MdVerified size={12} className="text-[#00B8A9] flex-shrink-0" />
+                              <p className={`text-sm font-bold truncate group-hover:text-evoa transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}>{pitch.name}</p>
+                              <MdVerified size={12} className="text-evoa flex-shrink-0" />
                             </div>
                             {pitch.category && <p className={`text-[10px] ${isDark ? 'text-white/40' : 'text-gray-500'}`}>{pitch.category}</p>}
                           </div>
@@ -995,9 +1008,9 @@ export default function ReelPitch() {
                           <p className={`text-[9px] uppercase tracking-widest font-semibold mb-2 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>Deal Terms</p>
                           <div className="grid grid-cols-3 gap-1">
                             {[{ lbl: 'Ask', val: pitch.dealInfo?.ask }, { lbl: 'Equity', val: pitch.dealInfo?.equity }, { lbl: 'Revenue', val: pitch.dealInfo?.revenue }].map(({ lbl, val }) => (
-                              <div key={lbl} className={`rounded-xl p-2 text-center border ${isDark ? 'bg-[#00B8A9]/05 border-[#00B8A9]/14' : 'bg-[#00B8A9]/04 border-[#00B8A9]/12'}`}>
+                              <div key={lbl} className={`rounded-xl p-2 text-center border ${isDark ? 'bg-evoa/05 border-evoa/14' : 'bg-evoa/04 border-evoa/12'}`}>
                                 <p className="text-[9px] uppercase tracking-wide font-medium" style={{ color: isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.4)' }}>{lbl}</p>
-                                <p className="text-xs font-bold mt-0.5" style={{ background: 'linear-gradient(135deg,#00E5D3,#00B8A9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{val || '—'}</p>
+                                <p className="text-xs font-bold mt-0.5" style={{ background: 'linear-gradient(135deg,var(--evoa-accent-light),var(--evoa-accent-primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{val || '—'}</p>
                               </div>
                             ))}
                           </div>
@@ -1018,7 +1031,7 @@ export default function ReelPitch() {
                           <FaEye size={11} />{(pitch.views || 0).toLocaleString()}
                         </span>
                         {pitch.hashtag && pitch.hashtag.split(' ').filter(Boolean).slice(0, 2).map((h, i) => (
-                          <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#00B8A9]/12 text-[#00B8A9] border border-[#00B8A9]/20">{h}</span>
+                          <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-evoa/12 text-evoa border border-evoa/20">{h}</span>
                         ))}
                       </div>
                     </div>
@@ -1084,7 +1097,7 @@ export default function ReelPitch() {
                             <span>Schedule Meeting</span>
                           </button>
                           <button className="reel-panel-action-btn" onClick={() => handleAIClick(pitch)}>
-                            <O21Icon size={18} color="#00B8A9" />
+                            <O21Icon size={18} color="var(--evoa-accent-primary)" />
                             <span>Investor AI</span>
                           </button>
                         </div>
@@ -1111,7 +1124,7 @@ export default function ReelPitch() {
             {/* Header */}
             <div className={`flex items-center justify-between px-4 py-3.5 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-gradient-to-br from-evoa to-evoa-darker flex items-center justify-center">
                   {currentPitchForAI.profilePhoto
                     ? <img src={currentPitchForAI.profilePhoto} alt="" className="w-full h-full object-cover" />
                     : <span className="text-white text-sm font-bold">{currentPitchForAI.name?.[0]}</span>
@@ -1121,8 +1134,8 @@ export default function ReelPitch() {
                   <h3 className={`font-bold text-sm leading-tight ${isDark ? 'text-white' : 'text-black'}`}>
                     AI — {currentPitchForAI.name}
                   </h3>
-                  <p className={`text-[11px] flex items-center gap-1 ${isDark ? 'text-[#00B8A9]' : 'text-[#00B8A9]'}`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] inline-block animate-pulse" />
+                  <p className={`text-[11px] flex items-center gap-1 ${isDark ? 'text-evoa' : 'text-evoa'}`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-evoa inline-block animate-pulse" />
                     Investor AI Active
                   </p>
                 </div>
@@ -1140,7 +1153,7 @@ export default function ReelPitch() {
               {messages.map(msg => (
                 <div key={msg.id} className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'}`}>
                   <div className={`max-w-[88%] rounded-2xl px-4 py-3 ${msg.type === 'user'
-                    ? 'bg-[#00B8A9] text-white rounded-br-sm'
+                    ? 'bg-evoa text-white rounded-br-sm'
                     : isDark ? 'bg-white/8 text-white rounded-bl-sm border border-white/8' : 'bg-gray-100 text-black rounded-bl-sm'
                     }`}>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -1176,7 +1189,7 @@ export default function ReelPitch() {
                               draftMessage: frameMsg,
                             });
                           }}
-                          className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#00B8A9]/15 text-[#00B8A9] border border-[#00B8A9]/30 hover:bg-[#00B8A9]/25 transition-colors"
+                          className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-evoa/15 text-evoa border border-evoa/30 hover:bg-evoa/25 transition-colors"
                         >
                           ✉ Ask Founder
                         </button>
@@ -1190,9 +1203,9 @@ export default function ReelPitch() {
                 <div className="flex items-start gap-2">
                   <div className={`rounded-2xl rounded-bl-sm px-4 py-3 ${isDark ? 'bg-white/8 border border-white/8' : 'bg-gray-100'}`}>
                     <div className="flex gap-1 items-center">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#00B8A9] animate-bounce" style={{ animationDelay: '300ms' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-evoa animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-evoa animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-evoa animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   </div>
                 </div>
@@ -1237,15 +1250,15 @@ export default function ReelPitch() {
                   onKeyPress={handleKeyPress}
                   placeholder="Ask about this startup..."
                   className={`flex-1 px-4 py-2.5 rounded-xl text-sm outline-none ${isDark
-                    ? 'bg-white/5 text-white placeholder-white/40 border border-white/10 focus:border-[#00B8A9]'
-                    : 'bg-gray-50 text-black placeholder-gray-400 border border-gray-200 focus:border-[#00B8A9]'
+                    ? 'bg-white/5 text-white placeholder-white/40 border border-white/10 focus:border-evoa'
+                    : 'bg-gray-50 text-black placeholder-gray-400 border border-gray-200 focus:border-evoa'
                     }`}
                 />
                 <button
                   onClick={() => handleSendMessage()}
                   disabled={!inputMessage.trim() || isLoading}
                   className={`w-11 h-11 flex items-center justify-center rounded-xl transition-all flex-shrink-0 ${inputMessage.trim() && !isLoading
-                    ? 'bg-[#00B8A9] text-white hover:bg-[#00A89A] active:scale-95'
+                    ? 'bg-evoa text-white hover:bg-evoa-hover active:scale-95'
                     : isDark ? 'bg-white/5 text-white/25' : 'bg-gray-100 text-gray-300'
                     }`}
                 >
@@ -1275,7 +1288,7 @@ export default function ReelPitch() {
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center flex-shrink-0">
+                <div className="w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-evoa to-evoa-darker flex items-center justify-center flex-shrink-0">
                   {askFounderModal.pitch?.profilePhoto
                     ? <img src={askFounderModal.pitch.profilePhoto} alt="" className="w-full h-full object-cover" />
                     : <span className="text-white text-sm font-bold">{askFounderModal.pitch?.name?.[0]}</span>
@@ -1283,7 +1296,7 @@ export default function ReelPitch() {
                 </div>
                 <div>
                   <p className="text-white font-bold text-sm leading-tight">Message to Founder</p>
-                  <p className="text-[#00B8A9] text-[11px]">{askFounderModal.pitch?.name}</p>
+                  <p className="text-evoa text-[11px]">{askFounderModal.pitch?.name}</p>
                 </div>
               </div>
               {!askFounderSending && (
@@ -1301,20 +1314,20 @@ export default function ReelPitch() {
               {askFounderSent ? (
                 /* ── Success state ── */
                 <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-[#00B8A9]/15 border border-[#00B8A9]/30 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-[#00B8A9]" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <div className="w-16 h-16 rounded-full bg-evoa/15 border border-evoa/30 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-evoa" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div>
                     <p className="text-white font-bold text-base">Message Sent!</p>
                     <p className="text-white/50 text-sm mt-1">
-                      Your question has been sent to <span className="text-[#00B8A9]">{askFounderModal.pitch?.name}</span>'s founder. They'll be notified on EVOA.
+                      Your question has been sent to <span className="text-evoa">{askFounderModal.pitch?.name}</span>'s founder. They'll be notified on EVOA.
                     </p>
                   </div>
                   <button
                     onClick={() => setAskFounderModal(null)}
-                    className="mt-2 px-6 py-2.5 rounded-xl bg-[#00B8A9] text-white text-sm font-semibold hover:bg-[#00A89A] active:scale-95 transition-all"
+                    className="mt-2 px-6 py-2.5 rounded-xl bg-evoa text-white text-sm font-semibold hover:bg-evoa-hover active:scale-95 transition-all"
                   >
                     Done
                   </button>
@@ -1328,14 +1341,14 @@ export default function ReelPitch() {
 
                     {/* Editable message bubble */}
                     <div className="relative">
-                      <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center flex-shrink-0">
+                      <div className="absolute top-3 left-3 w-6 h-6 rounded-full bg-gradient-to-br from-evoa to-evoa-darker flex items-center justify-center flex-shrink-0">
                         <span className="text-white text-[10px] font-bold">{currentUser?.fullName?.[0] || 'I'}</span>
                       </div>
                       <textarea
                         value={askFounderModal.draftMessage}
                         onChange={e => setAskFounderModal(prev => ({ ...prev, draftMessage: e.target.value }))}
                         rows={6}
-                        className="w-full pl-11 pr-4 pt-3 pb-3 rounded-2xl rounded-tl-sm bg-[#00B8A9]/10 border border-[#00B8A9]/25 text-white text-sm leading-relaxed resize-none outline-none focus:border-[#00B8A9]/60 transition-colors"
+                        className="w-full pl-11 pr-4 pt-3 pb-3 rounded-2xl rounded-tl-sm bg-evoa/10 border border-evoa/25 text-white text-sm leading-relaxed resize-none outline-none focus:border-evoa/60 transition-colors"
                         placeholder="Write your message to the founder..."
                       />
                     </div>
@@ -1378,7 +1391,7 @@ export default function ReelPitch() {
                   }}
                   disabled={!askFounderModal.draftMessage.trim() || askFounderSending}
                   className={`w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${askFounderModal.draftMessage.trim() && !askFounderSending
-                    ? 'bg-[#00B8A9] text-white hover:bg-[#00A89A] active:scale-[0.98]'
+                    ? 'bg-evoa text-white hover:bg-evoa-hover active:scale-[0.98]'
                     : 'bg-white/10 text-white/30 cursor-not-allowed'
                     }`}
                 >
@@ -1426,7 +1439,7 @@ export default function ReelPitch() {
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4" style={{ minHeight: 0 }}>
               {commentsLoading ? (
                 <div className="flex justify-center py-8">
-                  <FaSpinner className="animate-spin text-[#00B8A9]" size={24} />
+                  <FaSpinner className="animate-spin text-evoa" size={24} />
                 </div>
               ) : comments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-white/40 gap-2">
@@ -1454,7 +1467,7 @@ export default function ReelPitch() {
                     <div className="flex-1 min-w-0">
                       <button
                         onClick={() => c.userId && c.userId !== 'me' && goToProfile(c.userId, currentUser, navigate)}
-                        className="text-xs font-semibold text-white/80 hover:text-[#00B8A9] transition-colors text-left"
+                        className="text-xs font-semibold text-white/80 hover:text-evoa transition-colors text-left"
                       >
                         {c.user?.fullName || c.user?.email?.split('@')[0] || 'User'}
                       </button>
@@ -1477,14 +1490,14 @@ export default function ReelPitch() {
                 onChange={e => setCommentText(e.target.value)}
                 onKeyDown={handleCommentKey}
                 placeholder="Add a comment..."
-                className="flex-1 bg-white/8 border border-white/15 rounded-full px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-[#00B8A9] transition-colors"
+                className="flex-1 bg-white/8 border border-white/15 rounded-full px-4 py-2.5 text-sm text-white placeholder-white/40 outline-none focus:border-evoa transition-colors"
                 style={{ background: 'rgba(255,255,255,0.06)' }}
               />
               <button
                 onClick={postComment}
                 disabled={!commentText.trim() || commentPosting}
                 className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all ${commentText.trim() && !commentPosting
-                  ? 'bg-[#00B8A9] text-white active:scale-90'
+                  ? 'bg-evoa text-white active:scale-90'
                   : 'bg-white/10 text-white/30'
                   }`}
               >

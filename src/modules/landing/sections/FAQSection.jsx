@@ -43,7 +43,7 @@ function FAQItem({ question, answer, isOpen, onToggle, isDark }) {
       >
         <span className={`font-semibold text-xs sm:text-sm md:text-base lg:text-lg transition-all duration-300 pr-3 sm:pr-4 ${isDark
           ? `text-white ${isOpen ? 'text-[#B0FFFA]' : ''}`
-          : `text-gray-900 ${isOpen ? 'text-[#00B8A9]' : ''}`
+          : `text-gray-900 ${isOpen ? 'text-evoa' : ''}`
           }`}>
           {question}
         </span>
@@ -52,7 +52,7 @@ function FAQItem({ question, answer, isOpen, onToggle, isDark }) {
           : `bg-[#B0FFFA]/20 ${isOpen ? 'bg-[#B0FFFA]/30 rotate-180' : 'group-hover:bg-[#B0FFFA]/25'}`
           }`}>
           <HiArrowDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''
-            } ${isDark ? `text-[#B0FFFA]` : 'text-[#00B8A9]'}`} />
+            } ${isDark ? `text-[#B0FFFA]` : 'text-evoa'}`} />
         </div>
       </button>
       {isOpen && (

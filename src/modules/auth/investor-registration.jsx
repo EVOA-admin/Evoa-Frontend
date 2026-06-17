@@ -478,8 +478,8 @@ export default function InvestorRegistration() {
                 <label className="block text-xs sm:text-sm text-white/60">
                   Upload SEBI Certificate (PDF)
                   <input type="file" accept=".pdf" onChange={(e) => handleFileUpload("sebiCertificate", e.target.files?.[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center border-white/20 hover:border-[#E8341A]/50 ${previews.sebiCertificate ? "border-[#00B8A9]/40" : ""}`}>
-                    {previews.sebiCertificate ? <><span className="text-[#00B8A9]">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.sebiCertificate}</span></> : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload PDF</span></>}
+                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center border-white/20 hover:border-[#E8341A]/50 ${previews.sebiCertificate ? "border-evoa/40" : ""}`}>
+                    {previews.sebiCertificate ? <><span className="text-evoa">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.sebiCertificate}</span></> : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload PDF</span></>}
                   </div>
                 </label>
               </div>
@@ -507,11 +507,11 @@ export default function InvestorRegistration() {
                 <label className="block text-xs sm:text-sm text-white/60">
                   Upload ID Proof (Aadhaar/Passport/Driving License)
                   <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload("idProof", e.target.files?.[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center border-white/20 hover:border-[#E8341A]/50 ${previews.idProof ? "border-[#00B8A9]/40" : ""}`}>
+                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center border-white/20 hover:border-[#E8341A]/50 ${previews.idProof ? "border-evoa/40" : ""}`}>
                     {previews.idProof
                       ? (typeof previews.idProof === "string" && previews.idProof.startsWith("blob:")
                         ? <img src={previews.idProof} alt="ID proof preview" className="h-20 mx-auto object-contain rounded" />
-                        : <><span className="text-[#00B8A9]">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.idProof}</span></>)
+                        : <><span className="text-evoa">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.idProof}</span></>)
                       : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload</span></>}
                   </div>
                 </label>

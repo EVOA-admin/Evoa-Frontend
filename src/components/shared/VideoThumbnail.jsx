@@ -62,7 +62,7 @@ export default function VideoThumbnail({ videoUrl, alt, className = "" }) {
                 <img src={thumbnailStr} alt={alt} className={className} />
             ) : (
                 <div className={`flex items-center justify-center bg-gray-900 ${className}`}>
-                    <div className="w-4 h-4 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-evoa border-t-transparent rounded-full animate-spin" />
                 </div>
             )}
         </>

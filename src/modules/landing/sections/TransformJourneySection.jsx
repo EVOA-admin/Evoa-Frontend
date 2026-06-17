@@ -29,7 +29,7 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
         'EVO-A connects startups, investors, and incubators on one smart platform.',
         'Pitch confidently. Discover verified deals. Showcase proven success.',
       ],
-      color: isDark ? '#B0FFFA' : '#00B8A9',
+      color: isDark ? '#B0FFFA' : 'var(--evoa-accent-primary)',
       bgColor: isDark
         ? 'rgba(176, 255, 250, 0.1)'
         : 'rgba(0, 184, 169, 0.1)',
@@ -43,7 +43,7 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
         'Trusted investors',
         'Real incubator portfolios',
       ],
-      color: isDark ? '#B0FFFA' : '#00B8A9',
+      color: isDark ? '#B0FFFA' : 'var(--evoa-accent-primary)',
       bgColor: isDark
         ? 'rgba(176, 255, 250, 0.1)'
         : 'rgba(0, 184, 169, 0.1)',
@@ -82,7 +82,7 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
               style={{
                 background: isDark
                   ? 'linear-gradient(135deg, #B0FFFA 0%, #80E5FF 50%, #B0FFFA 100%)'
-                  : 'linear-gradient(135deg, #00B8A9 0%, #00C9B7 50%, #00B8A9 100%)',
+                  : 'linear-gradient(135deg, var(--evoa-accent-primary) 0%, #00C9B7 50%, var(--evoa-accent-primary) 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -173,7 +173,7 @@ export default function PurposeBuiltSection({ isVisible, isDark, setRef }) {
                     >
                       <p
                         className={`flex justify-center items-center gap-2 text-sm font-bold ${
-                          isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'
+                          isDark ? 'text-[#B0FFFA]' : 'text-evoa'
                         }`}
                       >
                         <HiSparkles className="animate-pulse" />

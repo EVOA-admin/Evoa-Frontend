@@ -109,14 +109,14 @@ const HEADER_CSS = `
 
 .evoa-header.dark .evoa-header-action-btn { color: rgba(244,240,232,.5); }
 .evoa-header.dark .evoa-header-action-btn:hover {
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   background: rgba(0,184,169,0.12);
   box-shadow: 0 0 12px rgba(0,184,169,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
 }
 
 .evoa-header.light .evoa-header-action-btn { color: rgba(26,26,26,.45); }
 .evoa-header.light .evoa-header-action-btn:hover {
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   background: rgba(0,184,169,0.09);
   box-shadow: 0 0 10px rgba(0,184,169,0.12);
 }
@@ -175,7 +175,7 @@ const HEADER_CSS = `
  * Shows EVOA logo + wordmark on left, optional action slot on right.
  */
 export default function AppHeader({ actions = null, title = null, showThemeToggle = false }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, openThemeModal } = useTheme();
   const isDark = theme === "dark";
   const cls = isDark ? "dark" : "light";
 
@@ -198,9 +198,9 @@ export default function AppHeader({ actions = null, title = null, showThemeToggl
         {actions}
         {showThemeToggle && (
           <button
-            onClick={toggleTheme}
+            onClick={openThemeModal}
             className="evoa-theme-btn"
-            title={isDark ? "Light mode" : "Dark mode"}
+            title="Theme"
           >
             {isDark ? <HiSun size={18} /> : <HiMoon size={17} />}
           </button>

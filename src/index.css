@@ -1,8 +1,12 @@
-/* Google Fonts are loaded non-blockingly via index.html <link> tags */
 @import "tailwindcss";
 
-
-
+@theme {
+  --color-evoa: var(--evoa-accent-primary, var(--evoa-accent-primary));
+  --color-evoa-hover: var(--evoa-accent-hover, var(--evoa-accent-hover));
+  --color-evoa-dark: var(--evoa-accent-dark, var(--evoa-accent-dark));
+  --color-evoa-light: var(--evoa-accent-light, var(--evoa-accent-light));
+  --color-evoa-darker: var(--evoa-accent-darker, var(--evoa-accent-darker));
+}
 /* Full Screen Fix */
 html {
   scroll-behavior: smooth;
@@ -350,7 +354,7 @@ option {
 
 option:checked,
 option:focus {
-  background-color: #00B8A9 !important;
+  background-color: var(--evoa-accent-primary) !important;
   color: white !important;
 }
 

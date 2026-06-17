@@ -29,7 +29,7 @@ import { HiSun, HiMoon } from "react-icons/hi";
 const AmbassadorDashboard = lazy(() => import("../ambassador/AmbassadorDashboard"));
 
 export default function InvestorProfile() {
-    const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme, openThemeModal } = useTheme();
     const isDark = theme === "dark";
     const navigate = useNavigate();
     const { user: authUser } = useAuth();
@@ -127,7 +127,7 @@ export default function InvestorProfile() {
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
                     >
-                        <IoPencil size={16} className="text-[#00B8A9]" />
+                        <IoPencil size={16} className="text-evoa" />
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
@@ -159,7 +159,7 @@ export default function InvestorProfile() {
                     <button
                         onClick={() => {
                             setMenuOpen(false);
-                            setTimeout(toggleTheme, 150);
+                            setTimeout(openThemeModal, 150);
                         }}
                         className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
@@ -198,7 +198,7 @@ export default function InvestorProfile() {
             <AppShell>
                 <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
                 <div className="flex items-center justify-center h-72">
-                    <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-10 h-10 border-4 border-evoa border-t-transparent rounded-full animate-spin" />
                 </div>
             </AppShell>
         );
@@ -210,7 +210,7 @@ export default function InvestorProfile() {
             {toastMsg && (
                 <div style={{
                     position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-                    zIndex: 9999, background: "#00B8A9", color: "#fff",
+                    zIndex: 9999, background: "var(--evoa-accent-primary)", color: "#fff",
                     padding: "9px 20px", borderRadius: 24, fontSize: 13, fontWeight: 600,
                     whiteSpace: "nowrap", boxShadow: "0 4px 24px rgba(0,184,169,0.35)",
                     animation: "fadeIn 0.2s ease",
@@ -230,7 +230,7 @@ export default function InvestorProfile() {
                 <div className="px-4 pt-5 pb-4">
                     <div className="flex items-start gap-4">
                         {/* Avatar */}
-                        <div className={`w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"} ring-2 ring-[#00B8A9]/30`}>
+                        <div className={`w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"} ring-2 ring-evoa/30`}>
                             <img
                                 src={profile?.logoUrl || authUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || "I")}&background=00B8A9&color=fff&size=128`}
                                 alt={profile?.name}
@@ -253,7 +253,7 @@ export default function InvestorProfile() {
                             )}
                             <div className="flex flex-wrap gap-1 mt-2">
                                 {profile?.sectors?.slice(0, 2).map(s => (
-                                    <span key={s} className="text-[11px] px-2 py-0.5 bg-[#00B8A9]/15 text-[#00B8A9] rounded-full font-medium">{s}</span>
+                                    <span key={s} className="text-[11px] px-2 py-0.5 bg-evoa/15 text-evoa rounded-full font-medium">{s}</span>
                                 ))}
                             </div>
                         </div>
@@ -307,7 +307,7 @@ export default function InvestorProfile() {
                     >
                         {tab.label}
                         {activeTab === tab.id && (
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#00B8A9]" />
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-evoa" />
                         )}
                     </button>
                 ))}
@@ -338,7 +338,7 @@ export default function InvestorProfile() {
                             <Section title="Preferred Sectors" isDark={isDark}>
                                 <div className="flex flex-wrap gap-1.5">
                                     {profile.sectors.map(s => (
-                                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-[#00B8A9]/10 text-[#00B8A9] font-medium">{s}</span>
+                                        <span key={s} className="text-xs px-2.5 py-1 rounded-full bg-evoa/10 text-evoa font-medium">{s}</span>
                                     ))}
                                 </div>
                             </Section>
@@ -399,7 +399,7 @@ export default function InvestorProfile() {
                                 <div className="space-y-2">
                                     {profile.credentials.map((cred, idx) => (
                                         <div key={idx} className={`flex items-center gap-2 p-3 rounded-xl ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
-                                            <IoCheckmarkCircle className="text-[#00B8A9] flex-shrink-0" size={16} />
+                                            <IoCheckmarkCircle className="text-evoa flex-shrink-0" size={16} />
                                             <span className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{cred}</span>
                                         </div>
                                     ))}
@@ -457,7 +457,7 @@ function StatItem({ label, value, isDark }) {
 function FinancialCard({ label, value, isDark }) {
     return (
         <div className={`p-3 rounded-xl text-center ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-            <p className="text-sm font-bold text-[#00B8A9]">{value}</p>
+            <p className="text-sm font-bold text-evoa">{value}</p>
             <p className={`text-xs mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
         </div>
     );

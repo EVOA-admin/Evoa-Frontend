@@ -5,12 +5,12 @@ function DashboardIllustration({ isDark }) {
       <svg viewBox="0 0 400 300" className="w-full h-full">
         <defs>
           <linearGradient id="dashboardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={isDark ? '#B0FFFA' : '#00B8A9'} stopOpacity="0.2" />
-            <stop offset="100%" stopColor={isDark ? '#80E5FF' : '#008C81'} stopOpacity="0.1" />
+            <stop offset="0%" stopColor={isDark ? '#B0FFFA' : 'var(--evoa-accent-primary)'} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={isDark ? '#80E5FF' : 'var(--evoa-accent-dark)'} stopOpacity="0.1" />
           </linearGradient>
         </defs>
         {/* Dashboard frame */}
-        <rect x="20" y="20" width="360" height="260" rx="8" fill={isDark ? 'rgba(176,255,250,0.1)' : 'rgba(0,184,169,0.1)'} stroke={isDark ? '#B0FFFA' : '#00B8A9'} strokeWidth="2" opacity="0.3" />
+        <rect x="20" y="20" width="360" height="260" rx="8" fill={isDark ? 'rgba(176,255,250,0.1)' : 'rgba(0,184,169,0.1)'} stroke={isDark ? '#B0FFFA' : 'var(--evoa-accent-primary)'} strokeWidth="2" opacity="0.3" />
         {/* Dashboard elements */}
         <rect x="40" y="50" width="120" height="80" rx="4" fill={isDark ? 'rgba(176,255,250,0.15)' : 'rgba(0,184,169,0.15)'} />
         <rect x="180" y="50" width="120" height="80" rx="4" fill={isDark ? 'rgba(176,255,250,0.15)' : 'rgba(0,184,169,0.15)'} />
@@ -20,7 +20,7 @@ function DashboardIllustration({ isDark }) {
         <polyline
           points="60,200 100,180 140,190 180,170 220,175 260,165 300,160 340,155"
           fill="none"
-          stroke={isDark ? '#B0FFFA' : '#00B8A9'}
+          stroke={isDark ? '#B0FFFA' : 'var(--evoa-accent-primary)'}
           strokeWidth="2"
           opacity="0.4"
         />
@@ -50,7 +50,7 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
         <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 sm:mb-6 backdrop-blur-xl border ${
           isDark 
             ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
-            : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
+            : 'bg-evoa/5 border-evoa/20 text-evoa'
         }`}>
           <span className="text-xs sm:text-sm font-bold tracking-wider uppercase">Powerful Features</span>
         </div>
@@ -59,7 +59,7 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
         }`}>
           One Platform.  {' '}
           <span className={`underline decoration-2 underline-offset-4 ${
-            isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'
+            isDark ? 'text-[#B0FFFA]' : 'text-evoa'
           }`}>
            Zero Noise.
           </span>
@@ -91,7 +91,7 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
               r="5"
               cx="50%"
               cy="0%"
-              fill={isDark ? '#B0FFFA' : '#00B8A9'}
+              fill={isDark ? '#B0FFFA' : 'var(--evoa-accent-primary)'}
               opacity="0.9"
             >
               <animate
@@ -133,16 +133,16 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
               <div className="relative z-10">
                 {/* Number indicator */}
                 <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full mb-3 ${
-                  isDark ? 'bg-[#B0FFFA]/20 text-[#B0FFFA]' : 'bg-[#00B8A9]/20 text-[#00B8A9]'
+                  isDark ? 'bg-[#B0FFFA]/20 text-[#B0FFFA]' : 'bg-evoa/20 text-evoa'
                 } text-sm font-bold`}>
                   {index + 1}
                 </div>
                 
                 {/* Visual SVG Block mimicking abstract UI */}
                 <div className={`w-full h-24 mb-4 rounded-lg flex items-center justify-center border ${
-                  isDark ? 'bg-black/30 border-[#B0FFFA]/10' : 'bg-gray-50 border-[#00B8A9]/10'
+                  isDark ? 'bg-black/30 border-[#B0FFFA]/10' : 'bg-gray-50 border-evoa/10'
                 }`}>
-                  <svg className={`w-12 h-12 opacity-80 ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} fill="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-12 h-12 opacity-80 ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} fill="currentColor" viewBox="0 0 24 24">
                     {/* Abstract illustration relying on index to slightly vary the icon look */}
                     {index % 3 === 0 && <path d="M4 4h16v16H4V4zm2 2v12h12V6H6zm2 2h8v2H8V8zm0 4h5v2H8v-2z" />}
                     {index % 3 === 1 && <path d="M12 3L2 12h3v8h6v-6h2v6h6v-8h3L12 3zm0 2.8l5.5 5.2H16v7h-3v-6H11v6H8v-7H6.5L12 5.8z" />}
@@ -192,7 +192,7 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
                     </p>
                   </div>
                   <div className={`hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 z-10 ${
-                    isDark ? 'bg-black border-[#B0FFFA]' : 'bg-white border-[#00B8A9]'
+                    isDark ? 'bg-black border-[#B0FFFA]' : 'bg-white border-evoa'
                   }`}></div>
                   <div className="hidden md:block md:w-1/2 md:pl-8"></div>
                 </>
@@ -200,7 +200,7 @@ export default function PowerfulFeaturesSection({ isVisible, isDark, setRef }) {
                 <>
                   <div className="hidden md:block md:w-1/2 md:pr-8"></div>
                   <div className={`hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-3 h-3 md:w-4 md:h-4 rounded-full border-2 z-10 ${
-                    isDark ? 'bg-black border-[#B0FFFA]' : 'bg-white border-[#00B8A9]'
+                    isDark ? 'bg-black border-[#B0FFFA]' : 'bg-white border-evoa'
                   }`}></div>
                   <div className="w-full md:w-1/2 md:pl-8 md:text-left">
                     <h3 className={`text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 ${

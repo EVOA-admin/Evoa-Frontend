@@ -9,7 +9,6 @@ import AppHeader from "../../components/layout/AppHeader";
 import DesktopFeedLayout from "../../components/layout/DesktopFeedLayout";
 import reelsService from "../../services/reelsService";
 import { getNotifications } from "../../services/notificationsService";
-import CreateContentModal from "../../components/shared/CreateContentModal";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
@@ -147,8 +146,18 @@ export default function Startup() {
     </div>
   );
 
+  // Global post creation listener
+  useEffect(() => {
+    const handlePostCreated = () => {
+      fetchPosts();
+      fetchRisingStartups();
+    };
+    window.addEventListener('evoa:contentCreated', handlePostCreated);
+    return () => window.removeEventListener('evoa:contentCreated', handlePostCreated);
+  }, []);
+
   return (
-    <AppShell onCreatePost={() => setShowUploadModal(true)}>
+    <AppShell >
       <AppHeader actions={uploadAction} />
       <main>
         <RisingStartupsSection
@@ -228,19 +237,6 @@ export default function Startup() {
         </DesktopFeedLayout>
       </main>
 
-      <CreateContentModal
-        isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
-        canUploadReel={true}
-        onCreated={(type) => {
-          if (type === 'reel') {
-            navigate('/pitch');
-          } else {
-            fetchPosts();
-            fetchRisingStartups();
-          }
-        }}
-      />
-    </AppShell>
+          </AppShell>
   );
 }

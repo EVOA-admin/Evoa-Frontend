@@ -121,7 +121,7 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                         <button
                             onClick={handleSave}
                             disabled={loading}
-                            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[#00B8A9] text-white font-bold hover:bg-[#00A89A] disabled:opacity-50 transition-all"
+                            className="flex items-center gap-2 px-5 py-2 rounded-xl bg-evoa text-white font-bold hover:bg-evoa-hover disabled:opacity-50 transition-all"
                         >
                             {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <IoCheckmark size={20} />}
                             Save
@@ -155,7 +155,7 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                             <button
                                 type="button"
                                 onClick={() => avatarInputRef.current?.click()}
-                                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#00B8A9] text-white flex items-center justify-center shadow-lg hover:bg-[#00A89A] transition-colors"
+                                className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-evoa text-white flex items-center justify-center shadow-lg hover:bg-evoa-hover transition-colors"
                             >
                                 <IoCamera size={15} />
                             </button>
@@ -216,7 +216,7 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                                         key={item}
                                         onClick={() => handleArrayChange('sectors', item)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${formData.sectors.includes(item)
-                                            ? "bg-[#00B8A9] border-[#00B8A9] text-white"
+                                            ? "bg-evoa border-evoa text-white"
                                             : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
                                             }`}
                                     >
@@ -233,7 +233,7 @@ export default function EditInvestorModal({ isOpen, onClose, profile, onSuccess 
                                         key={item}
                                         onClick={() => handleArrayChange('stages', item)}
                                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${formData.stages.includes(item)
-                                            ? "bg-[#00B8A9] border-[#00B8A9] text-white"
+                                            ? "bg-evoa border-evoa text-white"
                                             : isDark ? "bg-white/5 border-white/10 text-white/60 hover:border-white/30" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"
                                             }`}
                                     >
@@ -267,7 +267,7 @@ function InputField({ label, value, onChange, placeholder, type = "text", isDark
                 value={value}
                 onChange={e => onChange(e.target.value)}
                 placeholder={placeholder || label}
-                className={`w-full px-4 py-3 rounded-2xl border outline-none transition-all focus:border-[#00B8A9] focus:ring-4 focus:ring-[#00B8A9]/10 ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
+                className={`w-full px-4 py-3 rounded-2xl border outline-none transition-all focus:border-evoa focus:ring-4 focus:ring-evoa/10 ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
                     }`}
             />
         </div>
@@ -283,7 +283,7 @@ function TextAreaField({ label, value, onChange, placeholder, isDark }) {
                 onChange={e => onChange(e.target.value)}
                 placeholder={placeholder || label}
                 rows={4}
-                className={`w-full px-4 py-3 rounded-2xl border outline-none transition-all focus:border-[#00B8A9] focus:ring-4 focus:ring-[#00B8A9]/10 resize-none ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
+                className={`w-full px-4 py-3 rounded-2xl border outline-none transition-all focus:border-evoa focus:ring-4 focus:ring-evoa/10 resize-none ${isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-50 border-gray-200 text-gray-900"
                     }`}
             />
         </div>

@@ -94,7 +94,7 @@ export default function InvestorThoughtSheet({ isOpen, onClose, postId, postTitl
                 <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4" style={{ minHeight: 0 }}>
                     {loading ? (
                         <div className="flex justify-center py-10">
-                            <FaSpinner className="animate-spin text-[#00B8A9]" size={24} />
+                            <FaSpinner className="animate-spin text-evoa" size={24} />
                         </div>
                     ) : thoughts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 gap-3">
@@ -129,13 +129,13 @@ export default function InvestorThoughtSheet({ isOpen, onClose, postId, postTitl
                                     <div className="flex items-center gap-1">
                                         <button
                                             onClick={() => t.userId && goToProfile(t.userId, currentUser, navigate)}
-                                            className={`text-xs font-semibold hover:text-[#00B8A9] transition-colors text-left ${isDark ? "text-white/90" : "text-gray-800"}`}
+                                            className={`text-xs font-semibold hover:text-evoa transition-colors text-left ${isDark ? "text-white/90" : "text-gray-800"}`}
                                         >
                                             {t.name || "Investor"}
                                         </button>
                                         {/* Investor verified badge */}
-                                        <MdVerified size={12} className="text-[#00B8A9] flex-shrink-0" />
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium bg-[#00B8A9]/10 text-[#00B8A9] ml-0.5`}>
+                                        <MdVerified size={12} className="text-evoa flex-shrink-0" />
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium bg-evoa/10 text-evoa ml-0.5`}>
                                             {t.role === 'incubator' ? 'Incubator' : 'Investor'}
                                         </span>
                                     </div>

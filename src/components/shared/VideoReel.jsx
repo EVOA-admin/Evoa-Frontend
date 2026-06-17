@@ -197,7 +197,7 @@ const VideoReel = () => {
             }}
             className={`rounded-full transition-all duration-500 ease-in-out ${
               i === currentIndex 
-                ? 'bg-[#00B8A9] w-10 h-2 shadow-lg shadow-[#00B8A9]/50' 
+                ? 'bg-evoa w-10 h-2 shadow-lg shadow-evoa/50' 
                 : 'bg-white/30 w-2 h-2 hover:bg-white/50 hover:w-3'
             }`}
             aria-label={`Go to video ${i + 1}`}

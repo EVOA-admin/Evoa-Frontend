@@ -71,7 +71,7 @@ function FeatureCard({
         ${
           isDark
             ? 'bg-black/50 border-white/10 hover:border-[#B0FFFA]/60 hover:bg-black/70'
-            : 'bg-white border-slate-200 hover:border-[#00B8A9]/60 hover:bg-white'
+            : 'bg-white border-slate-200 hover:border-evoa/60 hover:bg-white'
         }
         hover:-translate-y-1 hover:shadow-xl
       `}
@@ -87,7 +87,7 @@ function FeatureCard({
             className={`inline-flex items-center justify-center w-9 h-9 rounded-full ${
               isDark
                 ? 'bg-[#B0FFFA]/10 text-[#B0FFFA]'
-                : 'bg-[#00B8A9]/10 text-[#00B8A9]'
+                : 'bg-evoa/10 text-evoa'
             }`}
           >
             {gifIcon ? (
@@ -150,7 +150,7 @@ export default function WhyEvoaSection({
             className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 border backdrop-blur ${
               isDark
                 ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]'
-                : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
+                : 'bg-evoa/5 border-evoa/20 text-evoa'
             }`}
           >
             <span className="text-xs sm:text-sm font-bold uppercase tracking-wider">

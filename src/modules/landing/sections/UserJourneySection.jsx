@@ -46,7 +46,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
           <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}>
-            One Platform for <span style={{ color: '#00B8A9' }}>Powering the Startup Economy.</span>
+            One Platform for <span style={{ color: 'var(--evoa-accent-primary)' }}>Powering the Startup Economy.</span>
           </h2>
           <p className={`hidden sm:block text-base md:text-lg max-w-3xl mx-auto ${
             isDark ? 'text-gray-400' : 'text-gray-600'
@@ -62,7 +62,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
             <div 
               className="rounded-2xl px-6 py-4 md:px-10 md:py-6 shadow-xl transform transition-all duration-300 hover:scale-105 relative z-10"
               style={{
-                background: 'linear-gradient(to right, #00B8A9, #009688)'
+                background: 'linear-gradient(to right, var(--evoa-accent-primary), #009688)'
               }}
             >
               <div className="flex flex-col items-center gap-3">
@@ -129,7 +129,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
                       style={{
                         animation: isVisible?.userJourney ? `fadeInUp 0.6s ease-out ${index * 0.1}s both` : 'none',
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#00B8A9'}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--evoa-accent-primary)'}
                       onMouseLeave={(e) => e.currentTarget.style.borderColor = isDark ? '#1f2937' : '#e5e7eb'}
                     >
                       <div className="flex flex-col items-center text-center gap-4">
@@ -140,7 +140,7 @@ export default function OnePlatformSection({ isVisible, isDark, setRef }) {
                             backgroundColor: isDark ? 'rgba(0, 184, 169, 0.2)' : 'rgba(0, 184, 169, 0.15)'
                           }}
                         >
-                          <Icon className="w-8 h-8" style={{ color: '#00B8A9' }} />
+                          <Icon className="w-8 h-8" style={{ color: 'var(--evoa-accent-primary)' }} />
                         </div>
                         
                         {/* Title */}

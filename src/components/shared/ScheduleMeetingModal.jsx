@@ -89,7 +89,7 @@ export default function ScheduleMeetingModal({ startupId, startupName, onClose, 
     const card = `rounded-3xl border backdrop-blur-sm ${isDark ? "bg-gray-900/95 border-white/10" : "bg-white border-gray-200 shadow-2xl"}`;
     const muted = isDark ? "text-gray-400" : "text-gray-500";
     const heading = isDark ? "text-white" : "text-gray-900";
-    const tealBtn = "bg-[#00B8A9] hover:bg-[#00A89A] text-white font-semibold rounded-2xl transition-all duration-200 active:scale-95";
+    const tealBtn = "bg-evoa hover:bg-evoa-hover text-white font-semibold rounded-2xl transition-all duration-200 active:scale-95";
 
     return (
         <div className="fixed inset-0 z-[100] flex items-end justify-center" onClick={onClose}>
@@ -105,7 +105,7 @@ export default function ScheduleMeetingModal({ startupId, startupName, onClose, 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2">
-                        <FiCalendar size={18} className="text-[#00B8A9]" />
+                        <FiCalendar size={18} className="text-evoa" />
                         <div>
                             <h2 className={`text-base font-bold ${heading}`}>Schedule Meeting</h2>
                             <p className={`text-xs ${muted}`}>with {startupName}</p>
@@ -150,8 +150,8 @@ export default function ScheduleMeetingModal({ startupId, startupName, onClose, 
                                         onClick={() => date && setSelectedDate(date)}
                                         className={`h-9 rounded-xl text-xs font-medium transition-all duration-150 
                                             ${!date ? "invisible" : ""}
-                                            ${selected ? "bg-[#00B8A9] text-white shadow-lg shadow-[#00B8A9]/30" : ""}
-                                            ${!selected && isToday ? `border ${isDark ? "border-[#00B8A9] text-[#00B8A9]" : "border-[#00B8A9] text-[#00B8A9]"}` : ""}
+                                            ${selected ? "bg-evoa text-white shadow-lg shadow-evoa/30" : ""}
+                                            ${!selected && isToday ? `border ${isDark ? "border-evoa text-evoa" : "border-evoa text-evoa"}` : ""}
                                             ${!selected && !isToday && !disabled ? isDark ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-gray-100" : ""}
                                             ${disabled ? "opacity-25 cursor-not-allowed" : "cursor-pointer active:scale-90"}
                                         `}
@@ -175,12 +175,12 @@ export default function ScheduleMeetingModal({ startupId, startupName, onClose, 
                 {/* Step: Time */}
                 {step === "time" && (
                     <>
-                        <button onClick={() => setStep("date")} className={`flex items-center gap-1 text-xs ${muted} mb-4 hover:text-[#00B8A9] transition-colors`}>
+                        <button onClick={() => setStep("date")} className={`flex items-center gap-1 text-xs ${muted} mb-4 hover:text-evoa transition-colors`}>
                             <FiChevronLeft size={14} /> Back to Calendar
                         </button>
 
                         <p className={`text-xs font-semibold mb-3 ${heading}`}>
-                            <FiClock size={12} className="inline mr-1 text-[#00B8A9]" />
+                            <FiClock size={12} className="inline mr-1 text-evoa" />
                             {selectedDate?.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
                         </p>
 
@@ -191,7 +191,7 @@ export default function ScheduleMeetingModal({ startupId, startupName, onClose, 
                                     onClick={() => setSelectedTime(slot)}
                                     className={`py-2 rounded-xl text-xs font-medium transition-all duration-150 active:scale-95
                                         ${selectedTime === slot
-                                            ? "bg-[#00B8A9] text-white shadow-md shadow-[#00B8A9]/30"
+                                            ? "bg-evoa text-white shadow-md shadow-evoa/30"
                                             : isDark ? "bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10" : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100"
                                         }`}
                                 >
@@ -208,7 +208,7 @@ export default function ScheduleMeetingModal({ startupId, startupName, onClose, 
                             rows={2}
                             maxLength={300}
                             className={`w-full rounded-2xl px-4 py-3 text-xs outline-none border resize-none mb-4 transition-colors
-                                ${isDark ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-[#00B8A9]" : "bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-[#00B8A9]"}
+                                ${isDark ? "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-evoa" : "bg-gray-50 border-gray-200 text-gray-800 placeholder-gray-400 focus:border-evoa"}
                             `}
                         />
 

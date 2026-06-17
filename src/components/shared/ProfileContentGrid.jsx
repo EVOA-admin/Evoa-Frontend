@@ -117,7 +117,7 @@ export default function ProfileContentGrid({
 
     if (loading) return (
         <div className="flex justify-center py-14">
-            <FaSpinner className="animate-spin text-[#00B8A9]" size={26} />
+            <FaSpinner className="animate-spin text-evoa" size={26} />
         </div>
     );
 

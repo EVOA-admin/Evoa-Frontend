@@ -141,7 +141,7 @@ export default function AmbassadorDashboard({ onBack }) {
               Your Referral Code
             </p>
             <div className={`font-mono text-xl font-semibold tracking-widest mb-4 ${
-              isDark ? 'text-[#00B8A9]' : 'text-[#00B8A9]'
+              isDark ? 'text-evoa' : 'text-evoa'
             }`}>
               {data.code}
             </div>
@@ -151,8 +151,8 @@ export default function AmbassadorDashboard({ onBack }) {
                 id="amb-copy-btn"
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   copied
-                    ? isDark ? 'bg-[#00B8A9]/20 text-[#00B8A9] border border-[#00B8A9]/30' : 'bg-[#00B8A9]/10 text-[#00B8A9] border border-[#00B8A9]/30'
-                    : isDark ? 'bg-[#00B8A9] text-white hover:bg-[#00A89A]' : 'bg-[#00B8A9] text-white hover:bg-[#00A89A]'
+                    ? isDark ? 'bg-evoa/20 text-evoa border border-evoa/30' : 'bg-evoa/10 text-evoa border border-evoa/30'
+                    : isDark ? 'bg-evoa text-white hover:bg-evoa-hover' : 'bg-evoa text-white hover:bg-evoa-hover'
                 }`}
               >
                 {copied ? <IoCheckmark size={15} /> : <IoCopyOutline size={15} />}
@@ -177,7 +177,7 @@ export default function AmbassadorDashboard({ onBack }) {
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Total',   value: totalReferrals, color: isDark ? 'text-white' : 'text-gray-900' },
-              { label: 'Rewarded', value: rewarded,      color: 'text-[#00B8A9]' },
+              { label: 'Rewarded', value: rewarded,      color: 'text-evoa' },
               { label: 'Pending',  value: pending,       color: isDark ? 'text-yellow-400' : 'text-yellow-600' },
             ].map(({ label, value, color }) => (
               <div
@@ -238,7 +238,7 @@ export default function AmbassadorDashboard({ onBack }) {
                       {ref.avatarUrl ? (
                         <img src={ref.avatarUrl} alt={ref.fullName} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">
+                        <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">
                           {(ref.fullName || '?')[0].toUpperCase()}
                         </div>
                       )}
@@ -258,7 +258,7 @@ export default function AmbassadorDashboard({ onBack }) {
                     {/* Badge */}
                     <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0 ${
                       ref.status === 'rewarded'
-                        ? isDark ? 'bg-[#00B8A9]/15 text-[#00B8A9] border border-[#00B8A9]/25' : 'bg-[#00B8A9]/10 text-[#00B8A9] border border-[#00B8A9]/20'
+                        ? isDark ? 'bg-evoa/15 text-evoa border border-evoa/25' : 'bg-evoa/10 text-evoa border border-evoa/20'
                         : isDark ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/25' : 'bg-yellow-50 text-yellow-600 border border-yellow-200'
                     }`}>
                       {ref.status}
@@ -274,7 +274,7 @@ export default function AmbassadorDashboard({ onBack }) {
 
       {/* Copy toast */}
       {copied && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[#00B8A9] text-white shadow-lg pointer-events-none">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-semibold bg-evoa text-white shadow-lg pointer-events-none">
           ✓ Copied to clipboard
         </div>
       )}

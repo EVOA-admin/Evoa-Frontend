@@ -390,7 +390,7 @@ export function AuthProvider({ children }) {
         <AuthContext.Provider value={value}>
             {loading ? (
                 <div className="min-h-screen flex items-center justify-center bg-black">
-                    <div className="w-16 h-16 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-16 h-16 border-4 border-evoa border-t-transparent rounded-full animate-spin" />
                 </div>
             ) : (
                 children

@@ -13,7 +13,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 sm:mb-6 backdrop-blur-xl border ${
           isDark 
             ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
-            : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
+            : 'bg-evoa/5 border-evoa/20 text-evoa'
         }`}>
           <HiShieldCheck className="text-lg" />
           <span className="text-sm font-semibold tracking-wide">SECURITY & TRUST</span>
@@ -42,7 +42,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
                 ? 'bg-gradient-to-br from-[#B0FFFA]/20 to-[#80E5FF]/10' 
                 : 'bg-gradient-to-br from-[#B0FFFA]/30 to-[#80E5FF]/20'
             }`}>
-              <HiShieldCheck className={`text-3xl ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiShieldCheck className={`text-3xl ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
             </div>
 
             <h3 className={`text-2xl font-bold ${
@@ -60,7 +60,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
           
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Auto-Verify
@@ -72,7 +72,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
             </div>
             
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Manual Review
@@ -84,7 +84,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
             </div>
             
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Early Stage
@@ -105,7 +105,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
                 ? 'bg-gradient-to-br from-[#B0FFFA]/20 to-[#80E5FF]/10' 
                 : 'bg-gradient-to-br from-[#B0FFFA]/30 to-[#80E5FF]/20'
             }`}>
-              <HiCurrencyDollar className={`text-3xl ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCurrencyDollar className={`text-3xl ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
             </div>
 
             <h3 className={`text-2xl font-bold ${
@@ -123,7 +123,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
           
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   SEBI Registered
@@ -135,7 +135,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
             </div>
             
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Angel Investors
@@ -147,7 +147,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
             </div>
             
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Trust Badge
@@ -168,7 +168,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
                 ? 'bg-gradient-to-br from-[#B0FFFA]/20 to-[#80E5FF]/10' 
                 : 'bg-gradient-to-br from-[#B0FFFA]/30 to-[#80E5FF]/20'
             }`}>
-              <HiAcademicCap className={`text-3xl ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiAcademicCap className={`text-3xl ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
             </div>
 
             <h3 className={`text-2xl font-bold ${
@@ -186,7 +186,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
           
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Government Body
@@ -198,7 +198,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
             </div>
             
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Academic Institution
@@ -210,7 +210,7 @@ export default function TrustDesignSection({ isVisible, isDark, setRef, SectionT
             </div>
             
             <div className="flex items-start gap-3">
-              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'}`} />
+              <HiCheckCircle className={`shrink-0 mt-0.5 text-lg ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'}`} />
               <div>
                 <p className={`font-medium ${isDark ? 'text-white' : 'text-black'}`}>
                   Private/Corporate

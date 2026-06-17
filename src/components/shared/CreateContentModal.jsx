@@ -341,8 +341,8 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                             <div className="grid grid-cols-2 gap-3">
                                 {/* Reel tile */}
                                 <button onClick={handleReelSelect}
-                                    className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-dashed transition-all active:scale-95 ${isDark ? "border-white/15 hover:border-[#00B8A9]/60 hover:bg-[#00B8A9]/10" : "border-gray-200 hover:border-[#00B8A9]/60 hover:bg-[#00B8A9]/5"}`}>
-                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center shadow-lg shadow-[#00B8A9]/30">
+                                    className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-dashed transition-all active:scale-95 ${isDark ? "border-white/15 hover:border-evoa/60 hover:bg-evoa/10" : "border-gray-200 hover:border-evoa/60 hover:bg-evoa/5"}`}>
+                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-evoa to-evoa-darker flex items-center justify-center shadow-lg shadow-evoa/30">
                                         <IoVideocam size={26} className="text-white" />
                                     </div>
                                     <div className="text-center">
@@ -397,7 +397,7 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                                             />
                                             {/* Cropped indicator */}
                                             {item.croppedBlob && (
-                                                <div className="absolute bottom-1 right-1 w-4 h-4 bg-[#00B8A9] rounded-full flex items-center justify-center">
+                                                <div className="absolute bottom-1 right-1 w-4 h-4 bg-evoa rounded-full flex items-center justify-center">
                                                     <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
                                                         <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                                                     </svg>
@@ -436,7 +436,7 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                                     {mediaItems.length < MAX_IMAGES && (
                                         <button
                                             onClick={() => addMoreInputRef.current?.click()}
-                                            className={`flex-shrink-0 w-24 h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? "border-white/15 hover:border-[#00B8A9]/50 hover:bg-[#00B8A9]/5" : "border-gray-200 hover:border-[#00B8A9]/50"}`}
+                                            className={`flex-shrink-0 w-24 h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all ${isDark ? "border-white/15 hover:border-evoa/50 hover:bg-evoa/5" : "border-gray-200 hover:border-evoa/50"}`}
                                         >
                                             <IoAdd size={20} className={isDark ? "text-gray-400" : "text-gray-400"} />
                                             <span className={`text-[10px] font-medium ${isDark ? "text-gray-500" : "text-gray-400"}`}>Add more</span>
@@ -561,7 +561,7 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                         {!reelPreview ? (
                             <button
                                 onClick={() => videoInputRef.current?.click()}
-                                className={`w-full aspect-[9/16] max-h-64 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${isDark ? "border-white/15 hover:border-[#00B8A9]/40 bg-white/5" : "border-gray-200 hover:border-[#00B8A9]/40 bg-gray-50"}`}
+                                className={`w-full aspect-[9/16] max-h-64 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${isDark ? "border-white/15 hover:border-evoa/40 bg-white/5" : "border-gray-200 hover:border-evoa/40 bg-gray-50"}`}
                             >
                                 <IoVideocam size={32} className={isDark ? "text-gray-500" : "text-gray-300"} />
                                 <span className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>Tap to add video</span>
@@ -629,7 +629,7 @@ function UploadButton({ state, progress, onPress, label }) {
             disabled={isLoading || isSuccess}
             className={`w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${isSuccess
                 ? "bg-green-500 text-white"
-                : "bg-[#00B8A9] text-white hover:bg-[#00A89A] active:scale-95 disabled:opacity-80"
+                : "bg-evoa text-white hover:bg-evoa-hover active:scale-95 disabled:opacity-80"
                 }`}
         >
             {isSuccess ? (

@@ -270,11 +270,11 @@ export default function IncubatorRegistration() {
               <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
                 Upload Document (PDF/JPG/PNG)
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('verificationDocument', e.target.files[0])} className="hidden" />
-                <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'} ${previews.verificationDocument ? 'border-[#00B8A9]/40' : ''}`}>
+                <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'} ${previews.verificationDocument ? 'border-evoa/40' : ''}`}>
                   {previews.verificationDocument
                     ? (typeof previews.verificationDocument === 'string' && previews.verificationDocument.startsWith('blob:')
                       ? <img src={previews.verificationDocument} alt="Doc" className="h-20 mx-auto object-contain rounded" />
-                      : <><span className="text-[#00B8A9]">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.verificationDocument}</span></>)
+                      : <><span className="text-evoa">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.verificationDocument}</span></>)
                     : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload</span></>}
                 </div>
               </label>
@@ -288,7 +288,7 @@ export default function IncubatorRegistration() {
                   <div className="flex flex-wrap gap-2">
                     {sectors.map(sector => (
                       <button key={sector} type="button" onClick={() => handleArrayChange('sectorFocus', sector)}
-                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.sectorFocus.includes(sector) ? 'bg-[#E8341A] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
+                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.sectorFocus.includes(sector) ? 'bg-[#E8341A] text-white border-evoa' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
                         {sector}
                       </button>
                     ))}
@@ -320,7 +320,7 @@ export default function IncubatorRegistration() {
               <div className="flex flex-wrap gap-2">
                 {facilitiesList.map(facility => (
                   <button key={facility} type="button" onClick={() => handleArrayChange('facilities', facility)}
-                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.facilities.includes(facility) ? 'bg-[#E8341A] text-white border-[#00B8A9]' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.facilities.includes(facility) ? 'bg-[#E8341A] text-white border-evoa' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
                     {facility}
                   </button>
                 ))}

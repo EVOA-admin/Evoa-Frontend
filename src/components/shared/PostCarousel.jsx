@@ -117,7 +117,7 @@ export default function PostCarousel({
                                 style={{
                                     width: active ? 7 : 5,
                                     height: active ? 7 : 5,
-                                    background: active ? "#00B8A9" : "rgba(255,255,255,0.70)",
+                                    background: active ? "var(--evoa-accent-primary)" : "rgba(255,255,255,0.70)",
                                     boxShadow: active
                                         ? "0 0 6px rgba(0,184,169,0.8)"
                                         : "0 1px 3px rgba(0,0,0,0.4)",

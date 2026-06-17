@@ -22,6 +22,11 @@ const NOTIF_CSS = `
 .notif-main-col { flex: 1; min-width: 0; }
 .notif-right-panel { display: none; }
 
+/* Desktop page title — only shown at lg+ */
+.notif-desktop-title {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .notif-desktop-wrap {
     flex-direction: row;
@@ -47,9 +52,8 @@ const NOTIF_CSS = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 32px 0;
-    max-width: 1000px;
-    margin: 0 auto;
+    padding: 24px 32px 8px;
+    gap: 16px;
   }
 }
 
@@ -91,7 +95,7 @@ const NOTIF_CSS = `
   bottom: 8px;
   width: 3px;
   border-radius: 0 3px 3px 0;
-  background: #00B8A9;
+  background: var(--evoa-accent-primary);
   opacity: 0;
   transition: opacity .2s;
 }
@@ -249,7 +253,7 @@ export default function Notifications() {
         <>
           <button
             onClick={e => { e.stopPropagation(); if (actorId) goToProfile(actorId, currentUser, navigate); }}
-            className="font-bold text-[#00B8A9] hover:underline bg-transparent border-none p-0 cursor-pointer"
+            className="font-bold text-evoa hover:underline bg-transparent border-none p-0 cursor-pointer"
             style={{ font: 'inherit', display: 'inline' }}
           >
             {name}
@@ -276,8 +280,7 @@ export default function Notifications() {
       <AppHeader title="Notifications" />
 
       {/* Desktop page title */}
-      <div className="notif-desktop-title" style={{ display: 'none' }}
-        ref={el => { if (el) el.style.display = window.innerWidth >= 1024 ? 'flex' : 'none'; }}>
+      <div className="notif-desktop-title">
         <div>
           <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Notifications</h1>
           <p className={`text-sm mt-0.5 ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
@@ -289,8 +292,8 @@ export default function Notifications() {
             onClick={handleMarkAllRead}
             disabled={markingAll}
             className={`flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl transition-all ${isDark
-              ? 'text-[#00B8A9] bg-[#00B8A9]/10 hover:bg-[#00B8A9]/20 border border-[#00B8A9]/25'
-              : 'text-[#00B8A9] bg-[#00B8A9]/8 hover:bg-[#00B8A9]/15 border border-[#00B8A9]/20'
+              ? 'text-evoa bg-evoa/10 hover:bg-evoa/20 border border-evoa/25'
+              : 'text-evoa bg-evoa/8 hover:bg-evoa/15 border border-evoa/20'
             }`}
           >
             <FaCheck size={10} /> Mark all read
@@ -305,7 +308,7 @@ export default function Notifications() {
           <div className="flex items-center justify-between mb-4 lg:hidden">
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
-                <span className="bg-[#00B8A9] text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                <span className="bg-evoa text-white text-xs font-bold px-2 py-0.5 rounded-full">
                   {unreadCount}
                 </span>
               )}
@@ -315,8 +318,8 @@ export default function Notifications() {
                 onClick={handleMarkAllRead}
                 disabled={markingAll}
                 className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${isDark
-                  ? 'text-[#00B8A9] hover:bg-white/10'
-                  : 'text-[#00B8A9] hover:bg-[#00B8A9]/10'
+                  ? 'text-evoa hover:bg-white/10'
+                  : 'text-evoa hover:bg-evoa/10'
                 }`}
               >
                 <FaCheck size={10} /> Mark all read
@@ -333,7 +336,7 @@ export default function Notifications() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${activeTab === tab.id
-                    ? 'bg-[#00B8A9] text-white shadow-lg shadow-[#00B8A9]/30'
+                    ? 'bg-evoa text-white shadow-lg shadow-evoa/30'
                     : isDark
                       ? 'bg-white/8 text-white/60 hover:bg-white/15'
                       : 'bg-black/8 text-black/60 hover:bg-black/15'
@@ -389,7 +392,7 @@ export default function Notifications() {
                               </p>
                             </div>
                             {!notification.isRead && (
-                              <div className="w-2 h-2 rounded-full bg-[#00B8A9] flex-shrink-0 mt-1.5 shadow-[0_0_6px_rgba(0,184,169,0.6)]" />
+                              <div className="w-2 h-2 rounded-full bg-evoa flex-shrink-0 mt-1.5 shadow-[0_0_6px_rgba(0,184,169,0.6)]" />
                             )}
                           </div>
                         </div>
@@ -411,13 +414,13 @@ export default function Notifications() {
             </div>
             <div className="notif-stat-grid">
               <div className="notif-stat-tile">
-                <p className="text-lg font-black" style={{ background: 'linear-gradient(135deg,#00E5D3,#00B8A9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                <p className="text-lg font-black" style={{ background: 'linear-gradient(135deg,var(--evoa-accent-light),var(--evoa-accent-primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   {unreadCount}
                 </p>
                 <p className={`text-[10px] font-500 uppercase tracking-wide ${isDark ? 'text-white/35' : 'text-gray-400'}`}>Unread</p>
               </div>
               <div className="notif-stat-tile">
-                <p className="text-lg font-black" style={{ background: 'linear-gradient(135deg,#00E5D3,#00B8A9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+                <p className="text-lg font-black" style={{ background: 'linear-gradient(135deg,var(--evoa-accent-light),var(--evoa-accent-primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
                   {notifications.length}
                 </p>
                 <p className={`text-[10px] font-500 uppercase tracking-wide ${isDark ? 'text-white/35' : 'text-gray-400'}`}>Total</p>
@@ -428,7 +431,7 @@ export default function Notifications() {
                 <button
                   onClick={handleMarkAllRead}
                   disabled={markingAll}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all bg-[#00B8A9] text-white hover:bg-[#009e96] shadow-lg shadow-[#00B8A9]/30"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all bg-evoa text-white hover:bg-[#009e96] shadow-lg shadow-evoa/30"
                 >
                   <FaCheck size={11} /> Mark all read
                 </button>
@@ -447,7 +450,7 @@ export default function Notifications() {
                   key={id}
                   onClick={() => setActiveTab(id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${activeTab === id
-                    ? (isDark ? 'bg-[#00B8A9]/12 text-[#00B8A9]' : 'bg-[#00B8A9]/10 text-[#00B8A9]')
+                    ? (isDark ? 'bg-evoa/12 text-evoa' : 'bg-evoa/10 text-evoa')
                     : (isDark ? 'text-white/60 hover:bg-white/5' : 'text-gray-600 hover:bg-black/4')
                   }`}
                 >
@@ -455,7 +458,7 @@ export default function Notifications() {
                   <span className="text-sm font-medium flex-1">{label}</span>
                   {count > 0 && (
                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === id
-                      ? 'bg-[#00B8A9] text-white'
+                      ? 'bg-evoa text-white'
                       : (isDark ? 'bg-white/10 text-white/60' : 'bg-black/8 text-gray-500')
                     }`}>{count}</span>
                   )}

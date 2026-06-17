@@ -952,7 +952,7 @@ export default function StartupRegistration() {
             <span className={`text-xs truncate flex-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
               {filePreviews[field].name}
             </span>
-            <span className="text-[#00B8A9] text-xs">OK</span>
+            <span className="text-evoa text-xs">OK</span>
           </div>
         )}
         {!filePreviews[field] && (

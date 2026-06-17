@@ -63,7 +63,7 @@ function MeetingCard({ msg, isDark }) {
             case "ongoing": return "text-green-400 bg-green-400/10 border-green-400/20";
             case "completed": return "text-gray-400 bg-gray-400/10 border-gray-400/20";
             case "cancelled": return "text-red-400 bg-red-400/10 border-red-400/20";
-            default: return "text-[#00B8A9] bg-[#00B8A9]/10 border-[#00B8A9]/20";
+            default: return "text-evoa bg-evoa/10 border-evoa/20";
         }
     };
 
@@ -73,7 +73,7 @@ function MeetingCard({ msg, isDark }) {
     return (
         <div className={`w-full max-w-xs rounded-2xl border overflow-hidden ${isDark ? "bg-gray-800/70 border-white/10" : "bg-white border-gray-200 shadow-sm"}`}>
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#00B8A9] to-[#007C72] px-4 py-3 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-evoa to-[#007C72] px-4 py-3 flex items-center gap-2">
                 <FiCalendar size={15} className="text-white/90 flex-shrink-0" />
                 <span className="text-white text-sm font-semibold">Meeting Scheduled</span>
             </div>
@@ -82,7 +82,7 @@ function MeetingCard({ msg, isDark }) {
             <div className="px-4 py-3">
                 {loadingMeeting ? (
                     <div className="flex justify-center py-3">
-                        <div className="w-5 h-5 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-evoa border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : meeting ? (
                     <>
@@ -106,7 +106,7 @@ function MeetingCard({ msg, isDark }) {
                                     href={jitsiUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#00B8A9] text-white text-xs font-semibold hover:bg-[#00A89A] transition-colors active:scale-95"
+                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-evoa text-white text-xs font-semibold hover:bg-evoa-hover transition-colors active:scale-95"
                                 >
                                     <FiVideo size={12} />
                                     Join Video Call
@@ -248,7 +248,7 @@ export default function Conversation() {
                 <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                     {loading ? (
                         <div className="flex justify-center py-10">
-                            <div className="w-6 h-6 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-2 border-evoa border-t-transparent rounded-full animate-spin" />
                         </div>
                     ) : messages.map((msg) => {
                         const isMine = msg.senderId === authUser?.id;
@@ -266,7 +266,7 @@ export default function Conversation() {
                         return (
                             <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                                 <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${isMine
-                                    ? "bg-[#00B8A9] text-white rounded-br-sm"
+                                    ? "bg-evoa text-white rounded-br-sm"
                                     : isDark ? "bg-gray-800 text-white rounded-bl-sm" : "bg-white text-gray-900 shadow-sm rounded-bl-sm"
                                     }`}>
                                     <p>{msg.content}</p>
@@ -292,7 +292,7 @@ export default function Conversation() {
                                 <button
                                     onClick={handleFollow}
                                     disabled={sending}
-                                    className="px-6 py-2 rounded-xl bg-[#00B8A9] text-white font-semibold text-sm hover:bg-[#00A89A] transition-all disabled:opacity-50"
+                                    className="px-6 py-2 rounded-xl bg-evoa text-white font-semibold text-sm hover:bg-evoa-hover transition-all disabled:opacity-50"
                                 >
                                     {sending ? "Processing..." : "Follow User"}
                                 </button>
@@ -311,7 +311,7 @@ export default function Conversation() {
                             <button
                                 onClick={handleSend}
                                 disabled={!text.trim() || sending}
-                                className="w-10 h-10 rounded-full bg-[#00B8A9] text-white flex items-center justify-center disabled:opacity-40 hover:bg-[#00A89A] transition-all active:scale-90"
+                                className="w-10 h-10 rounded-full bg-evoa text-white flex items-center justify-center disabled:opacity-40 hover:bg-evoa-hover transition-all active:scale-90"
                             >
                                 <IoPaperPlaneOutline size={18} />
                             </button>

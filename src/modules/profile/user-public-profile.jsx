@@ -25,7 +25,7 @@ const fmt = (n) => {
 const ROLE_COLORS = {
     investor: "from-blue-600 to-cyan-500",
     incubator: "from-purple-600 to-pink-500",
-    startup: "from-[#00B8A9] to-[#007a73]",
+    startup: "from-evoa to-evoa-darker",
     viewer: "from-gray-500 to-gray-400",
 };
 
@@ -39,11 +39,11 @@ const InfoRow = ({ icon: Icon, label, value, isDark, href }) => {
     if (!value) return null;
     return (
         <div className={`flex items-start gap-3 py-2.5 border-b ${isDark ? "border-white/8" : "border-gray-100"}`}>
-            <Icon size={14} className="text-[#00B8A9] flex-shrink-0 mt-0.5" />
+            <Icon size={14} className="text-evoa flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
                 <p className={`text-[11px] uppercase tracking-wide font-semibold mb-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>{label}</p>
                 {href
-                    ? <a href={href} target="_blank" rel="noopener noreferrer" className="text-sm text-[#00B8A9] hover:underline break-all">{value}</a>
+                    ? <a href={href} target="_blank" rel="noopener noreferrer" className="text-sm text-evoa hover:underline break-all">{value}</a>
                     : <p className={`text-sm break-words ${isDark ? "text-white/85" : "text-gray-800"}`}>{value}</p>
                 }
             </div>
@@ -124,7 +124,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                         <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`}>{startup?.name}</h2>
                         {startup?.tagline && <p className={`text-sm mt-0.5 ${isDark ? "text-white/60" : "text-gray-500"}`}>{startup.tagline}</p>}
                         <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            {startup?.stage && <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#00B8A9]/20 text-[#00B8A9]">{startup.stage}</span>}
+                            {startup?.stage && <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-evoa/20 text-evoa">{startup.stage}</span>}
                             {startup?.industry && <span className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>{startup.industry}</span>}
                         </div>
                     </div>
@@ -135,7 +135,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                                 disabled={followLoading}
                                 className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all ${isFollowing
                                     ? isDark ? "bg-white/10 text-white" : "bg-gray-100 text-gray-700"
-                                    : "bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30"
+                                    : "bg-evoa text-white hover:bg-[#00a098] shadow-lg shadow-evoa/30"
                                     }`}
                             >
                                 {followLoading
@@ -243,7 +243,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                                 <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700 flex-shrink-0">
                                     {f.photoUrl
                                         ? <img src={f.photoUrl} alt={f.name} className="w-full h-full object-cover" />
-                                        : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#007a73] flex items-center justify-center text-white text-sm font-bold">{f.name?.[0]}</div>
+                                        : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-darker flex items-center justify-center text-white text-sm font-bold">{f.name?.[0]}</div>
                                     }
                                 </div>
                                 <div>
@@ -284,7 +284,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                 <div className="flex flex-wrap gap-2">
                     {startup.hashtags.map((h, i) => (
                         <button key={i} onClick={() => navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(h)}`)}
-                            className="px-3 py-1 rounded-full text-xs font-medium bg-[#00B8A9]/15 text-[#00B8A9] hover:bg-[#00B8A9]/25 transition-colors">
+                            className="px-3 py-1 rounded-full text-xs font-medium bg-evoa/15 text-evoa hover:bg-evoa/25 transition-colors">
                             #{h}
                         </button>
                     ))}
@@ -406,7 +406,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                                     ? isDark
                                         ? "bg-white/10 text-white border border-white/20 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30"
                                         : "bg-gray-100 text-gray-700 border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200"
-                                    : "bg-[#00B8A9] text-white hover:bg-[#00a098] shadow-lg shadow-[#00B8A9]/30"
+                                    : "bg-evoa text-white hover:bg-[#00a098] shadow-lg shadow-evoa/30"
                                     }`}
                             >
                                 {connectLoading
@@ -449,7 +449,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                         {data?.minTicketSize && (
                             <div className={`flex justify-between items-center py-2.5 border-b ${isDark ? "border-white/8" : "border-gray-100"}`}>
                                 <div className="flex items-center gap-2">
-                                    <FaChartLine size={13} className="text-[#00B8A9]" />
+                                    <FaChartLine size={13} className="text-evoa" />
                                     <span className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>Ticket Size</span>
                                 </div>
                                 <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-black"}`}>
@@ -460,7 +460,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                         {data?.type && (
                             <div className={`flex justify-between items-center py-2.5 border-b ${isDark ? "border-white/8" : "border-gray-100"}`}>
                                 <div className="flex items-center gap-2">
-                                    <FaUserTie size={13} className="text-[#00B8A9]" />
+                                    <FaUserTie size={13} className="text-evoa" />
                                     <span className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>Investor Type</span>
                                 </div>
                                 <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-black"}`}>{data.type}</span>
@@ -473,7 +473,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                         {data?.cohortSize && (
                             <div className={`flex justify-between items-center py-2.5 border-b ${isDark ? "border-white/8" : "border-gray-100"}`}>
                                 <div className="flex items-center gap-2">
-                                    <FaUsers size={13} className="text-[#00B8A9]" />
+                                    <FaUsers size={13} className="text-evoa" />
                                     <span className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>Cohort Size</span>
                                 </div>
                                 <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-black"}`}>{data.cohortSize} startups</span>
@@ -482,7 +482,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
                         {data?.applicationDeadline && (
                             <div className={`flex justify-between items-center py-2.5 border-b ${isDark ? "border-white/8" : "border-gray-100"}`}>
                                 <div className="flex items-center gap-2">
-                                    <FaStar size={13} className="text-[#00B8A9]" />
+                                    <FaStar size={13} className="text-evoa" />
                                     <span className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}>Deadline</span>
                                 </div>
                                 <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-black"}`}>{new Date(data.applicationDeadline).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
@@ -629,12 +629,12 @@ export default function UserPublicProfile() {
             <AppHeader title={pageTitle} showThemeToggle={true} />
             <div className="px-4 py-5 pb-6">
                 {loading ? (
-                    <div className="flex justify-center py-20"><FaSpinner className="animate-spin text-[#00B8A9]" size={32} /></div>
+                    <div className="flex justify-center py-20"><FaSpinner className="animate-spin text-evoa" size={32} /></div>
                 ) : error ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
                         <FaUser size={48} className="text-gray-400" />
                         <p className={`font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>{error}</p>
-                        <button onClick={() => navigate(-1)} className="text-sm text-[#00B8A9] hover:underline">Go back</button>
+                        <button onClick={() => navigate(-1)} className="text-sm text-evoa hover:underline">Go back</button>
                     </div>
                 ) : role === "startup" ? (
                     <StartupProfile profile={profile} startup={startup} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} />

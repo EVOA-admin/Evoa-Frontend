@@ -65,7 +65,7 @@ const NAV_CSS = `
 
 /* active — glass pill background + teal */
 .evoa-bnav-tab.active {
-  color: #00B8A9 !important;
+  color: var(--evoa-accent-primary) !important;
 }
 
 /* Active glass pill highlight */
@@ -108,7 +108,7 @@ const NAV_CSS = `
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #00B8A9;
+  background: var(--evoa-accent-primary);
   box-shadow: 0 0 6px rgba(0,184,169,0.8), 0 0 12px rgba(0,184,169,0.4);
   animation: nav-dot-expand 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -121,7 +121,7 @@ const NAV_CSS = `
   width: 48px;
   height: 48px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #00E5D3 0%, #00B8A9 50%, #007a73 100%);
+  background: linear-gradient(135deg, var(--evoa-accent-light) 0%, var(--evoa-accent-primary) 50%, var(--evoa-accent-darker) 100%);
   box-shadow:
     0 0 0 1px rgba(0,184,169,0.35),
     0 4px 20px rgba(0,184,169,0.45),

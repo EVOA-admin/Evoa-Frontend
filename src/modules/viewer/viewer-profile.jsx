@@ -47,7 +47,7 @@ function parseInterests(bio) {
 }
 
 export default function ViewerProfile() {
-    const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme, openThemeModal } = useTheme();
     const isDark = theme === "dark";
     const navigate = useNavigate();
     const { user: authUser, updateProfile } = useAuth();
@@ -225,7 +225,7 @@ export default function ViewerProfile() {
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
                     >
-                        <IoPencil size={16} className="text-[#00B8A9]" />
+                        <IoPencil size={16} className="text-evoa" />
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
@@ -257,7 +257,7 @@ export default function ViewerProfile() {
                     <button
                         onClick={() => {
                             setMenuOpen(false);
-                            setTimeout(toggleTheme, 150);
+                            setTimeout(openThemeModal, 150);
                         }}
                         className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
@@ -297,7 +297,7 @@ export default function ViewerProfile() {
             {toastMsg && (
                 <div style={{
                     position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-                    zIndex: 9999, background: "#00B8A9", color: "#fff",
+                    zIndex: 9999, background: "var(--evoa-accent-primary)", color: "#fff",
                     padding: "9px 20px", borderRadius: 24, fontSize: 13, fontWeight: 600,
                     whiteSpace: "nowrap", boxShadow: "0 4px 24px rgba(0,184,169,0.35)",
                     animation: "fadeIn 0.2s ease",
@@ -309,7 +309,7 @@ export default function ViewerProfile() {
                 {/* Loading */}
                 {loading ? (
                     <div className="flex items-center justify-center h-72">
-                        <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                        <div className="w-10 h-10 border-4 border-evoa border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : activeSection === "ambassador" ? (
                     <Suspense fallback={<div style={{padding:32,textAlign:'center'}}><div style={{width:32,height:32,border:'3px solid rgba(201,168,76,.2)',borderTopColor:'#C9A84C',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto'}}/><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style></div>}>
@@ -369,7 +369,7 @@ export default function ViewerProfile() {
                                     href={ensureUrl(profile.website)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1 mt-3 text-xs text-[#00B8A9] hover:underline"
+                                    className="flex items-center gap-1 mt-3 text-xs text-evoa hover:underline"
                                 >
                                     <IoLinkOutline size={13} />
                                     {profile.website.replace(/^https?:\/\//, "")}
@@ -447,7 +447,7 @@ export default function ViewerProfile() {
                                 <button
                                     onClick={handleEditSave}
                                     disabled={editLoading}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-[#00B8A9] text-white hover:bg-[#00A89A] disabled:opacity-50 transition-all"
+                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-evoa text-white hover:bg-evoa-hover disabled:opacity-50 transition-all"
                                 >
                                     {editLoading ? (
                                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -484,7 +484,7 @@ export default function ViewerProfile() {
                                     <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                                     <button
                                         onClick={() => avatarInputRef.current?.click()}
-                                        className="mt-2 text-xs text-[#00B8A9] font-medium"
+                                        className="mt-2 text-xs text-evoa font-medium"
                                     >
                                         Change Photo
                                     </button>
@@ -544,7 +544,7 @@ function EditField({ label, value, onChange, placeholder, isDark }) {
                 value={value || ""}
                 onChange={e => onChange(e.target.value)}
                 placeholder={placeholder || label}
-                className={`w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none transition-all focus:border-[#00B8A9] focus:ring-1 focus:ring-[#00B8A9]/30 ${isDark
+                className={`w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none transition-all focus:border-evoa focus:ring-1 focus:ring-evoa/30 ${isDark
                     ? "bg-gray-800 border-white/10 text-white placeholder-gray-600"
                     : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`}
             />

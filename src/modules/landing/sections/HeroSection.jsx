@@ -184,16 +184,16 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
             `}
           >
             {/* Mobile-only background glow */}
-            <div className={`absolute -inset-10 -z-10 rounded-[3rem] blur-3xl lg:hidden ${isDark ? 'bg-gradient-to-br from-[#B0FFFA]/10 to-transparent' : 'bg-gradient-to-br from-[#00B8A9]/10 to-transparent'
+            <div className={`absolute -inset-10 -z-10 rounded-[3rem] blur-3xl lg:hidden ${isDark ? 'bg-gradient-to-br from-[#B0FFFA]/10 to-transparent' : 'bg-gradient-to-br from-evoa/10 to-transparent'
               }`} />
 
             {/* Tagline - Workflow Requirement - Enhanced Professional Styling */}
             <div className="mb-5 sm:mb-6">
               <div className={`inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full mb-4 backdrop-blur-xl border transition-all duration-500 ${isDark
                 ? 'bg-[#B0FFFA]/10 border-[#B0FFFA]/30 hover:border-[#B0FFFA]/50 hover:bg-[#B0FFFA]/15'
-                : 'bg-[#00B8A9]/10 border-[#00B8A9]/30 hover:border-[#00B8A9]/50 hover:bg-[#00B8A9]/15'
+                : 'bg-evoa/10 border-evoa/30 hover:border-evoa/50 hover:bg-evoa/15'
                 }`}>
-                <span className={`text-sm sm:text-base md:text-lg font-bold tracking-wide ${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'
+                <span className={`text-sm sm:text-base md:text-lg font-bold tracking-wide ${isDark ? 'text-[#B0FFFA]' : 'text-evoa'
                   }`}>
                   Recognized by the Govt. of India under Startup India 🇮🇳
                 </span>
@@ -428,7 +428,7 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
                   overflow-hidden
                   ${isDark
                     ? 'border-[#B0FFFA]/60 text-[#B0FFFA] hover:bg-[#B0FFFA]/10 hover:border-[#B0FFFA] hover:shadow-[0_0_30px_rgba(176,255,250,0.3)]'
-                    : 'border-[#043873] text-[#043873] hover:bg-[#00B8A9]/10 hover:border-[#00B8A9] hover:shadow-[0_0_30px_rgba(0,184,169,0.3)]'
+                    : 'border-[#043873] text-[#043873] hover:bg-evoa/10 hover:border-evoa hover:shadow-[0_0_30px_rgba(0,184,169,0.3)]'
                   }
                 `}
               >
@@ -439,7 +439,7 @@ export default function HeroSection({ isVisible, isDark, setRef, mousePosition }
             {/* Mobile Down Arrow Indicator */}
             <div className="flex justify-center mt-8 lg:hidden animate-bounce pt-4">
               <svg
-                className={`w-6 h-6 sm:w-8 sm:h-8 ${isDark ? 'text-[#B0FFFA]/50' : 'text-[#00B8A9]/50'}`}
+                className={`w-6 h-6 sm:w-8 sm:h-8 ${isDark ? 'text-[#B0FFFA]/50' : 'text-evoa/50'}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

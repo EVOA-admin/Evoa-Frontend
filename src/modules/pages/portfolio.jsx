@@ -53,7 +53,7 @@ export default function Portfolio() {
     <h2 className={`text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r ${
       isDark 
         ? 'from-white via-[#B0FFFA] to-white bg-clip-text text-transparent' 
-        : 'from-black via-[#00B8A9] to-black bg-clip-text text-transparent'
+        : 'from-black via-evoa to-black bg-clip-text text-transparent'
     }`}>
       {children}
     </h2>
@@ -165,7 +165,7 @@ export default function Portfolio() {
             <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 backdrop-blur-xl border ${
               isDark 
                 ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
-                : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
+                : 'bg-evoa/5 border-evoa/20 text-evoa'
             }`}>
               <span className="text-xs font-bold tracking-wider uppercase">Our Success Stories</span>
             </div>
@@ -187,7 +187,7 @@ export default function Portfolio() {
                 <div className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 bg-gradient-to-r ${
                   isDark 
                     ? 'from-[#B0FFFA] via-white to-[#80E5FF] bg-clip-text text-transparent' 
-                    : 'from-[#00B8A9] via-teal-600 to-[#008C81] bg-clip-text text-transparent'
+                    : 'from-evoa via-teal-600 to-evoa-dark bg-clip-text text-transparent'
                 }`}>
                   {stat.value}
                 </div>
@@ -210,10 +210,10 @@ export default function Portfolio() {
                   selectedCategory === category
                     ? isDark
                       ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black shadow-lg'
-                      : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white shadow-lg'
+                      : 'bg-gradient-to-r from-evoa to-evoa-dark text-white shadow-lg'
                     : isDark
                       ? 'bg-black/40 text-white hover:bg-black/60 border border-[#B0FFFA]/30 hover:border-[#B0FFFA]/50'
-                      : 'bg-white/90 text-gray-700 hover:bg-white border border-[#00B8A9]/30 hover:border-[#00B8A9]/50'
+                      : 'bg-white/90 text-gray-700 hover:bg-white border border-evoa/30 hover:border-evoa/50'
                 }`}
               >
                 {category}
@@ -247,7 +247,7 @@ export default function Portfolio() {
                       <button className={`w-full py-2.5 sm:py-3 font-semibold text-sm sm:text-base flex items-center justify-center gap-2 rounded-lg transition-all duration-300 ${
                         isDark 
                           ? 'bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black hover:shadow-lg' 
-                          : 'bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white hover:shadow-lg'
+                          : 'bg-gradient-to-r from-evoa to-evoa-dark text-white hover:shadow-lg'
                       }`}>
                         View Details
                         <HiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -257,7 +257,7 @@ export default function Portfolio() {
                   <div className={`absolute top-3 sm:top-4 right-3 sm:right-4 px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold backdrop-blur-xl ${
                     isDark 
                       ? 'bg-[#B0FFFA]/20 border border-[#B0FFFA]/30 text-[#B0FFFA]' 
-                      : 'bg-white/90 border border-[#00B8A9]/30 text-[#00B8A9]'
+                      : 'bg-white/90 border border-evoa/30 text-evoa'
                   }`}>
                     {item.status}
                   </div>
@@ -269,7 +269,7 @@ export default function Portfolio() {
                     <span className={`text-xs sm:text-sm font-semibold px-3 py-1 rounded-lg ${
                       isDark 
                         ? 'bg-[#B0FFFA]/20 text-[#B0FFFA] border border-[#B0FFFA]/30' 
-                        : 'bg-[#00B8A9]/20 text-[#00B8A9] border border-[#00B8A9]/30'
+                        : 'bg-evoa/20 text-evoa border border-evoa/30'
                     }`}>
                       {item.category}
                     </span>
@@ -280,7 +280,7 @@ export default function Portfolio() {
                     </span>
                   </div>
                   <h3 className={`text-xl sm:text-2xl md:text-3xl font-bold mb-3 ${
-                    isDark ? 'text-white group-hover:text-[#B0FFFA]' : 'text-black group-hover:text-[#00B8A9]'
+                    isDark ? 'text-white group-hover:text-[#B0FFFA]' : 'text-black group-hover:text-evoa'
                   } transition-colors duration-300`}>
                     {item.title}
                   </h3>
@@ -290,7 +290,7 @@ export default function Portfolio() {
                     {item.description}
                   </p>
                   <div className={`flex items-center justify-between pt-4 border-t ${
-                    isDark ? 'border-[#B0FFFA]/20' : 'border-[#00B8A9]/20'
+                    isDark ? 'border-[#B0FFFA]/20' : 'border-evoa/20'
                   }`}>
                     <div>
                       <div className={`text-xs sm:text-sm font-medium mb-1 ${
@@ -301,7 +301,7 @@ export default function Portfolio() {
                       <div className={`text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r ${
                         isDark 
                           ? 'from-[#B0FFFA] to-[#80E5FF] bg-clip-text text-transparent' 
-                          : 'from-[#00B8A9] to-[#008C81] bg-clip-text text-transparent'
+                          : 'from-evoa to-evoa-dark bg-clip-text text-transparent'
                       }`}>
                         {item.funding}
                       </div>
@@ -309,7 +309,7 @@ export default function Portfolio() {
                     <button className={`p-2 sm:p-3 rounded-lg transition-all duration-300 ${
                       isDark
                         ? 'bg-[#B0FFFA]/20 text-[#B0FFFA] hover:bg-[#B0FFFA]/30 hover:scale-110'
-                        : 'bg-[#00B8A9]/20 text-[#00B8A9] hover:bg-[#00B8A9]/30 hover:scale-110'
+                        : 'bg-evoa/20 text-evoa hover:bg-evoa/30 hover:scale-110'
                     }`}>
                       <FaExternalLinkAlt size={16} className="sm:w-5 sm:h-5" />
                     </button>

@@ -49,7 +49,7 @@ const CARD_CSS = `
   border: 1px solid;
   letter-spacing: 0.02em;
 }
-.upc-role-badge.startup  { color: #00B8A9; background: rgba(0,184,169,0.12); border-color: rgba(0,184,169,0.25); }
+.upc-role-badge.startup  { color: var(--evoa-accent-primary); background: rgba(0,184,169,0.12); border-color: rgba(0,184,169,0.25); }
 .upc-role-badge.investor  { color: #60A5FA; background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.25); }
 .upc-role-badge.incubator { color: #C084FC; background: rgba(192,132,252,0.12); border-color: rgba(192,132,252,0.25); }
 .upc-role-badge.viewer    { color: #9CA3AF; background: rgba(156,163,175,0.12); border-color: rgba(156,163,175,0.25); }
@@ -141,7 +141,7 @@ const CARD_CSS = `
 .upc-hashtag {
   font-size: 12px;
   font-weight: 600;
-  background: linear-gradient(135deg, #00E5D3, #00B8A9);
+  background: linear-gradient(135deg, var(--evoa-accent-light), var(--evoa-accent-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -210,13 +210,13 @@ const ROLE_META = {
 const initials = (name = "U") =>
     (name || "U").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
-const svgFallback = (name, bg = "#00B8A9") => {
+const svgFallback = (name, bg = "var(--evoa-accent-primary)") => {
     const text = initials(name);
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='80' height='80' fill='${bg}'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='32' font-family='sans-serif'>${text}</text></svg>`;
     return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
-const roleColors = { startup: "#00B8A9", investor: "#3B82F6", incubator: "#A855F7", viewer: "#6B7280" };
+const roleColors = { startup: "var(--evoa-accent-primary)", investor: "#3B82F6", incubator: "#A855F7", viewer: "#6B7280" };
 
 // How many chars roughly fit in 2 lines of a 14px text in ~350px width
 const CAPTION_THRESHOLD = 120;
@@ -235,7 +235,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
     const meta = ROLE_META[post.authorRole] || ROLE_META.viewer;
-    const avatarFallback = svgFallback(post.authorName, roleColors[post.authorRole] || "#00B8A9");
+    const avatarFallback = svgFallback(post.authorName, roleColors[post.authorRole] || "var(--evoa-accent-primary)");
     const cardCls = isDark ? "dark" : "light";
 
     // Caption expand/collapse
@@ -324,7 +324,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
                             >
                                 {post.authorName}
                             </button>
-                            <MdVerified size={13} className="text-[#00B8A9] flex-shrink-0" />
+                            <MdVerified size={13} className="text-evoa flex-shrink-0" />
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className={`upc-role-badge ${meta.roleClass}`}>{meta.label}</span>
@@ -430,7 +430,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
                     <button onClick={handleLikeWithBloom} className="upc-action-btn">
                         <span className={likeAnimating ? "animate-like-bloom" : ""} style={{ display: "inline-flex" }}>
                             {post.isLiked
-                                ? <FaHeart className="text-[#00B8A9]" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
+                                ? <FaHeart className="text-evoa" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
                                 : <FaRegHeart size={16} className={isDark ? "text-white/40" : "text-gray-400"} />}
                         </span>
                         {post.likeCount > 0 && <span className={`text-xs font-semibold ${isDark ? "text-white/50" : "text-gray-500"}`}>{post.likeCount}</span>}
@@ -439,7 +439,7 @@ export default function UserPostCard({ post, onLike, onSave, isDark: isDarkProp,
                     {/* Save */}
                     <button onClick={onSave} className="upc-action-btn">
                         {post.isSaved
-                            ? <FaBookmark className="text-[#00B8A9]" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
+                            ? <FaBookmark className="text-evoa" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
                             : <FaRegBookmark size={16} className={isDark ? "text-white/40" : "text-gray-400"} />}
                     </button>
 

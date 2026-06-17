@@ -6,7 +6,7 @@ import logo from '../../assets/logo.avif';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, openThemeModal } = useTheme();
   const isDark = theme === 'dark';
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -25,8 +25,8 @@ export default function Navbar() {
     <>
       <header
         className={`sticky top-0 z-50 backdrop-blur-xl transition-all duration-500 ${isDark
-            ? 'bg-black/60 text-white'
-            : 'bg-white/70 text-gray-900'
+          ? 'bg-black/60 text-white'
+          : 'bg-white/70 text-gray-900'
           } ${isScrolled
             ? isDark
               ? 'shadow-[0_6px_30px_rgba(176,255,250,0.18)]'
@@ -46,8 +46,8 @@ export default function Navbar() {
               <img src={logo} alt="EVO-A Logo" className="h-9 w-9 md:h-10 md:w-10" />
               <span
                 className={`text-lg md:text-xl font-bold tracking-wide bg-gradient-to-r ${isDark
-                    ? 'from-white via-[#B0FFFA] to-white bg-clip-text text-transparent'
-                    : 'from-black via-[#00B8A9] to-black bg-clip-text text-transparent'
+                  ? 'from-white via-[#B0FFFA] to-white bg-clip-text text-transparent'
+                  : 'from-black via-evoa to-black bg-clip-text text-transparent'
                   }`}
               >
                 EVO-A
@@ -67,8 +67,8 @@ export default function Navbar() {
                   key={label}
                   to={path}
                   className={`px-3 py-1.5 transition-all duration-300 hover:scale-105 ${isDark
-                      ? 'text-white/70 hover:text-[#B0FFFA]'
-                      : 'text-black/70 hover:text-[#00B8A9]'
+                    ? 'text-white/70 hover:text-[#B0FFFA]'
+                    : 'text-black/70 hover:text-evoa'
                     }`}
                 >
                   {label}
@@ -77,11 +77,11 @@ export default function Navbar() {
 
               {/* Theme Toggle */}
               <button
-                onClick={toggleTheme}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                onClick={openThemeModal}
+                aria-label={"Theme"}
                 className={`border px-2.5 py-1.5 rounded cursor-pointer transition-all hover:scale-110 active:scale-95 ${isDark
-                    ? 'border-[#B0FFFA]/40 hover:bg-[#B0FFFA]/10 hover:border-[#B0FFFA]'
-                    : 'border-[#00B8A9]/40 hover:bg-[#00B8A9]/10 hover:border-[#00B8A9]'
+                  ? 'border-[#B0FFFA]/40 hover:bg-[#B0FFFA]/10 hover:border-[#B0FFFA]'
+                  : 'border-evoa/40 hover:bg-evoa/10 hover:border-evoa'
                   }`}
               >
                 {isDark ? <HiSun aria-hidden="true" /> : <HiMoon aria-hidden="true" />}
@@ -101,8 +101,8 @@ export default function Navbar() {
             {/* ================= MOBILE BUTTONS ================= */}
             <div className="flex items-center gap-2 md:hidden">
               <button
-                onClick={toggleTheme}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                onClick={openThemeModal}
+                aria-label={"Theme"}
                 className={`h-8 w-8 flex items-center justify-center rounded cursor-pointer ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/10'
                   }`}
               >
@@ -140,8 +140,8 @@ export default function Navbar() {
             aria-modal="true"
             aria-label="Navigation menu"
             className={`fixed top-0 right-0 h-full w-full z-[70] transition-all duration-500 ${isDark
-                ? 'bg-black border-l border-[#B0FFFA]/20'
-                : 'bg-white border-l border-[#00B8A9]/20'
+              ? 'bg-black border-l border-[#B0FFFA]/20'
+              : 'bg-white border-l border-evoa/20'
               }`}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
@@ -164,8 +164,8 @@ export default function Navbar() {
                   to={path}
                   onClick={closeMobileMenu}
                   className={`px-4 py-3 text-base font-semibold transition-all hover:scale-105 ${isDark
-                      ? 'text-white hover:bg-white/10'
-                      : 'text-black hover:bg-gray-100'
+                    ? 'text-white hover:bg-white/10'
+                    : 'text-black hover:bg-gray-100'
                     }`}
                 >
                   {label}
@@ -175,7 +175,7 @@ export default function Navbar() {
 
             <div className="px-5 py-5 border-t border-white/10 space-y-3">
               <button
-                onClick={toggleTheme}
+                onClick={openThemeModal}
                 className="w-full px-4 py-3 flex justify-between font-semibold rounded cursor-pointer"
               >
                 Theme {isDark ? <HiSun /> : <HiMoon />}

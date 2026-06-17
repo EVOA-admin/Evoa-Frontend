@@ -12,7 +12,7 @@ export default function PitchUs() {
       className={`text-2xl sm:text-3xl md:text-4xl lg:text-4xl font-bold leading-snug mb-3 sm:mb-4 bg-gradient-to-r ${
         isDark
           ? "from-white via-[#B0FFFA] to-white bg-clip-text text-transparent"
-          : "from-black via-[#00B8A9] to-black bg-clip-text text-transparent"
+          : "from-black via-evoa to-black bg-clip-text text-transparent"
       }`}
     >
       {children}
@@ -107,7 +107,7 @@ export default function PitchUs() {
             className={`inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4 backdrop-blur-xl border ${
               isDark
                 ? "bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]"
-                : "bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]"
+                : "bg-evoa/5 border-evoa/20 text-evoa"
             }`}
           >
             <span className="text-xs font-bold tracking-wider uppercase">
@@ -143,7 +143,7 @@ export default function PitchUs() {
                       className={`mt-0.5 flex h-5 w-5 items-center justify-center rounded-full ${
                         isDark
                           ? "bg-[#B0FFFA]/15 text-[#B0FFFA]"
-                          : "bg-[#00B8A9]/10 text-[#00B8A9]"
+                          : "bg-evoa/10 text-evoa"
                       }`}
                     >
                       <FaCheckCircle size={12} aria-hidden="true" />
@@ -168,7 +168,7 @@ export default function PitchUs() {
                     className={`text-xl sm:text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-r ${
                       isDark
                         ? "from-[#B0FFFA] via-white to-[#80E5FF] bg-clip-text text-transparent"
-                        : "from-[#00B8A9] via-teal-600 to-[#008C81] bg-clip-text text-transparent"
+                        : "from-evoa via-teal-600 to-evoa-dark bg-clip-text text-transparent"
                     }`}
                   >
                     500+
@@ -186,7 +186,7 @@ export default function PitchUs() {
                     className={`text-xl sm:text-2xl md:text-3xl font-bold mb-1 bg-gradient-to-r ${
                       isDark
                         ? "from-[#B0FFFA] via-white to-[#80E5FF] bg-clip-text text-transparent"
-                        : "from-[#00B8A9] via-teal-600 to-[#008C81] bg-clip-text text-transparent"
+                        : "from-evoa via-teal-600 to-evoa-dark bg-clip-text text-transparent"
                     }`}
                   >
                     ₹2,000Cr+
@@ -242,7 +242,7 @@ export default function PitchUs() {
                       isDark
                         ? "bg-black/50 border-white/20 text-white placeholder-white/40"
                         : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400"
-                    } focus:outline-none focus:ring-2 focus:ring-[#00B8A9] focus:border-[#00B8A9]`}
+                    } focus:outline-none focus:ring-2 focus:ring-evoa focus:border-evoa`}
                     placeholder="Enter your full name"
                     aria-required="true"
                   />
@@ -271,7 +271,7 @@ export default function PitchUs() {
                         isDark
                           ? "bg-black/50 border-white/20 text-white placeholder-white/40"
                           : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400"
-                      } focus:outline-none focus:ring-2 focus:ring-[#00B8A9] focus:border-[#00B8A9]`}
+                      } focus:outline-none focus:ring-2 focus:ring-evoa focus:border-evoa`}
                       placeholder="you@example.com"
                       aria-required="true"
                     />
@@ -297,7 +297,7 @@ export default function PitchUs() {
                         isDark
                           ? "bg-black/50 border-white/20 text-white placeholder-white/40"
                           : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400"
-                      } focus:outline-none focus:ring-2 focus:ring-[#00B8A9] focus:border-[#00B8A9]`}
+                      } focus:outline-none focus:ring-2 focus:ring-evoa focus:border-evoa`}
                       placeholder="+91 1234567890"
                       aria-required="true"
                     />
@@ -325,7 +325,7 @@ export default function PitchUs() {
                       isDark
                         ? "bg-black/50 border-white/20 text-white placeholder-white/40"
                         : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400"
-                    } focus:outline-none focus:ring-2 focus:ring-[#00B8A9] focus:border-[#00B8A9]`}
+                    } focus:outline-none focus:ring-2 focus:ring-evoa focus:border-evoa`}
                     placeholder="Your startup name"
                     aria-required="true"
                   />
@@ -348,7 +348,7 @@ export default function PitchUs() {
                           key={type.id}
                           type="button"
                           onClick={() => handlePitchTypeChange(type.id)}
-                          className={`p-2.5 sm:p-3 md:p-4 rounded-lg border text-left text-xs sm:text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#00B8A9] ${
+                          className={`p-2.5 sm:p-3 md:p-4 rounded-lg border text-left text-xs sm:text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-evoa ${
                             selected
                               ? isDark
                                 ? "bg-white text-black border-white"
@@ -410,7 +410,7 @@ export default function PitchUs() {
                       isDark
                         ? "bg-black/50 border-white/20 text-white placeholder-white/40"
                         : "bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400"
-                    } focus:outline-none focus:ring-2 focus:ring-[#00B8A9] focus:border-[#00B8A9]`}
+                    } focus:outline-none focus:ring-2 focus:ring-evoa focus:border-evoa`}
                     placeholder="Tell us what you’re building, your traction, and what kind of support you’re looking for..."
                     aria-required="true"
                   />
@@ -423,7 +423,7 @@ export default function PitchUs() {
                     className={`w-full inline-flex items-center justify-center gap-2 font-semibold text-sm sm:text-base md:text-lg px-4 py-2.5 sm:py-3 md:py-3.5 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                       isDark
                         ? "bg-gradient-to-r from-[#B0FFFA] to-[#80E5FF] text-black shadow-lg hover:shadow-[0_0_30px_rgba(176,255,250,0.5)] focus:ring-[#B0FFFA] focus:ring-offset-black"
-                        : "bg-gradient-to-r from-[#00B8A9] to-[#008C81] text-white shadow-lg hover:shadow-[0_0_30px_rgba(0,184,169,0.4)] focus:ring-[#00B8A9] focus:ring-offset-white"
+                        : "bg-gradient-to-r from-evoa to-evoa-dark text-white shadow-lg hover:shadow-[0_0_30px_rgba(0,184,169,0.4)] focus:ring-evoa focus:ring-offset-white"
                     }`}
                   >
                     Submit pitch

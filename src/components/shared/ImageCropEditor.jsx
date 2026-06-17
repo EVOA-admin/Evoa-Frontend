@@ -389,7 +389,7 @@ export default function ImageCropEditor({
                 <button
                     onClick={handleConfirm}
                     disabled={!ready || confirming}
-                    className="w-full py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-[#00B8A9] to-purple-500 text-white flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-60"
+                    className="w-full py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-evoa to-purple-500 text-white flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-60"
                 >
                     <IoCheckmark size={16} />
                     {confirming ? "Processing…" : "Continue"}

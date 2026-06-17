@@ -79,18 +79,18 @@ export default function Inbox() {
                             key={t.id}
                             onClick={() => setTab(t.id)}
                             className={`flex-1 py-3 text-sm font-semibold relative transition-all ${tab === t.id
-                                    ? "text-[#00B8A9]"
+                                    ? "text-evoa"
                                     : isDark ? "text-gray-500 hover:text-gray-300" : "text-gray-400 hover:text-gray-700"
                                 }`}
                         >
                             {t.label}
                             {t.count > 0 && (
-                                <span className="ml-1.5 text-xs bg-[#00B8A9] text-white rounded-full px-1.5 py-0.5">
+                                <span className="ml-1.5 text-xs bg-evoa text-white rounded-full px-1.5 py-0.5">
                                     {t.count}
                                 </span>
                             )}
                             {tab === t.id && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#00B8A9] rounded-full" />
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-evoa rounded-full" />
                             )}
                         </button>
                     ))}
@@ -99,7 +99,7 @@ export default function Inbox() {
                 <div className="flex-1 overflow-y-auto">
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <div className="w-8 h-8 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                            <div className="w-8 h-8 border-4 border-evoa border-t-transparent rounded-full animate-spin" />
                         </div>
                     ) : tab === "messages" ? (
                         conversations.length === 0 ? (
@@ -114,7 +114,7 @@ export default function Inbox() {
                                             key={conv.id}
                                             onClick={() => navigate(`/inbox/${conv.id}`)}
                                             className={`w-full flex items-center gap-3 px-4 py-3.5 border-b transition-all active:scale-[0.99] ${isDark ? "border-white/8 hover:bg-white/5" : "border-gray-50 hover:bg-gray-50"
-                                                } ${isUnread ? (isDark ? "bg-[#00B8A9]/5" : "bg-[#00B8A9]/3") : ""}`}
+                                                } ${isUnread ? (isDark ? "bg-evoa/5" : "bg-evoa/3") : ""}`}
                                         >
                                             <div className={`w-12 h-12 rounded-full overflow-hidden flex-shrink-0 ${isDark ? "bg-gray-700" : "bg-gray-200"} flex items-center justify-center`}>
                                                 {other.avatarUrl
@@ -131,7 +131,7 @@ export default function Inbox() {
                                                             {formatTime(conv.lastMessageAt)}
                                                         </span>
                                                         {isUnread && (
-                                                            <span className="w-2 h-2 rounded-full bg-[#00B8A9]" />
+                                                            <span className="w-2 h-2 rounded-full bg-evoa" />
                                                         )}
                                                     </div>
                                                 </div>
@@ -180,7 +180,7 @@ export default function Inbox() {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => handleRespond(req.id, "accept")}
-                                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#00B8A9] text-white text-sm font-semibold hover:bg-[#00A89A] transition-all"
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-evoa text-white text-sm font-semibold hover:bg-evoa-hover transition-all"
                                             >
                                                 <IoCheckmarkCircle size={16} /> Accept
                                             </button>

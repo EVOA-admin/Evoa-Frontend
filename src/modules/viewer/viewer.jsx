@@ -11,7 +11,6 @@ import DesktopFeedLayout from "../../components/layout/DesktopFeedLayout";
 import reelsService from "../../services/reelsService";
 import { followStartup, unfollowStartup } from "../../services/startupsService";
 import { getNotifications } from "../../services/notificationsService";
-import CreateContentModal from "../../components/shared/CreateContentModal";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
@@ -32,8 +31,7 @@ export default function Viewer() {
   const [loading, setLoading] = useState(true);
   const [cursor, setCursor] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [showModal, setShowModal] = useState(false);
-  const [showRisingStartups, setShowRisingStartups] = useState(false);
+    const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [risingStartups, setRisingStartups] = useState([]);
   const [risingLoading, setRisingLoading] = useState(true);
@@ -273,7 +271,7 @@ export default function Viewer() {
       />
       <button
         onClick={() => setShowModal(true)}
-        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100"}`}
+        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-evoa hover:bg-white/8" : "text-gray-600 hover:text-evoa hover:bg-gray-100"}`}
         title="Create Post"
       >
         <FaPlus size={16} />
@@ -287,12 +285,12 @@ export default function Viewer() {
       </button>
       <button
         onClick={() => navigate("/inbox")}
-        className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-[#00B8A9] hover:bg-white/8" : "text-gray-600 hover:text-[#00B8A9] hover:bg-gray-100"}`}
+        className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-evoa hover:bg-white/8" : "text-gray-600 hover:text-evoa hover:bg-gray-100"}`}
         title="Messages"
       >
         <IoChatbubbleEllipsesOutline size={22} />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#00B8A9] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-evoa text-white text-[9px] font-bold rounded-full flex items-center justify-center">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -300,8 +298,18 @@ export default function Viewer() {
     </div>
   );
 
+  // Global post creation listener
+  useEffect(() => {
+    const handlePostCreated = () => {
+      fetchPosts();
+      fetchRisingStartups();
+    };
+    window.addEventListener('evoa:contentCreated', handlePostCreated);
+    return () => window.removeEventListener('evoa:contentCreated', handlePostCreated);
+  }, []);
+
   return (
-    <AppShell onCreatePost={() => setShowModal(true)}>
+    <AppShell >
       <AppHeader actions={actions} />
       <DesktopFeedLayout>
         <main>
@@ -393,15 +401,6 @@ export default function Viewer() {
           )}
         </main>
       </DesktopFeedLayout>
-      <CreateContentModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        canUploadReel={false}
-        onCreated={() => {
-          fetchPosts();
-          fetchRisingStartups();
-        }}
-      />
-    </AppShell>
+          </AppShell>
   );
 }

@@ -275,7 +275,7 @@ export default function Profile() {
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 9999,
-            background: "#00B8A9",
+            background: "var(--evoa-accent-primary)",
             color: "#fff",
             padding: "9px 20px",
             borderRadius: 24,
@@ -306,7 +306,7 @@ export default function Profile() {
           <div className="profile-left-col">
             {/* Avatar */}
             <div className="relative -mt-12">
-              <div className="w-24 h-24 rounded-full overflow-hidden ring-3 ring-black border-2 border-[#00B8A9] shadow-xl">
+              <div className="w-24 h-24 rounded-full overflow-hidden ring-3 ring-black border-2 border-evoa shadow-xl">
                 <img src={user.profilePhoto} alt={user.displayName} className="w-full h-full object-cover" />
               </div>
               <button className="absolute bottom-0 right-0 p-1.5 rounded-full bg-black/70 text-white">
@@ -318,7 +318,7 @@ export default function Profile() {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <h1 className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`}>{user.displayName}</h1>
-                {user.isVerified && <MdVerified className="text-[#00B8A9]" size={18} />}
+                {user.isVerified && <MdVerified className="text-evoa" size={18} />}
               </div>
               <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>@{user.username}</p>
               {user.bio && (
@@ -393,7 +393,7 @@ export default function Profile() {
             <div className={`flex flex-col gap-2 text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>
               {user.location && <span className="flex items-center gap-1.5"><FaMapMarkerAlt size={11} />{user.location}</span>}
               {user.website && (
-                <a href={ensureUrl(user.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#00B8A9]">
+                <a href={ensureUrl(user.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-evoa">
                   <FaLink size={11} />{user.website.replace(/^https?:\/\//, "").slice(0, 28)}
                 </a>
               )}
@@ -405,13 +405,13 @@ export default function Profile() {
               <div className={`rounded-xl p-3 space-y-2 ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
                 {user.email && (
                   <div className="flex items-center gap-2">
-                    <FaEnvelope size={12} className="text-[#00B8A9]" />
+                    <FaEnvelope size={12} className="text-evoa" />
                     <p className={`text-xs truncate ${isDark ? "text-white/75" : "text-gray-700"}`}>{user.email}</p>
                   </div>
                 )}
                 {user.phone && (
                   <div className="flex items-center gap-2">
-                    <FaPhone size={12} className="text-[#00B8A9]" />
+                    <FaPhone size={12} className="text-evoa" />
                     <p className={`text-xs ${isDark ? "text-white/75" : "text-gray-700"}`}>{user.phone}</p>
                   </div>
                 )}
@@ -449,7 +449,7 @@ export default function Profile() {
               {/* Mobile-only profile header (hidden on desktop — left col handles it) */}
               <div className="profile-mobile-header flex items-end justify-between -mt-10 mb-4">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-full overflow-hidden ring-3 ring-black border-2 border-[#00B8A9]">
+                  <div className="w-20 h-20 rounded-full overflow-hidden ring-3 ring-black border-2 border-evoa">
                     <img src={user.profilePhoto} alt={user.displayName} className="w-full h-full object-cover" />
                   </div>
                   <button className="absolute bottom-0 right-0 p-1 rounded-full bg-black/70 text-white">
@@ -523,7 +523,7 @@ export default function Profile() {
                   <div className="profile-mobile-header mb-3">
                     <div className="flex items-center gap-2 mb-0.5">
                       <h1 className={`text-lg font-bold ${isDark ? "text-white" : "text-black"}`}>{user.displayName}</h1>
-                      {user.isVerified && <MdVerified className="text-[#00B8A9]" size={18} />}
+                      {user.isVerified && <MdVerified className="text-evoa" size={18} />}
                     </div>
                     <p className={`text-sm ${isDark ? "text-white/50" : "text-gray-500"}`}>@{user.username}</p>
                     {user.bio && (
@@ -536,7 +536,7 @@ export default function Profile() {
                     <div className={`flex flex-wrap gap-x-4 gap-y-1 text-xs mb-4 ${isDark ? "text-white/50" : "text-gray-500"}`}>
                       {user.location && <span className="flex items-center gap-1"><FaMapMarkerAlt size={11} />{user.location}</span>}
                       {user.website && (
-                        <a href={ensureUrl(user.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00B8A9]">
+                        <a href={ensureUrl(user.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-evoa">
                           <FaLink size={11} />{user.website.replace(/^https?:\/\//, "").slice(0, 28)}
                         </a>
                       )}
@@ -552,8 +552,8 @@ export default function Profile() {
                     </div>
                     {(user.email || user.phone) && (
                       <div className={`rounded-xl p-3.5 mb-4 space-y-2.5 ${isDark ? "bg-white/5" : "bg-gray-100"}`}>
-                        {user.email && (<div className="flex items-center gap-2"><FaEnvelope size={13} className="text-[#00B8A9]" /><p className={`text-sm truncate ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.email}</p></div>)}
-                        {user.phone && (<div className="flex items-center gap-2"><FaPhone size={13} className="text-[#00B8A9]" /><p className={`text-sm ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.phone}</p></div>)}
+                        {user.email && (<div className="flex items-center gap-2"><FaEnvelope size={13} className="text-evoa" /><p className={`text-sm truncate ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.email}</p></div>)}
+                        {user.phone && (<div className="flex items-center gap-2"><FaPhone size={13} className="text-evoa" /><p className={`text-sm ${isDark ? "text-white/80" : "text-gray-700"}`}>{user.phone}</p></div>)}
                       </div>
                     )}
                     {(user.links.linkedin || user.links.twitter || user.links.instagram) && (
@@ -572,7 +572,7 @@ export default function Profile() {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-4 py-2.5 text-sm font-semibold capitalize border-b-2 transition-all ${activeTab === tab
-                          ? "border-[#00B8A9] text-[#00B8A9]"
+                          ? "border-evoa text-evoa"
                           : isDark ? "border-transparent text-white/50 hover:text-white" : "border-transparent text-gray-400 hover:text-black"}`}
                       >
                         {tab}

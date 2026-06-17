@@ -25,7 +25,7 @@ export default function PublicRoute({ children }) {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-black">
-                <div className="w-16 h-16 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-16 h-16 border-4 border-evoa border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }

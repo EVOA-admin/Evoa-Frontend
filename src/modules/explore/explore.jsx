@@ -183,12 +183,12 @@ export default function Explore() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={`w-full pl-11 pr-4 py-3 rounded-xl text-sm border transition-all focus:outline-none focus:ring-1 ${isDark
-                  ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30'
-                  : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-[#00B8A9] focus:ring-[#00B8A9]/30 shadow-sm'
+                  ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-evoa focus:ring-evoa/30'
+                  : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-evoa focus:ring-evoa/30 shadow-sm'
                 }`}
               />
               {searchLoading && (
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-evoa border-t-transparent rounded-full animate-spin" />
               )}
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function Explore() {
                         <button
                           key={i}
                           onClick={() => navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(tag)}`)}
-                          className="px-4 py-1.5 rounded-full text-sm font-medium bg-[#00B8A9]/20 text-[#00B8A9] hover:bg-[#00B8A9]/30 transition-colors"
+                          className="px-4 py-1.5 rounded-full text-sm font-medium bg-evoa/20 text-evoa hover:bg-evoa/30 transition-colors"
                         >
                           #{tag}
                         </button>
@@ -241,7 +241,7 @@ export default function Explore() {
                           <div className="relative h-28 bg-gray-800">
                             {reel.thumbnailUrl
                               ? <img src={reel.thumbnailUrl} alt={reel.title} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9]/30 to-gray-800 flex items-center justify-center"><FaPlay className="text-white/40" size={22} /></div>
+                              : <div className="w-full h-full bg-gradient-to-br from-evoa/30 to-gray-800 flex items-center justify-center"><FaPlay className="text-white/40" size={22} /></div>
                             }
                           </div>
                           <div className="p-2.5">
@@ -268,7 +268,7 @@ export default function Explore() {
                           <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                             {item.logoUrl
                               ? <img src={item.logoUrl} alt={item.name} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{(item.name || 'U')[0].toUpperCase()}</div>
+                              : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{(item.name || 'U')[0].toUpperCase()}</div>
                             }
                           </div>
                           <div className="flex-1 min-w-0">
@@ -298,7 +298,7 @@ export default function Explore() {
                             <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                               {avatarSrc
                                 ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
+                                : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
                               }
                             </div>
                             <div className="flex-1 min-w-0">
@@ -329,7 +329,7 @@ export default function Explore() {
                             <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                               {avatarSrc
                                 ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
+                                : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
                               }
                             </div>
                             <div className="flex-1 min-w-0">
@@ -357,7 +357,7 @@ export default function Explore() {
                           <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
                             {item.avatarUrl
                               ? <img src={item.avatarUrl} alt={item.fullName} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-sm">{(item.fullName || 'U')[0].toUpperCase()}</div>
+                              : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{(item.fullName || 'U')[0].toUpperCase()}</div>
                             }
                           </div>
                           <div className="flex-1 min-w-0">
@@ -504,7 +504,7 @@ export default function Explore() {
                           : 'bg-white border border-gray-200 shadow-sm'
                         }`}
                       >
-                        <div className="w-12 h-12 rounded-full overflow-hidden mx-auto mb-2 bg-gradient-to-br from-[#00B8A9] to-[#00A89A]">
+                        <div className="w-12 h-12 rounded-full overflow-hidden mx-auto mb-2 bg-gradient-to-br from-evoa to-evoa-hover">
                           {startup.logoUrl ? (
                             <img src={startup.logoUrl} alt={startup.name} className="w-full h-full object-cover" />
                           ) : (
@@ -553,7 +553,7 @@ export default function Explore() {
                           {investor.avatarUrl ? (
                             <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-[#00B8A9] to-[#00A89A] flex items-center justify-center text-white font-bold text-xl">
+                            <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-xl">
                               {(investor.fullName || 'I')[0].toUpperCase()}
                             </div>
                           )}

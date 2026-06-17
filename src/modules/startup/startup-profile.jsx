@@ -25,7 +25,7 @@ import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
 const AmbassadorDashboard = lazy(() => import("../ambassador/AmbassadorDashboard"));
 
 export default function StartupProfile() {
-    const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme, openThemeModal } = useTheme();
     const isDark = theme === "dark";
     const navigate = useNavigate();
     const { user: authUser } = useAuth();
@@ -232,7 +232,7 @@ export default function StartupProfile() {
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
                     >
-                        <IoPencil size={16} className="text-[#00B8A9]" />
+                        <IoPencil size={16} className="text-evoa" />
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
@@ -264,7 +264,7 @@ export default function StartupProfile() {
                     <button
                         onClick={() => {
                             setMenuOpen(false);
-                            setTimeout(toggleTheme, 150);
+                            setTimeout(openThemeModal, 150);
                         }}
                         className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
@@ -304,7 +304,7 @@ export default function StartupProfile() {
             {toastMsg && (
                 <div style={{
                     position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-                    zIndex: 9999, background: "#00B8A9", color: "#fff",
+                    zIndex: 9999, background: "var(--evoa-accent-primary)", color: "#fff",
                     padding: "9px 20px", borderRadius: 24, fontSize: 13, fontWeight: 600,
                     whiteSpace: "nowrap", boxShadow: "0 4px 24px rgba(0,184,169,0.35)",
                     animation: "fadeIn 0.2s ease",
@@ -315,13 +315,13 @@ export default function StartupProfile() {
 
                 {loading ? (
                     <div className="flex items-center justify-center h-72">
-                        <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                        <div className="w-10 h-10 border-4 border-evoa border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : !startup ? (
                     <div className="flex flex-col items-center justify-center h-72 gap-4">
                         <IoRocketOutline size={48} className={isDark ? "text-gray-700" : "text-gray-300"} />
                         <p className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>No startup profile found</p>
-                        <button onClick={() => navigate("/register/startup")} className="px-5 py-2 bg-[#00B8A9] text-white text-sm rounded-full font-semibold">
+                        <button onClick={() => navigate("/register/startup")} className="px-5 py-2 bg-evoa text-white text-sm rounded-full font-semibold">
                             Create Startup
                         </button>
                     </div>
@@ -349,7 +349,7 @@ export default function StartupProfile() {
                                         {startup.tagline && <p className={`text-sm mt-0.5 leading-snug ${isDark ? "text-gray-400" : "text-gray-500"}`}>{startup.tagline}</p>}
                                         <div className="flex flex-wrap gap-1.5 mt-2">
                                             {startup.stage && (
-                                                <span className="text-[11px] px-2 py-0.5 bg-[#00B8A9]/15 text-[#00B8A9] rounded-full font-medium">{startup.stage}</span>
+                                                <span className="text-[11px] px-2 py-0.5 bg-evoa/15 text-evoa rounded-full font-medium">{startup.stage}</span>
                                             )}
                                             {startup.industries?.slice(0, 2).map(ind => (
                                                 <span key={ind} className={`text-[11px] px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{ind}</span>
@@ -373,7 +373,7 @@ export default function StartupProfile() {
                                         </div>
                                     )}
                                     {startup.website && (
-                                        <a href={ensureUrl(startup.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-[#00B8A9]">
+                                        <a href={ensureUrl(startup.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-evoa">
                                             <IoLinkOutline size={13} /><span>{startup.website.replace(/^https?:\/\//, "")}</span>
                                         </a>
                                     )}
@@ -413,7 +413,7 @@ export default function StartupProfile() {
                                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                                     className={`flex-1 py-3 text-sm font-medium relative transition-colors ${activeTab === tab.id ? isDark ? "text-white" : "text-gray-900" : isDark ? "text-gray-500" : "text-gray-400"}`}>
                                     {tab.label}
-                                    {activeTab === tab.id && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ backgroundColor: "#00B8A9" }} />}
+                                    {activeTab === tab.id && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ backgroundColor: "var(--evoa-accent-primary)" }} />}
                                 </button>
                             ))}
                         </div>
@@ -453,7 +453,7 @@ export default function StartupProfile() {
                                     )}
                                     {startup.socialLinks?.productDemo && (
                                         <Section title="Product Demo" isDark={isDark}>
-                                            <a href={ensureUrl(startup.socialLinks.productDemo)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-[#00B8A9]">
+                                            <a href={ensureUrl(startup.socialLinks.productDemo)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-evoa">
                                                 <IoPlayCircleOutline size={18} />View Product Demo
                                             </a>
                                         </Section>
@@ -521,7 +521,7 @@ export default function StartupProfile() {
                                     {startup.pitchDeckUrl && (
                                         <Section title="Pitch Deck" isDark={isDark}>
                                             <a href={ensureUrl(startup.pitchDeckUrl)} target="_blank" rel="noopener noreferrer"
-                                                className={`flex items-center gap-2 p-3 rounded-xl text-sm font-medium border ${isDark ? "border-white/10 text-[#00B8A9] hover:bg-white/5" : "border-gray-200 text-[#00B8A9] hover:bg-gray-50"}`}>
+                                                className={`flex items-center gap-2 p-3 rounded-xl text-sm font-medium border ${isDark ? "border-white/10 text-evoa hover:bg-white/5" : "border-gray-200 text-evoa hover:bg-gray-50"}`}>
                                                 <IoDocumentTextOutline size={18} />View Pitch Deck (PDF)
                                             </a>
                                         </Section>
@@ -558,7 +558,7 @@ export default function StartupProfile() {
                                 </button>
                                 <span className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Edit Startup Profile</span>
                                 <button onClick={handleEditSave} disabled={editLoading}
-                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-[#00B8A9] text-white hover:bg-[#00A89A] disabled:opacity-50">
+                                    className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-full bg-evoa text-white hover:bg-evoa-hover disabled:opacity-50">
                                     {editLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <><IoCheckmark size={15} />Save</>}
                                 </button>
                             </div>
@@ -577,7 +577,7 @@ export default function StartupProfile() {
                                         <button
                                             type="button"
                                             onClick={() => logoInputRef.current?.click()}
-                                            className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#00B8A9] text-white flex items-center justify-center shadow-lg hover:bg-[#00A89A] transition-colors"
+                                            className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-evoa text-white flex items-center justify-center shadow-lg hover:bg-evoa-hover transition-colors"
                                         >
                                             <IoCamera size={15} />
                                         </button>
@@ -624,7 +624,7 @@ export default function StartupProfile() {
                                                     }}
                                                 />
                                                 {newPitchDeck ? (
-                                                    <span className={`text-xs ${isDark ? "text-[#00B8A9]" : "text-gray-600"}`}>{newPitchDeck.name}</span>
+                                                    <span className={`text-xs ${isDark ? "text-evoa" : "text-gray-600"}`}>{newPitchDeck.name}</span>
                                                 ) : editForm.pitchDeckUrl ? (
                                                     <span className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"} line-clamp-1`}>Existing PDF uploaded</span>
                                                 ) : (
@@ -686,7 +686,7 @@ function InfoRow({ label, value, isDark }) {
 function FinancialCard({ label, value, isDark }) {
     return (
         <div className={`p-4 rounded-2xl text-center ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
-            <p className={`text-lg font-bold ${isDark ? "text-[#00B8A9]" : "text-[#00B8A9]"}`}>{value}</p>
+            <p className={`text-lg font-bold ${isDark ? "text-evoa" : "text-evoa"}`}>{value}</p>
             <p className={`text-xs mt-0.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</p>
         </div>
     );
@@ -711,7 +711,7 @@ function EditSection({ title, children, isDark }) {
 }
 
 function EditField({ label, value, onChange, placeholder, multiline, isDark }) {
-    const cls = `w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none transition-all focus:border-[#00B8A9] focus:ring-1 focus:ring-[#00B8A9]/30 ${isDark ? "bg-gray-800 border-white/10 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`;
+    const cls = `w-full px-3.5 py-2.5 text-sm rounded-xl border outline-none transition-all focus:border-evoa focus:ring-1 focus:ring-evoa/30 ${isDark ? "bg-gray-800 border-white/10 text-white placeholder-gray-600" : "bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400"}`;
     return (
         <div>
             <label className={`block text-xs font-semibold mb-1.5 ${isDark ? "text-gray-400" : "text-gray-500"}`}>{label}</label>

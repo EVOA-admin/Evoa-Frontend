@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import BottomNav from "./BottomNav";
 import DesktopSidebar from "./DesktopSidebar";
+import CreateContentModal from "../shared/CreateContentModal";
 
 /* ─── EVOA AppShell — Apple Glassmorphism + Instagram Desktop Layout ─── */
 const SHELL_CSS = `
@@ -110,8 +112,8 @@ const SHELL_CSS = `
 
   .evoa-shell-column {
     max-width: none;
-    width: calc(100% - 72px);
-    margin-left: 72px;
+    width: calc(100% - 104px);
+    margin-left: 104px;
     /* Remove decorative column borders on desktop */
   }
 
@@ -133,8 +135,8 @@ const SHELL_CSS = `
 
 @media (min-width: 1280px) {
   .evoa-shell-column {
-    width: calc(100% - 240px);
-    margin-left: 240px;
+    width: calc(100% - 272px);
+    margin-left: 272px;
   }
 }
 `;
@@ -150,17 +152,25 @@ const SHELL_CSS = `
  *   children     — page content
  *   onCreatePost — optional callback to open CreateContentModal from sidebar
  */
-export default function AppShell({ children, onCreatePost }) {
+export default function AppShell({ children }) {
   const { theme } = useTheme();
+  const { userRole } = useAuth();
   const isDark = theme === "dark";
   const cls = isDark ? "dark" : "light";
+
+  const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+
+  const handlePostCreated = (type) => {
+    setCreateModalOpen(false);
+    window.dispatchEvent(new CustomEvent('evoa:contentCreated', { detail: { type } }));
+  };
 
   return (
     <div className={`evoa-shell-root ${cls}`}>
       <style>{SHELL_CSS}</style>
 
       {/* Desktop sidebar — CSS-hidden below 1024px */}
-      <DesktopSidebar onCreatePost={onCreatePost} />
+      <DesktopSidebar onCreatePost={() => setCreateModalOpen(true)} />
 
       {/* Main content column */}
       <div className="evoa-shell-column">
@@ -172,6 +182,13 @@ export default function AppShell({ children, onCreatePost }) {
         {/* BottomNav — CSS-hidden on desktop (≥1024px) */}
         <BottomNav />
       </div>
+
+      <CreateContentModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setCreateModalOpen(false)}
+        canUploadReel={userRole === 'startup'}
+        onCreated={handlePostCreated}
+      />
     </div>
   );
 }

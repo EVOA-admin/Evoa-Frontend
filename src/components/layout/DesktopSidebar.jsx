@@ -22,14 +22,15 @@ const CSS = `
     display: flex;
     flex-direction: column;
     position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    height: 100dvh;
+    left: 16px;
+    top: 16px;
+    height: calc(100vh - 32px);
+    height: calc(100dvh - 32px);
     width: 72px;
     z-index: 55;
     transition: width .25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .25s;
     overflow: hidden;
+    border-radius: 28px;
   }
 
   /* Expand to full width at xl */
@@ -43,19 +44,17 @@ const CSS = `
   background: rgba(10,10,16,0.85);
   backdrop-filter: blur(32px) saturate(1.6);
   -webkit-backdrop-filter: blur(32px) saturate(1.6);
-  border-right: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.07);
   box-shadow:
-    1px 0 0 rgba(0,184,169,0.08),
-    4px 0 24px rgba(0,0,0,0.4);
+    0 4px 24px rgba(0,0,0,0.4);
 }
 .ds-sidebar.light {
   background: rgba(255,255,255,0.82);
   backdrop-filter: blur(32px) saturate(1.6);
   -webkit-backdrop-filter: blur(32px) saturate(1.6);
-  border-right: 1px solid rgba(255,255,255,0.9);
+  border: 1px solid rgba(255,255,255,1);
   box-shadow:
-    1px 0 0 rgba(0,184,169,0.07),
-    4px 0 24px rgba(0,0,0,0.06);
+    0 4px 24px rgba(0,0,0,0.08);
 }
 
 /* ── Logo area ── */
@@ -150,7 +149,7 @@ const CSS = `
 
 /* Active */
 .ds-nav-item.active {
-  color: #00B8A9 !important;
+  color: var(--evoa-accent-primary) !important;
   background: rgba(0,184,169,0.12);
   box-shadow:
     inset 0 1px 0 rgba(0,184,169,0.2),
@@ -215,7 +214,7 @@ const CSS = `
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  background: linear-gradient(135deg, #00E5D3 0%, #00B8A9 50%, #007a73 100%);
+  background: linear-gradient(135deg, var(--evoa-accent-light) 0%, var(--evoa-accent-primary) 50%, var(--evoa-accent-darker) 100%);
   color: #fff;
   box-shadow:
     0 4px 20px rgba(0,184,169,0.4),
@@ -370,7 +369,7 @@ const ROLE_PROFILE = {
  *   onCreatePost — callback to open CreateContentModal
  */
 export default function DesktopSidebar({ onCreatePost }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, openThemeModal } = useTheme();
   const { user, userRole } = useAuth();
   const isDark = theme === "dark";
   const cls = isDark ? "dark" : "light";
@@ -390,14 +389,14 @@ export default function DesktopSidebar({ onCreatePost }) {
       .then(r => {
         const d = r?.data?.data || r?.data || {};
         setUnreadChat((d.unreadMessages || 0) + (d.pendingRequests || 0));
-      }).catch(() => {});
+      }).catch(() => { });
 
     getNotifications()
       .then(r => {
         const data = r?.data?.data || r?.data || [];
         const list = Array.isArray(data) ? data : [];
         setUnreadNotif(list.filter(n => !n.isRead).length);
-      }).catch(() => {});
+      }).catch(() => { });
   }, [location.pathname]);
 
   const isActive = (path) => {
@@ -406,12 +405,12 @@ export default function DesktopSidebar({ onCreatePost }) {
   };
 
   const navItems = [
-    { key: "home",   icon: FaHome,  label: "Home",        path: home },
-    { key: "explore",icon: FaSearch,label: "Explore",     path: "/explore" },
-    { key: "pitch",  icon: FaPlay,  label: "Pitch Reels", path: "/pitch/hashtag" },
-    { key: "alerts", icon: FaBell,  label: "Alerts",      path: "/notifications", badge: unreadNotif },
-    { key: "profile",icon: FaUser,  label: "Profile",     path: profile },
-    { key: "inbox",  icon: FaInbox, label: "Messages",    path: "/inbox", badge: unreadChat },
+    { key: "home", icon: FaHome, label: "Home", path: home },
+    { key: "explore", icon: FaSearch, label: "Explore", path: "/explore" },
+    { key: "pitch", icon: FaPlay, label: "Pitch Reels", path: "/pitch/hashtag" },
+    { key: "alerts", icon: FaBell, label: "Alerts", path: "/notifications", badge: unreadNotif },
+    { key: "profile", icon: FaUser, label: "Profile", path: profile },
+    { key: "inbox", icon: FaInbox, label: "Messages", path: "/inbox", badge: unreadChat },
   ];
 
   const avatarSrc = user?.avatarUrl
@@ -465,11 +464,11 @@ export default function DesktopSidebar({ onCreatePost }) {
       <div className="ds-divider" />
       <div className="ds-bottom">
         {/* Theme toggle */}
-        <button className="ds-theme-btn" onClick={toggleTheme} title={isDark ? "Light mode" : "Dark mode"}>
+        <button className="ds-theme-btn" onClick={openThemeModal} title="Theme">
           <span style={{ width: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             {isDark ? <HiSun size={20} /> : <HiMoon size={19} />}
           </span>
-          <span className="ds-theme-label">{isDark ? "Light Mode" : "Dark Mode"}</span>
+          <span className="ds-theme-label">{"Theme"}</span>
         </button>
 
         {/* User chip */}

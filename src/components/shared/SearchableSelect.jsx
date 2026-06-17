@@ -8,7 +8,7 @@ export default function SearchableSelect({
   placeholder = "Select...",
   isDark = false,
   className = "",
-  accentColor = "#00B8A9"
+  accentColor = "var(--evoa-accent-primary)"
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

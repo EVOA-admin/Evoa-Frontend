@@ -45,7 +45,7 @@ const RSS_CSS = `
   flex-shrink: 0;
   background: rgba(0,184,169,0.14);
   border: 1px solid rgba(0,184,169,0.25);
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   box-shadow: 0 0 10px rgba(0,184,169,0.2);
 }
 
@@ -60,7 +60,7 @@ const RSS_CSS = `
   border-radius: 20px;
   border: 1px solid rgba(0,184,169,0.3);
   background: rgba(0,184,169,0.10);
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   transition: background .2s, box-shadow .2s;
   flex-shrink: 0;
   cursor: pointer;
@@ -88,7 +88,7 @@ const RSS_CSS = `
 .rss-rank {
   font-size: 11px;
   font-weight: 800;
-  background: linear-gradient(135deg, #00E5D3, #00B8A9);
+  background: linear-gradient(135deg, var(--evoa-accent-light), var(--evoa-accent-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -243,7 +243,7 @@ const RSS_CSS = `
 .rss-refresh-btn {
   width: 100%;
   border-radius: 14px;
-  background: linear-gradient(135deg, #00E5D3 0%, #00B8A9 50%, #007a73 100%);
+  background: linear-gradient(135deg, var(--evoa-accent-light) 0%, var(--evoa-accent-primary) 50%, var(--evoa-accent-darker) 100%);
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 600;

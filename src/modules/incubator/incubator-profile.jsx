@@ -28,7 +28,7 @@ import { HiSun, HiMoon } from "react-icons/hi";
 const AmbassadorDashboard = lazy(() => import("../ambassador/AmbassadorDashboard"));
 
 export default function IncubatorProfile() {
-    const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme, openThemeModal } = useTheme();
     const isDark = theme === "dark";
     const navigate = useNavigate();
     const { user: authUser } = useAuth();
@@ -117,7 +117,7 @@ export default function IncubatorProfile() {
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
                     >
-                        <IoPencil size={16} className="text-[#00B8A9]" />
+                        <IoPencil size={16} className="text-evoa" />
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
@@ -149,7 +149,7 @@ export default function IncubatorProfile() {
                     <button
                         onClick={() => {
                             setMenuOpen(false);
-                            setTimeout(toggleTheme, 150);
+                            setTimeout(openThemeModal, 150);
                         }}
                         className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
@@ -188,7 +188,7 @@ export default function IncubatorProfile() {
             <AppShell>
                 <AppHeader title="My Profile" actions={headerActions} showThemeToggle={true} />
                 <div className="flex items-center justify-center h-72">
-                    <div className="w-10 h-10 border-4 border-[#00B8A9] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-10 h-10 border-4 border-evoa border-t-transparent rounded-full animate-spin" />
                 </div>
             </AppShell>
         );
@@ -200,7 +200,7 @@ export default function IncubatorProfile() {
             {toastMsg && (
                 <div style={{
                     position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-                    zIndex: 9999, background: "#00B8A9", color: "#fff",
+                    zIndex: 9999, background: "var(--evoa-accent-primary)", color: "#fff",
                     padding: "9px 20px", borderRadius: 24, fontSize: 13, fontWeight: 600,
                     whiteSpace: "nowrap", boxShadow: "0 4px 24px rgba(0,184,169,0.35)",
                     animation: "fadeIn 0.2s ease",
@@ -218,7 +218,7 @@ export default function IncubatorProfile() {
                     <div className="px-4 pt-5 pb-4">
                         <div className="flex items-start gap-4">
                             {/* Logo */}
-                            <div className={`w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"} ring-2 ring-[#00B8A9]/30`}>
+                            <div className={`w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"} ring-2 ring-evoa/30`}>
                                 <img
                                     src={profile?.logoUrl || authUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || "I")}&background=00B8A9&color=fff&size=128`}
                                     alt={profile?.name}
@@ -232,14 +232,14 @@ export default function IncubatorProfile() {
                                     <h1 className={`text-lg font-bold leading-tight truncate ${isDark ? "text-white" : "text-gray-900"}`}>
                                         {profile?.name || "Incubator"}
                                     </h1>
-                                    <MdVerified className="text-[#00B8A9] flex-shrink-0" size={16} />
+                                    <MdVerified className="text-evoa flex-shrink-0" size={16} />
                                 </div>
                                 {profile?.tagline && (
                                     <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"} line-clamp-2 leading-snug`}>{profile.tagline}</p>
                                 )}
                                 <div className="flex flex-wrap gap-1 mt-2">
                                     {profile?.organizationType && (
-                                        <span className="text-[11px] px-2 py-0.5 bg-[#00B8A9]/15 text-[#00B8A9] rounded-full font-medium">{profile.organizationType}</span>
+                                        <span className="text-[11px] px-2 py-0.5 bg-evoa/15 text-evoa rounded-full font-medium">{profile.organizationType}</span>
                                     )}
                                     {profile?.affiliationType && (
                                         <span className={`text-[11px] px-2 py-0.5 rounded-full ${isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"}`}>{profile.affiliationType}</span>
@@ -269,7 +269,7 @@ export default function IncubatorProfile() {
                                 <span className="flex items-center gap-1"><IoLocationOutline size={12} />{locationStr}</span>
                             )}
                             {profile?.website && (
-                                <a href={ensureUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#00B8A9]">
+                                <a href={ensureUrl(profile.website)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-evoa">
                                     <IoLinkOutline size={12} />{profile.website.replace(/^https?:\/\//, "").slice(0, 24)}
                                 </a>
                             )}
@@ -301,7 +301,7 @@ export default function IncubatorProfile() {
                         >
                             {tab.label}
                             {activeTab === tab.id && (
-                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-[#00B8A9]" />
+                                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-evoa" />
                             )}
                         </button>
                     ))}
@@ -366,7 +366,7 @@ export default function IncubatorProfile() {
                                                 className={`flex items-center gap-2.5 p-3 rounded-xl border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-100"}`}
                                             >
                                                 <div className={`p-1.5 rounded-lg ${isDark ? "bg-white/8" : "bg-white"}`}>
-                                                    <IoBulbOutline size={16} className="text-[#00B8A9]" />
+                                                    <IoBulbOutline size={16} className="text-evoa" />
                                                 </div>
                                                 <span className={`text-xs font-semibold leading-tight ${isDark ? "text-gray-200" : "text-gray-700"}`}>{prog}</span>
                                             </div>

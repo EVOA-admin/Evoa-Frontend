@@ -55,7 +55,7 @@ const CARD_CSS = `
   border-radius: 20px;
   border: 1px solid rgba(0,184,169,0.3);
   background: rgba(0,184,169,0.12);
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   letter-spacing: 0.02em;
 }
 
@@ -124,7 +124,7 @@ const CARD_CSS = `
   font-size: 18px;
   font-weight: 900;
   line-height: 1.1;
-  background: linear-gradient(135deg, #00E5D3, #00B8A9);
+  background: linear-gradient(135deg, var(--evoa-accent-light), var(--evoa-accent-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -349,11 +349,11 @@ export default function StartupPostCard({
                                 >
                                     {post.startupName}
                                 </button>
-                                <MdVerified size={13} className="text-[#00B8A9] flex-shrink-0" />
+                                <MdVerified size={13} className="text-evoa flex-shrink-0" />
                                 {post.website && (
                                     <button
                                         onClick={handleWebsiteClick}
-                                        className="flex items-center text-[#00B8A9] hover:text-[#00E5D3] transition-colors flex-shrink-0"
+                                        className="flex items-center text-evoa hover:text-evoa-light transition-colors flex-shrink-0"
                                         title={post.website}
                                     >
                                         <FaLink size={11} />
@@ -482,7 +482,7 @@ export default function StartupPostCard({
                             </span>
                             <span className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-400"}`}>Investor's Thought</span>
                         </div>
-                        <svg className="ml-auto flex-shrink-0 text-[#00B8A9]" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <svg className="ml-auto flex-shrink-0 text-evoa" width="14" height="14" viewBox="0 0 14 14" fill="none">
                             <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                     </div>
@@ -494,7 +494,7 @@ export default function StartupPostCard({
                     <button onClick={handleLikeWithBloom} className="spc-action-btn">
                         <span className={likeAnimating ? "animate-like-bloom" : ""} style={{ display: "inline-flex" }}>
                             {post.isLiked
-                                ? <FaHeart className="text-[#00B8A9]" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
+                                ? <FaHeart className="text-evoa" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
                                 : <FaRegHeart size={16} className={isDark ? "text-white/40" : "text-gray-400"} />}
                         </span>
                         {post.likeCount > 0 && (
@@ -504,7 +504,7 @@ export default function StartupPostCard({
 
                     <button onClick={onSave} className="spc-action-btn">
                         {post.isSaved
-                            ? <FaBookmark className="text-[#00B8A9]" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
+                            ? <FaBookmark className="text-evoa" size={16} style={{ filter: "drop-shadow(0 0 4px rgba(0,184,169,0.6))" }} />
                             : <FaRegBookmark size={16} className={isDark ? "text-white/40" : "text-gray-400"} />}
                     </button>
 

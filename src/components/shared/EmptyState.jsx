@@ -36,7 +36,7 @@ const EmptyState = ({
                     style={{
                         background: 'rgba(0,184,169,0.12)',
                         border: '1px solid rgba(0,184,169,0.25)',
-                        color: '#00B8A9',
+                        color: 'var(--evoa-accent-primary)',
                         boxShadow: '0 0 20px rgba(0,184,169,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
                     }}
                 >
@@ -59,7 +59,7 @@ const EmptyState = ({
                     onClick={onAction}
                     className="px-7 py-2.5 text-sm font-semibold text-white rounded-[14px] transition-all"
                     style={{
-                        background: 'linear-gradient(135deg, #00E5D3 0%, #00B8A9 50%, #007a73 100%)',
+                        background: 'linear-gradient(135deg, var(--evoa-accent-light) 0%, var(--evoa-accent-primary) 50%, var(--evoa-accent-darker) 100%)',
                         boxShadow: '0 4px 20px rgba(0,184,169,0.4), 0 0 0 1px rgba(0,184,169,0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
                     }}
                     onMouseEnter={e => {

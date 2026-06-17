@@ -40,7 +40,7 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
         <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4 sm:mb-6 backdrop-blur-xl border ${
           isDark 
             ? 'bg-[#B0FFFA]/5 border-[#B0FFFA]/20 text-[#B0FFFA]' 
-            : 'bg-[#00B8A9]/5 border-[#00B8A9]/20 text-[#00B8A9]'
+            : 'bg-evoa/5 border-evoa/20 text-evoa'
         }`}>
           <span className="text-xs sm:text-sm font-bold tracking-wider uppercase">Simple Process</span>
         </div>
@@ -112,7 +112,7 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
                 className={`absolute -inset-1 rounded-2xl pointer-events-none ${
                   isDark 
                     ? 'border-2 border-dashed border-[#B0FFFA]/50' 
-                    : 'border-2 border-dashed border-[#00B8A9]/50'
+                    : 'border-2 border-dashed border-evoa/50'
                 }`}
                 style={{
                   clipPath: index % 2 === 0 
@@ -239,7 +239,7 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
                     className={`bg-gradient-to-br ${
                       isDark
                         ? 'from-[#B0FFFA]/30 to-[#80E5FF]/30 bg-clip-text text-transparent'
-                        : 'from-[#00B8A9] to-[#008C81] bg-clip-text text-transparent'
+                        : 'from-evoa to-evoa-dark bg-clip-text text-transparent'
                     }`}
                   >
                     {step.step.charAt(1)}
@@ -251,9 +251,9 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
                 <div className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 flex items-center justify-center mb-3 sm:mb-4 md:mb-5 rounded-xl sm:rounded-2xl transition-all duration-500 ${
                   isDark 
                     ? 'bg-gradient-to-br from-[#B0FFFA]/20 to-[#80E5FF]/20 shadow-lg shadow-[#B0FFFA]/10' 
-                    : 'bg-gradient-to-br from-[#B0FFFA]/25 to-[#80E5FF]/25 shadow-lg shadow-[#00B8A9]/10'
+                    : 'bg-gradient-to-br from-[#B0FFFA]/25 to-[#80E5FF]/25 shadow-lg shadow-evoa/10'
                 }`}>
-                  <div className={`${isDark ? 'text-[#B0FFFA]' : 'text-[#00B8A9]'} text-xl sm:text-2xl md:text-3xl transition-transform duration-300`}>
+                  <div className={`${isDark ? 'text-[#B0FFFA]' : 'text-evoa'} text-xl sm:text-2xl md:text-3xl transition-transform duration-300`}>
                     {getIcon(step.iconName, 'text-xl sm:text-2xl')}
                   </div>
                 </div>
@@ -262,7 +262,7 @@ export default function HowItWorksSection({ isVisible, isDark, setRef, SectionTi
                 {/* Title single line */}
                 <h3
                   className={`text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 whitespace-nowrap transition-all duration-300 ${
-                    isDark ? 'text-white group-hover:text-[#B0FFFA]' : 'text-gray-900 group-hover:text-[#00B8A9]'
+                    isDark ? 'text-white group-hover:text-[#B0FFFA]' : 'text-gray-900 group-hover:text-evoa'
                   }`}
                 >
                   {step.title}

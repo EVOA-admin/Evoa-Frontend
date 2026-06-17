@@ -123,7 +123,7 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                 <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4" style={{ minHeight: 0 }}>
                     {loading ? (
                         <div className="flex justify-center py-8">
-                            <FaSpinner className="animate-spin text-[#00B8A9]" size={24} />
+                            <FaSpinner className="animate-spin text-evoa" size={24} />
                         </div>
                     ) : comments.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-10 gap-2" style={{ color: isDark ? "rgba(255,255,255,0.4)" : "#9ca3af" }}>
@@ -149,7 +149,7 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                                 <div className="flex-1 min-w-0">
                                     <button
                                         onClick={() => c.userId && c.userId !== "me" && goToProfile(c.userId, currentUser, navigate)}
-                                        className={`text-xs font-semibold hover:text-[#00B8A9] transition-colors text-left ${isDark ? "text-white/80" : "text-gray-800"}`}
+                                        className={`text-xs font-semibold hover:text-evoa transition-colors text-left ${isDark ? "text-white/80" : "text-gray-800"}`}
                                     >
                                         {c.user?.fullName || c.user?.email?.split("@")[0] || "User"}
                                     </button>
@@ -182,14 +182,14 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                         onKeyDown={handleKey}
                         placeholder="Add a comment..."
                         className={`flex-1 rounded-full px-4 py-2.5 text-sm outline-none transition-colors ${isDark
-                            ? "bg-white/[0.06] border border-white/15 text-white placeholder-white/40 focus:border-[#00B8A9]"
-                            : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#00B8A9]"
+                            ? "bg-white/[0.06] border border-white/15 text-white placeholder-white/40 focus:border-evoa"
+                            : "bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-evoa"
                             }`}
                     />
                     <button
                         onClick={postComment}
                         disabled={!text.trim() || posting}
-                        className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all ${text.trim() && !posting ? "bg-[#00B8A9] text-white active:scale-90" : isDark ? "bg-white/10 text-white/30" : "bg-gray-100 text-gray-300"
+                        className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all ${text.trim() && !posting ? "bg-evoa text-white active:scale-90" : isDark ? "bg-white/10 text-white/30" : "bg-gray-100 text-gray-300"
                             }`}
                     >
                         {posting

@@ -7,6 +7,7 @@ import { MdVerified } from "react-icons/md";
 import postsService from "../../services/postsService";
 import exploreService from "../../services/exploreService";
 import { goToProfile } from "../../utils/profileNavigation";
+import RisingStartupsSection from "../shared/RisingStartupsSection";
 
 /* ─── CSS ─── */
 const CSS = `
@@ -50,7 +51,7 @@ const CSS = `
         left edge = 50vw - (560px / 2) = 50vw - 280px
       This is viewport-absolute and is unaffected by sidebar width.
     */
-    margin-left: calc(50vw - 280px - 72px); /* lg: sidebar 72px */
+    margin-left: calc(50vw - 280px - 104px); /* lg: sidebar 104px */
   }
 
   /* Right panel — fixed to viewport right, scrolls independently */
@@ -73,7 +74,7 @@ const CSS = `
 
 @media (min-width: 1280px) {
   .dfl-feed {
-    margin-left: calc(50vw - 280px - 240px); /* xl: sidebar 240px */
+    margin-left: calc(50vw - 280px - 272px); /* xl: sidebar 272px */
   }
 }
 
@@ -121,7 +122,7 @@ const CSS = `
   justify-content: center;
   background: rgba(0,184,169,0.14);
   border: 1px solid rgba(0,184,169,0.25);
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   flex-shrink: 0;
 }
 
@@ -164,7 +165,7 @@ const CSS = `
 .dfl-rank {
   font-size: 11px;
   font-weight: 800;
-  background: linear-gradient(135deg, #00E5D3, #00B8A9);
+  background: linear-gradient(135deg, var(--evoa-accent-light), var(--evoa-accent-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -184,7 +185,7 @@ const CSS = `
   border-radius: 20px;
   border: 1px solid rgba(0,184,169,0.3);
   background: rgba(0,184,169,0.10);
-  color: #00B8A9;
+  color: var(--evoa-accent-primary);
   cursor: pointer;
   transition: background .2s;
   border: none;
@@ -209,7 +210,7 @@ const CSS = `
 .dfl-stat-val {
   font-size: 18px;
   font-weight: 900;
-  background: linear-gradient(135deg, #00E5D3, #00B8A9);
+  background: linear-gradient(135deg, var(--evoa-accent-light), var(--evoa-accent-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -268,15 +269,16 @@ export default function DesktopFeedLayout({ children }) {
   const [risingStartups, setRisingStartups] = useState([]);
   const [suggested, setSuggested] = useState([]);
   const [loadingRising, setLoadingRising] = useState(true);
+  const [isRisingOpen, setIsRisingOpen] = useState(false);
 
   useEffect(() => {
     // Rising startups
     postsService.getRisingStartups()
       .then(res => {
         const data = res?.data?.data || res?.data || [];
-        if (Array.isArray(data)) setRisingStartups(data.slice(0, 5));
+        if (Array.isArray(data)) setRisingStartups(data);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoadingRising(false));
 
     // Suggested connections — investors for startup role, startups for others
@@ -289,7 +291,7 @@ export default function DesktopFeedLayout({ children }) {
         const data = res?.data?.data || res?.data || [];
         if (Array.isArray(data)) setSuggested(data.slice(0, 4));
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [userRole]);
 
   const logoFallback = (name) =>
@@ -308,7 +310,7 @@ export default function DesktopFeedLayout({ children }) {
               <p className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-500"}`}>Top 5 this week</p>
             </div>
           </div>
-          <button className="dfl-view-all" onClick={() => navigate("/explore")}>
+          <button className="dfl-view-all" onClick={() => setIsRisingOpen(true)}>
             All <FaArrowRight size={8} />
           </button>
         </div>
@@ -321,7 +323,7 @@ export default function DesktopFeedLayout({ children }) {
               <div key={i} className={`h-12 rounded-2xl animate-pulse mx-2 my-1 ${isDark ? "bg-white/5" : "bg-black/5"}`} />
             ))
           ) : risingStartups.length > 0 ? (
-            risingStartups.map((s, i) => (
+            risingStartups.slice(0, 5).map((s, i) => (
               <button
                 key={s.startupId || i}
                 className="dfl-panel-row"
@@ -392,7 +394,7 @@ export default function DesktopFeedLayout({ children }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                       <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{name}</p>
-                      <MdVerified size={11} className="text-[#00B8A9] flex-shrink-0" />
+                      <MdVerified size={11} className="text-evoa flex-shrink-0" />
                     </div>
                     {sub && <p className={`text-[10px] truncate ${isDark ? "text-white/40" : "text-gray-500"}`}>{sub}</p>}
                   </div>
@@ -417,7 +419,7 @@ export default function DesktopFeedLayout({ children }) {
             { val: `${risingStartups.length}`, lbl: "Rising Now" },
             { val: `${suggested.length}`, lbl: "Suggested" },
             { val: "Live", lbl: "Battlefield" },
-            { val: "AI", lbl: "O21 Ready" },
+            { val: "AI", lbl: "Investor AI" },
           ].map(({ val, lbl }) => (
             <div key={lbl} className="dfl-stat-tile">
               <p className="dfl-stat-val">{val}</p>
@@ -426,6 +428,15 @@ export default function DesktopFeedLayout({ children }) {
           ))}
         </div>
       </div>
+
+      <RisingStartupsSection
+        startups={risingStartups}
+        loading={loadingRising}
+        panelOnly={true}
+        isControlled={true}
+        isOpen={isRisingOpen}
+        onClose={() => setIsRisingOpen(false)}
+      />
     </>
   );
 

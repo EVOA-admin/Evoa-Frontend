@@ -124,7 +124,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-4">
             {/* Support (handshake) button */}
-            <button onClick={handleSupport} className={`flex items-center gap-1.5 transition-colors ${isSupported ? 'text-[#00B8A9]' : isDark ? 'text-white' : 'text-black'}`}>
+            <button onClick={handleSupport} className={`flex items-center gap-1.5 transition-colors ${isSupported ? 'text-evoa' : isDark ? 'text-white' : 'text-black'}`}>
               <FaHandshake size={22} />
               <span className="text-xs font-semibold">{isSupported ? 'Supported' : 'Support'}</span>
             </button>
@@ -173,8 +173,8 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
         {pitch.dealInfo && (
           <div className={`w-full rounded-xl px-4 py-3 mb-3 flex items-center justify-between gap-2 ${
             isDark
-              ? 'bg-gradient-to-r from-[#00B8A9] to-[#008C81]'
-              : 'bg-gradient-to-r from-[#00B8A9] to-[#007A72]'
+              ? 'bg-gradient-to-r from-evoa to-evoa-dark'
+              : 'bg-gradient-to-r from-evoa to-[#007A72]'
           }`}>
             <div>
               <span className="text-[10px] text-white/70 uppercase tracking-widest block mb-0.5">Ask</span>
@@ -287,7 +287,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
             onClick={handlePostComment}
             disabled={!commentText.trim() || commentPosting}
             className={`text-sm font-semibold transition-opacity ${commentText.trim() && !commentPosting
-              ? (isDark ? 'text-[#00B8A9]' : 'text-[#00B8A9]')
+              ? (isDark ? 'text-evoa' : 'text-evoa')
               : 'opacity-30 cursor-not-allowed'
               } ${isDark ? '' : 'text-blue-600'}`}
           >
