@@ -226,7 +226,11 @@ export default function InvestorProfile() {
                 ) : (<>
 
             {/* Hero Section */}
-            <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+            <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b relative ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                {/* ── DESKTOP 3-DOT MENU ── */}
+                <div className="hidden lg:block absolute top-4 right-4 z-50">
+                    {headerActions}
+                </div>
                 <div className="px-4 pt-5 pb-4">
                     <div className="flex items-start gap-4">
                         {/* Avatar */}
@@ -408,13 +412,6 @@ export default function InvestorProfile() {
                         ) : (
                             <EmptyTabState message="No credentials added yet" isDark={isDark} />
                         )}
-                        {/* Logout */}
-                        <button
-                            onClick={handleLogout}
-                            className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold border transition-all mt-2 ${isDark ? "border-red-500/30 text-red-400 hover:bg-red-500/10" : "border-red-200 text-red-500 hover:bg-red-50"}`}
-                        >
-                            <IoLogOutOutline size={15} />Log Out
-                        </button>
                     </>
                 )}
             </div>

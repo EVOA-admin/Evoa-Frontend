@@ -1,63 +1,14 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { FiEye, FiEyeOff } from "react-icons/fi";
-import { FaGoogle } from "react-icons/fa";
-import { useAuth } from "../../contexts/AuthContext";
-import VideoReel from "../../components/shared/VideoReel";
+import re
+import os
 
-/* ─── EVOA Auth CSS ─── */
-const AUTH_CSS = `
-/* ─── Auth Page Design Tokens ─── */
-[data-theme="light"] {
-  --bg:          #FFFFFF;
-  --bg-alt:      #F8FAFC;
-  --bg-card:     #FFFFFF;
-  --bg-deep:     #F1F5F9;
-  --text:        #0F172A;
-  --text-sub:    #334155;
-  --text-mute:   #64748B;
-  --blue:        #1565C0;
-  --blue-mid:    #1976D2;
-  --blue-bright: #2196F3;
-  --blue-pale:   #EEF5FF;
-  --blue-brd:    rgba(21,101,192,0.22);
-  --blue-hover:  #1976D2;
-  --border:      #E2E8F0;
-  --border-soft: #F1F5F9;
-  --shadow-sm:   0 1px 3px rgba(15,23,42,.06),0 2px 8px rgba(15,23,42,.04);
-  --shadow-md:   0 4px 20px rgba(15,23,42,.08),0 1px 4px rgba(15,23,42,.05);
-  --shadow-lg:   0 12px 48px rgba(15,23,42,.10),0 4px 12px rgba(15,23,42,.06);
-  --shadow-blue: 0 8px 32px rgba(21,101,192,.22);
-}
-[data-theme="dark"] {
-  --bg:          #0D1B2A;
-  --bg-alt:      #1E2D3D;
-  --bg-card:     #162032;
-  --bg-deep:     #243447;
-  --text:        #E2E8F0;
-  --text-sub:    #94A3B8;
-  --text-mute:   #64748B;
-  --blue:        #3B82F6;
-  --blue-mid:    #60A5FA;
-  --blue-bright: #93C5FD;
-  --blue-pale:   rgba(59,130,246,0.12);
-  --blue-brd:    rgba(59,130,246,0.25);
-  --blue-hover:  #60A5FA;
-  --border:      rgba(255,255,255,0.08);
-  --border-soft: rgba(255,255,255,0.04);
-  --shadow-sm:   0 1px 4px rgba(0,0,0,.3);
-  --shadow-md:   0 4px 20px rgba(0,0,0,.4);
-  --shadow-lg:   0 12px 48px rgba(0,0,0,.5);
-  --shadow-blue: 0 8px 32px rgba(59,130,246,.22);
-}
-
+new_auth_css = """
 @keyframes auth-fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 @keyframes auth-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 @keyframes auth-shake { 0%,100%{transform:translateX(0)} 15%,45%,75%{transform:translateX(-5px)} 30%,60%,90%{transform:translateX(5px)} }
 @keyframes ref-spin    { to{transform:rotate(360deg)} }
 
 .auth-root {
-  height:100vh; height:100dvh; display:flex;
+  min-height:100vh;display:flex;
   background:var(--bg);color:var(--text);
   font-family:'Inter',sans-serif;
   position:relative;overflow:hidden;
@@ -70,7 +21,7 @@ const AUTH_CSS = `
 @media(min-width:1024px){
   .auth-left {
     display:flex;flex-direction:column;justify-content:center;
-    width:50%;height:100%;position:relative;overflow:hidden;
+    width:50%;position:relative;overflow:hidden;
     background:var(--bg);
     border-right:1px solid var(--border);
   }
@@ -78,22 +29,15 @@ const AUTH_CSS = `
 
 /* ── RIGHT FORM PANEL ── */
 .auth-right {
-  flex:1;
-  height:100%;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding:60px 24px;
-  position:relative;z-index:2;
-  display:flex;
-  flex-direction:column;
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:32px 24px;position:relative;z-index:2;
 }
 @media(min-width:1024px){
-  .auth-right { width:50%;flex:none; padding:80px 40px; }
+  .auth-right { width:50%;flex:none; }
 }
 
 .auth-panel {
   width:100%;max-width:400px;
-  margin:auto;
 }
 
 /* Brand header */
@@ -300,116 +244,38 @@ const AUTH_CSS = `
   letter-spacing: .1em; text-transform: uppercase;
   margin-top: 6px;
 }
-`;
+"""
 
-export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData]   = useState({ email:"", password:"" });
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState(null);
-  const { signIn, signInWithGoogle } = useAuth();
-  const navigate = useNavigate();
+def update_file(filepath):
+    if not os.path.exists(filepath):
+        print(f"Not found: {filepath}")
+        return
+        
+    with open(filepath, 'r') as f:
+        content = f.read()
 
-  const handleChange = e => {
-    const { name, value } = e.target;
-    setFormData(p => ({ ...p, [name]:value }));
-    if (error) setError(null);
-  };
+    # Replace AUTH_CSS block
+    # We find everything between `const AUTH_CSS = \`` and `\`;`
+    pattern = r"const AUTH_CSS = `[\s\S]*?`;"
+    replacement = f"const AUTH_CSS = `\n{new_auth_css.strip()}\n`;"
+    content = re.sub(pattern, replacement, content)
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    setLoading(true); setError(null);
-    try {
-      const { error, data } = await signIn(formData.email, formData.password);
-      if (error) {
-        const msg = error.message?.toLowerCase() || '';
-        if (msg.includes('invalid login credentials') || msg.includes('email not confirmed') || msg.includes('invalid credentials')) {
-          setError('Invalid email or password. If you signed up with Google, please use "Login with Google" below.');
-        } else {
-          setError(error.message || 'Failed to sign in. Please try again.');
-        }
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to sign in. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    # Wrap root in evoa-root
+    content = content.replace('<div className="auth-root">', '<div className="auth-root evoa-root">')
 
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true); setError(null);
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
-    } catch (err) {
-      setError(err.message || 'Failed to initiate Google login');
-      setLoading(false);
-    }
-  };
+    # Fix referral code input color if it has inline styles
+    content = content.replace("color: 'rgba(244,240,232,.25)'", "color: 'var(--text-mute)'")
+    content = content.replace("color: '#00BFA5'", "color: 'var(--blue)'") # Valid hint color
+    content = content.replace("color: '#E8341A'", "color: 'var(--red)'") # Invalid hint color
 
-  return (
-    <div className="auth-root evoa-root">
-      <style>{AUTH_CSS}</style>
-      <Link to="/" className="auth-home-link">← Home</Link>
+    # Fix icon colors in register
+    content = content.replace('border-top-color: \'#C9A84C\'', 'borderTopColor: \'var(--blue)\'')
+    content = content.replace('rgba(201,168,76,.3)', 'var(--border)')
+    content = content.replace('color="#E8341A"', 'color="var(--red, #ef4444)"')
 
-      {/* Left — Video Reel */}
-      <div className="auth-left">
-        <VideoReel />
-      </div>
+    with open(filepath, 'w') as f:
+        f.write(content)
 
-      {/* Right — Form */}
-      <div className="auth-right">
-        <div className="auth-panel">
-          <div className="auth-anim-1">
-            <div className="auth-brand">EVO<span>-A</span></div>
-            <div className="auth-brand-sub">Startup · Investor · Ecosystem</div>
-          </div>
-
-          <div className="auth-box auth-anim-2">
-            <div className="auth-heading">Sign In</div>
-            <div className="auth-subheading">Welcome back — continue your journey</div>
-
-            {error && <div className="auth-error">{error}</div>}
-
-            <form onSubmit={handleSubmit}>
-              <div className="auth-field auth-anim-3">
-                <label className="auth-label">Email</label>
-                <input className="auth-input" type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required disabled={loading} />
-              </div>
-
-              <div className="auth-field auth-anim-4">
-                <label className="auth-label">Password</label>
-                <input className="auth-input" type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange} placeholder="Enter password" required disabled={loading} style={{paddingRight:48}} />
-                <button type="button" className="auth-input-icon" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
-                  {showPassword ? <FiEyeOff size={16}/> : <FiEye size={16}/>}
-                </button>
-              </div>
-
-              <div className="auth-forgot">
-                <Link to="/forget-password">Forgot password?</Link>
-              </div>
-
-              <button type="submit" className="auth-btn auth-anim-5" disabled={loading}>
-                {loading ? 'Signing in…' : 'Sign In'}
-              </button>
-            </form>
-
-            <div className="auth-or">
-              <div className="auth-or-line"/><span className="auth-or-text">or</span><div className="auth-or-line"/>
-            </div>
-
-            <button type="button" className="auth-google-btn" onClick={handleGoogleLogin} disabled={loading}>
-              <FaGoogle size={14}/>
-              {loading ? 'Authenticating…' : 'Continue with Google'}
-            </button>
-          </div>
-
-          <div className="auth-footer-box auth-anim-5">
-            Don't have an account?&nbsp;&nbsp;
-            <Link to="/register">Create Account →</Link>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+update_file('src/modules/auth/login.jsx')
+update_file('src/modules/auth/register.jsx')
+print("Auth UI updated!")

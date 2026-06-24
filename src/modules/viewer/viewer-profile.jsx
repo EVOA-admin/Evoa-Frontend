@@ -318,7 +318,11 @@ export default function ViewerProfile() {
                 ) : (
                     <>
                         {/* Profile Card */}
-                        <div className="px-4 pt-6 pb-4 flex flex-col items-center text-center">
+                        <div className="px-4 pt-6 pb-4 flex flex-col items-center text-center relative">
+                            {/* ── DESKTOP 3-DOT MENU ── */}
+                            <div className="hidden lg:block absolute top-4 right-4 z-50">
+                                {headerActions}
+                            </div>
                             {/* Avatar */}
                             <div className="relative mb-4">
                                 <div className={`w-24 h-24 rounded-full overflow-hidden flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-200"}`}>

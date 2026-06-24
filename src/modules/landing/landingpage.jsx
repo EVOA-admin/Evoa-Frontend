@@ -1,349 +1,797 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import LandingNav from "../../components/layout/LandingNav";
+import Footer from "../../components/layout/footer";
 
-/* ─────────────────────────────────────────
-   GLOBAL CSS
-───────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────
+   EVOA LANDING PAGE — Professional White & Blue Design
+   Light Mode (default): White background + Blue accents
+   Dark Mode (Option C): Navy background + Blue accents
+───────────────────────────────────────────────────── */
+
 const STYLES = `
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400&display=swap');
 
-:root{
-  --black:#060607;--white:#F4F0E8;--red:#E8341A;--gold:#C9A84C;
-  --grey:#1A1A1C;--greyL:#2C2C2F;
-  --muted:rgba(244,240,232,0.35);--muted2:rgba(244,240,232,0.55);--muted3:rgba(244,240,232,0.80);
+/* ─── Design Tokens ─── */
+[data-theme="light"] {
+  --bg:          #FFFFFF;
+  --bg-alt:      #F8FAFC;
+  --bg-card:     #FFFFFF;
+  --bg-deep:     #F1F5F9;
+  --text:        #0F172A;
+  --text-sub:    #334155;
+  --text-mute:   #64748B;
+  --blue:        #1565C0;
+  --blue-mid:    #1976D2;
+  --blue-bright: #2196F3;
+  --blue-pale:   #EEF5FF;
+  --blue-brd:    rgba(21,101,192,0.22);
+  --border:      #E2E8F0;
+  --border-soft: #F1F5F9;
+  --shadow-sm:   0 1px 3px rgba(15,23,42,.06),0 2px 8px rgba(15,23,42,.04);
+  --shadow-md:   0 4px 20px rgba(15,23,42,.08),0 1px 4px rgba(15,23,42,.05);
+  --shadow-lg:   0 12px 48px rgba(15,23,42,.10),0 4px 12px rgba(15,23,42,.06);
+  --shadow-blue: 0 8px 32px rgba(21,101,192,.22);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;}
-body{cursor:none;overflow-x:hidden;}
+[data-theme="dark"] {
+  --bg:          #0D1B2A;
+  --bg-alt:      #1E2D3D;
+  --bg-card:     #162032;
+  --bg-deep:     #243447;
+  --text:        #E2E8F0;
+  --text-sub:    #94A3B8;
+  --text-mute:   #64748B;
+  --blue:        #3B82F6;
+  --blue-mid:    #60A5FA;
+  --blue-bright: #93C5FD;
+  --blue-pale:   rgba(59,130,246,0.12);
+  --blue-brd:    rgba(59,130,246,0.25);
+  --border:      rgba(255,255,255,0.08);
+  --border-soft: rgba(255,255,255,0.04);
+  --shadow-sm:   0 1px 4px rgba(0,0,0,.3);
+  --shadow-md:   0 4px 20px rgba(0,0,0,.4);
+  --shadow-lg:   0 12px 48px rgba(0,0,0,.5);
+  --shadow-blue: 0 8px 32px rgba(59,130,246,.22);
+}
 
-.evoa-root{
-  background:var(--black);color:var(--white);
-  font-family:'Cormorant Garamond',Georgia,serif;
+/* ─── Animations ─── */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes floatY   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes floatY2  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+@keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes pulseDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.3);opacity:.7} }
+@keyframes shimmer  { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes rotate   { to{transform:rotate(360deg)} }
+@keyframes ambScroll { 0%{transform:translateY(0)} 100%{transform:translateY(-50%)} }
+@keyframes ticker   { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+/* ─── Reveal classes ─── */
+.reveal { opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease; }
+.reveal.vis { opacity:1;transform:translateY(0); }
+.rL { opacity:0;transform:translateX(-28px);transition:opacity .7s,transform .7s; }
+.rL.vis { opacity:1;transform:translateX(0); }
+.rR { opacity:0;transform:translateX(28px);transition:opacity .7s,transform .7s; }
+.rR.vis { opacity:1;transform:translateX(0); }
+
+/* ─── Utility ─── */
+.fu1{opacity:0;animation:fadeUp .8s ease forwards .15s}
+.fu2{opacity:0;animation:fadeUp .8s ease forwards .30s}
+.fu3{opacity:0;animation:fadeUp .8s ease forwards .45s}
+.fu4{opacity:0;animation:fadeUp .8s ease forwards .60s}
+.fu5{opacity:0;animation:fadeIn  1s ease forwards .40s}
+.fi1{opacity:0;animation:fadeIn  .8s ease forwards .2s}
+
+/* ─── Section layout ─── */
+.sec-inner { max-width:1200px;margin:0 auto;padding:0 48px; }
+@media(max-width:768px){ .sec-inner{padding:0 20px;} }
+
+/* ─── Shared eyebrow label ─── */
+.eyebrow {
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:400;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--blue);
+  margin-bottom:16px;
+}
+.eyebrow::before{content:'';width:18px;height:2px;background:var(--blue);flex-shrink:0;}
+
+/* ─── Buttons ─── */
+.btn-primary {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 26px;background:var(--blue);color:#FFF;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+  border-radius:8px;text-decoration:none;border:none;cursor:pointer;
+  transition:background .2s,transform .2s,box-shadow .2s;
+  box-shadow:var(--shadow-blue);
+}
+.btn-primary:hover{background:var(--blue-mid);transform:translateY(-2px);box-shadow:0 10px 30px rgba(21,101,192,.32);}
+[data-theme="dark"] .btn-primary{box-shadow:0 8px 28px rgba(59,130,246,.30);}
+[data-theme="dark"] .btn-primary:hover{box-shadow:0 10px 36px rgba(59,130,246,.40);}
+.btn-outline {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 26px;background:transparent;color:var(--blue);
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+  border-radius:8px;text-decoration:none;border:2px solid var(--blue-brd);cursor:pointer;
+  transition:all .2s;
+}
+.btn-outline:hover{background:var(--blue-pale);border-color:var(--blue);}
+.btn-white {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 28px;background:#FFF;color:#1565C0;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:700;
+  border-radius:8px;text-decoration:none;border:none;cursor:pointer;
+  transition:all .2s;box-shadow:0 4px 16px rgba(0,0,0,.18);
+}
+.btn-white:hover{background:#EEF5FF;transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.24);}
+.btn-white-outline {
+  display:inline-flex;align-items:center;gap:8px;
+  padding:12px 28px;background:transparent;color:#FFF;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+  border-radius:8px;text-decoration:none;border:2px solid rgba(255,255,255,.4);cursor:pointer;
+  transition:all .2s;
+}
+.btn-white-outline:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.75);}
+
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+#hero {
   position:relative;min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:90px 48px 80px;overflow:hidden;background:var(--bg);
 }
-.evoa-root::before{
-  content:'';position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:9997;opacity:.6;
+.hero-inner {
+  display:grid;grid-template-columns:1.2fr 1fr;gap:60px;
+  max-width:1200px;width:100%;align-items:center;z-index:2;
+}
+.hero-left {
+  display:flex;flex-direction:column;align-items:flex-start;text-align:left;
+}
+.hero-right {
+  display:flex;justify-content:center;align-items:center;position:relative;
+}
+.hero-blob {
+  position:absolute;border-radius:50%;pointer-events:none;
+  filter:blur(90px);opacity:.55;
+}
+.hero-blob-1 {
+  width:700px;height:700px;top:-160px;left:-160px;
+  background:radial-gradient(circle,rgba(21,101,192,.14),transparent 65%);
+}
+.hero-blob-2 {
+  width:550px;height:550px;bottom:-100px;right:-100px;
+  background:radial-gradient(circle,rgba(33,150,243,.10),transparent 65%);
+}
+[data-theme="dark"] .hero-blob-1{background:radial-gradient(circle,rgba(59,130,246,.20),transparent 65%);}
+[data-theme="dark"] .hero-blob-2{background:radial-gradient(circle,rgba(96,165,250,.12),transparent 65%);}
+
+.hero-badge {
+  display:inline-flex;align-items:center;gap:10px;
+  padding:7px 16px;background:var(--blue-pale);border:1px solid var(--blue-brd);
+  border-radius:100px;margin-bottom:28px;
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:400;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--blue);
+}
+.hero-badge-dot { width:7px;height:7px;border-radius:50%;background:var(--blue);animation:pulseDot 2s ease-in-out infinite; }
+
+.hero-h1 {
+  font-size:clamp(34px,5vw,64px);font-weight:800;
+  line-height:1.1;letter-spacing:-.028em;
+  color:var(--text);max-width:680px;margin-bottom:40px;
+}
+.hero-h1 em { color:var(--blue);font-style:normal; }
+
+.hero-subtitle {
+  font-size:clamp(15px,1.7vw,18px);font-weight:400;line-height:1.7;
+  color:var(--text-sub);max-width:540px;margin-bottom:40px;
 }
 
-/* ── KEYFRAMES ── */
-@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes orbPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-@keyframes orbRing{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-@keyframes floatStat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes ambassadorMarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes ambassadorGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-@keyframes scrollAnim{0%{opacity:1;transform:scaleY(0);transform-origin:top}50%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1);transform-origin:bottom}}
-@keyframes floatUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@keyframes spineDraw{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}
-@keyframes glitchR{0%,90%,100%{clip-path:inset(0 0 100% 0);transform:translateX(0)}92%{clip-path:inset(10% 0 60% 0);transform:translateX(4px)}94%{clip-path:inset(40% 0 30% 0);transform:translateX(-4px)}96%{clip-path:inset(70% 0 5% 0);transform:translateX(3px)}98%{clip-path:inset(0 0 0 0)}}
-@keyframes glitchB{0%,90%,100%{clip-path:inset(0 0 100% 0)}92%{clip-path:inset(10% 0 60% 0);transform:translateX(-3px)}94%{clip-path:inset(50% 0 20% 0);transform:translateX(3px)}96%{clip-path:inset(80% 0 0%)}98%{clip-path:inset(0 0 0 0)}}
-@keyframes scanSweep{0%{transform:translateY(-100%);opacity:0}5%{opacity:1}95%{opacity:1}100%{transform:translateY(20000px);opacity:0}}
-@keyframes textStretch{0%,100%{letter-spacing:.025em}50%{letter-spacing:.055em}}
-@keyframes featInR{from{opacity:0;transform:translateX(60px) skewX(-2deg)}to{opacity:1;transform:translateX(0) skewX(0)}}
-@keyframes featInL{from{opacity:0;transform:translateX(-60px) skewX(2deg)}to{opacity:1;transform:translateX(0) skewX(0)}}
-@keyframes segReveal{from{opacity:0;transform:translateY(40px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.hero-ctas { display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:52px; }
 
-/* ── UTILITY ── */
-.fu1{opacity:0;animation:fadeUp 1s ease forwards .3s}
-.fu2{opacity:0;animation:fadeUp 1s ease forwards .5s}
-.fu3{opacity:0;animation:fadeUp 1s ease forwards .7s}
-.fu4{opacity:0;animation:fadeUp 1s ease forwards .9s}
-.fu5{opacity:0;animation:fadeIn 1.4s ease forwards .6s}
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s ease}
-.reveal.vis{opacity:1;transform:translateY(0)}
-.pstat{opacity:0;transform:translateX(30px);transition:opacity .7s ease,transform .7s ease}
-.pstat.vis{opacity:1;transform:translateX(0)}
-.pillar{opacity:0;transform:translateY(40px);transition:opacity .5s,transform .4s cubic-bezier(.23,1,.32,1),background .3s,border-color .3s}
-.pillar.vis{opacity:1;transform:translateY(0)}
-.pillar:hover{background:var(--greyL)!important;transform:translateY(-8px)!important;border-color:rgba(232,52,26,.2)!important}
-.pillar:hover .pbar{transform:scaleX(1)!important}
-.pillar:hover .ptag{opacity:1!important}
-.pillar:hover .picon{filter:saturate(1) brightness(1)!important}
-.how-card{opacity:0;transform:translateY(32px);transition:opacity .7s ease,transform .7s ease}
-.how-card.vis{opacity:1;transform:translateY(0)}
-.how-card.vis.hf0{animation:floatUp 5s ease-in-out infinite}
-.how-card.vis.hf1{animation:floatUp 5.5s ease-in-out infinite .6s}
-.how-card.vis.hf2{animation:floatUp 4.8s ease-in-out infinite 1.1s}
-.how-card.vis.hf3{animation:floatUp 5.3s ease-in-out infinite .4s}
-.how-inner{transition:transform .5s cubic-bezier(.23,1,.32,1),border-color .3s}
-.how-inner:hover{transform:translateY(-14px)!important}
-.how-inner:hover .hacc{width:56px!important}
-.feat-row{opacity:0}
-.feat-row.onR{animation:featInR .8s cubic-bezier(.23,1,.32,1) forwards}
-.feat-row.onL{animation:featInL .8s cubic-bezier(.23,1,.32,1) forwards}
-.fspine{stroke-dasharray:2000;stroke-dashoffset:2000}
-.fspine.drawn{animation:spineDraw 2.2s cubic-bezier(.4,0,.2,1) forwards .2s}
-.gr{animation:glitchR 5s ease-in-out infinite 1s;position:absolute;inset:0;pointer-events:none;font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,8.5vw,116px);line-height:.88;white-space:nowrap;color:var(--red)}
-.gb{animation:glitchB 5s ease-in-out infinite 1.2s;position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,8.5vw,116px);line-height:.88;white-space:nowrap;color:#4466ff}
-.fts{animation:textStretch 8s ease-in-out infinite}
-.fscan{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(232,52,26,.4) 20%,rgba(201,168,76,.6) 50%,rgba(232,52,26,.4) 80%,transparent);pointer-events:none;z-index:3;animation:scanSweep 6s ease-in-out infinite}
-.seg-wrap{opacity:0}
-.seg-wrap.on{animation:segReveal .8s cubic-bezier(.23,1,.32,1) forwards}
-.ticker-t{animation:ticker 28s linear infinite;display:flex;white-space:nowrap}
-.orb{animation:orbPulse 6s ease-in-out infinite}
-.or1{animation:orbRing 8s linear infinite}
-.or2{animation:orbRing 12s linear infinite reverse}
-.or3{animation:orbRing 20s linear infinite}
-.fs0{animation:floatStat 4s ease-in-out infinite 0s}
-.fs1{animation:floatStat 4s ease-in-out infinite 1s}
-.fs2{animation:floatStat 4s ease-in-out infinite 2s}
-.fs3{animation:floatStat 4s ease-in-out infinite 1.5s}
-.sline{animation:scrollAnim 1.6s ease-in-out infinite}
-.tcursor{display:inline-block;width:8px;height:14px;background:var(--red);margin-left:2px;animation:blink 1s step-end infinite;vertical-align:text-bottom}
-.ghost{position:absolute;font-family:'Bebas Neue',sans-serif;font-size:320px;color:rgba(244,240,232,.02);right:-20px;top:-40px;line-height:1;pointer-events:none;user-select:none;z-index:0}
-.stag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:10px;margin-bottom:18px}
-.stag::before{content:'';width:22px;height:1px;background:var(--red);flex-shrink:0;display:inline-block}
-.bfire{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:16px 36px;background:var(--red);color:var(--black);text-decoration:none;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));display:inline-block;transition:all .3s;border:none;cursor:pointer}
-.bfire:hover{background:var(--gold);transform:translateY(-2px)}
+.hero-stats { display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:72px; }
+.hero-stat-val { font-size:28px;font-weight:800;color:var(--blue);line-height:1;margin-bottom:4px; }
+.hero-stat-lbl { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-mute); }
+.hero-stat-div { width:1px;height:36px;background:var(--border);flex-shrink:0; }
 
-/* ── PITCH SHOWCASE ── */
-.pitch-showcase{padding:60px 0 80px;background:var(--grey);position:relative;overflow:hidden;}
-.pitch-showcase-hdr{padding:0 48px;margin-bottom:40px;}
-.pitch-scroll{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 48px 24px;scrollbar-width:none;cursor:grab;}
-.pitch-scroll::-webkit-scrollbar{display:none;}
-.pitch-card{flex:0 0 auto;width:200px;transition:transform .35s cubic-bezier(.23,1,.32,1),box-shadow .35s ease;scroll-snap-align:start;}
-.pitch-card:hover{transform:scale(1.04);}
-.pitch-card:hover .pitch-card-img{box-shadow:0 12px 40px rgba(232,52,26,.18),0 0 0 1px rgba(232,52,26,.2);border-color:rgba(232,52,26,.25);}
-.pitch-card-name{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted2);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.pitch-card-img{width:100%;aspect-ratio:9/16;object-fit:cover;border:1px solid rgba(244,240,232,.08);display:block;transition:box-shadow .35s ease,border-color .35s ease;background:var(--greyL);}
-@media(max-width:768px){.pitch-showcase-hdr{padding:0 20px;}.pitch-scroll{padding:0 20px 16px;gap:12px;}.pitch-card{width:150px;}}
+/* Phone Mockup */
+.hero-phone-wrap {
+  position: relative;
+  transform: translateY(-40px);
+  transition: transform 0.6s cubic-bezier(0.2,0.8,0.2,1);
+  z-index: 10;
+  margin: 0 auto;
+}
+.hero-phone-wrap:hover { transform: translateY(-40px) scale(1.02); }
+.hero-phone-glow {
+  position: absolute;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 140%; height: 120%;
+  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 60%);
+  z-index: -1; pointer-events: none;
+}
+.hero-phone {
+  width:320px;height:650px;border-radius:48px;
+  background:#000;border:12px solid #1a1a1c;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.25), inset 0 0 0 1px rgba(255,255,255,0.15), 0 0 0 2px #2a2a2d;
+  position:relative;overflow:hidden;
+}
+[data-theme="dark"] .hero-phone { border-color:#0f0f11;box-shadow:0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.1), 0 0 0 2px #1f1f22; }
 
+/* Floating Boxes */
+.hero-float-box {
+  position: absolute;
+  background: #FFF;
+  border-radius: 18px;
+  padding: 16px 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.03);
+  display: flex; gap: 14px; align-items: center;
+  z-index: 50; width: max-content; max-width: 280px;
+  transition: transform 0.4s cubic-bezier(0.2,0.8,0.2,1);
+}
+.hero-phone-wrap:hover .hero-float-box { transform: translateY(-6px); }
+[data-theme="dark"] .hero-float-box {
+  background: var(--bg-card);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+}
+.fb-icon { width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
+.fb-icon-red { background: rgba(239,68,68,0.1); color: #ef4444; }
+.fb-icon-yellow { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.fb-icon-green { background: rgba(16,185,129,0.1); color: #10b981; }
 
+.fb-content { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.fb-title { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.1; }
+.fb-sub { font-size: 13px; color: var(--text-sub); line-height: 1.2; }
+.fb-link { font-size: 13px; font-weight: 600; color: var(--blue); margin-top: 2px; }
+.fb-trend { font-size: 13px; font-weight: 600; color: #10b981; margin-top: 2px; }
 
-/* ── CURSOR ── */
-.evoa-cur{width:10px;height:10px;background:var(--red);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:difference}
-.evoa-cur-r{width:36px;height:36px;border:1px solid rgba(232,52,26,.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transform:translate(-50%,-50%)}
+.box-1 { top: 60px; right: -90px; }
+.box-2 { top: 300px; left: -110px; }
+.box-3 { bottom: 80px; right: -70px; }
+.hero-phone-notch {
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:100px;height:26px;background:#000;
+  border-bottom-left-radius:18px;border-bottom-right-radius:18px;
+  z-index:40;
+}
+.hero-phone-screen {
+  width:100%;height:100%;background:#000;position:relative;overflow:hidden;border-radius:34px;
+}
+.hero-reel-track {
+  display:flex;flex-direction:column;height:100%;
+  overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;
+}
+.hero-reel-track::-webkit-scrollbar { display:none; }
+.hero-reel-slide {
+  width:100%;height:100%;flex:0 0 100%;position:relative;background:#111;
+  scroll-snap-align:start;
+}
+.hero-reel-img { width:100%;height:100%;object-fit:cover; }
+.hero-reel-overlay {
+  position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 35%, transparent 60%);
+  pointer-events:none;
+}
+.hero-reel-tag {
+  position:absolute;top:40px;left:14px;z-index:20;
+  padding:4px 10px;border-radius:100px;font-size:10px;font-weight:600;
+  background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);color:#FFF;border:1px solid rgba(255,255,255,0.2);
+}
+.hero-reel-bottom {
+  position:absolute;bottom:20px;left:14px;right:64px;color:#fff;z-index:20;
+}
+.hero-reel-title { font-family:'Inter',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px; }
+.hero-reel-desc { font-family:'Inter',sans-serif;font-size:11px;opacity:0.85;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+.hero-reel-actions {
+  position:absolute;bottom:20px;right:12px;display:flex;flex-direction:column;gap:14px;align-items:center;z-index:20;
+}
+.hero-reel-btn {
+  display:flex;flex-direction:column;align-items:center;gap:3px;color:#fff;cursor:pointer;
+}
+.hero-reel-btn-icon {
+  width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;transition:background 0.2s;
+}
+.hero-reel-btn-icon svg { width:16px;height:16px; }
+.hero-reel-btn-lbl { font-size:9px;font-weight:600;opacity:0.9; }
 
-/* ── RESPONSIVE ── */
 @media(max-width:1024px){
-  .ghost{font-size:180px}
-  .nlinks{display:none}
-  .hamburger{display:flex}
-  .nsignin,.ncta{display:none}
+  .hero-inner { grid-template-columns:1fr;text-align:center;gap:40px; }
+  .hero-left { align-items:center;text-align:center; }
+  .hero-h1, .hero-subtitle { text-align:center; }
+  .hero-ctas, .hero-stats { justify-content:center; }
+  .hero-phone-wrap { transform: none; margin-top: 40px; }
+  .hero-phone-wrap:hover { transform: scale(1.02); }
+  .hero-phone { width:280px;height:580px; }
+  .box-1 { right: -20px; top: 40px; }
+  .box-2 { left: -20px; top: 250px; }
+  .box-3 { right: -10px; bottom: 60px; }
 }
 @media(max-width:768px){
-  body{cursor:auto}
-  .evoa-cur,.evoa-cur-r{display:none}
-  .nav{padding:0 20px;height:60px}
-  .hero-grid{grid-template-columns:1fr!important;padding:90px 20px 60px!important;min-height:auto!important}
-  .hero-orb{display:none!important}
-  .hero-div{display:none!important}
-  .hero-h1{font-size:clamp(52px,13vw,72px)!important}
-  .problem-grid{grid-template-columns:1fr!important;gap:40px!important;padding:72px 20px!important}
-  .pstat-n{font-size:52px!important;min-width:100px!important}
-  .pillars-sec{padding:72px 20px 60px!important}
-  .pillars-grid{grid-template-columns:1fr 1fr!important}
-  .ai-sec{padding:72px 20px!important}
-  .ai-hdr{grid-template-columns:1fr!important;gap:28px!important}
-  .ai-app{padding:0!important}
-  .ai-cols{grid-template-columns:1fr!important;height:auto!important}
-  .ai-sb,.ai-adv{display:none!important}
-  .ai-chat{height:380px!important}
-  .how-sec{padding:72px 20px 80px!important}
-  .how-svg{display:none!important}
-  .how-grid{grid-template-columns:1fr 1fr!important;gap:10px!important}
-  .seg-sec{padding:72px 20px 80px!important}
-  .seg-grid{grid-template-columns:1fr 1fr!important}
-  .feat-sec{padding:72px 0 80px!important}
-  .feat-hdr{padding:0 20px 52px!important}
-  .feat-row{display:block!important;opacity:1!important;animation:none!important}
-  .feat-mid{display:none!important}
-  .feat-slot{padding:0 20px 8px!important;opacity:1!important;display:block!important}
-  .mission-sec{padding:72px 20px!important}
-  .launch-sec{flex-direction:column!important;gap:28px!important;padding:60px 20px!important;text-align:center!important}
-  .launch-r{text-align:center!important}
-  .launch-d{font-size:clamp(48px,14vw,80px)!important}
-  .footer-grid{grid-template-columns:1fr!important;gap:36px!important}
-  .footer-sec{padding:48px 24px 28px!important}
+  #hero { padding:100px 20px 60px; }
+  .hero-stat-div { display:none; }
+  .hero-stats { gap:24px; }
+  .hero-float-box { display: none; /* Hide floating boxes on very small screens to avoid clutter */ }
 }
-@media(max-width:480px){
-  .pillars-grid{grid-template-columns:1fr!important}
-  .how-grid{grid-template-columns:1fr!important}
-  .seg-grid{grid-template-columns:1fr!important}
+@media(max-width:480px){ .hero-h1{font-size:32px;} .hero-phone { width:260px;height:540px; } }
+
+/* ══════════════════════════════════════════
+   PITCH SHOWCASE
+══════════════════════════════════════════ */
+#pitch-showcase {
+  padding:80px 0 90px;
+  background:var(--bg-alt);
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
 }
-@media(hover:none){
-  .pillar:hover{transform:none!important;background:var(--black)!important;border-color:rgba(244,240,232,.04)!important}
-  .how-inner:hover{transform:none!important}
+.ps-hdr { padding:0 0 40px; }
+.ps-scroll {
+  display:flex;gap:14px;overflow-x:auto;
+  padding:0 48px 16px;scrollbar-width:none;
+  cursor:grab;-webkit-overflow-scrolling:touch;
+  scroll-snap-type:x mandatory;
 }
+.ps-scroll:active { cursor:grabbing; }
+.ps-scroll::-webkit-scrollbar { display:none; }
+.ps-card { flex:0 0 auto;width:175px;scroll-snap-align:start;transition:transform .3s; }
+.ps-card:hover { transform:scale(1.04) translateY(-4px); }
+.ps-name {
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ps-img {
+  width:100%;aspect-ratio:9/16;object-fit:cover;border-radius:14px;
+  border:1px solid var(--border);background:var(--bg-deep);display:block;
+  transition:box-shadow .3s,border-color .3s;
+}
+.ps-card:hover .ps-img { box-shadow:0 10px 36px rgba(21,101,192,.14);border-color:var(--blue-brd); }
+@media(max-width:768px){ .ps-scroll{padding:0 20px 14px;}.ps-card{width:140px;} }
+
+/* ══════════════════════════════════════════
+   PLATFORM FEATURES
+══════════════════════════════════════════ */
+#features { padding:100px 0;background:var(--bg); }
+.feat-grid {
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:56px;
+}
+.feat-card {
+  background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+  padding:30px 26px;box-shadow:var(--shadow-sm);
+  transition:all .3s;position:relative;overflow:hidden;cursor:default;
+}
+.feat-card::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--blue),var(--blue-mid));
+  transform:scaleX(0);transition:transform .35s;transform-origin:left;
+}
+.feat-card:hover::before { transform:scaleX(1); }
+.feat-card:hover { box-shadow:var(--shadow-md);transform:translateY(-4px);border-color:var(--blue-brd); }
+.feat-icon {
+  width:46px;height:46px;border-radius:12px;background:var(--blue-pale);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:18px;color:var(--blue);flex-shrink:0;
+}
+.feat-title { font-size:16px;font-weight:700;color:var(--text);margin-bottom:9px;line-height:1.3; }
+.feat-desc { font-size:14px;line-height:1.7;color:var(--text-sub); }
+@media(max-width:1024px){ .feat-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:600px){ .feat-grid{grid-template-columns:1fr;} }
+
+/* ══════════════════════════════════════════
+   HOW IT WORKS
+══════════════════════════════════════════ */
+#how {
+  padding:100px 0;background:var(--bg-alt);
+  border-top:1px solid var(--border);
+}
+.how-grid {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:56px;
+  position:relative;
+}
+.how-connector {
+  position:absolute;top:42px;left:calc(12.5% + 18px);right:calc(12.5% + 18px);
+  height:2px;pointer-events:none;
+  background:linear-gradient(90deg,var(--blue),var(--blue-mid),var(--blue));
+  opacity:.18;
+}
+.how-step {
+  background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+  padding:30px 22px;text-align:center;box-shadow:var(--shadow-sm);
+  transition:all .3s;position:relative;z-index:1;
+}
+.how-step:hover { border-color:var(--blue-brd);box-shadow:var(--shadow-md);transform:translateY(-5px); }
+.how-num {
+  width:54px;height:54px;border-radius:50%;background:var(--blue);
+  color:#FFF;font-size:20px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;box-shadow:0 4px 16px rgba(21,101,192,.35);
+}
+[data-theme="dark"] .how-num { box-shadow:0 4px 16px rgba(59,130,246,.35); }
+.how-step-title { font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3; }
+.how-step-desc { font-size:13px;line-height:1.7;color:var(--text-sub); }
+@media(max-width:900px){ .how-grid{grid-template-columns:repeat(2,1fr);}.how-connector{display:none;} }
+@media(max-width:480px){ .how-grid{grid-template-columns:1fr;} }
+
+/* ══════════════════════════════════════════
+   SEGMENTS (on blue bg — inverted)
+══════════════════════════════════════════ */
+#segments {
+  padding:100px 0;background:var(--blue);
+  position:relative;overflow:hidden;
+}
+[data-theme="dark"] #segments { background:var(--bg-deep); }
+#segments::before {
+  content:'';position:absolute;inset:0;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='1' fill-rule='evenodd'%3E%3Ccircle cx='1' cy='1' r='1'/%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+.seg-eyebrow { color:rgba(255,255,255,.65); }
+.seg-eyebrow::before { background:rgba(255,255,255,.65); }
+[data-theme="dark"] .seg-eyebrow { color:var(--blue); }
+[data-theme="dark"] .seg-eyebrow::before { background:var(--blue); }
+.seg-h2 { font-size:clamp(30px,4vw,52px);font-weight:800;color:#FFF;line-height:1.06;max-width:520px;margin-bottom:56px;letter-spacing:-.02em; }
+[data-theme="dark"] .seg-h2 { color:var(--text); }
+.seg-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:18px; }
+.seg-card {
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);
+  border-radius:18px;padding:32px 24px;transition:all .3s;
+  backdrop-filter:blur(12px);cursor:default;
+}
+.seg-card:hover { background:rgba(255,255,255,.17);transform:translateY(-5px);box-shadow:0 16px 44px rgba(0,0,0,.16); }
+[data-theme="dark"] .seg-card { background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.20); }
+[data-theme="dark"] .seg-card:hover { background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.35); }
+.seg-icon {
+  width:50px;height:50px;border-radius:13px;
+  background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
+  margin-bottom:18px;font-size:22px;
+}
+[data-theme="dark"] .seg-icon { background:rgba(59,130,246,.15); }
+.seg-role { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:7px; }
+[data-theme="dark"] .seg-role { color:var(--text-mute); }
+.seg-headline { font-size:24px;font-weight:800;color:#FFF;line-height:1.15;margin-bottom:10px; }
+[data-theme="dark"] .seg-headline { color:var(--text); }
+.seg-desc { font-size:13px;line-height:1.7;color:rgba(255,255,255,.72);margin-bottom:18px; }
+[data-theme="dark"] .seg-desc { color:var(--text-sub); }
+.seg-features { list-style:none;display:flex;flex-direction:column;gap:4px; }
+.seg-feature {
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:rgba(255,255,255,.70);
+  padding:4px 0;border-bottom:1px solid rgba(255,255,255,.07);
+}
+.seg-feature:last-child { border-bottom:none; }
+[data-theme="dark"] .seg-feature { color:var(--text-sub);border-bottom-color:rgba(255,255,255,.05); }
+.seg-feature-dot { width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.55);flex-shrink:0; }
+[data-theme="dark"] .seg-feature-dot { background:var(--blue); }
+@media(max-width:1024px){ .seg-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:540px){ .seg-grid{grid-template-columns:1fr;} }
+
+/* ══════════════════════════════════════════
+   MISSION
+══════════════════════════════════════════ */
+#mission {
+  padding:100px 0;background:var(--bg);
+  border-top:1px solid var(--border);
+  text-align:center;
+}
+.mission-quote {
+  font-size:clamp(18px,2.6vw,32px);font-weight:400;
+  font-style:italic;line-height:1.55;
+  color:var(--text);max-width:820px;margin:0 auto 44px;
+  position:relative;
+}
+.mission-blue { color:var(--blue);font-style:normal;font-weight:700; }
+.mission-authors { display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap; }
+.mission-author-name { font-size:14px;font-weight:700;color:var(--text); }
+.mission-author-role { font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-mute);margin-top:3px; }
+.mission-divider { width:1px;height:36px;background:var(--border); }
+
+/* ══════════════════════════════════════════
+   CTA BAND
+══════════════════════════════════════════ */
+#cta-band {
+  padding:100px 0;
+  background:linear-gradient(135deg,#0D47A1 0%,#1565C0 50%,#1976D2 100%);
+  position:relative;overflow:hidden;
+}
+[data-theme="dark"] #cta-band {
+  background:linear-gradient(135deg,#0D1B2A 0%,#162032 50%,#1E2D3D 100%);
+  border-top:1px solid rgba(59,130,246,.2);
+}
+#cta-band::before {
+  content:'';position:absolute;inset:0;opacity:.05;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-rule='evenodd'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.cta-inner { position:relative;z-index:2;text-align:center; }
+.cta-eyebrow {
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:20px;
+}
+.cta-eyebrow::before,.cta-eyebrow::after { content:'';width:36px;height:1px;background:rgba(255,255,255,.35); }
+[data-theme="dark"] .cta-eyebrow { color:var(--blue-mid); }
+[data-theme="dark"] .cta-eyebrow::before,[data-theme="dark"] .cta-eyebrow::after { background:rgba(59,130,246,.35); }
+.cta-h2 {
+  font-size:clamp(30px,4.5vw,58px);font-weight:800;
+  color:#FFF;line-height:1.06;margin-bottom:18px;letter-spacing:-.02em;
+}
+[data-theme="dark"] .cta-h2 { color:var(--text); }
+.cta-sub { font-size:clamp(15px,1.7vw,18px);color:rgba(255,255,255,.72);line-height:1.65;max-width:480px;margin:0 auto 40px; }
+[data-theme="dark"] .cta-sub { color:var(--text-sub); }
+.cta-btns { display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap; }
+
+
+.ln-modal-body a{color:var(--blue)}
+.ln-modal-body strong{color:var(--text)}
+.ln-modal-warn{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.20);border-radius:10px;padding:14px 18px;margin:12px 0;display:flex;gap:12px;align-items:flex-start}
+
+/* ══════════════════════════════════════════
+   AMBASSADOR BOTTOM BANNER
+══════════════════════════════════════════ */
+.amb-bottom-container {
+  position:absolute;bottom:0;left:0;right:0;height:46px;z-index:20;
+  background:rgba(21,101,192,.03);
+  overflow:hidden;transition:all .35s;
+  display:flex;align-items:center;
+  border-top:1px solid rgba(21,101,192,.08);
+}
+.amb-bottom-container:hover { background:rgba(21,101,192,.08); border-top-color:rgba(21,101,192,.22); }
+[data-theme="dark"] .amb-bottom-container { background:rgba(59,130,246,.04); border-top-color:rgba(59,130,246,.12); }
+[data-theme="dark"] .amb-bottom-container:hover { background:rgba(59,130,246,.10); border-top-color:rgba(59,130,246,.30); }
+.amb-bottom-track {
+  display:flex;white-space:nowrap;
+  animation:ticker 45s linear infinite;will-change:transform;
+  width:max-content;
+}
+.amb-bottom-container:hover .amb-bottom-track { animation-play-state:paused; }
+.amb-item { display:inline-flex;align-items:center;gap:14px;padding:0 28px;text-decoration:none; }
+.amb-dot { width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0;box-shadow:0 0 6px rgba(21,101,192,.4); }
+[data-theme="dark"] .amb-dot { box-shadow:0 0 6px rgba(59,130,246,.4); }
+.amb-text {
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--text-mute);white-space:nowrap;
+}
+.amb-cta {
+  padding:4px 8px;border:1px solid var(--blue-brd);color:var(--blue);
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;border-radius:4px;background:var(--blue-pale);
+  transition:all .3s;display:inline-flex;align-items:center;gap:5px;
+}
+.amb-item:hover .amb-cta { background:var(--blue);color:#FFF;border-color:var(--blue); }
+@media(max-width:768px){ .amb-bottom-container{display:none;} }
 `;
 
-/* ─── HOOKS ─── */
+/* ─── Hooks ─── */
 function useReveal() {
   useEffect(() => {
     const obs = new IntersectionObserver(
       es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add("vis"); }),
-      { threshold: 0.08 }
+      { threshold: 0.07 }
     );
-    document.querySelectorAll(".reveal,.pstat").forEach(el => obs.observe(el));
+    document.querySelectorAll(".reveal,.rL,.rR").forEach(el => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 }
 
-function useCounter(target, duration = 2000, delay = 600) {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      const step = target / (duration / 16);
-      let cur = 0;
-      const id = setInterval(() => {
-        cur = Math.min(cur + step, target);
-        setVal(Math.floor(cur));
-        if (cur >= target) clearInterval(id);
-      }, 16);
-    }, delay);
-    return () => clearTimeout(t);
-  }, []);
-  return val;
-}
+/* ─── Ambassador Banner ─── */
+const AMB_TEXT = "Join Ambassador Program and Earn Money with Us";
+const AMB_ITEMS = Array(18).fill(null);
 
-/* ─── CURSOR ─── */
-function Cursor() {
-  const dot = useRef(null), ring = useRef(null);
-  const pos = useRef({ mx: 0, my: 0, rx: 0, ry: 0 });
-  useEffect(() => {
-    const mv = e => { pos.current.mx = e.clientX; pos.current.my = e.clientY; };
-    document.addEventListener("mousemove", mv);
-    const tick = () => {
-      const p = pos.current;
-      p.rx += (p.mx - p.rx) * .12; p.ry += (p.my - p.ry) * .12;
-      if (dot.current) { dot.current.style.left = p.mx + "px"; dot.current.style.top = p.my + "px"; }
-      if (ring.current) { ring.current.style.left = p.rx + "px"; ring.current.style.top = p.ry + "px"; }
-      requestAnimationFrame(tick);
-    };
-    tick();
-    const grow = () => { if (dot.current) { dot.current.style.width = "20px"; dot.current.style.height = "20px"; dot.current.style.background = "var(--gold)"; } if (ring.current) { ring.current.style.width = "52px"; ring.current.style.height = "52px"; } };
-    const shrink = () => { if (dot.current) { dot.current.style.width = "10px"; dot.current.style.height = "10px"; dot.current.style.background = "var(--red)"; } if (ring.current) { ring.current.style.width = "36px"; ring.current.style.height = "36px"; } };
-    document.querySelectorAll("a,button").forEach(el => { el.addEventListener("mouseenter", grow); el.addEventListener("mouseleave", shrink); });
-    return () => document.removeEventListener("mousemove", mv);
-  }, []);
-  return (<>
-    <div ref={dot} className="evoa-cur" />
-    <div ref={ring} className="evoa-cur-r" />
-  </>);
-}
-
-
-
-/* ─── PARTICLE CANVAS ─── */
-function ParticleCanvas() {
-  const ref = useRef(null);
-  useEffect(() => {
-    const cv = ref.current; if (!cv) return;
-    const ctx = cv.getContext("2d");
-    const rsz = () => { cv.width = cv.offsetWidth; cv.height = cv.offsetHeight; };
-    rsz(); window.addEventListener("resize", rsz);
-    const pts = Array.from({ length: 80 }, () => ({
-      x: Math.random() * cv.width, y: Math.random() * cv.height,
-      r: Math.random() * 1.5 + .3, vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3,
-      a: Math.random() * .5 + .1, c: Math.random() > .6 ? "#E8341A" : "#C9A84C"
-    }));
-    let raf;
-    const draw = () => {
-      ctx.clearRect(0, 0, cv.width, cv.height);
-      pts.forEach(p => {
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = cv.width; if (p.x > cv.width) p.x = 0;
-        if (p.y < 0) p.y = cv.height; if (p.y > cv.height) p.y = 0;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.c; ctx.globalAlpha = p.a; ctx.fill(); ctx.globalAlpha = 1;
-      });
-      for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
-        const d = Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y);
-        if (d < 100) { ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.strokeStyle = "#E8341A"; ctx.globalAlpha = (1 - d / 100) * .07; ctx.lineWidth = .5; ctx.stroke(); ctx.globalAlpha = 1; }
-      }
-      raf = requestAnimationFrame(draw);
-    };
-    draw();
-    return () => { window.removeEventListener("resize", rsz); cancelAnimationFrame(raf); };
-  }, []);
-  return <canvas ref={ref} style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none", width: "100%", height: "100%" }} />;
+function AmbassadorBanner() {
+  return (
+    <div className="amb-bottom-container">
+      <div className="amb-bottom-track">
+        {AMB_ITEMS.map((_, i) => (
+          <Link key={i} to="/ambassador-program" className="amb-item" aria-label="Join Ambassador Program">
+            <span className="amb-dot" />
+            <span className="amb-text">{AMB_TEXT}</span>
+            <span className="amb-cta">
+              Join
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
+                <path d="M1 7L7 1M7 1H2M7 1V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /* ─── HERO ─── */
 function Hero() {
-  const cnt = useCounter(40);
+  const trackRef = useRef(null);
+
+  useEffect(() => {
+    let timer;
+    const startScroll = () => {
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (!trackRef.current) return;
+        const el = trackRef.current;
+        const itemH = el.clientHeight;
+        const maxScroll = el.scrollHeight - itemH;
+
+        // Calculate the next snap point exactly to avoid smooth scroll desync
+        let currentIdx = Math.round(el.scrollTop / itemH);
+        let nextTop = (currentIdx + 1) * itemH;
+
+        if (nextTop > maxScroll - 10) {
+          nextTop = 0;
+        }
+        el.scrollTo({ top: nextTop, behavior: 'smooth' });
+      }, 4000);
+    };
+
+    startScroll();
+
+    // Pause auto-scroll on manual interaction
+    const handlePause = () => clearInterval(timer);
+    const handleResume = () => startScroll();
+
+    const el = trackRef.current;
+    let scrollTimeout;
+    const handleScroll = () => {
+      handlePause();
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(handleResume, 2000);
+    };
+
+    if (el) {
+      el.addEventListener('touchstart', handlePause, { passive: true });
+      el.addEventListener('touchend', handleResume, { passive: true });
+      el.addEventListener('mousedown', handlePause);
+      el.addEventListener('mouseup', handleResume);
+      el.addEventListener('mouseleave', handleResume);
+      // Also pause if the user is scrolling manually via trackpad/wheel
+      el.addEventListener('wheel', handlePause, { passive: true });
+      el.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    return () => {
+      clearInterval(timer);
+      clearTimeout(scrollTimeout);
+      if (el) {
+        el.removeEventListener('touchstart', handlePause);
+        el.removeEventListener('touchend', handleResume);
+        el.removeEventListener('mousedown', handlePause);
+        el.removeEventListener('mouseup', handleResume);
+        el.removeEventListener('mouseleave', handleResume);
+        el.removeEventListener('wheel', handlePause);
+        el.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, []);
+
   return (
-    <section id="hero" className="hero-grid" style={{ minHeight: "100vh", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", padding: "10px 48px 60px", position: "relative", overflow: "hidden" }}>
-      <ParticleCanvas />
-      <div className="hero-div" style={{ position: "absolute", top: 0, right: "50%", bottom: 0, width: 1, background: "linear-gradient(to bottom,transparent,rgba(232,52,26,.2) 30%,rgba(201,168,76,.15) 70%,transparent)", zIndex: 1 }} />
-      <div style={{ position: "relative", zIndex: 2 }}>
-        <div className="fu1" style={{ marginBottom: 20, display: "inline-flex", alignItems: "center", gap: 12, background: "rgba(255,255,255,.04)", border: "1px solid rgba(255,255,255,.08)", borderRadius: 6, padding: "8px 16px" }}>
-          <span style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 13, fontWeight: 300, color: "rgba(244,240,232,.6)", letterSpacing: ".04em" }}>Recognised By</span>
-          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: ".04em" }}>
-            <span style={{ color: "#E8341A" }}>#start </span>
-            <span style={{ color: "#138808" }}>up </span>
-            <span style={{ color: "#FF9933" }}>india</span>
-          </span>
-        </div>
-        <div className="fu1" style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".22em", textTransform: "uppercase", color: "var(--red)", marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ width: 32, height: 1, background: "var(--red)", display: "inline-block" }} />Global Startup Ecosystem · Est. 2025
-        </div>
-        <h1 className="fu2 hero-h1" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(72px,8vw,116px)", lineHeight: .92, letterSpacing: ".02em", marginBottom: 32 }}>
-          <span style={{ display: "block" }}>Pitch</span>
-          <span style={{ display: "block", color: "var(--red)" }}>your startup</span>
-          <span style={{ display: "block", fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, fontStyle: "italic", fontSize: "clamp(40px,5.5vw,78px)", color: "var(--gold)", lineHeight: 1.1 }}>here.</span>
-        </h1>
-        <p className="fu3" style={{ fontSize: "clamp(15px,2vw,20px)", fontWeight: 300, lineHeight: 1.7, color: "var(--muted2)", maxWidth: 420, marginBottom: 48 }}>
-          Find the best startup pitches, connect with top investors & incubators — all in one place. EVOA.
-        </p>
-        <div className="fu4" style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-          <Link to="/register" className="bfire">Create Your Account</Link>
-          <a href="https://021.evoa.co.in" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted2)", textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-            Meet 021 AI <span style={{ width: 24, height: 1, background: "currentColor", display: "inline-block" }} />
-          </a>
-        </div>
-      </div>
-      <div className="hero-orb fu5" style={{ position: "relative", zIndex: 2, display: "flex", justifyContent: "center", alignItems: "center" }}>
-        <div style={{ position: "relative", width: 460, height: 460 }}>
-          <div className="orb" style={{ position: "absolute", inset: 60, borderRadius: "50%", background: "radial-gradient(circle at 35% 35%,rgba(232,52,26,.7),rgba(201,168,76,.3) 40%,rgba(6,6,7,.9) 70%)", filter: "blur(2px)" }} />
-          <div className="or1" style={{ position: "absolute", inset: 0, borderRadius: "50%", border: "1px solid rgba(232,52,26,.15)" }} />
-          <div className="or2" style={{ position: "absolute", inset: 20, borderRadius: "50%", border: "1px solid rgba(201,168,76,.1)" }} />
-          <div className="or3" style={{ position: "absolute", inset: 40, borderRadius: "50%", border: "1px solid rgba(232,52,26,.08)" }} />
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 64, lineHeight: 1, color: "var(--white)", letterSpacing: ".04em" }}>{cnt.toLocaleString()}</div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--muted)", marginTop: 4 }}>Startups on Platform</div>
+    <section id="hero">
+      <div className="hero-blob hero-blob-1" />
+      <div className="hero-blob hero-blob-2" />
+      <AmbassadorBanner />
+
+      <div className="hero-inner">
+        <div className="hero-left">
+          {/* Headline */}
+          <h1 className="hero-h1 fu2">
+            India's First <br /> <em>Video-Based</em><br />
+            Startup &amp; Investor<br />
+            Discovery Platform
+          </h1>
+
+          {/* Subtitle removed */}
+
+          {/* CTAs */}
+          <div className="hero-ctas fu3">
+            <Link to="/register" className="btn-primary">
+              Start Pitching — Free
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+            <Link to="/login" className="btn-outline">
+              Explore Investors →
+            </Link>
           </div>
-          {[{ v: "40+", l: "Startups Live", c: "fs0", s: { top: "8%", right: "5%" } }, { v: "11", l: "Countries", c: "fs1", s: { top: "38%", right: "-2%" } }, { v: "100", l: "Free Early Access", c: "fs2", s: { bottom: "18%", right: "8%" } }, { v: "021", l: "AI Co-Founder", c: "fs3", s: { bottom: "30%", left: "2%" } }].map((st, i) => (
-            <div key={i} className={st.c} style={{ position: "absolute", fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted2)", whiteSpace: "nowrap", ...st.s }}>
-              <strong style={{ color: "var(--gold)", fontWeight: 400, display: "block", fontSize: 18, fontFamily: "'Bebas Neue',sans-serif" }}>{st.v}</strong>{st.l}
+
+          {/* Stats */}
+          <div className="hero-stats fu4">
+            <div className="hero-stat">
+              <div className="hero-stat-val">100+</div>
+              <div className="hero-stat-lbl">Startups Pitching</div>
             </div>
-          ))}
+            <div className="hero-stat-div" />
+            <div className="hero-stat">
+              <div className="hero-stat-val">50+</div>
+              <div className="hero-stat-lbl">Active Investors</div>
+            </div>
+            <div className="hero-stat-div" />
+            <div className="hero-stat">
+              <div className="hero-stat-val">₹0</div>
+              <div className="hero-stat-lbl">Cost to Join</div>
+            </div>
+            <div className="hero-stat-div" />
+            <div className="hero-stat">
+              <div className="hero-stat-val">90s</div>
+              <div className="hero-stat-lbl">Video Pitches</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="fu5" style={{ position: "absolute", bottom: 36, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--muted)", zIndex: 10 }}>
-        <div className="sline" style={{ width: 1, height: 40, background: "linear-gradient(to bottom,var(--red),transparent)" }} />Scroll
+
+        <div className="hero-right fu5">
+          {/* iPhone Mockup */}
+          <div className="hero-phone-wrap">
+            <div className="hero-phone-glow" />
+
+            {/* Floating Boxes */}
+            <div className="hero-float-box box-1">
+              <div className="fb-icon fb-icon-red">🎯</div>
+              <div className="fb-content">
+                <div className="fb-title">Investor Matched!</div>
+                <div className="fb-sub">Sequoia India · Seed Stage</div>
+                <div className="fb-link">→ View Profile</div>
+              </div>
+            </div>
+
+            <div className="hero-float-box box-2">
+              <div className="fb-icon fb-icon-yellow">📊</div>
+              <div className="fb-content">
+                <div className="fb-title">Pitch Analytics</div>
+                <div className="fb-sub">2,400 views · last 48 hours</div>
+                <div className="fb-trend">↑ 38% this week</div>
+              </div>
+            </div>
+
+            <div className="hero-float-box box-3">
+              <div className="fb-icon fb-icon-green">⚡</div>
+              <div className="fb-content">
+                <div className="fb-title">Investor AI</div>
+                <div className="fb-sub">Startup Review & Analysis</div>
+                <div className="fb-link">→ View Pitchdeck/Sch Meet</div>
+              </div>
+            </div>
+
+            <div className="hero-phone">
+              <div className="hero-phone-notch" />
+              <div className="hero-phone-screen">
+                <div className="hero-reel-track" ref={trackRef}>
+                  {PITCH_IMAGES.map((p, i) => (
+                    <div className="hero-reel-slide" key={i}>
+                      <img src={p.url} className="hero-reel-img" alt={`${p.name} pitch`} />
+                      <div className="hero-reel-overlay" />
+
+                      <div className="hero-reel-tag">Seed Stage</div>
+
+                      <div className="hero-reel-bottom">
+                        <div className="hero-reel-title">
+                          {p.name}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="#3B82F6" stroke="#FFF" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                        </div>
+                        <div className="hero-reel-desc">Raising ₹2Cr for 10% equity. We are revolutionizing the industry with an AI-first approach...</div>
+                      </div>
+
+                      <div className="hero-reel-actions">
+                        <div className="hero-reel-btn">
+                          <div className="hero-reel-btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
+                          </div>
+                          <span className="hero-reel-btn-lbl">2.4k</span>
+                        </div>
+                        <div className="hero-reel-btn">
+                          <div className="hero-reel-btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+                          </div>
+                          <span className="hero-reel-btn-lbl">42</span>
+                        </div>
+                        <div className="hero-reel-btn">
+                          <div className="hero-reel-btn-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
-  );
-}
-
-/* ─── TICKER ─── */
-const TICKS = [
-  { t: "Free Early Access", h: "For first 100 startups" },
-  { t: "Investor AI launched", h: "Get startup's real time report" },
-  { t: "021 AI co-founder activated", h: "get your own CXO's" },
-  // { t: "Trade Arena product test", h: "847 responses in 2 hours" },
-  // { t: "New investor joined", h: "Dragon's Den alumni · London" },
-];
-function Ticker() {
-  const items = [...TICKS, ...TICKS];
-  return (
-    <div style={{ overflow: "hidden", background: "var(--grey)", borderTop: "1px solid rgba(244,240,232,.06)", borderBottom: "1px solid rgba(244,240,232,.06)", padding: "14px 0" }}>
-      <div className="ticker-t">
-        {items.map((t, i) => (
-          <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 14, padding: "0 36px", fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase", color: "var(--muted)" }}>
-            <span style={{ width: 4, height: 4, background: "var(--red)", borderRadius: "50%", flexShrink: 0, display: "inline-block" }} />
-            {t.t} · <span style={{ color: "var(--gold)" }}>{t.h}</span>
-          </span>
-        ))}
-      </div>
-    </div>
   );
 }
 
@@ -361,42 +809,38 @@ const PITCH_IMAGES = [
 
 function PitchShowcase() {
   const scrollRef = useRef(null);
-  // Enable click-drag scrolling
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     let isDown = false, sx = 0, sl = 0;
-    const down = e => { isDown = true; sx = e.pageX - el.offsetLeft; sl = el.scrollLeft; el.style.cursor = 'grabbing'; };
-    const up = () => { isDown = false; el.style.cursor = 'grab'; };
-    const move = e => { if (!isDown) return; e.preventDefault(); const x = e.pageX - el.offsetLeft; el.scrollLeft = sl - (x - sx); };
-    el.addEventListener('mousedown', down);
+    const dn = e => { isDown = true; sx = e.pageX - el.offsetLeft; sl = el.scrollLeft; };
+    const up = () => { isDown = false; };
+    const mv = e => { if (!isDown) return; e.preventDefault(); el.scrollLeft = sl - (e.pageX - el.offsetLeft - sx); };
+    el.addEventListener('mousedown', dn);
     el.addEventListener('mouseleave', up);
     el.addEventListener('mouseup', up);
-    el.addEventListener('mousemove', move);
-    return () => { el.removeEventListener('mousedown', down); el.removeEventListener('mouseleave', up); el.removeEventListener('mouseup', up); el.removeEventListener('mousemove', move); };
+    el.addEventListener('mousemove', mv);
+    return () => { el.removeEventListener('mousedown', dn); el.removeEventListener('mouseleave', up); el.removeEventListener('mouseup', up); el.removeEventListener('mousemove', mv); };
   }, []);
 
   return (
-    <section className="pitch-showcase">
-      <div className="ghost" style={{ fontSize: 220, top: -20, right: -10 }}>03</div>
-      <div className="pitch-showcase-hdr reveal">
-        <div className="stag">Live on EVOA</div>
-        <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(36px,4.5vw,62px)', lineHeight: .94, letterSpacing: '.02em', marginBottom: 12 }}>Startups pitching now.</h2>
-        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(14px,1.6vw,17px)', fontWeight: 300, color: 'var(--muted2)', maxWidth: 440 }}>Real founders. Real pitches. Discover the next big idea.</p>
+    <section id="pitch-showcase">
+      <div className="sec-inner">
+        <div className="ps-hdr reveal">
+          <div className="eyebrow">Live on EVOA</div>
+          <h2 style={{ fontSize: 'clamp(26px,3.5vw,42px)', fontWeight: 800, color: 'var(--text)', lineHeight: 1.1, letterSpacing: '-.02em', marginBottom: 10 }}>
+            Startups Pitching Right Now
+          </h2>
+          <p style={{ fontSize: 15, color: 'var(--text-sub)', lineHeight: 1.65 }}>
+            Real founders. Real pitches. Discover the next big idea before anyone else.
+          </p>
+        </div>
       </div>
-      <div className="pitch-scroll" ref={scrollRef}>
-        {PITCH_IMAGES.map((p, i) => (
-          <div key={i} className="pitch-card">
-            <div className="pitch-card-name">{p.name}</div>
-            <img
-              className="pitch-card-img"
-              src={p.url}
-              alt={`${p.name} startup pitch thumbnail`}
-              loading={i < 3 ? 'eager' : 'lazy'}
-              decoding="async"
-              width="200"
-              height="356"
-            />
+      <div className="ps-scroll" ref={scrollRef}>
+        {[...PITCH_IMAGES, ...PITCH_IMAGES].map((p, i) => (
+          <div key={i} className="ps-card">
+            <div className="ps-name">{p.name}</div>
+            <img className="ps-img" src={p.url} alt={`${p.name} pitch`} loading={i < 4 ? 'eager' : 'lazy'} />
           </div>
         ))}
       </div>
@@ -404,425 +848,203 @@ function PitchShowcase() {
   );
 }
 
-/* ─── PROBLEM ─── */
-function Problem() {
+/* ─── PLATFORM FEATURES ─── */
+const FEATURES_DATA = [
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 8s-4-4-10-4S2 8 2 8" /><path d="M22 8v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8" /><path d="M8 21h8" /><path d="M12 17v4" />
+        <polygon points="8,8 16,8 12,14" />
+      </svg>
+    ),
+    title: 'Video Pitch Platform',
+    desc: 'Record and share your 90-second startup pitch. Get discovered by 50+ active investors without any cold outreach.',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+      </svg>
+    ),
+    title: 'Investor AI Matching',
+    desc: 'AI-powered matching connects startups with the right investors instantly. No cold outreach — just precise signal.',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" /><line x1="12" y1="12" x2="12" y2="16" /><line x1="10" y1="14" x2="14" y2="14" />
+      </svg>
+    ),
+    title: '021 AI Co-Founder',
+    desc: 'Your virtual C-suite — CEO, CMO, CTO, CFO — operating in parallel, 24/7. Turn your idea into a business plan instantly.',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+      </svg>
+    ),
+    title: 'Smart Discovery',
+    desc: 'Find hundreds of quality startups, investors, and opportunities. Intelligent filters. Zero noise. Maximum signal.',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 20V10M12 20V4M6 20v-6" />
+      </svg>
+    ),
+    title: 'Analytics & Insights',
+    desc: 'Track pitch views, investor engagement, and traction in real-time. Know your numbers and own your growth.',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+    title: 'Verified & Secure',
+    desc: 'CIN, GST, SEBI, PAN — all verified. Enterprise-grade encryption and security at every layer of the platform.',
+  },
+];
+
+function PlatformFeatures() {
   return (
-    <section style={{ background: "var(--black)", position: "relative", overflow: "hidden" }}>
-      <div className="problem-grid" style={{ padding: "140px 48px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "center" }}>
-        <div className="ghost">01</div>
-        <div className="reveal" style={{ position: "relative", zIndex: 1 }}>
-          <div className="stag">The Reality</div>
-          <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(48px,5.5vw,80px)", lineHeight: .94, letterSpacing: ".02em", marginBottom: 28 }}>
-            The system was never <em style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", fontWeight: 300, color: "var(--gold)" }}>built for you.</em>
+    <section id="features">
+      <div className="sec-inner">
+        <div className="reveal">
+          <div className="eyebrow">The Platform</div>
+          <h2 style={{ fontSize: 'clamp(28px,4vw,50px)', fontWeight: 800, color: 'var(--text)', lineHeight: 1.07, letterSpacing: '-.022em', maxWidth: 620, marginBottom: 12 }}>
+            Everything You Need to Raise Capital
           </h2>
-          <p style={{ fontSize: "clamp(15px,2vw,18px)", fontWeight: 300, lineHeight: 1.8, color: "var(--muted2)", maxWidth: 480 }}>
-            94% of startups fail. Not because the ideas are bad — but because founders without the right network, city, or connections never get a real shot. EVOA exists to break that.
+          <p style={{ fontSize: 16, color: 'var(--text-sub)', lineHeight: 1.7, maxWidth: 560 }}>
+            Six powerful tools. One seamless ecosystem designed to take startups from idea to funded.
           </p>
         </div>
-        <div style={{ position: "relative", zIndex: 1 }}>
-          {[["94%", "of startups fail — most before reaching the right investor or customer"], ["1%", "of founders have access to tier-1 VC networks. The rest have to fight."], ["90s", "is all it takes on EVOA. Pitch your startup in a reel. Get discovered globally."]].map(([n, t], i) => (
-            <div key={i} className="pstat" style={{ padding: "32px 0", borderBottom: "1px solid rgba(244,240,232,.07)", display: "flex", alignItems: "baseline", gap: 20, transitionDelay: `${i * .15}s` }}>
-              <div className="pstat-n" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 72, color: "var(--red)", lineHeight: 1, minWidth: 160, letterSpacing: ".02em" }}>{n}</div>
-              <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 16, fontWeight: 300, lineHeight: 1.6, color: "var(--muted2)" }}>{t}</div>
+        <div className="feat-grid">
+          {FEATURES_DATA.map((f, i) => (
+            <div key={i} className="feat-card reveal" style={{ transitionDelay: `${i * .07}s` }}>
+              <div className="feat-icon">{f.icon}</div>
+              <div className="feat-title">{f.title}</div>
+              <p className="feat-desc">{f.desc}</p>
             </div>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── PILLARS ─── */
-const PILLARS = [
-  { n: "01", icon: "🎬", name: "Pitch Reel", desc: "90-second video pitch. Seen by real investors. No warm intros. No gatekeepers.", tag: "Go Live →", locked: false, to: "/login" },
-  { n: "02", icon: "💎", name: "Investor AI", desc: "AI-powered investor matchmaking. Right investor, right stage, right moment.", tag: "Raise Capital →", locked: false, to: "/login" },
-  { n: "03", icon: "🤖", name: "021 AI", desc: "Your virtual C-suite. CEO · CMO · CTO · CFO — all running in parallel, 24/7.", tag: "Meet 021 →", locked: false, href: "https://021.evoa.co.in" },
-  { n: "04", icon: "⚡", name: "EVOA Hire", desc: "Hire humans and deploy AI agents simultaneously.", tag: "Coming Soon", locked: true },
-  { n: "05", icon: "🏹", name: "Trade Arena", desc: "Test your product with real users before you build.", tag: "Coming Soon", locked: true },
-  { n: "06", icon: "⚔️", name: "Battleground", desc: "Compete. Win. Get noticed.", tag: "Coming Soon", locked: true },
-];
-function Pillars() {
-  const ref = useRef(null);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) document.querySelectorAll(".pillar").forEach((el, i) => setTimeout(() => el.classList.add("vis"), i * 100));
-    }, { threshold: .08 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return (
-    <section id="pillars" ref={ref} className="pillars-sec" style={{ padding: "140px 48px 100px", background: "var(--grey)", position: "relative", overflow: "hidden" }}>
-      <div className="ghost">02</div>
-      <div className="reveal" style={{ maxWidth: 640, marginBottom: 80, position: "relative", zIndex: 1 }}>
-        <div className="stag">The Platform</div>
-        <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(44px,5vw,72px)", lineHeight: .94, letterSpacing: ".02em", marginBottom: 20 }}>Six weapons.<br />One arena.</h2>
-        <p style={{ fontSize: "clamp(14px,1.8vw,17px)", fontWeight: 300, lineHeight: 1.7, color: "var(--muted2)" }}>Every tool a startup needs to go from idea to funded — in a single ecosystem designed for the relentless.</p>
-      </div>
-      <div className="pillars-grid" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 2, position: "relative", zIndex: 1 }}>
-        {PILLARS.map((p, i) => (
-          <div key={i} className="pillar" style={{ background: "var(--black)", padding: "32px 22px 28px", position: "relative", overflow: "hidden", border: "1px solid rgba(244,240,232,.04)", transitionDelay: `${i * .08}s`, ...(p.locked && { filter: "blur(2px)", pointerEvents: "none" }) }}>
-            <div className="pbar" style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,var(--red),var(--gold))", transform: "scaleX(0)", transformOrigin: "left", transition: "transform .4s" }} />
-            {p.locked && (
-              <div style={{ position: "absolute", top: 10, right: 10, display: "flex", alignItems: "center", gap: 4, background: "rgba(201,168,76,.12)", border: "1px solid rgba(201,168,76,.25)", padding: "3px 8px", borderRadius: 2 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 7, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--gold)" }}>Locked</span>
-              </div>
-            )}
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, color: p.locked ? "var(--muted)" : "var(--red)", letterSpacing: ".1em", marginBottom: 28 }}>{p.n}</div>
-            <span className="picon" style={{ fontSize: 28, marginBottom: 16, display: "block", filter: p.locked ? "saturate(0) brightness(.4)" : "saturate(0) brightness(1.5)", transition: "filter .3s" }}>{p.icon}</span>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: ".04em", marginBottom: 10, color: p.locked ? "var(--muted)" : "var(--white)" }}>{p.name}</div>
-            <p style={{ fontSize: 12, fontWeight: 300, lineHeight: 1.7, color: "var(--muted)" }}>{p.desc}</p>
-            {p.to ? (
-              <Link to={p.to} className="ptag" style={{ display: "inline-block", marginTop: 18, fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--red)", padding: "4px 10px", border: "1px solid rgba(232,52,26,.3)", opacity: 0, transition: "opacity .3s", textDecoration: "none", cursor: "pointer" }}>{p.tag}</Link>
-            ) : p.href ? (
-              <a href={p.href} target="_blank" rel="noopener noreferrer" className="ptag" style={{ display: "inline-block", marginTop: 18, fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--red)", padding: "4px 10px", border: "1px solid rgba(232,52,26,.3)", opacity: 0, transition: "opacity .3s", textDecoration: "none", cursor: "pointer" }}>{p.tag}</a>
-            ) : (
-              <span className="ptag" style={{ display: "inline-block", marginTop: 18, fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: p.locked ? "var(--muted)" : "var(--red)", padding: "4px 10px", border: `1px solid ${p.locked ? "rgba(244,240,232,.1)" : "rgba(232,52,26,.3)"}`, opacity: 0, transition: "opacity .3s" }}>{p.tag}</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <div className="reveal" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 60, position: "relative", zIndex: 1, flexWrap: "wrap" }}>
-        <Link to="/register" className="bfire" style={{ padding: "16px 40px" }}>Create Account — Free</Link>
-        <Link to="/register" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", padding: "15px 40px", color: "var(--white)", textDecoration: "none", border: "1px solid rgba(244,240,232,.2)", display: "inline-block", clipPath: "polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))" }}>Start Pitching →</Link>
-      </div>
-    </section>
-  );
-}
-
-/* ─── AI SECTION ─── */
-function AISection() {
-  const [msgs, setMsgs] = useState([
-    { from: "user", text: "How do I improve my startup's unit economics before Series A?" },
-    { from: "ai", text: "Your LTV:CAC ratio is 15.3x — strong. Focus on reducing churn below 2% and expanding ACV by 20% through upsell motions. Target payback period under 6 months." },
-  ]);
-  const [inp, setInp] = useState("");
-  const [typing, setTyping] = useState(false);
-  const bottom = useRef(null);
-  const chatContainer = useRef(null);
-  useEffect(() => {
-    if (chatContainer.current) {
-      chatContainer.current.scrollTop = chatContainer.current.scrollHeight;
-    }
-  }, [msgs]);
-  const send = () => {
-    if (!inp.trim()) return;
-    setMsgs(m => [...m, { from: "user", text: inp.trim() }]);
-    setInp(""); setTyping(true);
-    setTimeout(() => {
-      setMsgs(m => [...m, { from: "ai", text: "The 021 AI C-suite is analysing your query across all four executive lenses — strategy, growth, tech, and finance. Your comprehensive answer is ready." }]);
-      setTyping(false);
-    }, 1800);
-  };
-  return (
-    <section id="ai" className="ai-sec" style={{ padding: "120px 48px 140px", background: "var(--black)", position: "relative", overflow: "hidden" }}>
-      <div className="ghost">03</div>
-      <div className="ai-hdr reveal" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 80, alignItems: "flex-end", marginBottom: 60, position: "relative", zIndex: 1 }}>
-        <div>
-          <div className="stag">021 AI System</div>
-          <h2 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(48px,6vw,88px)", lineHeight: .94, letterSpacing: ".02em" }}>
-            Your <span style={{ color: "var(--red)" }}>AI</span> Co-Founder
-            <em style={{ fontFamily: "'Cormorant Garamond',serif", fontStyle: "italic", fontWeight: 300, color: "var(--gold)", display: "block", fontSize: ".72em", lineHeight: 1.2 }}>is already waiting.</em>
-          </h2>
-        </div>
-        <div>
-          <p style={{ fontSize: "clamp(15px,2vw,18px)", fontWeight: 300, lineHeight: 1.8, color: "var(--muted2)", marginBottom: 32 }}>The 021 AI system isn't a chatbot. It's a full executive team — CEO, CMO, CTO, CFO — operating in parallel, 24/7.</p>
-          <Link to="/register" className="bfire">Click to Turn Your Idea Into Reality →</Link>
-        </div>
-      </div>
-      <div className="ai-app reveal" style={{ position: "relative", zIndex: 1, transitionDelay: ".2s" }}>
-        <div style={{ background: "#0a0a0f", border: "1px solid rgba(244,240,232,.08)", borderRadius: 4, overflow: "hidden", boxShadow: "0 40px 120px rgba(0,0,0,.8)" }}>
-          <div style={{ background: "#060609", padding: "10px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(244,240,232,.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "var(--white)", letterSpacing: ".12em" }}>021 AI</span>
-              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: "var(--muted)" }}>CO-FOUNDER INTERFACE</span>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>{["#ff5f57", "#ffbd2e", "#28c840"].map((c, i) => <div key={i} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}</div>
-          </div>
-          <div className="ai-cols" style={{ display: "grid", gridTemplateColumns: "190px 1fr 170px", height: 480 }}>
-            {/* Sidebar */}
-            <div className="ai-sb" style={{ background: "#08080d", borderRight: "1px solid rgba(244,240,232,.05)", display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: 12 }}><div style={{ background: "rgba(232,52,26,.1)", border: "1px solid rgba(232,52,26,.2)", borderRadius: 3, padding: "8px 12px", fontFamily: "'DM Mono',monospace", fontSize: 10, color: "var(--muted2)", cursor: "pointer" }}>+ New Chat</div></div>
-              <div style={{ flex: 1, padding: "0 8px" }}>
-                {["New Chat", "Online Milk Shop", "E-commerce Solut...", "Pitchroom"].map((item, i) => (
-                  <div key={i} style={{ padding: "8px 10px", fontFamily: "'DM Mono',monospace", fontSize: 9, color: i === 0 ? "var(--muted2)" : "var(--muted)", background: i === 0 ? "rgba(244,240,232,.05)" : "transparent", marginBottom: 2, borderRadius: 3, cursor: "pointer" }}>💬 {item}</div>
-                ))}
-              </div>
-              <div style={{ padding: 10 }}><div style={{ background: "linear-gradient(135deg,#6B3FA0,#3A1F6B)", borderRadius: 4, padding: 9, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: ".1em", textTransform: "uppercase", color: "#fff", textAlign: "center", cursor: "pointer" }}>Switch to Pro</div></div>
-              <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(244,240,232,.05)", display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#2a1a2a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>👤</div>
-                <div><div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: "var(--muted2)" }}>adityanarayan...</div><div style={{ fontFamily: "'DM Mono',monospace", fontSize: 7, color: "var(--muted)" }}>Free tier</div></div>
-              </div>
-            </div>
-            {/* Chat */}
-            <div className="ai-chat" style={{ display: "flex", flexDirection: "column", background: "#0a0a0f", height: 480 }}>
-              <div style={{ padding: "12px 18px", borderBottom: "1px solid rgba(244,240,232,.05)" }}><span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "var(--white)" }}>👤 CFO</span></div>
-              <div ref={chatContainer} style={{ flex: 1, overflowY: "auto", padding: 18, display: "flex", flexDirection: "column", gap: 14 }}>
-                {msgs.map((m, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: m.from === "user" ? "flex-end" : "flex-start", alignItems: "flex-start", gap: 8 }}>
-                    {m.from === "ai" && <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#1a1108", border: "1px solid rgba(232,168,52,.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, flexShrink: 0 }}>💰</div>}
-                    <div style={{ maxWidth: "76%", padding: "10px 14px", background: m.from === "user" ? "rgba(232,52,26,.12)" : "rgba(244,240,232,.04)", border: `1px solid ${m.from === "user" ? "rgba(232,52,26,.2)" : "rgba(244,240,232,.07)"}`, borderRadius: 3 }}>
-                      <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 300, lineHeight: 1.7, color: m.from === "user" ? "var(--muted3)" : "var(--muted2)" }}>{m.text}</p>
-                    </div>
-                  </div>
-                ))}
-                {typing && <div style={{ display: "flex", alignItems: "center", gap: 8 }}><div style={{ width: 26, height: 26, borderRadius: "50%", background: "#1a1108", border: "1px solid rgba(232,168,52,.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>💰</div><div style={{ padding: "10px 14px", background: "rgba(244,240,232,.04)", border: "1px solid rgba(244,240,232,.07)", borderRadius: 3, display: "flex", gap: 4 }}>{[0, 1, 2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--gold)", animation: `blink 1.2s ease-in-out infinite ${i * .2}s` }} />)}</div></div>}
-
-              </div>
-              <div style={{ padding: "10px 14px", borderTop: "1px solid rgba(244,240,232,.06)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(244,240,232,.04)", border: "1px solid rgba(244,240,232,.08)", borderRadius: 3, padding: "8px 12px" }}>
-                  <input value={inp} onChange={e => setInp(e.target.value)} onKeyDown={e => e.key === "Enter" && send()} placeholder="Type your message here..." style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 300, color: "var(--muted2)" }} />
-                  <button onClick={send} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted2)", fontSize: 16 }}>➤</button>
-                </div>
-              </div>
-            </div>
-            {/* Advisors */}
-            <div className="ai-adv" style={{ background: "#06060a", borderLeft: "1px solid rgba(244,240,232,.05)", display: "flex", flexDirection: "column" }}>
-              <div style={{ padding: 12, borderBottom: "1px solid rgba(244,240,232,.05)" }}><div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted)" }}>C-Suite Advisors →</div></div>
-              <div style={{ padding: 8, display: "flex", flexDirection: "column", gap: 5 }}>
-                {[{ role: "CEO", c: "#E8341A", bg: "#1a0a08", s: "ready" }, { role: "CMO", c: "#4EC896", bg: "#081a10", s: "active" }, { role: "CTO", c: "#9B8FE8", bg: "#0e0818", s: "ready" }, { role: "CFO", c: "#E8A834", bg: "#1a1108", s: "ready" }].map((a, i) => (
-                  <div key={i} style={{ border: `1px solid ${a.c}33`, borderRadius: 3, background: a.bg }}>
-                    <div style={{ padding: "5px 9px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 7, color: a.s === "active" ? a.c : "#888" }}>● {a.s}</span>
-                      {a.s === "active" && <span style={{ width: 5, height: 5, background: a.c, borderRadius: "50%", display: "inline-block" }} />}
-                    </div>
-                    <div style={{ padding: "6px 9px 10px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                      <div style={{ width: 46, height: 46, borderRadius: "50%", background: a.bg, border: `2px solid ${a.c}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🤖</div>
-                      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: a.c, letterSpacing: ".06em" }}>{a.role}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style={{ position: "absolute", bottom: -40, left: "20%", right: "20%", height: 80, background: "radial-gradient(ellipse,rgba(232,52,26,.15),transparent 70%)", pointerEvents: "none", filter: "blur(20px)" }} />
       </div>
     </section>
   );
 }
 
 /* ─── HOW IT WORKS ─── */
-const HOW = [
-  { n: 1, acc: "var(--red)", cls: "hf0", title: "Create Your Account", desc: "Sign up with email or phone, choose your role — Startup, Investor, Incubator, or Viewer." },
-  { n: 2, acc: "var(--gold)", cls: "hf1", title: "Complete Your Profile", desc: "Startups: founder details, verification & pitch. Investors: ticket size, sector focus. Incubators: programs & documents." },
-  { n: 3, acc: "var(--red)", cls: "hf2", title: "Discover & Pitch", desc: "Discover pitches from Home feed, Explore page, and Battleground. Watch pitch reels, like, comment, share, and support." },
-  { n: 4, acc: "var(--gold)", cls: "hf3", title: "Connect & Close Deals", desc: "Comments, messages, offers, battlegrounds — all lead you to real conversations and deals." },
+const HOW_STEPS = [
+  { n: '01', title: 'Create Your Account', desc: 'Sign up with email or phone. Choose your role — Startup, Investor, Incubator, or Viewer.' },
+  { n: '02', title: 'Complete Your Profile', desc: 'Startups add pitch, team & traction. Investors set ticket size, sector & preferences.' },
+  { n: '03', title: 'Discover & Pitch', desc: 'Browse the pitch feed, watch 90-second reels, and discover opportunities that match your goals.' },
+  { n: '04', title: 'Connect & Close', desc: 'Send messages, make offers, schedule calls — all within one platform until the deal is done.' },
 ];
+
 function HowItWorks() {
   const ref = useRef(null);
-  const [vis, setVis] = useState(false);
   useEffect(() => {
     const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        setVis(true);
-        document.querySelectorAll(".how-card").forEach((el, i) => setTimeout(() => { el.classList.add("vis"); el.style.opacity = "1"; el.style.transform = "translateY(0)"; }, 150 + i * 180));
-      }
-    }, { threshold: .05 });
+      if (e.isIntersecting) document.querySelectorAll('.how-step').forEach((el, i) =>
+        setTimeout(() => el.classList.add('reveal', 'vis'), i * 120)
+      );
+    }, { threshold: .06 });
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
   return (
-    <section id="how" ref={ref} className="how-sec" style={{ padding: "140px 48px 160px", background: "var(--black)", position: "relative", overflow: "hidden" }}>
-      <div className="ghost" style={{ right: "auto", left: -10 }}>03</div>
-      <div style={{ position: "absolute", top: -120, left: -120, width: 500, height: 500, background: "radial-gradient(circle,rgba(232,52,26,.07),transparent 65%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: -100, right: -60, width: 440, height: 440, background: "radial-gradient(circle,rgba(201,168,76,.07),transparent 65%)", pointerEvents: "none" }} />
-      <div style={{ textAlign: "center", position: "relative", zIndex: 2, marginBottom: 80 }}>
-        <div className={`reveal${vis ? " vis" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 10, fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: ".26em", textTransform: "uppercase", color: "var(--red)", marginBottom: 22 }}>
-          <span style={{ width: 28, height: 1, background: "var(--red)", display: "inline-block" }} />Simple Process<span style={{ width: 28, height: 1, background: "var(--red)", display: "inline-block" }} />
+    <section id="how" ref={ref}>
+      <div className="sec-inner">
+        <div className="reveal">
+          <div className="eyebrow">Simple Process</div>
+          <h2 style={{ fontSize: 'clamp(28px,4vw,50px)', fontWeight: 800, color: 'var(--text)', lineHeight: 1.07, letterSpacing: '-.022em', marginBottom: 10 }}>
+            How It Works
+          </h2>
+          <p style={{ fontSize: 16, color: 'var(--text-sub)', lineHeight: 1.65 }}>
+            Get started in four simple steps — no complicated setup, no gatekeepers.
+          </p>
         </div>
-        <h2 className={`reveal${vis ? " vis" : ""}`} style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(56px,8.5vw,120px)", lineHeight: .88, letterSpacing: ".025em", marginBottom: 24, transitionDelay: ".1s" }}>
-          How It <span style={{ WebkitTextStroke: "1px var(--gold)", WebkitTextFillColor: "transparent" }}>Works</span>
-        </h2>
-        <p className={`reveal${vis ? " vis" : ""}`} style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(16px,2vw,20px)", fontWeight: 300, fontStyle: "italic", color: "var(--muted2)", transitionDelay: ".2s" }}>Get started in four simple steps</p>
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-          <div style={{ height: 1, background: "linear-gradient(90deg,transparent,var(--red) 30%,var(--gold) 70%,transparent)", width: vis ? 280 : 0, transition: "width 1.4s cubic-bezier(.4,0,.2,1) .3s" }} />
-        </div>
-      </div>
-      <div style={{ position: "relative", zIndex: 2, maxWidth: 1280, margin: "0 auto" }}>
-        <svg className="how-svg" style={{ position: "absolute", top: 52, left: "6%", width: "88%", height: 10, overflow: "visible", pointerEvents: "none", zIndex: 1 }} viewBox="0 0 1200 10">
-          <defs><linearGradient id="hlg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#E8341A" stopOpacity="0" /><stop offset="20%" stopColor="#E8341A" stopOpacity="1" /><stop offset="50%" stopColor="#C9A84C" stopOpacity="1" /><stop offset="80%" stopColor="#E8341A" stopOpacity="1" /><stop offset="100%" stopColor="#E8341A" stopOpacity="0" /></linearGradient></defs>
-          <path d="M 0 5 L 1200 5" fill="none" stroke="url(#hlg)" strokeWidth="1" />
-          {[0, 400, 800, 1200].map((x, i) => <g key={i}><circle cx={x} cy="5" r="5" fill="var(--black)" stroke={i % 2 === 0 ? "#E8341A" : "#C9A84C"} strokeWidth="1.5" /></g>)}
-        </svg>
-        <div className="how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
-          {HOW.map((s, i) => (
-            <div key={i} className={`how-card ${s.cls}`} style={{ transitionDelay: `${i * .15}s` }}>
-              <div className="how-inner" style={{ position: "relative", padding: "44px 28px 36px", background: "rgba(244,240,232,.02)", border: "1px solid rgba(244,240,232,.07)", overflow: "hidden", height: "100%" }}>
-                <div style={{ position: "absolute", top: 0, right: 0, width: 0, height: 0, borderStyle: "solid", borderWidth: "0 24px 24px 0", borderColor: `transparent ${s.n % 2 === 0 ? "rgba(201,168,76,.2)" : "rgba(232,52,26,.2)"} transparent transparent` }} />
-                <div style={{ display: "flex", alignItems: "baseline", marginBottom: 18 }}>
-                  <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 80, lineHeight: 1, color: "var(--white)", opacity: .3 }}>0</span>
-                  <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 80, lineHeight: 1, color: s.acc }}>{s.n}</span>
-                </div>
-                <div className="hacc" style={{ width: 32, height: 2, background: `linear-gradient(90deg,${s.acc},transparent)`, marginBottom: 16, transition: "width .5s ease .3s" }} />
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: ".04em", color: "var(--white)", marginBottom: 12, lineHeight: 1.1 }}>{s.title}</div>
-                <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 300, lineHeight: 1.85, color: "var(--muted)" }}>{s.desc}</p>
-                <div style={{ position: "absolute", bottom: 16, right: 20, fontFamily: "'DM Mono',monospace", fontSize: 7, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(244,240,232,.15)" }}>{s.n} / 4</div>
-              </div>
+        <div className="how-grid">
+          <div className="how-connector" />
+          {HOW_STEPS.map((s, i) => (
+            <div key={i} className="how-step" style={{ transitionDelay: `${i * .1}s` }}>
+              <div className="how-num">{s.n}</div>
+              <div className="how-step-title">{s.title}</div>
+              <p className="how-step-desc">{s.desc}</p>
             </div>
           ))}
         </div>
-      </div>
-      <div className={`reveal${vis ? " vis" : ""}`} style={{ textAlign: "center", marginTop: 72, position: "relative", zIndex: 2, transitionDelay: ".6s" }}>
-        <div style={{ width: 1, height: 48, background: "linear-gradient(to bottom,transparent,var(--gold))", margin: "0 auto 28px" }} />
-        <Link to="/register" className="bfire" style={{ padding: "18px 52px" }}>Create Your Account — Free</Link>
-        <p style={{ marginTop: 16, fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontStyle: "italic", fontWeight: 300, color: "var(--muted)" }}>No gatekeepers. No warm intros. Just your idea.</p>
+        <div className="reveal" style={{ textAlign: 'center', marginTop: 52 }}>
+          <Link to="/register" className="btn-primary" style={{ padding: '15px 36px', fontSize: 15 }}>
+            Create Your Account — Free
+          </Link>
+          <p style={{ marginTop: 12, fontSize: 13, color: 'var(--text-mute)', fontStyle: 'italic' }}>
+            No gatekeepers. No warm intros. Just your idea.
+          </p>
+        </div>
       </div>
     </section>
   );
 }
 
 /* ─── SEGMENTS ─── */
-const SEGS = [
-  { n: "01", tag: "Founders", t1: "Build", t2: "Empires.", c: "var(--red)", bg: "#0E0504", glow: "rgba(232,52,26,.1)", icon: "🚀", items: ["Pitch to 1000+ investors", "021 AI co-founder", "Product validation tools", "Hire talent & AI agents", "Compete in Battleground"] },
-  { n: "02", tag: "Investors", t1: "Fund", t2: "Futures.", c: "var(--gold)", bg: "#0E0B02", glow: "rgba(201,168,76,.1)", icon: "💎", items: ["AI-matched deal flow", "90s pitch reels", "Traction dashboards", "Direct founder access", "Portfolio analytics"] },
-  { n: "03", tag: "Visionaries", t1: "Dream", t2: "Big.", c: "#9B8FE8", bg: "#080510", glow: "rgba(155,143,232,.1)", icon: "🔭", items: ["Explore pitch feed daily", "Connect with incubators", "Discover co-founders", "Track emerging sectors", "Learn from live deals"] },
-  { n: "04", tag: "Incubators", t1: "Nurture", t2: "Unicorns.", c: "#4EC896", bg: "#02100A", glow: "rgba(78,200,150,.1)", icon: "🏛️", items: ["Verified portfolio page", "Cohort investor access", "Startup showcase tools", "Program management", "Impact analytics"] },
+const SEGMENTS_DATA = [
+  {
+    icon: '🚀',
+    role: 'Founders',
+    headline: 'Build Empires.',
+    desc: 'From first idea to Series A. EVOA gives you the stage, tools, AI co-founder, and global investor access.',
+    features: ['Pitch to 50+ investors', '021 AI co-founder', 'Product validation', 'Hire talent & AI agents', 'Compete in Battleground'],
+  },
+  {
+    icon: '💎',
+    role: 'Investors',
+    headline: 'Fund Futures.',
+    desc: 'AI-curated deal flow from verified startups. Watch 90-second pitch reels and track traction live — no middleman.',
+    features: ['AI-matched deal flow', '90s pitch reels', 'Traction dashboards', 'Direct founder access', 'Portfolio analytics'],
+  },
+  {
+    icon: '🏛️',
+    role: 'Incubators',
+    headline: 'Nurture Unicorns.',
+    desc: 'Build a verified portfolio page, connect your cohort to global investors, and showcase your programs at scale.',
+    features: ['Verified portfolio page', 'Cohort investor access', 'Startup showcase tools', 'Program management', 'Impact analytics'],
+  },
+  {
+    icon: '🔭',
+    role: 'Visionaries',
+    headline: 'Dream Big.',
+    desc: 'You have the vision. Explore the pitch feed, discover co-founders, connect with incubators, and track emerging sectors.',
+    features: ['Explore pitch feed daily', 'Connect with incubators', 'Discover co-founders', 'Track emerging sectors', 'Learn from live deals'],
+  },
 ];
+
 function Segments() {
-  const ref = useRef(null);
-  const [active, setActive] = useState(null);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) document.querySelectorAll(".seg-wrap").forEach((el, i) => setTimeout(() => el.classList.add("on"), i * 150));
-    }, { threshold: .05 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
   return (
-    <section id="segments" ref={ref} className="seg-sec" style={{ padding: "140px 48px 160px", background: "var(--grey)", position: "relative", overflow: "hidden" }}>
-      <div className="ghost">04</div>
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,transparent,var(--red) 30%,var(--gold) 70%,transparent)", opacity: .4, zIndex: 1 }} />
-      <div style={{ position: "relative", zIndex: 2, marginBottom: 72 }}>
-        <div className="reveal"><div className="stag">Built For</div></div>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
-          <h2 className="reveal" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(52px,6.5vw,96px)", lineHeight: .88, letterSpacing: ".025em", transitionDelay: ".1s" }}>
-            Four worlds.<br /><span style={{ WebkitTextStroke: "1px var(--gold)", WebkitTextFillColor: "transparent" }}>One platform.</span>
-          </h2>
-          <p className="reveal" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(14px,1.8vw,18px)", fontWeight: 300, lineHeight: 1.7, color: "var(--muted2)", maxWidth: 380, transitionDelay: ".2s", paddingBottom: 8 }}>Every person in the startup universe has a seat at the EVOA table — no matter where they are in their journey.</p>
+    <section id="segments">
+      <div className="sec-inner">
+        <div className="reveal">
+          <div className="eyebrow seg-eyebrow">Built For</div>
+          <h2 className="seg-h2">Four worlds.<br />One platform.</h2>
         </div>
-      </div>
-      <div className="seg-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 3, position: "relative", zIndex: 2 }}>
-        {SEGS.map((s, i) => (
-          <div key={i} className="seg-wrap" style={{ animationDelay: `${i * .15}s` }}>
-            <div onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(null)}
-              style={{ position: "relative", height: "100%", background: s.bg, border: `1px solid ${active === i ? "rgba(244,240,232,.12)" : "rgba(244,240,232,.05)"}`, padding: "44px 28px 40px", overflow: "hidden", transition: "all .4s cubic-bezier(.23,1,.32,1)", transform: active === i ? "translateY(-10px)" : "none" }}>
-              <div style={{ position: "absolute", inset: 0, background: `radial-gradient(ellipse 100% 80% at 50% -10%,${s.glow},transparent 65%)`, opacity: active === i ? 1 : .3, transition: "opacity .5s", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 2, background: `linear-gradient(to bottom,transparent,${s.c} 30%,${s.c} 70%,transparent)`, opacity: active === i ? 1 : .2, transition: "opacity .4s" }} />
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, position: "relative", zIndex: 1 }}>
-                <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".2em", color: s.c, opacity: .7 }}>{s.n} / {s.tag.toUpperCase()}</span>
-                <span style={{ fontSize: 24, lineHeight: 1, filter: active === i ? "none" : "saturate(0) brightness(.6)", transition: "filter .4s" }}>{s.icon}</span>
-              </div>
-              <div style={{ position: "relative", zIndex: 1, marginBottom: 20 }}>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(36px,4.5vw,56px)", lineHeight: .9, color: active === i ? s.c : "var(--white)", transition: "color .4s" }}>{s.t1}</div>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(36px,4.5vw,56px)", lineHeight: .9, color: active === i ? s.c : "var(--white)", transition: "color .4s" }}>{s.t2}</div>
-              </div>
-              <div style={{ width: active === i ? 52 : 28, height: 1.5, background: `linear-gradient(90deg,${s.c},transparent)`, marginBottom: 18, transition: "width .4s", position: "relative", zIndex: 1 }} />
-              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 13, fontWeight: 300, lineHeight: 1.8, color: active === i ? "var(--muted2)" : "var(--muted)", marginBottom: 24, position: "relative", zIndex: 1, transition: "color .3s" }}>
-                {s.tag === "Founders" ? "From first idea to Series A. EVOA gives you the tools, AI co-founder, and global stage." : s.tag === "Investors" ? "AI-curated deal flow from verified startups. Watch 90-second pitch reels, track traction live." : s.tag === "Visionaries" ? "You have the vision. Explore the ecosystem, discover startups worth building, connect with incubators." : "Build a verified portfolio. Connect your cohort to global investors."}
-              </p>
-              <ul style={{ listStyle: "none", position: "relative", zIndex: 1 }}>
-                {s.items.map((item, j) => (
-                  <li key={j} style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".1em", textTransform: "uppercase", color: active === i ? "var(--muted2)" : "var(--muted)", padding: "6px 0", borderBottom: "1px solid rgba(244,240,232,.04)", display: "flex", alignItems: "center", gap: 8, transition: "color .2s" }}>
-                    <span style={{ color: s.c, fontSize: 7 }}>▸</span>{item}
+        <div className="seg-grid">
+          {SEGMENTS_DATA.map((s, i) => (
+            <div key={i} className="seg-card reveal" style={{ transitionDelay: `${i * .1}s` }}>
+              <div className="seg-icon">{s.icon}</div>
+              <div className="seg-role">{s.role}</div>
+              <div className="seg-headline">{s.headline}</div>
+              <p className="seg-desc">{s.desc}</p>
+              <ul className="seg-features">
+                {s.features.map((f, j) => (
+                  <li key={j} className="seg-feature">
+                    <span className="seg-feature-dot" />{f}
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/* ─── FEATURES ─── */
-const FEATS = [
-  { id: "01", title: "Instant AI-Powered Matching", desc: "AI-powered connections match startups with the right investors effortlessly. No cold outreach. Just signal.", side: "right", acc: "#E8341A" },
-  { id: "02", title: "Secure Enterprise-Grade Platform", desc: "Robust security and verification. CIN · GST · SEBI · PAN — all verified. Bank-level encryption at every scale.", side: "left", acc: "#C9A84C" },
-  { id: "03", title: "Instant & Reliable Pitch Creation", desc: "Generate high-quality pitch videos and decks instantly. Pitch reel, deck, deal terms — one clear investor view.", side: "right", acc: "#E8341A" },
-  { id: "04", title: "Smart Discovery & Search", desc: "Find hundreds of quality startups, investors, and opportunities. Intelligent filters. Zero noise. Maximum signal.", side: "left", acc: "#C9A84C" },
-  { id: "05", title: "Real-Time Notifications & Updates", desc: "Instant alerts for offers, messages, battlegrounds, and trending updates. Never miss the moment.", side: "right", acc: "#E8341A" },
-  { id: "06", title: "Analytics & Performance Insights", desc: "Detailed engagement insights with easy-to-track performance metrics. Know your numbers. Own your growth.", side: "left", acc: "#C9A84C" },
-];
-function FeatCard({ f, active }) {
-  return (
-    <div style={{ padding: "40px 52px", background: "rgba(244,240,232,.02)", border: "1px solid rgba(244,240,232,.07)", position: "relative", overflow: "hidden", transition: "transform .15s" }}>
-      <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: ".24em", textTransform: "uppercase", color: f.acc, marginBottom: 14, opacity: .8, display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ width: 16, height: 1, background: f.acc, display: "inline-block" }} />Feature {f.id}
-      </div>
-      <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(22px,2.4vw,34px)", letterSpacing: active ? ".06em" : ".025em", lineHeight: 1, color: active ? f.acc : "var(--white)", marginBottom: 16, transition: "color .35s,letter-spacing .4s" }}>{f.title}</div>
-      <div style={{ width: active ? 64 : 28, height: 2, background: `linear-gradient(90deg,${f.acc},transparent)`, marginBottom: 16, transition: "width .5s cubic-bezier(.23,1,.32,1)" }} />
-      <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, lineHeight: 1.85, color: active ? "var(--muted3)" : "var(--muted2)", maxWidth: 400, transition: "color .35s" }}>{f.desc}</p>
-    </div>
-  );
-}
-function Features() {
-  const ref = useRef(null), spineRef = useRef(null);
-  const [active, setActive] = useState(null);
-  const [vis, setVis] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) {
-        setVis(true);
-        if (spineRef.current) spineRef.current.classList.add("drawn");
-        document.querySelectorAll(".feat-row").forEach((el, i) => setTimeout(() => { el.classList.add(el.dataset.side === "right" ? "onR" : "onL"); el.style.opacity = "1"; }, i * 140));
-      }
-    }, { threshold: .04 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-  return (
-    <section id="features" ref={ref} className="feat-sec" style={{ padding: "140px 0 180px", background: "var(--black)", position: "relative", overflow: "hidden" }}>
-      <div className="fscan" />
-      <div className="ghost" style={{ right: "auto", left: -10 }}>05</div>
-      <div style={{ position: "absolute", top: "10%", left: "-8%", width: 600, height: 600, background: "radial-gradient(circle,rgba(232,52,26,.06),transparent 65%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: "15%", right: "-8%", width: 500, height: 500, background: "radial-gradient(circle,rgba(201,168,76,.06),transparent 65%)", pointerEvents: "none" }} />
-      <div className="feat-hdr" style={{ textAlign: "center", padding: "0 48px 100px", position: "relative", zIndex: 2 }}>
-        <div className={`reveal${vis ? " vis" : ""}`} style={{ marginBottom: 28 }}><div className="stag" style={{ justifyContent: "center" }}>Powerful Features</div></div>
-        <div className={`reveal${vis ? " vis" : ""}`} style={{ position: "relative", display: "inline-block", transitionDelay: ".1s" }}>
-          <h2 className="fts" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(48px,8.5vw,116px)", lineHeight: .88, letterSpacing: ".025em", position: "relative", zIndex: 1 }}>
-            One Platform. <span style={{ WebkitTextStroke: "1.5px var(--red)", WebkitTextFillColor: "transparent" }}>Zero Noise.</span>
-          </h2>
-          <div className="gr">One Platform. Zero Noise.</div>
-          <div className="gb">One Platform. Zero Noise.</div>
-        </div>
-        <p className={`reveal${vis ? " vis" : ""}`} style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(16px,2vw,20px)", fontWeight: 300, fontStyle: "italic", color: "var(--muted2)", maxWidth: 560, margin: "20px auto 0", transitionDelay: ".2s" }}>A powerful platform designed to simplify startup-investor connections, pitch management, and deal tracking.</p>
-        <div className={`reveal${vis ? " vis" : ""}`} style={{ display: "flex", justifyContent: "center", gap: 36, marginTop: 48, transitionDelay: ".3s", flexWrap: "wrap" }}>
-          {[["6", "Features Live", "red"], ["100%", "Verified", "gold"], ["021", "AI-Powered", "red"], ["∞", "Scalable", "gold"]].map(([v, l, c], i) => (
-            <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 34, color: c === "red" ? "var(--red)" : "var(--gold)", letterSpacing: ".04em" }}>{v}</div>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".14em", textTransform: "uppercase", color: "var(--muted)", marginTop: 4 }}>{l}</div>
-            </div>
           ))}
         </div>
-      </div>
-      <div style={{ position: "relative", zIndex: 2 }}>
-        <svg style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", top: 0, width: 2, height: "100%", overflow: "visible", zIndex: 1, pointerEvents: "none" }}>
-          <defs>
-            <linearGradient id="fsg" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="transparent" /><stop offset="10%" stopColor="#E8341A" stopOpacity=".8" /><stop offset="35%" stopColor="#C9A84C" /><stop offset="65%" stopColor="#E8341A" /><stop offset="90%" stopColor="#C9A84C" stopOpacity=".8" /><stop offset="100%" stopColor="transparent" /></linearGradient>
-            <filter id="fglow"><feGaussianBlur stdDeviation="2" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          </defs>
-          <line ref={spineRef} className="fspine" x1="1" y1="0" x2="1" y2="10000" stroke="url(#fsg)" strokeWidth="1.5" filter="url(#fglow)" />
-        </svg>
-        {FEATS.map((f, i) => {
-          const isR = f.side === "right", isA = active === i;
-          return (
-            <div key={i} className="feat-row" data-side={f.side} onMouseEnter={() => setActive(i)} onMouseLeave={() => setActive(null)} style={{ display: "grid", gridTemplateColumns: "1fr 80px 1fr", alignItems: "center", animationDelay: `${i * .14}s` }}>
-              <div className={isR ? "feat-slot" : "feat-slot"} style={{ padding: "0", opacity: isR ? (isA ? .07 : .06) : 1, transition: "opacity .5s" }}>
-                {!isR && <FeatCard f={f} active={isA} />}
-              </div>
-              <div className="feat-mid" style={{ display: "flex", justifyContent: "center", alignItems: "center", position: "relative", zIndex: 4 }}>
-                <div style={{ position: "relative", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div style={{ width: isA ? 18 : 11, height: isA ? 18 : 11, borderRadius: "50%", background: isA ? f.acc : "var(--black)", border: `2px solid ${f.acc}`, transition: "all .35s cubic-bezier(.23,1,.32,1)", boxShadow: isA ? `0 0 24px ${f.acc},0 0 60px ${f.acc}44` : "none", zIndex: 5, position: "relative" }} />
-                </div>
-              </div>
-              <div className="feat-slot" style={{ padding: "0", opacity: !isR ? (isA ? .07 : .06) : 1, transition: "opacity .5s" }}>
-                {isR && <FeatCard f={f} active={isA} />}
-              </div>
-            </div>
-          );
-        })}
       </div>
     </section>
   );
@@ -831,377 +1053,54 @@ function Features() {
 /* ─── MISSION ─── */
 function Mission() {
   return (
-    <section id="mission" className="mission-sec" style={{ padding: "160px 48px", background: "var(--black)", textAlign: "center", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(100px,18vw,200px)", letterSpacing: ".08em", color: "rgba(244,240,232,.02)", top: "50%", left: "50%", transform: "translate(-50%,-50%)", whiteSpace: "nowrap", pointerEvents: "none", userSelect: "none" }}>EVOA</div>
-      <p className="reveal" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(20px,3.5vw,48px)", fontWeight: 300, fontStyle: "italic", lineHeight: 1.4, maxWidth: 900, margin: "0 auto 40px", color: "var(--white)", position: "relative", zIndex: 2 }}>
-        "We are building the world's first <em style={{ color: "var(--gold)", fontStyle: "normal" }}>video-based</em> startup ecosystem — where your idea and your execution are the only credentials that matter."
-      </p>
-      <div className="reveal" style={{ position: "relative", zIndex: 2, transitionDelay: ".2s", display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom,transparent,var(--gold))", marginBottom: 4 }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
-          <span style={{ width: 28, height: 1, background: "var(--red)", display: "inline-block" }} />
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--white)" }}>Aditya Narayan Singh</div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--muted)", marginTop: 3 }}>Co-Founder &amp; CEO · EVOA</div>
+    <section id="mission">
+      <div className="sec-inner">
+        <p className="mission-quote reveal">
+          "We are building India's first{' '}
+          <span className="mission-blue">video-based startup ecosystem</span>
+          {' '}— where your idea and your execution are the only credentials that matter."
+        </p>
+        <div className="mission-authors reveal">
+          <div className="mission-author">
+            <div className="mission-author-name">Aditya Narayan Singh</div>
+            <div className="mission-author-role">Co-Founder & CEO · EVOA</div>
           </div>
-          <span style={{ width: 28, height: 1, background: "var(--red)", display: "inline-block" }} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ width: 16, height: 1, background: "rgba(244,240,232,.12)", display: "inline-block" }} />
-          <span style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--gold)", display: "inline-block" }} />
-          <span style={{ width: 16, height: 1, background: "rgba(244,240,232,.12)", display: "inline-block" }} />
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
-          <span style={{ width: 28, height: 1, background: "var(--gold)", display: "inline-block" }} />
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--white)" }}>Abhishek Kumar</div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: ".18em", textTransform: "uppercase", color: "var(--muted)", marginTop: 3 }}>Co-Founder &amp; CTO · EVOA</div>
+          <div className="mission-divider" />
+          <div className="mission-author">
+            <div className="mission-author-name">Abhishek Kumar</div>
+            <div className="mission-author-role">Co-Founder & CTO · EVOA</div>
           </div>
-          <span style={{ width: 28, height: 1, background: "var(--gold)", display: "inline-block" }} />
         </div>
       </div>
     </section>
   );
 }
 
-/* ─── LAUNCH ─── */
-function Launch() {
+/* ─── CTA BAND ─── */
+function CTABand() {
   return (
-    <section id="launch" className="launch-sec" style={{ padding: "100px 48px", background: "var(--red)", display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: "repeating-linear-gradient(-45deg,rgba(0,0,0,.04) 0,rgba(0,0,0,.04) 1px,transparent 1px,transparent 8px)", pointerEvents: "none" }} />
-      <div style={{ position: "relative", zIndex: 2 }}>
-        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".2em", textTransform: "uppercase", color: "rgba(6,6,7,.6)", marginBottom: 12 }}>Global Launch</div>
-        <div className="launch-d" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: "clamp(56px,8vw,120px)", lineHeight: .88, color: "var(--black)", letterSpacing: ".02em" }}>26.03.2026</div>
-      </div>
-      <div className="launch-r" style={{ position: "relative", zIndex: 2, textAlign: "right" }}>
-        <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: "clamp(16px,2vw,22px)", fontWeight: 300, fontStyle: "italic", color: "rgba(6,6,7,.7)", marginBottom: 28, maxWidth: 360 }}>The future of the startup ecosystem goes live. Be the first inside.</p>
-        <Link to="/register" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", padding: "16px 36px", background: "var(--black)", color: "var(--white)", textDecoration: "none", clipPath: "polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))", display: "inline-block" }}>Claim Your Spot — Free</Link>
+    <section id="cta-band">
+      <div className="sec-inner cta-inner">
+        <div className="cta-eyebrow">Global Launch · 26.03.2026</div>
+        <h2 className="cta-h2">Ready to Join India's<br />Startup Revolution?</h2>
+        <p className="cta-sub">
+          Be among the first 100 startups and get free early access to every feature — including Investor AI and 021 AI.
+        </p>
+        <div className="cta-btns">
+          <Link to="/register" className="btn-white">
+            Claim Your Spot — Free
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+          </Link>
+          <Link to="/login" className="btn-white-outline">Sign In →</Link>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ─── FOOTER ─── */
-const LI = ({ href, to, onClick, children }) => {
-  const [hov, setHov] = useState(false);
-  const style = { fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, color: hov ? "rgba(244,240,232,.9)" : "rgba(244,240,232,.5)", textDecoration: "none", transition: "color .2s", background: "none", border: "none", cursor: "pointer", padding: 0 };
-  if (to) return <li><Link to={to} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={style}>{children}</Link></li>;
-  if (onClick) return <li><button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={style}>{children}</button></li>;
-  return <li><a href={href || "#"} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={style}>{children}</a></li>;
-};
-const SocialIcon = ({ children }) => {
-  const [hov, setHov] = useState(false);
-  return (
-    <a href="#" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ width: 36, height: 36, border: `1px solid ${hov ? "rgba(244,240,232,.4)" : "rgba(244,240,232,.15)"}`, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", background: hov ? "rgba(244,240,232,.05)" : "transparent", transition: "all .2s", textDecoration: "none" }}>
-      {children}
-    </a>
-  );
-};
+/* ─── POLICY MODAL ─── */
 
-/* ─── POLICY MODALS ─── */
-const MODAL_STYLES = `
-.ln-modal-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);cursor:default}
-.ln-modal-box{position:relative;width:100%;max-width:760px;max-height:80vh;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;background:#111;border:1px solid rgba(244,240,232,.1);box-shadow:0 40px 120px rgba(0,0,0,.8)}
-.ln-modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(244,240,232,.08)}
-.ln-modal-hdr h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.06em;color:#F4F0E8;margin:0}
-.ln-modal-close{background:none;border:none;cursor:pointer!important;color:rgba(244,240,232,.5);padding:8px;display:flex;transition:color .2s;border-radius:4px}
-.ln-modal-close:hover{color:#F4F0E8}
-.ln-modal-body{padding:24px;overflow-y:auto;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:300;line-height:1.8;color:rgba(244,240,232,.7)}
-.ln-modal-body h3{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:.05em;color:#C9A84C;margin:24px 0 8px}
-.ln-modal-body h4{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(244,240,232,.7);margin:16px 0 6px}
-.ln-modal-body ul{padding-left:20px;margin:8px 0}
-.ln-modal-body li{margin-bottom:4px}
-.ln-modal-body p{margin-bottom:12px}
-.ln-modal-body a{color:#E8341A;text-decoration:none}
-.ln-modal-body a:hover{text-decoration:underline}
-.ln-modal-warn{background:rgba(232,52,26,.08);border:1px solid rgba(232,52,26,.2);border-radius:6px;padding:14px 18px;margin:12px 0;display:flex;gap:12px;align-items:flex-start}
-`;
 
-function PolicyModal({ title, children, onClose }) {
-  useEffect(() => {
-    const esc = e => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", esc);
-    return () => document.removeEventListener("keydown", esc);
-  }, [onClose]);
-  return (
-    <div className="ln-modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="ln-modal-box">
-        <div className="ln-modal-hdr">
-          <h2>{title}</h2>
-          <button className="ln-modal-close" onClick={onClose} aria-label="Close">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
-          </button>
-        </div>
-        <div className="ln-modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function Footer() {
-  const [modal, setModal] = useState(null); // "privacy" | "terms" | "ai" | "community"
-  const close = () => setModal(null);
-  return (
-    <>
-      <style>{MODAL_STYLES}</style>
-      <footer className="footer-sec" style={{ padding: "64px 48px 32px", background: "#0A0A0A", borderTop: "1px solid rgba(244,240,232,.06)" }}>
-        <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr 1fr", gap: 48, marginBottom: 52 }}>
-          {/* Brand */}
-          <div>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, letterSpacing: ".12em", color: "var(--white)", marginBottom: 16 }}>EVO-A</div>
-            <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, lineHeight: 1.75, color: "rgba(244,240,232,.45)", maxWidth: 340, marginBottom: 24 }}>Revolutionizing the startup–investor ecosystem. Connect, invest, and grow together in the future of entrepreneurship.</p>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <SocialIcon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,240,232,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" />
-                </svg>
-              </SocialIcon>
-              <SocialIcon>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(244,240,232,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                </svg>
-              </SocialIcon>
-            </div>
-          </div>
-          {/* Quick Links */}
-          <div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--white)", fontWeight: 500, marginBottom: 24 }}>Quick Links</div>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
-              <LI to="/">Home</LI><LI to="/login">Sign In</LI><LI to="/register">Sign Up</LI><LI to="/about">About Us</LI>
-            </ul>
-          </div>
-          {/* Support */}
-          <div>
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, letterSpacing: ".12em", textTransform: "uppercase", color: "var(--white)", fontWeight: 500, marginBottom: 24 }}>Support</div>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 14 }}>
-              <LI onClick={() => setModal("privacy")}>Privacy Policy</LI>
-              <LI onClick={() => setModal("terms")}>Terms of Service</LI>
-              <LI onClick={() => setModal("ai")}>AI Disclaimer</LI>
-              <LI onClick={() => setModal("community")}>Community Guidelines</LI>
-            </ul>
-          </div>
-        </div>
-        <div style={{ height: 1, background: "rgba(244,240,232,.07)", marginBottom: 24 }} />
-        <div style={{ textAlign: "center", fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: ".1em", color: "rgba(244,240,232,.3)" }}>© 2026 EVO-A. All rights reserved.</div>
-      </footer>
-
-      {/* ── PRIVACY POLICY ── */}
-      {modal === "privacy" && (
-        <PolicyModal title="Privacy Policy" onClose={close}>
-          <p><strong>Evoa Technology Private Limited</strong> ("Evoa", "Company", "we", "us", or "our") respects your privacy and is committed to protecting your personal data.</p>
-          <p>This Privacy Policy explains how we collect, use, store, and protect your information when you use the Evoa platform, Investor AI, 021 AI, our website <strong>evoa.co.in</strong>, and any related services.</p>
-          <p><em>By using Evoa services, you agree to the collection and use of information in accordance with this policy.</em></p>
-          <h3>1. About Evoa</h3>
-          <p>Evoa is a digital platform designed to connect startup founders, investors, builders, and startup enthusiasts. Users can pitch startup ideas through short video reels, explore startups, validate ideas using AI tools, and connect with investors.</p>
-          <h3>2. Information We Collect</h3>
-          <h4>2.1 Personal Information</h4>
-          <p>When you register or use our services, we may collect: full name, username, email address, profile photo, password (encrypted), country/location, startup information, and investor profile information.</p>
-          <h4>2.2 Startup Information</h4>
-          <p>If you upload a pitch or startup information, we may collect: startup name & description, pitch videos, business model information, financial insights (if voluntarily provided), and market & product information. <em>This data may be displayed publicly depending on your settings.</em></p>
-          <h4>2.3 AI Interaction Data</h4>
-          <p>When you interact with Investor AI or 021 AI, we may collect: startup ideas you submit, AI prompts and responses, feedback and ratings, AI generated outputs, and chat logs with AI assistants. This data is used to improve AI performance and service quality.</p>
-          <h4>2.4 Usage Data</h4>
-          <p>We automatically collect: IP address, browser type, device type, operating system, pages visited & time spent, and click interactions & engagement with startup pitches.</p>
-          <h3>3. How We Use Your Information</h3>
-          <ul>
-            <li><strong>Platform Operations:</strong> Create/manage accounts, display pitches, enable networking, provide messaging.</li>
-            <li><strong>AI Services:</strong> Operate Investor AI & 021 AI, improve AI responses, and train AI systems.</li>
-            <li><strong>Platform Improvement:</strong> Enhance features, understand user behavior, optimize experience.</li>
-            <li><strong>Security:</strong> Prevent fraud, detect suspicious activity, protect users.</li>
-            <li><strong>Communication:</strong> Send updates, notify about changes, provide support.</li>
-          </ul>
-          <h3>4. AI System Usage</h3>
-          <p>Evoa provides AI-powered tools that assist with startup idea validation, market analysis, business models, pitch feedback, and investor insights. AI responses are informational only and do <strong>not</strong> constitute financial, legal, or investment advice. Users should independently verify any AI-generated insights.</p>
-          <h3>5. Data Sharing & Security</h3>
-          <p>We do not sell user data. We may share data with service providers (cloud, payment, analytics, AI infrastructure) and if required by Indian law. We implement encryption and secure authentication. Users must protect their credentials.</p>
-          <h3>6. Retention, Your Rights & Minors</h3>
-          <p>We retain data as long as necessary. Users may access data, update profiles, or request account deletion via <strong>support@evoa.co.in</strong>. Evoa services are not intended for users under 14 years of age.</p>
-          <h3>7. Contact</h3>
-          <p><strong>Evoa Technology Private Limited</strong><br />Email: <a href="mailto:support@evoa.co.in">support@evoa.co.in</a> · Website: <a href="https://evoa.co.in" target="_blank" rel="noopener noreferrer">evoa.co.in</a></p>
-        </PolicyModal>
-      )}
-
-      {/* ── TERMS OF SERVICE ── */}
-      {modal === "terms" && (
-        <PolicyModal title="Terms of Service" onClose={close}>
-          <p>These Terms of Service govern your use of the Evoa platform, Investor AI, 021 AI, and our website <strong>evoa.co.in</strong>.</p>
-          <p><em>By accessing Evoa services, you agree to these terms.</em></p>
-          <h3>1. Eligibility</h3>
-          <p>To use Evoa, you must be at least 14 years old, provide accurate information, and comply with all applicable laws.</p>
-          <h3>2. User Accounts</h3>
-          <p>Users must maintain accurate profile information, keep login credentials secure, and be responsible for activities on their account. Evoa reserves the right to suspend accounts for violations.</p>
-          <h3>3. Platform Purpose</h3>
-          <p>Evoa is designed to enable startup pitching, help investors discover startups, and assist founders through AI tools. <strong>Evoa does not guarantee funding, investment, or business success.</strong></p>
-          <h3>4. AI Services Disclaimer</h3>
-          <p>Investor AI and 021 AI provide automated insights. They do <strong>not</strong> provide investment advice, legal advice, or financial guarantees. Users should perform independent research before making decisions.</p>
-          <h3>5. Startup Pitches</h3>
-          <p>Founders are responsible for ensuring that their pitches are truthful, they have rights to the information they share, and they do not upload misleading or fraudulent information. <em>Evoa does not verify every startup claim.</em></p>
-          <h3>6. Intellectual Property</h3>
-          <p>Users retain ownership of their startup ideas, pitch videos, and uploaded content. However, by uploading content, users grant Evoa a license to display, distribute, and promote the content within the platform.</p>
-          <h3>7. Prohibited Activities</h3>
-          <ul>
-            <li>Upload illegal content or impersonate others</li>
-            <li>Spread misinformation or attempt platform hacking</li>
-            <li>Use bots to manipulate engagement</li>
-          </ul>
-          <div className="ln-modal-warn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8341A" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-            <span>Violation may result in account suspension or permanent ban without prior notice.</span>
-          </div>
-          <h3>8. Limitation of Liability</h3>
-          <p>Evoa is not liable for investment losses, business failures, decisions based on AI outputs, or interactions between users. <strong>Users participate on the platform at their own risk.</strong></p>
-          <h3>9. Governing Law & Contact</h3>
-          <p>These Terms are governed by the laws of India. Contact: <a href="mailto:support@evoa.co.in">support@evoa.co.in</a></p>
-        </PolicyModal>
-      )}
-
-      {/* ── AI DISCLAIMER ── */}
-      {modal === "ai" && (
-        <PolicyModal title="AI Disclaimer" onClose={close}>
-          <p>Evoa provides AI-powered tools including <strong>Investor AI</strong> and <strong>021 AI</strong> to assist users with startup insights, idea validation, and informational analysis.</p>
-          <div className="ln-modal-warn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8341A" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-            <div><strong style={{ color: "#F4F0E8" }}>Important AI Limitations</strong><br />These AI systems generate responses automatically and may contain inaccuracies.</div>
-          </div>
-          <h3>The information provided by AI tools:</h3>
-          <ul>
-            <li>Does <strong>not</strong> constitute financial advice</li>
-            <li>Does <strong>not</strong> constitute legal advice</li>
-            <li>Does <strong>not</strong> constitute investment advice</li>
-            <li>Should <strong>not</strong> be solely relied upon for business decisions</li>
-          </ul>
-          <p><strong>Users are responsible for independently verifying any information before making decisions.</strong></p>
-          <p><em>Evoa Technology Private Limited is not responsible for any actions taken based on AI-generated content.</em></p>
-        </PolicyModal>
-      )}
-
-      {/* ── COMMUNITY GUIDELINES ── */}
-      {modal === "community" && (
-        <PolicyModal title="Community Guidelines" onClose={close}>
-          <p>We are building a trusted ecosystem for founders and investors. Respect, honesty, and professionalism are our core values.</p>
-          <h3>Prohibited Content & Actions</h3>
-          <p>Users must <strong>not</strong> upload or share:</p>
-          <ul>
-            <li>Fraudulent startup claims or fake traction</li>
-            <li>Misleading financial information or manipulated metrics</li>
-            <li>Illegal content of any kind</li>
-            <li>Hate speech, harassment, or abusive language</li>
-            <li>Copyrighted material without explicit permission</li>
-            <li>Confidential or proprietary business information they do not have the rights to share</li>
-          </ul>
-          <div className="ln-modal-warn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E8341A" strokeWidth="2" style={{ flexShrink: 0, marginTop: 2 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
-            <div><strong style={{ color: "#F4F0E8" }}>Evoa reserves the right to remove any content that violates these guidelines.</strong><br /><span style={{ fontSize: 13 }}>Accounts involved in fraudulent activities may be suspended or permanently banned without prior notice.</span></div>
-          </div>
-        </PolicyModal>
-      )}
-    </>
-  );
-}
-
-/* ─── AMBASSADOR BANNER ─── */
-const BANNER_CSS = `
-.amb-banner {
-  position: fixed;
-  top: 72px;
-  left: 0;
-  right: 0;
-  height: 38px;
-  z-index: 999;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  background: linear-gradient(270deg,#1a1004,#2a1a00,#C9A84C22,#1a1004,#2a1a00,#C9A84C22,#1a1004);
-  background-size: 400% 400%;
-  animation: ambassadorGlow 8s ease infinite;
-  border-bottom: 1px solid rgba(201,168,76,0.25);
-  border-top: 1px solid rgba(201,168,76,0.12);
-  box-shadow: 0 2px 16px rgba(201,168,76,0.08), inset 0 -1px 0 rgba(201,168,76,0.07);
-}
-.amb-track {
-  display: flex;
-  white-space: nowrap;
-  animation: ambassadorMarquee 22s linear infinite;
-  will-change: transform;
-}
-.amb-track:hover { animation-play-state: paused; }
-.amb-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  padding: 0 48px;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: rgba(201,168,76,0.9);
-}
-.amb-dot {
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: #C9A84C;
-  flex-shrink: 0;
-  display: inline-block;
-  box-shadow: 0 0 6px rgba(201,168,76,0.8);
-}
-.amb-text { color: rgba(244,240,232,0.85); letter-spacing: .14em; }
-.amb-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 12px;
-  border: 1px solid rgba(201,168,76,0.5);
-  color: #C9A84C;
-  font-family: 'DM Mono', monospace;
-  font-size: 9px;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-radius: 2px;
-  transition: background .25s, color .25s, border-color .25s;
-  cursor: pointer;
-  flex-shrink: 0;
-  background: rgba(201,168,76,0.06);
-}
-.amb-cta:hover {
-  background: #C9A84C;
-  color: #060607;
-  border-color: #C9A84C;
-}
-.amb-spacer { height: 38px; width: 100%; flex-shrink: 0; }
-@media(max-width:768px) {
-  .amb-banner { top: 60px; height: 34px; }
-  .amb-item { font-size: 9px; padding: 0 32px; gap: 10px; }
-  .amb-spacer { height: 34px; }
-}
-`;
-
-const AMB_TEXT = "Join Ambassador Program and Earn Money with Us";
-const AMB_ITEMS = Array(8).fill(null);
-
-function AmbassadorBanner() {
-  return (
-    <>
-      <style>{BANNER_CSS}</style>
-      <div className="amb-banner" role="marquee" aria-label="Ambassador program promotion">
-        <div className="amb-track">
-          {AMB_ITEMS.map((_, i) => (
-            <span key={i} className="amb-item">
-              <span className="amb-dot" />
-              <span className="amb-text">{AMB_TEXT}</span>
-              <Link to="/ambassador-program" className="amb-cta" aria-label="Join Ambassador Program">
-                Click Here
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true">
-                  <path d="M1 7L7 1M7 1H2M7 1V6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </Link>
-            </span>
-          ))}
-        </div>
-      </div>
-    </>
-  );
-}
 
 /* ─── ROOT ─── */
 export default function Landing() {
@@ -1209,22 +1108,14 @@ export default function Landing() {
   return (
     <div className="evoa-root">
       <style>{STYLES}</style>
-      <Cursor />
       <LandingNav />
-      <AmbassadorBanner />
-      {/* Extra spacer for the ambassador banner below the nav spacer already in LandingNav */}
-      <div className="amb-spacer" />
       <Hero />
-      <Ticker />
       <PitchShowcase />
-      <Problem />
-      <Pillars />
-      <AISection />
+      <PlatformFeatures />
       <HowItWorks />
       <Segments />
-      <Features />
       <Mission />
-      <Launch />
+      <CTABand />
       <Footer />
     </div>
   );

@@ -14,9 +14,9 @@ const PRICING_CSS = `
 @keyframes pr-pulse { 0%,100%{ opacity:.5; transform:scale(1); } 50%{ opacity:1; transform:scale(1.04); } }
 
 .pr-root {
-  background: #060607;
-  color: #F4F0E8;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
@@ -28,10 +28,10 @@ const PRICING_CSS = `
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 14% 18%, rgba(232,52,26,.08), transparent 26%),
-    radial-gradient(circle at 82% 14%, rgba(201,168,76,.06), transparent 26%),
-    linear-gradient(rgba(244,240,232,.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(244,240,232,.018) 1px, transparent 1px);
+    radial-gradient(circle at 14% 18%, var(--blue-brd), transparent 26%),
+    radial-gradient(circle at 82% 14%, var(--blue-brd), transparent 26%),
+    linear-gradient(var(--border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
   background-size: auto, auto, 56px 56px, 56px 56px;
   opacity: .55;
 }
@@ -48,9 +48,9 @@ const PRICING_CSS = `
   left: 50%;
   top: -10px;
   transform: translateX(-50%);
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Inter', sans-serif; font-weight: 800;
   font-size: clamp(140px, 22vw, 340px);
-  color: rgba(244,240,232,.018);
+  color: var(--border-soft);
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
@@ -65,8 +65,8 @@ const PRICING_CSS = `
   font-size: 9px;
   letter-spacing: .22em;
   text-transform: uppercase;
-  color: #E8341A;
-  border: 1px solid rgba(232,52,26,.3);
+  color: var(--blue);
+  border: 1px solid var(--blue-brd);
   padding: 6px 18px;
   border-radius: 40px;
   margin-bottom: 28px;
@@ -79,7 +79,7 @@ const PRICING_CSS = `
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #E8341A;
+  background: var(--blue);
   display: inline-block;
   animation: pr-pulse 2s ease-in-out infinite;
 }
@@ -87,7 +87,7 @@ const PRICING_CSS = `
 .pr-hero h1 {
   position: relative;
   z-index: 1;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Inter', sans-serif; font-weight: 800;
   font-size: clamp(56px, 8vw, 118px);
   letter-spacing: .04em;
   line-height: .9;
@@ -98,10 +98,10 @@ const PRICING_CSS = `
 
 .pr-hero h1 em {
   display: block;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Inter', sans-serif;
   font-style: italic;
   font-weight: 300;
-  color: #C9A84C;
+  color: var(--blue-bright);
   font-size: .64em;
   line-height: 1.28;
   letter-spacing: .02em;
@@ -115,7 +115,7 @@ const PRICING_CSS = `
   font-size: clamp(16px, 2vw, 20px);
   font-weight: 300;
   line-height: 1.75;
-  color: rgba(244,240,232,.55);
+  color: var(--text-sub);
   opacity: 0;
   animation: pr-fadeUp .9s ease forwards .22s;
 }
@@ -124,7 +124,7 @@ const PRICING_CSS = `
   width: 80px;
   height: 1px;
   margin: 0 auto 56px;
-  background: linear-gradient(90deg, transparent, rgba(232,52,26,.5), rgba(201,168,76,.42), transparent);
+  background: linear-gradient(90deg, transparent, var(--blue-brd), var(--blue-brd), transparent);
 }
 
 .pr-section {
@@ -143,7 +143,7 @@ const PRICING_CSS = `
   font-size: 9px;
   letter-spacing: .22em;
   text-transform: uppercase;
-  color: #E8341A;
+  color: var(--blue);
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -154,22 +154,22 @@ const PRICING_CSS = `
   content: '';
   width: 22px;
   height: 1px;
-  background: #E8341A;
+  background: var(--blue);
   flex-shrink: 0;
 }
 
 .pr-section-title {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Inter', sans-serif; font-weight: 800;
   font-size: clamp(38px, 5vw, 58px);
   letter-spacing: .04em;
-  color: #C9A84C;
+  color: var(--blue-bright);
   margin: 0 0 12px;
 }
 
 .pr-section-sub {
   font-size: clamp(15px, 1.8vw, 18px);
   font-weight: 300;
-  color: rgba(244,240,232,.55);
+  color: var(--text-sub);
   line-height: 1.7;
   margin: 0;
 }
@@ -184,8 +184,8 @@ const PRICING_CSS = `
 
 .pr-card {
   position: relative;
-  background: #0f0f10;
-  border: 1px solid rgba(244,240,232,.07);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   padding: 30px 28px 28px;
   display: flex;
   flex-direction: column;
@@ -195,22 +195,22 @@ const PRICING_CSS = `
 }
 
 .pr-card:hover {
-  border-color: rgba(232,52,26,.25);
+  border-color: var(--blue-brd);
   transform: translateY(-6px);
 }
 
 .pr-card.pro {
-  box-shadow: inset 0 0 0 1px rgba(232,52,26,.12);
-  border-color: rgba(232,52,26,.26);
+  box-shadow: inset 0 0 0 1px var(--blue-brd);
+  border-color: var(--blue-brd);
 }
 
 .pr-card-tag {
   align-self: flex-start;
   margin-bottom: 18px;
   padding: 5px 12px;
-  background: rgba(6,6,7,.72);
-  border: 1px solid rgba(232,52,26,.3);
-  color: #E8341A;
+  background: var(--bg-alt);
+  border: 1px solid var(--blue-brd);
+  color: var(--blue);
   font-family: 'DM Mono', monospace;
   font-size: 9px;
   letter-spacing: .16em;
@@ -218,11 +218,11 @@ const PRICING_CSS = `
 }
 
 .pr-card-title {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Inter', sans-serif; font-weight: 800;
   font-size: clamp(24px, 2.2vw, 32px);
   letter-spacing: .04em;
   line-height: 1.04;
-  color: #F4F0E8;
+  color: var(--text);
   margin: 0 0 14px;
 }
 
@@ -230,7 +230,7 @@ const PRICING_CSS = `
   font-size: 15px;
   font-weight: 300;
   line-height: 1.75;
-  color: rgba(244,240,232,.55);
+  color: var(--text-sub);
   margin: 0 0 24px;
 }
 
@@ -245,15 +245,15 @@ const PRICING_CSS = `
   font-size: 9px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: rgba(244,240,232,.34);
+  color: var(--text-mute);
 }
 
 .pr-price {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Inter', sans-serif; font-weight: 800;
   font-size: 42px;
   letter-spacing: .04em;
   line-height: 1;
-  color: #C9A84C;
+  color: var(--blue-bright);
 }
 
 .pr-list-title {
@@ -262,7 +262,7 @@ const PRICING_CSS = `
   font-size: 10px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: rgba(244,240,232,.42);
+  color: var(--text-mute);
 }
 
 .pr-list {
@@ -279,12 +279,12 @@ const PRICING_CSS = `
   align-items: flex-start;
   font-size: 15px;
   line-height: 1.65;
-  color: rgba(244,240,232,.82);
+  color: var(--text-sub);
 }
 
 .pr-list li::before {
   content: '✦';
-  color: #E8341A;
+  color: var(--blue);
   font-size: 11px;
   margin-top: 6px;
   flex-shrink: 0;
@@ -293,7 +293,7 @@ const PRICING_CSS = `
 .pr-rule {
   height: 1px;
   margin: 22px 0;
-  background: linear-gradient(90deg, transparent, rgba(244,240,232,.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
 }
 
 .pr-actions {
@@ -311,8 +311,8 @@ const PRICING_CSS = `
   padding: 0 20px;
   text-decoration: none;
   background: transparent;
-  border: 1px solid rgba(244,240,232,.14);
-  color: rgba(244,240,232,.82);
+  border: 1px solid var(--border);
+  color: var(--text-sub);
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   letter-spacing: .16em;
@@ -322,22 +322,22 @@ const PRICING_CSS = `
 
 .pr-btn:hover {
   transform: translateY(-2px);
-  border-color: rgba(244,240,232,.28);
-  background: rgba(244,240,232,.06);
-  color: #F4F0E8;
+  border-color: var(--text-mute);
+  background: var(--border);
+  color: var(--text);
 }
 
 .pr-btn.primary {
-  background: #E8341A;
-  border-color: #E8341A;
-  color: #060607;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--bg);
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
 }
 
 .pr-btn.primary:hover {
-  background: #C9A84C;
-  border-color: #C9A84C;
-  color: #060607;
+  background: var(--blue-bright);
+  border-color: var(--blue-bright);
+  color: var(--bg);
 }
 
 .pr-meta {
@@ -346,13 +346,13 @@ const PRICING_CSS = `
   font-size: 9px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: rgba(244,240,232,.28);
+  color: var(--text-mute);
 }
 
 .pr-state {
   text-align: center;
   padding: 80px 24px;
-  color: rgba(244,240,232,.4);
+  color: var(--text-mute);
   font-family: 'DM Mono', monospace;
   font-size: 13px;
   letter-spacing: .1em;

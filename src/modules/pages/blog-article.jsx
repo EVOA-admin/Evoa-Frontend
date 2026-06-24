@@ -35,15 +35,15 @@ function stripHtml(html) {
  *
  * Content from Word / Google Docs / pasted web pages often contains
  * inline `color: black` / `color: #000` / `color: rgb(0,0,0)` which
- * becomes invisible on the platform's #060607 background. This
+ * becomes invisible on the platform's var(--bg) background. This
  * function replaces those dark colour declarations with the EVOA
- * light cream (#F4F0E8) and strips white/light background-color boxes.
+ * light cream (var(--text)) and strips white/light background-color boxes.
  *
  * Other intentional colours (gold, red, custom brand tints) are kept.
  */
 function sanitizeHtmlForDark(html) {
   if (!html) return html;
-  const LIGHT = '#F4F0E8';
+  const LIGHT = 'var(--text)';
   const DARK_NAMED = ['black', 'windowtext', 'buttontext', 'captiontext',
                       'infotext', 'menutext', 'highlighttext', 'graytext'];
   const LIGHT_BG   = ['white', '#fff', '#ffffff', 'rgb(255,255,255)',
@@ -115,8 +115,8 @@ const CSS = `
 @keyframes ba-shimmer{ 0%{background-position:-200% 0}100%{background-position:200% 0} }
 
 .ba-root {
-  background:#060607;color:#F4F0E8;
-  font-family:'Cormorant Garamond',Georgia,serif;
+  background:var(--bg);color:var(--text);
+  font-family:'Inter', sans-serif;
   min-height:100vh;overflow-x:hidden;
 }
 
@@ -124,12 +124,12 @@ const CSS = `
 .ba-breadcrumb {
   padding:24px 80px 0;
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;
-  text-transform:uppercase;color:rgba(244,240,232,.35);
+  text-transform:uppercase;color:var(--text-mute);
   display:flex;align-items:center;gap:10px;
   animation:ba-fadeUp .5s ease both;
 }
-.ba-breadcrumb a { color:rgba(244,240,232,.35);text-decoration:none;transition:color .2s; }
-.ba-breadcrumb a:hover { color:#E8341A; }
+.ba-breadcrumb a { color:var(--text-mute);text-decoration:none;transition:color .2s; }
+.ba-breadcrumb a:hover { color:var(--blue); }
 .ba-breadcrumb svg { width:12px;height:12px;opacity:.4; }
 
 /* ── Back button ── */
@@ -137,12 +137,12 @@ const CSS = `
   display:inline-flex;align-items:center;gap:8px;
   padding:28px 80px 0;
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;
-  text-transform:uppercase;color:#E8341A;
+  text-transform:uppercase;color:var(--blue);
   background:none;border:none;cursor:pointer;
   transition:gap .2s,color .2s;
   animation:ba-fadeUp .5s .1s ease both;opacity:0;animation-fill-mode:forwards;
 }
-.ba-back:hover { gap:14px;color:#C9A84C; }
+.ba-back:hover { gap:14px;color:var(--blue-bright); }
 .ba-back svg { width:14px;height:14px;transition:transform .2s; }
 .ba-back:hover svg { transform:translateX(-4px); }
 
@@ -157,7 +157,7 @@ const CSS = `
 }
 .ba-hero-img-overlay {
   position:absolute;inset:0;
-  background:linear-gradient(to bottom,rgba(6,6,7,.2) 0%,rgba(6,6,7,.7) 100%);
+  background:linear-gradient(to bottom,var(--bg-alt) 0%,var(--bg-alt) 100%);
 }
 
 /* ── Article meta header ── */
@@ -171,14 +171,14 @@ const CSS = `
 .ba-cat-badge {
   font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;
   text-transform:uppercase;padding:5px 14px;
-  border:1px solid rgba(232,52,26,.4);color:#E8341A;
+  border:1px solid var(--blue-brd);color:var(--blue);
 }
 .ba-read-time {
   font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;
-  text-transform:uppercase;color:rgba(244,240,232,.4);
+  text-transform:uppercase;color:var(--text-mute);
 }
 .ba-title {
-  font-family:'Bebas Neue',sans-serif;
+  font-family:'Inter', sans-serif; font-weight: 800;
   font-size:clamp(40px,6vw,84px);
   letter-spacing:.03em;line-height:.95;
   margin-bottom:28px;
@@ -186,16 +186,16 @@ const CSS = `
 .ba-byline {
   display:flex;align-items:center;gap:20px;
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
-  text-transform:uppercase;color:rgba(244,240,232,.4);
+  text-transform:uppercase;color:var(--text-mute);
   padding-bottom:36px;
-  border-bottom:1px solid rgba(244,240,232,.08);
+  border-bottom:1px solid var(--border);
 }
-.ba-byline-dot { width:4px;height:4px;border-radius:50%;background:rgba(244,240,232,.2); }
+.ba-byline-dot { width:4px;height:4px;border-radius:50%;background:var(--text-mute); }
 
 /* ── Divider ── */
 .ba-divider {
   width:60px;height:1px;margin:0 auto 0;
-  background:linear-gradient(90deg,transparent,rgba(232,52,26,.5),rgba(201,168,76,.4),transparent);
+  background:linear-gradient(90deg,transparent,var(--blue-brd),var(--blue-brd),transparent);
 }
 
 /* ── ARTICLE PROSE ── */
@@ -205,58 +205,58 @@ const CSS = `
 }
 
 /* Typography */
-.ba-prose { font-size:clamp(16px,1.5vw,19px);line-height:1.85;font-weight:300;color:rgba(244,240,232,.88); }
+.ba-prose { font-size:clamp(16px,1.5vw,19px);line-height:1.85;font-weight:300;color:var(--text-sub); }
 .ba-prose p  { margin:0 0 1.4em; }
-.ba-prose h1 { font-family:'Bebas Neue',sans-serif;font-size:2.4em;letter-spacing:.04em;line-height:.95;margin:1.6em 0 .6em;color:#F4F0E8; }
-.ba-prose h2 { font-family:'Bebas Neue',sans-serif;font-size:1.85em;letter-spacing:.04em;line-height:.95;margin:1.5em 0 .55em;color:#F4F0E8; }
-.ba-prose h3 { font-family:'Cormorant Garamond',serif;font-size:1.45em;font-weight:600;font-style:italic;margin:1.3em 0 .5em;color:#C9A84C; }
-.ba-prose h4 { font-family:'DM Mono',monospace;font-size:.85em;letter-spacing:.14em;text-transform:uppercase;margin:1.2em 0 .4em;color:rgba(244,240,232,.7); }
+.ba-prose h1 { font-family:'Inter', sans-serif; font-weight: 800;font-size:2.4em;letter-spacing:.04em;line-height:.95;margin:1.6em 0 .6em;color:var(--text); }
+.ba-prose h2 { font-family:'Inter', sans-serif; font-weight: 800;font-size:1.85em;letter-spacing:.04em;line-height:.95;margin:1.5em 0 .55em;color:var(--text); }
+.ba-prose h3 { font-family:'Inter', sans-serif;font-size:1.45em;font-weight:600;font-style:italic;margin:1.3em 0 .5em;color:var(--blue-bright); }
+.ba-prose h4 { font-family:'DM Mono',monospace;font-size:.85em;letter-spacing:.14em;text-transform:uppercase;margin:1.2em 0 .4em;color:var(--text-sub); }
 
 /* Bold / Italic */
-.ba-prose strong { font-weight:600;color:#F4F0E8; }
-.ba-prose em { font-style:italic;color:#C9A84C; }
+.ba-prose strong { font-weight:600;color:var(--text); }
+.ba-prose em { font-style:italic;color:var(--blue-bright); }
 .ba-prose u { text-underline-offset:4px; }
 .ba-prose s { opacity:.6; }
-.ba-prose mark { background:#3a2c00;border-radius:3px;padding:0 4px;color:#F4F0E8; }
+.ba-prose mark { background:#3a2c00;border-radius:3px;padding:0 4px;color:var(--text); }
 
 /* Links */
-.ba-prose a { color:#E8341A;text-decoration:underline;text-underline-offset:4px;transition:color .2s; }
-.ba-prose a:hover { color:#C9A84C; }
+.ba-prose a { color:var(--blue);text-decoration:underline;text-underline-offset:4px;transition:color .2s; }
+.ba-prose a:hover { color:var(--blue-bright); }
 
 /* Lists */
 .ba-prose ul,.ba-prose ol { padding-left:1.6em;margin:0 0 1.4em; }
 .ba-prose li { margin:.4em 0; }
-.ba-prose ul li::marker { color:#E8341A; }
-.ba-prose ol li::marker { color:#C9A84C;font-family:'DM Mono',monospace;font-size:.85em; }
+.ba-prose ul li::marker { color:var(--blue); }
+.ba-prose ol li::marker { color:var(--blue-bright);font-family:'DM Mono',monospace;font-size:.85em; }
 
 /* Task list */
 .ba-prose ul[data-type="taskList"] { list-style:none;padding-left:.4em; }
 .ba-prose ul[data-type="taskList"] li { display:flex;align-items:flex-start;gap:.6em; }
-.ba-prose ul[data-type="taskList"] li input[type="checkbox"] { margin-top:5px;accent-color:#E8341A; }
+.ba-prose ul[data-type="taskList"] li input[type="checkbox"] { margin-top:5px;accent-color:var(--blue); }
 
 /* Blockquote */
 .ba-prose blockquote {
-  border-left:3px solid #E8341A;
+  border-left:3px solid var(--blue);
   padding:16px 24px;margin:1.6em 0;
-  background:rgba(232,52,26,.05);
+  background:var(--blue-brd);
   border-radius:0 4px 4px 0;
-  font-style:italic;font-size:1.1em;color:rgba(244,240,232,.75);
+  font-style:italic;font-size:1.1em;color:var(--text-sub);
 }
 
 /* Code */
 .ba-prose code {
   background:#1a1a1b;border-radius:4px;padding:2px 7px;
-  font-family:'DM Mono',monospace;font-size:.85em;color:#C9A84C;
-  border:1px solid rgba(244,240,232,.1);
+  font-family:'DM Mono',monospace;font-size:.85em;color:var(--blue-bright);
+  border:1px solid var(--border);
 }
 .ba-prose pre {
-  background:#0d0d0e;border:1px solid rgba(244,240,232,.1);
+  background:#0d0d0e;border:1px solid var(--border);
   border-radius:8px;padding:20px 24px;overflow-x:auto;margin:1.6em 0;
 }
 .ba-prose pre code { background:none;border:none;padding:0;color:#cdd6f4;font-size:.9em; }
 
 /* HR */
-.ba-prose hr { border:none;border-top:1px solid rgba(244,240,232,.1);margin:2.4em 0; }
+.ba-prose hr { border:none;border-top:1px solid var(--border);margin:2.4em 0; }
 
 /* Images */
 .ba-prose img { max-width:100%;border-radius:8px;margin:1.6em 0;display:block; }
@@ -266,13 +266,13 @@ const CSS = `
 
 /* Tables */
 .ba-prose table { width:100%;border-collapse:collapse;margin:1.8em 0;font-size:.9em; }
-.ba-prose th,.ba-prose td { border:1px solid rgba(244,240,232,.12);padding:10px 14px;vertical-align:top; }
+.ba-prose th,.ba-prose td { border:1px solid var(--border);padding:10px 14px;vertical-align:top; }
 .ba-prose th {
-  background:rgba(244,240,232,.05);font-family:'DM Mono',monospace;
+  background:var(--border);font-family:'DM Mono',monospace;
   font-size:.78em;letter-spacing:.1em;text-transform:uppercase;
-  color:rgba(244,240,232,.6);font-weight:400;
+  color:var(--text-sub);font-weight:400;
 }
-.ba-prose tr:nth-child(even) td { background:rgba(244,240,232,.02); }
+.ba-prose tr:nth-child(even) td { background:var(--border); }
 
 /* ── Force contrast: CSS fallback for any inline dark colors the sanitizer may miss ──
    CSS !important overrides inline styles for the most common black/dark patterns. */
@@ -280,7 +280,7 @@ const CSS = `
 .ba-prose [style*="color: #000"],.ba-prose [style*="color:#000"],
 .ba-prose [style*="color: rgb(0"],.ba-prose [style*="color: windowtext"],
 .ba-prose [style*="color: windowText"],.ba-prose [style*="color: ButtonText"],
-.ba-prose [style*="color: CanvasText"] { color:#F4F0E8 !important; }
+.ba-prose [style*="color: CanvasText"] { color:var(--text) !important; }
 /* Strip any light/white background boxes pasted from external sources */
 .ba-prose [style*="background-color: white"],
 .ba-prose [style*="background-color: #fff"],
@@ -295,17 +295,17 @@ const CSS = `
   max-width:860px;margin:0 auto;padding:0 80px 80px;
   display:flex;align-items:center;gap:16px;
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;
-  text-transform:uppercase;color:rgba(244,240,232,.35);
-  border-top:1px solid rgba(244,240,232,.08);padding-top:32px;
+  text-transform:uppercase;color:var(--text-mute);
+  border-top:1px solid var(--border);padding-top:32px;
 }
 .ba-share-btn {
   display:inline-flex;align-items:center;gap:8px;
-  padding:8px 18px;border:1px solid rgba(244,240,232,.15);
-  background:transparent;color:rgba(244,240,232,.5);
+  padding:8px 18px;border:1px solid var(--border);
+  background:transparent;color:var(--text-mute);
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;
   text-transform:uppercase;cursor:pointer;transition:all .25s;
 }
-.ba-share-btn:hover { border-color:#E8341A;color:#E8341A; }
+.ba-share-btn:hover { border-color:var(--blue);color:var(--blue); }
 
 /* ── Skeleton / Error ── */
 .ba-skel {
@@ -319,7 +319,7 @@ const CSS = `
 .ba-error {
   text-align:center;padding:120px 24px;
   font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.1em;
-  color:rgba(244,240,232,.4);
+  color:var(--text-mute);
 }
 
 /* ── Responsive ── */
@@ -428,7 +428,7 @@ export default function BlogArticle() {
         {post && (
           <>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
-            <span style={{ color: "rgba(244,240,232,.6)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{post.title}</span>
+            <span style={{ color: "var(--text-sub)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>{post.title}</span>
           </>
         )}
       </nav>
@@ -459,7 +459,7 @@ export default function BlogArticle() {
           <div>{error}</div>
           <button
             onClick={() => navigate("/blog")}
-            style={{ marginTop: 24, background: "none", border: "1px solid rgba(244,240,232,.2)", color: "rgba(244,240,232,.5)", padding: "10px 28px", cursor: "pointer", fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase" }}
+            style={{ marginTop: 24, background: "none", border: "1px solid var(--text-mute)", color: "var(--text-mute)", padding: "10px 28px", cursor: "pointer", fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: ".16em", textTransform: "uppercase" }}
           >
             ← Back to Blog
           </button>

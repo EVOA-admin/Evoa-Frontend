@@ -16,7 +16,7 @@ const CONTACT_CSS = `
 @keyframes con-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
 @keyframes con-shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 @keyframes con-ripple { 0%{transform:scale(0);opacity:1} 100%{transform:scale(4);opacity:0} }
-@keyframes con-glowPulse { 0%,100%{box-shadow:0 0 20px rgba(0,191,165,.2),0 0 40px rgba(0,191,165,.05)} 50%{box-shadow:0 0 40px rgba(0,191,165,.4),0 0 80px rgba(0,191,165,.15)} }
+@keyframes con-glowPulse { 0%,100%{box-shadow:0 0 20px var(--blue-brd),0 0 40px var(--blue-brd)} 50%{box-shadow:0 0 40px var(--blue-brd),0 0 80px var(--blue-brd)} }
 @keyframes con-morphBg { 0%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%} 50%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%} 100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%} }
 @keyframes con-waveform { 0%,100%{transform:scaleY(.3)} 50%{transform:scaleY(1)} }
 
@@ -37,25 +37,25 @@ const CONTACT_CSS = `
 /* ── INPUT STYLING ── */
 .con-input {
   width: 100%;
-  background: rgba(244,240,232,.03);
-  border: 1px solid rgba(255,255,255,.08);
+  background: var(--border);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 14px 18px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 300;
-  color: #F4F0E8;
+  color: var(--text);
   outline: none;
   transition: border-color .3s, background .3s, box-shadow .3s;
   position: relative;
 }
-.con-input::placeholder { color: rgba(244,240,232,.25); font-style: italic; }
+.con-input::placeholder { color: var(--text-mute); font-style: italic; }
 .con-input:focus {
-  border-color: #00BFA5;
-  background: rgba(0,191,165,.04);
-  box-shadow: 0 0 0 3px rgba(0,191,165,.08), 0 0 30px rgba(0,191,165,.1);
+  border-color: var(--blue-mid);
+  background: var(--blue-brd);
+  box-shadow: 0 0 0 3px var(--blue-brd), 0 0 30px var(--blue-brd);
 }
-.con-input.error { border-color: #E8341A; }
+.con-input.error { border-color: var(--blue); }
 
 /* ── LABEL ── */
 .con-field-label {
@@ -63,20 +63,20 @@ const CONTACT_CSS = `
   font-size: 9px;
   letter-spacing: .22em;
   text-transform: uppercase;
-  color: #00BFA5;
+  color: var(--blue-mid);
   margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.con-field-label .req { color: #E8341A; }
+.con-field-label .req { color: var(--blue); }
 
 /* ── SEND BUTTON ── */
 .con-send-btn {
   width: 100%;
   padding: 18px 40px;
-  background: #00BFA5;
-  color: #060607;
+  background: var(--blue-mid);
+  color: var(--bg);
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   letter-spacing: .22em;
@@ -97,14 +97,14 @@ const CONTACT_CSS = `
   animation: con-shimmer 2.5s infinite;
   pointer-events: none;
 }
-.con-send-btn:hover { background: #C9A84C; transform: translateY(-2px); }
+.con-send-btn:hover { background: var(--blue-bright); transform: translateY(-2px); }
 .con-send-btn:active { transform: translateY(0); }
 .con-send-btn.sending { opacity: .7; pointer-events: none; }
 
 /* ── CONTACT INFO CARD ── */
 .con-info-card {
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--border);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 24px 28px;
   display: flex;
@@ -118,14 +118,14 @@ const CONTACT_CSS = `
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, #00BFA5, transparent);
+  background: linear-gradient(90deg, transparent, var(--blue-mid), transparent);
   opacity: 0;
   transition: opacity .3s;
 }
 .con-info-card:hover::before { opacity: 1; }
 .con-info-card:hover {
-  border-color: rgba(0,191,165,.25);
-  background: rgba(0,191,165,.04);
+  border-color: var(--blue-brd);
+  background: var(--blue-brd);
   transform: translateX(6px);
 }
 
@@ -133,14 +133,14 @@ const CONTACT_CSS = `
 .con-icon-box {
   width: 48px; height: 48px;
   border-radius: 10px;
-  background: rgba(0,191,165,.1);
-  border: 1px solid rgba(0,191,165,.2);
+  background: var(--blue-brd);
+  border: 1px solid var(--blue-brd);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   transition: background .3s, transform .3s;
 }
 .con-info-card:hover .con-icon-box {
-  background: rgba(0,191,165,.2);
+  background: var(--blue-brd);
   transform: scale(1.08) rotate(3deg);
 }
 
@@ -148,7 +148,7 @@ const CONTACT_CSS = `
 .con-waveform { display: flex; align-items: center; gap: 2px; height: 16px; }
 .con-waveform-bar {
   width: 2px;
-  background: #00BFA5;
+  background: var(--blue-mid);
   border-radius: 1px;
   animation: con-waveform .8s ease-in-out infinite;
   opacity: .6;
@@ -167,7 +167,7 @@ const CONTACT_CSS = `
 .con-success-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(6,6,7,.95);
+  background: var(--bg-alt);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -213,7 +213,7 @@ function ParticleCanvas() {
         vx: (Math.random() - .5) * .4, vy: (Math.random() - .5) * .4,
         r: Math.random() * 1.5 + .3,
         a: Math.random() * .6 + .1,
-        c: Math.random() > .5 ? '#00BFA5' : '#C9A84C'
+        c: Math.random() > .5 ? 'var(--blue-mid)' : 'var(--blue-bright)'
       });
     }
 
@@ -233,7 +233,7 @@ function ParticleCanvas() {
         const d = Math.hypot(particles[i].x - particles[j].x, particles[i].y - particles[j].y);
         if (d < 110) {
           ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = '#00BFA5'; ctx.globalAlpha = (1 - d / 110) * .08; ctx.lineWidth = .5; ctx.stroke(); ctx.globalAlpha = 1;
+          ctx.strokeStyle = 'var(--blue-mid)'; ctx.globalAlpha = (1 - d / 110) * .08; ctx.lineWidth = .5; ctx.stroke(); ctx.globalAlpha = 1;
         }
       }
       raf = requestAnimationFrame(draw);
@@ -248,10 +248,10 @@ function ParticleCanvas() {
 function OrbitDeco() {
   return (
     <div style={{ position: 'absolute', top: '50%', left: '-80px', transform: 'translateY(-50%)', width: 320, height: 320, pointerEvents: 'none', zIndex: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid rgba(0,191,165,.06)' }} />
-      <div style={{ position: 'absolute', inset: 30, borderRadius: '50%', border: '1px solid rgba(201,168,76,.04)' }} />
+      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1px solid var(--blue-brd)' }} />
+      <div style={{ position: 'absolute', inset: 30, borderRadius: '50%', border: '1px solid var(--blue-brd)' }} />
       {[1, 2, 3].map(i => (
-        <div key={i} style={{ position: 'absolute', top: '50%', left: '50%', width: 6, height: 6, marginTop: -3, marginLeft: -3, borderRadius: '50%', background: i === 2 ? '#C9A84C' : '#00BFA5', boxShadow: `0 0 12px ${i === 2 ? '#C9A84C' : '#00BFA5'}`, animation: `con-orbit${i === 1 ? '' : i} ${5 + i * 2}s linear infinite` }} />
+        <div key={i} style={{ position: 'absolute', top: '50%', left: '50%', width: 6, height: 6, marginTop: -3, marginLeft: -3, borderRadius: '50%', background: i === 2 ? 'var(--blue-bright)' : 'var(--blue-mid)', boxShadow: `0 0 12px ${i === 2 ? 'var(--blue-bright)' : 'var(--blue-mid)'}`, animation: `con-orbit${i === 1 ? '' : i} ${5 + i * 2}s linear infinite` }} />
       ))}
     </div>
   );
@@ -286,11 +286,11 @@ function InfoCard({ icon, label, value, delay, active }) {
   return (
     <div className={`con-info-card cr delay${delay}`}>
       <div className="con-icon-box">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00BFA5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue-mid)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{icon}</svg>
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.4)', marginBottom: 6 }}>{label}</div>
-        <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 16, fontWeight: 300, color: '#F4F0E8', lineHeight: 1.5 }}>{value}</div>
+        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--text-mute)', marginBottom: 6 }}>{label}</div>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, fontWeight: 300, color: 'var(--text)', lineHeight: 1.5 }}>{value}</div>
       </div>
       {active && <Waveform active />}
     </div>
@@ -304,7 +304,7 @@ function FloatingField({ label, type = 'text', placeholder, value, onChange, err
   return (
     <div style={{ position: 'relative' }}>
       <label className="con-field-label">
-        <span style={{ width: 14, height: 1, background: '#00BFA5', display: 'inline-block' }} />
+        <span style={{ width: 14, height: 1, background: 'var(--blue-mid)', display: 'inline-block' }} />
         {label} <span className="req">*</span>
       </label>
       <Tag
@@ -318,8 +318,8 @@ function FloatingField({ label, type = 'text', placeholder, value, onChange, err
         rows={multiline ? 5 : undefined}
         style={{ display: 'block', resize: multiline ? 'vertical' : undefined, minHeight: multiline ? 120 : undefined }}
       />
-      {error && <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: '#E8341A', marginTop: 6, letterSpacing: '.1em' }}>↑ {error}</div>}
-      <div style={{ position: 'absolute', bottom: error ? 20 : 0, left: 0, right: 0, height: 1, background: '#00BFA5', transform: focused ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left', transition: 'transform .3s cubic-bezier(.23,1,.32,1)' }} />
+      {error && <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: 'var(--blue)', marginTop: 6, letterSpacing: '.1em' }}>↑ {error}</div>}
+      <div style={{ position: 'absolute', bottom: error ? 20 : 0, left: 0, right: 0, height: 1, background: 'var(--blue-mid)', transform: focused ? 'scaleX(1)' : 'scaleX(0)', transformOrigin: 'left', transition: 'transform .3s cubic-bezier(.23,1,.32,1)' }} />
     </div>
   );
 }
@@ -400,60 +400,60 @@ export default function Contact() {
       <ParticleCanvas />
 
       {/* ── HERO SECTION ── */}
-      <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(100px,14vw,160px) 24px 80px', position: 'relative', overflow: 'hidden', zIndex: 1, background: '#060607' }}>
+      <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'clamp(100px,14vw,160px) 24px 80px', position: 'relative', overflow: 'hidden', zIndex: 1, background: 'var(--bg)' }}>
 
-        <div style={{ position: 'absolute', top: '20%', left: '-15%', width: 400, height: 400, background: 'radial-gradient(circle,rgba(0,191,165,.07),transparent 65%)', animation: 'con-morphBg 8s ease-in-out infinite', filter: 'blur(40px)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: '15%', right: '-10%', width: 500, height: 500, background: 'radial-gradient(circle,rgba(201,168,76,.06),transparent 65%)', animation: 'con-morphBg 11s ease-in-out infinite reverse', filter: 'blur(50px)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 300, background: 'radial-gradient(circle,rgba(232,52,26,.04),transparent 60%)', pointerEvents: 'none', filter: 'blur(60px)' }} />
+        <div style={{ position: 'absolute', top: '20%', left: '-15%', width: 400, height: 400, background: 'radial-gradient(circle,var(--blue-brd),transparent 65%)', animation: 'con-morphBg 8s ease-in-out infinite', filter: 'blur(40px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '15%', right: '-10%', width: 500, height: 500, background: 'radial-gradient(circle,var(--blue-brd),transparent 65%)', animation: 'con-morphBg 11s ease-in-out infinite reverse', filter: 'blur(50px)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 300, background: 'radial-gradient(circle,var(--blue-brd),transparent 60%)', pointerEvents: 'none', filter: 'blur(60px)' }} />
 
         {/* ghost text */}
-        <div style={{ position: 'absolute', fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(80px,18vw,240px)', color: 'rgba(244,240,232,.015)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', whiteSpace: 'nowrap', pointerEvents: 'none', letterSpacing: '.1em', userSelect: 'none' }}>CONTACT</div>
+        <div style={{ position: 'absolute', fontFamily: "'Inter', sans-serif; font-weight: 800", fontSize: 'clamp(80px,18vw,240px)', color: 'var(--border-soft)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', whiteSpace: 'nowrap', pointerEvents: 'none', letterSpacing: '.1em', userSelect: 'none' }}>CONTACT</div>
 
         {/* tag */}
         <div style={{ opacity: 0, animation: 'con-fadeUp .7s ease forwards .2s' }}>
-          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.28em', textTransform: 'uppercase', color: '#00BFA5', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 28, border: '1px solid rgba(0,191,165,.2)', padding: '6px 16px', borderRadius: 40 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#00BFA5', boxShadow: '0 0 8px #00BFA5', display: 'inline-block', animation: 'con-pulse 2s ease-in-out infinite' }} />
+          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.28em', textTransform: 'uppercase', color: 'var(--blue-mid)', display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 28, border: '1px solid var(--blue-brd)', padding: '6px 16px', borderRadius: 40 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--blue-mid)', boxShadow: '0 0 8px var(--blue-mid)', display: 'inline-block', animation: 'con-pulse 2s ease-in-out infinite' }} />
             Signal Transmission Open
           </div>
         </div>
 
         {/* main title */}
         <div style={{ opacity: 0, animation: 'con-fadeUp .9s ease forwards .4s', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          <h1 className="con-hero-title" style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(48px,7vw,100px)', lineHeight: 1.05, color: '#F4F0E8', letterSpacing: '-.01em', marginBottom: 8 }}>
+          <h1 className="con-hero-title" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontStyle: 'italic', fontSize: 'clamp(48px,7vw,100px)', lineHeight: 1.05, color: 'var(--text)', letterSpacing: '-.01em', marginBottom: 8 }}>
             Let's build<br />
-            <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontStyle: 'normal', fontWeight: 400, fontSize: 'clamp(60px,9vw,130px)', lineHeight: .88, letterSpacing: '.03em', display: 'block' }}>
-              <span style={{ color: '#00BFA5' }}>something</span>{' '}
-              <span style={{ WebkitTextStroke: '1px #C9A84C', WebkitTextFillColor: 'transparent' }}>extraordinary</span>
+            <span style={{ fontFamily: "'Inter', sans-serif; font-weight: 800", fontStyle: 'normal', fontWeight: 400, fontSize: 'clamp(60px,9vw,130px)', lineHeight: .88, letterSpacing: '.03em', display: 'block' }}>
+              <span style={{ color: 'var(--blue-mid)' }}>something</span>{' '}
+              <span style={{ WebkitTextStroke: '1px var(--blue-bright)', WebkitTextFillColor: 'transparent' }}>extraordinary</span>
             </span>
           </h1>
         </div>
 
         {/* sub */}
         <div style={{ opacity: 0, animation: 'con-fadeUp .9s ease forwards .6s', textAlign: 'center', maxWidth: 560, marginTop: 28 }}>
-          <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 'clamp(16px,2vw,20px)', fontWeight: 300, lineHeight: 1.75, color: 'rgba(244,240,232,0.5)' }}>
+          <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 'clamp(16px,2vw,20px)', fontWeight: 300, lineHeight: 1.75, color: 'var(--text-sub)' }}>
             Have a question, partnership inquiry, or just want to say hello? Our team receives your signal and responds within 24 hours.
           </p>
         </div>
 
         {/* scroll hint */}
         <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, opacity: 0, animation: 'con-fadeIn 1s ease forwards 1.2s' }}>
-          <div style={{ width: 1, height: 48, background: 'linear-gradient(to bottom,#00BFA5,transparent)', animation: 'con-float 1.8s ease-in-out infinite' }} />
-          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.35)' }}>Scroll</div>
+          <div style={{ width: 1, height: 48, background: 'linear-gradient(to bottom,var(--blue-mid),transparent)', animation: 'con-float 1.8s ease-in-out infinite' }} />
+          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--text-mute)' }}>Scroll</div>
         </div>
       </section>
 
       {/* ── MAIN CONTACT SECTION ── */}
-      <section ref={sectionRef} style={{ padding: 'clamp(60px,8vw,120px) clamp(20px,5vw,80px)', position: 'relative', zIndex: 1, background: '#060607' }}>
+      <section ref={sectionRef} style={{ padding: 'clamp(60px,8vw,120px) clamp(20px,5vw,80px)', position: 'relative', zIndex: 1, background: 'var(--bg)' }}>
 
         {/* section heading */}
         <div style={{ textAlign: 'center', marginBottom: 80, position: 'relative', zIndex: 1 }}>
-          <div className="cr" style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.26em', textTransform: 'uppercase', color: '#E8341A', marginBottom: 20, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 28, height: 1, background: '#E8341A', display: 'inline-block' }} />Transmission Center<span style={{ width: 28, height: 1, background: '#E8341A', display: 'inline-block' }} />
+          <div className="cr" style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.26em', textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 20, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 28, height: 1, background: 'var(--blue)', display: 'inline-block' }} />Transmission Center<span style={{ width: 28, height: 1, background: 'var(--blue)', display: 'inline-block' }} />
           </div>
-          <h2 className="cr delay1" style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(48px,7vw,88px)', letterSpacing: '.04em', color: '#F4F0E8', lineHeight: .9, marginBottom: 20 }}>
-            Get In <span style={{ color: '#00BFA5' }}>Touch</span>
+          <h2 className="cr delay1" style={{ fontFamily: "'Inter', sans-serif; font-weight: 800", fontSize: 'clamp(48px,7vw,88px)', letterSpacing: '.04em', color: 'var(--text)', lineHeight: .9, marginBottom: 20 }}>
+            Get In <span style={{ color: 'var(--blue-mid)' }}>Touch</span>
           </h2>
-          <p className="cr delay2" style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, fontWeight: 300, color: 'rgba(244,240,232,0.5)', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+          <p className="cr delay2" style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 300, color: 'var(--text-sub)', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
             We typically respond within 24 business hours. Your message travels at the speed of ambition.
           </p>
         </div>
@@ -486,63 +486,63 @@ export default function Contact() {
               />
 
               {/* Follow Us */}
-              <div className="cr delay5" style={{ background: 'rgba(255,255,255,.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '24px 28px' }}>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: '.06em', color: '#F4F0E8', marginBottom: 10 }}>Follow Us</div>
-                <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 300, color: 'rgba(244,240,232,0.35)', marginBottom: 20, lineHeight: 1.6 }}>Connect for updates, startup stories, and ecosystem news.</p>
+              <div className="cr delay5" style={{ background: 'var(--border)', border: '1px solid var(--border)', borderRadius: 8, padding: '24px 28px' }}>
+                <div style={{ fontFamily: "'Inter', sans-serif; font-weight: 800", fontSize: 22, letterSpacing: '.06em', color: 'var(--text)', marginBottom: 10 }}>Follow Us</div>
+                <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 300, color: 'var(--text-mute)', marginBottom: 20, lineHeight: 1.6 }}>Connect for updates, startup stories, and ecosystem news.</p>
                 <div style={{ display: 'flex', gap: 12 }}>
                   {[
                     { label: 'LinkedIn', href: 'https://linkedin.com/company/evo-a', icon: <><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></> },
                     { label: 'Instagram', href: 'https://instagram.com/evoaofficial', icon: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></> }
                   ].map(s => (
                     <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
-                      style={{ width: 44, height: 44, border: '1px solid rgba(0,191,165,.2)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'all .3s', background: 'rgba(0,191,165,.05)' }}
-                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,165,.15)'; e.currentTarget.style.borderColor = 'rgba(0,191,165,.5)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,165,.05)'; e.currentTarget.style.borderColor = 'rgba(0,191,165,.2)'; e.currentTarget.style.transform = ''; }}
+                      style={{ width: 44, height: 44, border: '1px solid var(--blue-brd)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'all .3s', background: 'var(--blue-brd)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--blue-brd)'; e.currentTarget.style.borderColor = 'var(--blue-brd)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--blue-brd)'; e.currentTarget.style.borderColor = 'var(--blue-brd)'; e.currentTarget.style.transform = ''; }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00BFA5" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{s.icon}</svg>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue-mid)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">{s.icon}</svg>
                     </a>
                   ))}
                 </div>
               </div>
 
               {/* Response time stat */}
-              <div className="cr delay6" style={{ background: 'linear-gradient(135deg,rgba(0,191,165,.08),rgba(201,168,76,.05))', border: '1px solid rgba(0,191,165,.15)', borderRadius: 8, padding: '20px 28px', display: 'flex', alignItems: 'center', gap: 20 }}>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 48, lineHeight: 1, color: '#00BFA5', letterSpacing: '.04em' }}>24h</div>
+              <div className="cr delay6" style={{ background: 'linear-gradient(135deg,var(--blue-brd),var(--blue-brd))', border: '1px solid var(--blue-brd)', borderRadius: 8, padding: '20px 28px', display: 'flex', alignItems: 'center', gap: 20 }}>
+                <div style={{ fontFamily: "'Inter', sans-serif; font-weight: 800", fontSize: 48, lineHeight: 1, color: 'var(--blue-mid)', letterSpacing: '.04em' }}>24h</div>
                 <div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.35)', marginBottom: 4 }}>Response Time</div>
-                  <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 14, fontWeight: 300, color: 'rgba(244,240,232,.6)' }}>We read every message personally</div>
+                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--text-mute)', marginBottom: 4 }}>Response Time</div>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, fontWeight: 300, color: 'var(--text-sub)' }}>We read every message personally</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* ── RIGHT: Contact Form ── */}
-          <div className="cr from-right delay2" ref={formRef} style={{ background: 'rgba(10,10,12,.6)', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: 'clamp(28px,4vw,52px)', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(20px)', animation: 'con-glowPulse 4s ease-in-out infinite' }}>
+          <div className="cr from-right delay2" ref={formRef} style={{ background: 'var(--bg-alt)', border: '1px solid var(--border)', borderRadius: 12, padding: 'clamp(28px,4vw,52px)', position: 'relative', overflow: 'hidden', backdropFilter: 'blur(20px)', animation: 'con-glowPulse 4s ease-in-out infinite' }}>
 
             {/* scanline effect */}
-            <div ref={scanRef} style={{ position: 'absolute', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,rgba(0,191,165,.3),transparent)', pointerEvents: 'none', zIndex: 0 }} />
+            <div ref={scanRef} style={{ position: 'absolute', left: 0, right: 0, height: 1, background: 'linear-gradient(90deg,transparent,var(--blue-brd),transparent)', pointerEvents: 'none', zIndex: 0 }} />
 
             {/* top accent */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,#00BFA5 40%,#C9A84C 60%,transparent)' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg,transparent,var(--blue-mid) 40%,var(--blue-bright) 60%,transparent)' }} />
 
             {/* form header */}
             <div style={{ marginBottom: 36, position: 'relative', zIndex: 1 }}>
-              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: '#00BFA5', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--blue-mid)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Waveform active={!sent} />
                 <span>Send Us a Message</span>
               </div>
-              <h3 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 36, letterSpacing: '.04em', color: '#F4F0E8', lineHeight: 1, marginBottom: 10 }}>Start a Conversation</h3>
-              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 15, fontWeight: 300, color: 'rgba(244,240,232,0.35)', lineHeight: 1.6 }}>Fill out the form and we'll get back to you shortly.</p>
+              <h3 style={{ fontFamily: "'Inter', sans-serif; font-weight: 800", fontSize: 36, letterSpacing: '.04em', color: 'var(--text)', lineHeight: 1, marginBottom: 10 }}>Start a Conversation</h3>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 15, fontWeight: 300, color: 'var(--text-mute)', lineHeight: 1.6 }}>Fill out the form and we'll get back to you shortly.</p>
             </div>
 
             {/* success overlay */}
             <div className={`con-success-overlay${sent ? ' visible' : ''}`}>
               <div style={{ fontSize: 56, marginBottom: 24, animation: sent ? 'con-fadeUp .5s ease' : 'none' }}>✦</div>
-              <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 48, letterSpacing: '.06em', color: '#00BFA5', marginBottom: 12 }}>Signal Received</div>
-              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 18, fontWeight: 300, color: 'rgba(244,240,232,0.55)', textAlign: 'center', maxWidth: 320, lineHeight: 1.7 }}>Your message has been transmitted. We'll respond within 24 hours.</p>
+              <div style={{ fontFamily: "'Inter', sans-serif; font-weight: 800", fontSize: 48, letterSpacing: '.06em', color: 'var(--blue-mid)', marginBottom: 12 }}>Signal Received</div>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 18, fontWeight: 300, color: 'var(--text-sub)', textAlign: 'center', maxWidth: 320, lineHeight: 1.7 }}>Your message has been transmitted. We'll respond within 24 hours.</p>
               <button onClick={() => { setSent(false); setForm({ name: '', email: '', subject: '', message: '' }); setCharCount(0); }}
-                style={{ marginTop: 32, fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: '#00BFA5', background: 'transparent', border: '1px solid rgba(0,191,165,.3)', padding: '12px 28px', cursor: 'pointer', transition: 'all .3s' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,165,.1)'; }}
+                style={{ marginTop: 32, fontFamily: "'DM Mono',monospace", fontSize: 10, letterSpacing: '.2em', textTransform: 'uppercase', color: 'var(--blue-mid)', background: 'transparent', border: '1px solid var(--blue-brd)', padding: '12px 28px', cursor: 'pointer', transition: 'all .3s' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--blue-brd)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
               >Send Another →</button>
             </div>
@@ -556,7 +556,7 @@ export default function Contact() {
               <FloatingField label="Subject" placeholder="Partnership Inquiry" value={form.subject} onChange={handleChange('subject')} error={errors.subject} />
               <div>
                 <FloatingField label="Message" placeholder="Tell us about your inquiry, startup idea, or partnership opportunity..." value={form.message} onChange={handleChange('message')} error={errors.message} multiline />
-                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: charCount > 500 ? '#C9A84C' : 'rgba(244,240,232,0.35)', marginTop: 8, textAlign: 'right', letterSpacing: '.1em' }}>{charCount} chars</div>
+                <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 8, color: charCount > 500 ? 'var(--blue-bright)' : 'var(--text-mute)', marginTop: 8, textAlign: 'right', letterSpacing: '.1em' }}>{charCount} chars</div>
               </div>
 
               {/* send button */}
@@ -565,7 +565,7 @@ export default function Contact() {
                   {sending ? (
                     <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                       <span style={{ display: 'flex', gap: 4 }}>
-                        {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: '#060607', animation: 'con-pulse .8s ease-in-out infinite', animationDelay: `${i * .2}s` }} />)}
+                        {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--bg)', animation: 'con-pulse .8s ease-in-out infinite', animationDelay: `${i * .2}s` }} />)}
                       </span>
                       Transmitting Signal...
                     </span>
@@ -577,7 +577,7 @@ export default function Contact() {
                 ))}
               </div>
 
-              <p style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 12, fontWeight: 300, color: 'rgba(244,240,232,.3)', textAlign: 'center', lineHeight: 1.6, fontStyle: 'italic' }}>
+              <p style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 300, color: 'var(--text-mute)', textAlign: 'center', lineHeight: 1.6, fontStyle: 'italic' }}>
                 By submitting this form, you agree to our privacy policy. We respect your privacy and will never share your information with third parties.
               </p>
             </div>
@@ -586,23 +586,23 @@ export default function Contact() {
       </section>
 
       {/* ── MAP / LOCATION STRIP ── */}
-      <section style={{ padding: 'clamp(40px,6vw,80px) clamp(20px,5vw,80px)', position: 'relative', zIndex: 1, borderTop: '1px solid rgba(255,255,255,.04)', background: '#060607' }}>
+      <section style={{ padding: 'clamp(40px,6vw,80px) clamp(20px,5vw,80px)', position: 'relative', zIndex: 1, borderTop: '1px solid var(--border)', background: 'var(--bg)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 32 }}>
           <div className="cr">
-            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(244,240,232,0.35)', marginBottom: 12 }}>Located In</div>
-            <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 'clamp(32px,5vw,56px)', letterSpacing: '.04em', color: '#F4F0E8', lineHeight: 1 }}>UP, <span style={{ color: '#C9A84C' }}>India</span></div>
-            <div style={{ fontFamily: "'Cormorant Garamond',serif", fontSize: 16, fontWeight: 300, color: 'rgba(244,240,232,0.55)', marginTop: 8 }}>Bareilly, 243001</div>
+            <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 9, letterSpacing: '.22em', textTransform: 'uppercase', color: 'var(--text-mute)', marginBottom: 12 }}>Located In</div>
+            <div style={{ fontFamily: "'Inter', sans-serif; font-weight: 800", fontSize: 'clamp(32px,5vw,56px)', letterSpacing: '.04em', color: 'var(--text)', lineHeight: 1 }}>UP, <span style={{ color: 'var(--blue-bright)' }}>India</span></div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 16, fontWeight: 300, color: 'var(--text-sub)', marginTop: 8 }}>Bareilly, 243001</div>
           </div>
           {/* Coordinate display */}
-          <div className="cr delay3" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: 'rgba(0,191,165,.5)', letterSpacing: '.12em', textAlign: 'right' }}>
+          <div className="cr delay3" style={{ fontFamily: "'DM Mono',monospace", fontSize: 11, color: 'var(--blue-brd)', letterSpacing: '.12em', textAlign: 'right' }}>
             <div>28.3676° N</div>
             <div>79.4304° E</div>
-            <div style={{ marginTop: 8, fontSize: 9, color: 'rgba(244,240,232,0.35)' }}>UTC+05:30 · IST</div>
+            <div style={{ marginTop: 8, fontSize: 9, color: 'var(--text-mute)' }}>UTC+05:30 · IST</div>
           </div>
           {/* visual grid */}
           <div className="cr delay2" style={{ display: 'grid', gridTemplateColumns: 'repeat(8,1fr)', gap: 6 }}>
             {Array.from({ length: 40 }, (_, i) => (
-              <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: i === 20 ? '#00BFA5' : 'rgba(255,255,255,.04)', boxShadow: i === 20 ? '0 0 12px #00BFA5' : 'none', animation: i === 20 ? 'con-pulse 2s ease-in-out infinite' : 'none', transition: 'background .3s' }} />
+              <div key={i} style={{ width: 8, height: 8, borderRadius: 2, background: i === 20 ? 'var(--blue-mid)' : 'var(--border)', boxShadow: i === 20 ? '0 0 12px var(--blue-mid)' : 'none', animation: i === 20 ? 'con-pulse 2s ease-in-out infinite' : 'none', transition: 'background .3s' }} />
             ))}
           </div>
         </div>

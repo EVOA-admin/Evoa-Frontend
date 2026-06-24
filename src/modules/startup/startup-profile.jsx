@@ -332,7 +332,11 @@ export default function StartupProfile() {
                 ) : (
                     <>
                         {/* Hero Section */}
-                        <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                        <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b relative ${isDark ? "border-white/10" : "border-gray-100"}`}>
+                            {/* ── DESKTOP 3-DOT MENU ── */}
+                            <div className="hidden lg:block absolute top-4 right-4 z-50">
+                                {headerActions}
+                            </div>
                             <div className="px-4 pt-6 pb-5">
                                 <div className="flex items-start gap-4">
                                     {/* Logo */}

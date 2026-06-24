@@ -463,14 +463,6 @@ export default function DesktopSidebar({ onCreatePost }) {
       {/* Bottom controls */}
       <div className="ds-divider" />
       <div className="ds-bottom">
-        {/* Theme toggle */}
-        <button className="ds-theme-btn" onClick={openThemeModal} title="Theme">
-          <span style={{ width: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            {isDark ? <HiSun size={20} /> : <HiMoon size={19} />}
-          </span>
-          <span className="ds-theme-label">{"Theme"}</span>
-        </button>
-
         {/* User chip */}
         <button className="ds-user-chip" onClick={() => navigate(profile)} aria-label="Your profile">
           <div className="ds-user-avatar">
