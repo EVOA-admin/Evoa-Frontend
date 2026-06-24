@@ -7,8 +7,14 @@
   --color-evoa-light: var(--evoa-accent-light, var(--evoa-accent-light));
   --color-evoa-darker: var(--evoa-accent-darker, var(--evoa-accent-darker));
 }
-
 /* ─── Global Design Tokens for Internal App ─── */
+:root {
+  --evoa-accent-primary: #00B8A9;
+  --evoa-accent-hover: #00A698;
+  --evoa-accent-dark: #009387;
+  --evoa-accent-light: #33C6B9;
+  --evoa-accent-darker: #007A70;
+}
 :root, .dark {
   --bg:          #0D1B2A;
   --bg-alt:      #1E2D3D;
@@ -28,11 +34,6 @@
   --shadow-md:   0 4px 20px rgba(0,0,0,.4);
   --shadow-lg:   0 12px 48px rgba(0,0,0,.5);
   --shadow-blue: 0 8px 32px rgba(59,130,246,.22);
-  --evoa-accent-primary: #00B8A9;
-  --evoa-accent-hover: #00A698;
-  --evoa-accent-dark: #009387;
-  --evoa-accent-light: #33C6B9;
-  --evoa-accent-darker: #007A70;
 }
 
 .light {
@@ -54,11 +55,6 @@
   --shadow-md:   0 4px 20px rgba(15,23,42,.08),0 1px 4px rgba(15,23,42,.05);
   --shadow-lg:   0 12px 48px rgba(15,23,42,.10),0 4px 12px rgba(15,23,42,.06);
   --shadow-blue: 0 8px 32px rgba(21,101,192,.22);
-  --evoa-accent-primary: #00B8A9;
-  --evoa-accent-hover: #00A698;
-  --evoa-accent-dark: #009387;
-  --evoa-accent-light: #33C6B9;
-  --evoa-accent-darker: #007A70;
 }
 
 /* Full Screen Fix */

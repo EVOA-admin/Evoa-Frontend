@@ -36,17 +36,26 @@ const NOTIF_CSS = `
     padding: 0 16px;
     gap: 24px;
   }
-  .notif-main-col { flex: 1; min-width: 0; }
+  .notif-main-col { 
+    flex: 1; 
+    min-width: 0; 
+    max-width: 680px; /* limits width to what it was before the right panel was removed from flow */
+  }
   .notif-right-panel {
     display: flex;
     flex-direction: column;
-    width: 280px;
-    flex-shrink: 0;
-    position: sticky;
+    position: fixed;
+    right: 20px;
     top: 0;
-    padding-top: 4px;
+    bottom: 0;
+    width: 300px;
+    padding: 20px 0;
     gap: 12px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    z-index: 5;
   }
+  .notif-right-panel::-webkit-scrollbar { display: none; }
   /* Desktop page title */
   .notif-desktop-title {
     display: flex;

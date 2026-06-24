@@ -73,7 +73,7 @@ const CSS = `
   border-radius: 10px;
   object-fit: contain;
   flex-shrink: 0;
-  box-shadow: 0 0 12px rgba(0,184,169,0.3);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--evoa-accent-primary) 30%, transparent);
 }
 .ds-logo-word {
   font-family: 'Bebas Neue', sans-serif;
@@ -150,10 +150,10 @@ const CSS = `
 /* Active */
 .ds-nav-item.active {
   color: var(--evoa-accent-primary) !important;
-  background: rgba(0,184,169,0.12);
+  background: color-mix(in srgb, var(--evoa-accent-primary) 12%, transparent);
   box-shadow:
-    inset 0 1px 0 rgba(0,184,169,0.2),
-    0 0 14px rgba(0,184,169,0.1);
+    inset 0 1px 0 color-mix(in srgb, var(--evoa-accent-primary) 20%, transparent),
+    0 0 14px color-mix(in srgb, var(--evoa-accent-primary) 10%, transparent);
 }
 
 /* Nav label */
@@ -217,8 +217,8 @@ const CSS = `
   background: linear-gradient(135deg, var(--evoa-accent-light) 0%, var(--evoa-accent-primary) 50%, var(--evoa-accent-darker) 100%);
   color: #fff;
   box-shadow:
-    0 4px 20px rgba(0,184,169,0.4),
-    0 0 0 1px rgba(0,184,169,0.3),
+    0 4px 20px color-mix(in srgb, var(--evoa-accent-primary) 40%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--evoa-accent-primary) 30%, transparent),
     inset 0 1px 0 rgba(255,255,255,0.2);
   transition: transform .2s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .2s;
   white-space: nowrap;
@@ -228,8 +228,8 @@ const CSS = `
 .ds-create-btn:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 6px 28px rgba(0,184,169,0.55),
-    0 0 0 1px rgba(0,184,169,0.4),
+    0 6px 28px color-mix(in srgb, var(--evoa-accent-primary) 55%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--evoa-accent-primary) 40%, transparent),
     inset 0 1px 0 rgba(255,255,255,0.25);
 }
 .ds-create-btn:active { transform: scale(0.97); }
@@ -309,13 +309,13 @@ const CSS = `
 .ds-sidebar.light .ds-user-chip:hover { background: rgba(0,0,0,0.05); }
 
 .ds-user-avatar {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   overflow: hidden;
-  border: 1.5px solid rgba(0,184,169,0.4);
-  box-shadow: 0 0 8px rgba(0,184,169,0.2);
   flex-shrink: 0;
+  border: 1.5px solid color-mix(in srgb, var(--evoa-accent-primary) 40%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--evoa-accent-primary) 20%, transparent);
 }
 
 .ds-user-info {
