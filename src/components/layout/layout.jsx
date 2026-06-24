@@ -11,7 +11,7 @@ export default function Layout() {
   const isAuthPage = authPages.includes(location.pathname);
   // Homepage has its own built-in Nav — suppress the global one, but don't constrain to h-screen
   const isHomePage = location.pathname === '/';
-  const dashboardPages = ['/startup', '/investor', '/incubator', '/viewer', '/explore', '/notifications'];
+  const dashboardPages = ['/startup', '/investor', '/incubator', '/viewer', '/explore', '/notifications', '/battlefield', '/battleground'];
   const isDashboardPage = dashboardPages.includes(location.pathname);
   const publicPagesWithLandingNav = ['/blog', '/about', '/contact', '/pitch-us', '/portfolio', '/privacy-policy', '/ambassador-program', '/pricing'];
   const hideNav = isAuthPage || isDashboardPage || isHomePage || publicPagesWithLandingNav.includes(location.pathname);
