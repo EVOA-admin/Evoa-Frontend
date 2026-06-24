@@ -88,9 +88,7 @@ const NAV_CSS = `
 .evoa-nav-root .ln-left { display:flex;align-items:center;gap:0; }
 .evoa-nav-root .ln-si-badge {
   display:inline-flex;align-items:center;gap:6px;
-  margin-left:14px;padding:4px 10px;
-  background:rgba(21,101,192,.06);border:1px solid rgba(21,101,192,.14);
-  border-radius:6px;
+  margin-left:14px;
 }
 .evoa-nav-root .ln-si-label {
   font-family:'DM Mono',monospace;font-size:9px;font-weight:400;
@@ -101,9 +99,7 @@ const NAV_CSS = `
   font-family:'Inter',sans-serif;font-size:11px;font-weight:700;
   letter-spacing:.02em;line-height:1;
 }
-[data-theme="dark"] .evoa-nav-root .ln-si-badge {
-  background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.18);
-}
+/* removed dark mode badge bg/border */
 [data-theme="dark"] .evoa-nav-root .ln-si-label { color:rgba(226,232,240,.4); }
 @media(max-width:900px){ .evoa-nav-root .ln-si-badge { display:none; } }
 

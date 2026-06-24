@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import LandingNav from "../../components/layout/LandingNav";
 import Footer from "../../components/layout/footer";
+import { FaEye, FaVideo, FaChartLine, FaHandshake, FaUsers, FaComments, FaTrophy, FaMoneyBillWave } from "react-icons/fa";
 
 /* ─────────────────────────────────────────────────────
    EVOA LANDING PAGE — Professional White & Blue Design
@@ -556,6 +557,102 @@ const STYLES = `
 }
 .amb-item:hover .amb-cta { background:var(--blue);color:#FFF;border-color:var(--blue); }
 @media(max-width:768px){ .amb-bottom-container{display:none;} }
+
+/* ══════════════════════════════════════════
+   COLLABORATION
+══════════════════════════════════════════ */
+#collab {
+  padding: 100px 0;
+  background: var(--bg-alt);
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.collab-inner { text-align: center; }
+.collab-header { margin-bottom: 56px; }
+.collab-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.collab-logo-evoa {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: .12em;
+  color: var(--text);
+}
+.collab-logo-evoa span { color: var(--blue); }
+.collab-logo-cross { font-size: 20px; color: var(--text-mute); }
+.collab-logo-pitch {
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -.03em;
+}
+.collab-h2 {
+  font-size: clamp(28px, 3.5vw, 48px);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  margin-bottom: 16px;
+}
+.collab-sub {
+  font-size: clamp(15px, 1.7vw, 18px);
+  color: var(--text-sub);
+  line-height: 1.65;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.collab-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 48px;
+}
+.collab-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: left;
+  transition: all .3s;
+  box-shadow: var(--shadow-sm);
+}
+.collab-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue-brd);
+}
+.collab-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--blue-pale);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.collab-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.collab-card-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-sub);
+}
+@media (max-width: 900px) { .collab-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .collab-grid { grid-template-columns: 1fr; } }
 `;
 
 /* ─── Hooks ─── */
@@ -1102,6 +1199,56 @@ function CTABand() {
 
 
 
+/* ─── COLLABORATION ─── */
+function CollaborationSection() {
+  const deliverables = [
+    { icon: FaEye, title: "Offline Pitching", desc: "Startup founders pitch their ideas live in just 180 seconds." },
+    { icon: FaVideo, title: "Online Discovery", desc: "Gain visibility on EVOA beyond the physical event." },
+    { icon: FaChartLine, title: "Featured Pitch Videos", desc: "Startup pitch videos are showcased on EVOA for continued exposure." },
+    { icon: FaHandshake, title: "Investor Discovery", desc: "Connect with investors before, during, and after the event." },
+    { icon: FaUsers, title: "Startup Profiles", desc: "Participating startups receive visibility through their EVOA profiles." },
+    { icon: FaComments, title: "Founder Networking", desc: "Network with founders, mentors, investors, and ecosystem leaders." },
+    { icon: FaTrophy, title: "Investor-Startup Matchmaking", desc: "Create meaningful connections between startups and potential investors." },
+    { icon: FaMoneyBillWave, title: "Long-Term Exposure", desc: "Continue receiving visibility through EVOA's discovery platform even after the event concludes." }
+  ];
+
+  return (
+    <section id="collab">
+      <div className="sec-inner collab-inner">
+        <div className="collab-header reveal">
+          <div className="eyebrow">Featured Collaboration</div>
+          <div className="collab-logos">
+            <div className="collab-logo-evoa">EVO<span>-A</span></div>
+            <div className="collab-logo-cross">×</div>
+            <div className="collab-logo-pitch">Pitchathon</div>
+          </div>
+          <h2 className="collab-h2">EVOA × Pitch in 180 Seconds</h2>
+          <p className="collab-sub">
+            We're partnering with Pitchathon to give founders the ultimate stage. Pitch your startup, gain massive visibility, connect with investors, and showcase your ideas through a fast-paced 180-second pitching format.
+          </p>
+        </div>
+
+        <div className="collab-grid">
+          {deliverables.map((item, i) => (
+            <div key={i} className={`collab-card fu${(i % 4) + 1}`}>
+              <div className="collab-icon"><item.icon /></div>
+              <h3 className="collab-card-title">{item.title}</h3>
+              <p className="collab-card-desc">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="reveal">
+          <Link to="/register" className="btn-primary">
+            Submit Your Startup
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ─── ROOT ─── */
 export default function Landing() {
   useReveal();
@@ -1110,6 +1257,7 @@ export default function Landing() {
       <style>{STYLES}</style>
       <LandingNav />
       <Hero />
+      <CollaborationSection />
       <PitchShowcase />
       <PlatformFeatures />
       <HowItWorks />
