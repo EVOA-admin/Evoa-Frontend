@@ -9,11 +9,11 @@
 }
 /* ─── Global Design Tokens for Internal App ─── */
 :root {
-  --evoa-accent-primary: #00B8A9;
-  --evoa-accent-hover: #00A698;
-  --evoa-accent-dark: #009387;
-  --evoa-accent-light: #33C6B9;
-  --evoa-accent-darker: #007A70;
+  --evoa-accent-primary: #3B82F6;
+  --evoa-accent-hover: #2563EB;
+  --evoa-accent-dark: #1D4ED8;
+  --evoa-accent-light: #60A5FA;
+  --evoa-accent-darker: #1E3A8A;
 }
 :root, .dark {
   --bg:          #0D1B2A;

@@ -270,6 +270,7 @@ export default function DesktopFeedLayout({ children }) {
   const [suggested, setSuggested] = useState([]);
   const [loadingRising, setLoadingRising] = useState(true);
   const [isRisingOpen, setIsRisingOpen] = useState(false);
+  const [isSuggestedOpen, setIsSuggestedOpen] = useState(false);
 
   useEffect(() => {
     // Rising startups
@@ -367,12 +368,15 @@ export default function DesktopFeedLayout({ children }) {
                 <p className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-500"}`}>Suggested for you</p>
               </div>
             </div>
+            <button className="dfl-view-all" onClick={() => setIsSuggestedOpen(true)}>
+              All <FaArrowRight size={8} />
+            </button>
           </div>
 
           <div className="dfl-panel-div" />
 
           <div className="py-1 px-1">
-            {suggested.map((item, i) => {
+            {suggested.slice(0, 1).map((item, i) => {
               const name = item.fullName || item.name || item.user?.fullName || "User";
               const avatar = item.avatarUrl || item.logoUrl || item.user?.avatarUrl;
               const sub = item.investorProfile?.investorType || item.tagline || item.sector || item.role || "";
@@ -437,6 +441,54 @@ export default function DesktopFeedLayout({ children }) {
         isOpen={isRisingOpen}
         onClose={() => setIsRisingOpen(false)}
       />
+
+      {isSuggestedOpen && (
+        <div className="rss-backdrop" style={{ zIndex: 9999 }}>
+          <div className={`rss-modal-content ${cls}`}>
+            <button className="rss-close-btn" onClick={() => setIsSuggestedOpen(false)}>
+              <FaTimes size={16} />
+            </button>
+            <div className="rss-modal-hdr">
+              <div className="rss-icon-wrap"><FaUsers size={16} /></div>
+              <div>
+                <h3 className={`font-bold text-lg ${isDark ? "text-white" : "text-gray-900"}`}>
+                  {userRole === "startup" ? "Investor Spotlight" : "Startups to Watch"}
+                </h3>
+                <p className={`text-xs ${isDark ? "text-white/50" : "text-gray-500"}`}>Suggested connections</p>
+              </div>
+            </div>
+            <div className="rss-modal-body px-4 py-2 flex flex-col gap-2">
+              {suggested.map((item, i) => {
+                const name = item.fullName || item.name || item.user?.fullName || "User";
+                const avatar = item.avatarUrl || item.logoUrl || item.user?.avatarUrl;
+                const sub = item.investorProfile?.investorType || item.tagline || item.sector || item.role || "";
+                const userId = item.userId || item.user?.id || item.id;
+                return (
+                  <button
+                    key={item.id || i}
+                    className="rss-row-btn flex items-center gap-3 w-full"
+                    onClick={() => {
+                        setIsSuggestedOpen(false);
+                        userId && goToProfile(userId, currentUser, navigate);
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                      <img src={avatar || logoFallback(name)} alt={name} className="w-full h-full object-cover" onError={e => { e.currentTarget.src = logoFallback(name); }} />
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                        <div className="flex items-center gap-1">
+                            <p className={`text-sm font-bold truncate ${isDark ? "text-white" : "text-gray-900"}`}>{name}</p>
+                            <MdVerified size={13} className="text-evoa flex-shrink-0" />
+                        </div>
+                        {sub && <p className={`text-xs truncate ${isDark ? "text-white/40" : "text-gray-500"}`}>{sub}</p>}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 
