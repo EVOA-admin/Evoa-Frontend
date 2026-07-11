@@ -13,6 +13,52 @@ import startupService from "../../services/startupService";
 import { getConversationWith } from "../../services/chatService";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
+import AuthPromptModal from "../../components/shared/AuthPromptModal";
+
+/* ─── Guest top bar shown to unauthenticated visitors ─────────────────────── */
+function GuestTopBar({ isDark, navigate }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '12px 16px',
+      background: isDark ? 'rgba(10,10,14,0.85)' : 'rgba(242,239,233,0.9)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.07)',
+      position: 'sticky', top: 0, zIndex: 50,
+    }}>
+      {/* Logo */}
+      <button
+        onClick={() => navigate('/')}
+        style={{ fontWeight: 800, fontSize: 18, letterSpacing: '-0.5px',
+          color: '#00b8a9', background: 'none', border: 'none', cursor: 'pointer' }}
+      >
+        EVOA
+      </button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={() => navigate('/login')}
+          style={{
+            padding: '7px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+            background: 'none',
+            border: isDark ? '1px solid rgba(255,255,255,0.18)' : '1px solid rgba(0,0,0,0.15)',
+            color: isDark ? '#fff' : '#111', cursor: 'pointer',
+          }}
+        >
+          Sign In
+        </button>
+        <button
+          onClick={() => navigate('/register')}
+          style={{
+            padding: '7px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+            background: '#00b8a9', border: 'none', color: '#fff', cursor: 'pointer',
+          }}
+        >
+          Join Free
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const fmt = (n) => {
     if (!n) return "0";
@@ -52,15 +98,16 @@ const InfoRow = ({ icon: Icon, label, value, isDark, href }) => {
 };
 
 // ─────────────────────────────────────────────────────────── STARTUP PROFILE
-function StartupProfile({ profile, startup, isDark, currentUser, userRole, navigate }) {
+function StartupProfile({ profile, startup, isDark, currentUser, userRole, navigate, requireAuth }) {
     const isOwner = currentUser?.id === startup?.founderId || currentUser?.id === profile?.id;
     const [isFollowing, setIsFollowing] = useState(false);
-    const [followLoading, setFollowLoading] = useState(true);
+    const [followLoading, setFollowLoading] = useState(!currentUser); // skip status fetch for guests
     const [followCount, setFollowCount] = useState(startup?.followerCount || 0);
     const [messageLoading, setMessageLoading] = useState(false);
 
     useEffect(() => {
-        if (!startup?.id || isOwner) { setFollowLoading(false); return; }
+        // Guests have no session — skip the follow-status lookup entirely
+        if (!currentUser || !startup?.id || isOwner) { setFollowLoading(false); return; }
         startupService.getFollowStatus(startup.id)
             .then(res => {
                 const data = res?.data?.data || res?.data || res;
@@ -68,9 +115,10 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
             })
             .catch(() => { })
             .finally(() => setFollowLoading(false));
-    }, [startup?.id, isOwner]);
+    }, [startup?.id, isOwner, currentUser]);
 
     const toggleFollow = async () => {
+        if (!requireAuth('follow this startup')) return;
         if (!startup?.id || followLoading) return;
         setFollowLoading(true);
         const was = isFollowing;
@@ -88,6 +136,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
     };
 
     const handleMessage = async () => {
+        if (!requireAuth('send a message')) return;
         const targetId = startup?.founderId || profile?.id;
         if (!targetId || messageLoading) return;
         setMessageLoading(true);
@@ -295,7 +344,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
 }
 
 // ─────────────────────────────────────── INVESTOR / INCUBATOR PROFILE
-function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
+function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate, requireAuth }) {
     const role = profile?.role;
     const data = role === "investor" ? profile?.investors?.[0] : profile?.incubators?.[0];
     const isOwnProfile = currentUser?.id === profile?.id;
@@ -307,7 +356,8 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
 
     // Fetch initial connection status
     useEffect(() => {
-        if (isOwnProfile || !profile?.id) { setConnectLoading(false); return; }
+        // Guests have no session — skip the connection-status lookup entirely
+        if (!currentUser || isOwnProfile || !profile?.id) { setConnectLoading(false); return; }
         apiClient.get(`/users/${profile.id}/connection-status`)
             .then(res => {
                 const d = res?.data?.data ?? res?.data ?? res ?? {};
@@ -316,9 +366,10 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
             })
             .catch(() => { })
             .finally(() => setConnectLoading(false));
-    }, [profile?.id, isOwnProfile]);
+    }, [profile?.id, isOwnProfile, currentUser]);
 
     const handleConnect = async () => {
+        if (!requireAuth('follow this profile')) return;
         if (connectLoading) return;
         const prevConnected = isConnected;
         const prevCount = connectionCount;
@@ -341,6 +392,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
     };
 
     const handleMessage = async () => {
+        if (!requireAuth('send a message')) return;
         const targetId = profile?.id;
         if (!targetId || messageLoading) return;
         setMessageLoading(true);
@@ -578,14 +630,52 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate }) {
 export default function UserPublicProfile() {
     const { userId } = useParams();
     const { theme } = useTheme();
-    const isDark = theme === "dark";
     const navigate = useNavigate();
     const { user: currentUser, userRole } = useAuth();
+
+    // Guest visitors (no account) always see the light-mode layout.
+    // Authenticated users respect their chosen theme as normal.
+    const isDark = currentUser ? theme === 'dark' : false;
+
+    useEffect(() => {
+        if (!currentUser) {
+            // Force light mode on the document for guests
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            
+            // Restore original theme preferences when they leave or log in
+            return () => {
+                document.documentElement.setAttribute('data-theme', theme);
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                } else {
+                    document.documentElement.classList.add('light');
+                    document.documentElement.classList.remove('dark');
+                }
+            };
+        }
+    }, [currentUser, theme]);
 
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [messageLoading, setMessageLoading] = useState(false);
+
+    // Auth-prompt state — shown when a guest clicks any interactive action
+    const [authPrompt, setAuthPrompt] = useState({ open: false, action: '' });
+
+    /**
+     * requireAuth — call before any protected action.
+     * If the user is logged in, returns true and the caller may proceed.
+     * If the user is a guest, opens the AuthPromptModal and returns false.
+     */
+    const requireAuth = (actionLabel = 'do this') => {
+        if (currentUser) return true;
+        setAuthPrompt({ open: true, action: actionLabel });
+        return false;
+    };
 
     useEffect(() => {
         if (!userId) return;
@@ -593,7 +683,7 @@ export default function UserPublicProfile() {
         setError(null);
         apiClient.get(`/users/${userId}`)
             .then(res => setProfile(res?.data?.data || res?.data || res))
-            .catch(() => setError("Could not load this profile."))
+            .catch(() => setError('Could not load this profile.'))
             .finally(() => setLoading(false));
     }, [userId]);
 
@@ -607,6 +697,7 @@ export default function UserPublicProfile() {
     }, [startup?.id, startup?.founderId, currentUser?.id, profile?.id]);
 
     const handleMessage = async () => {
+        if (!requireAuth('send a message')) return;
         if (!profile?.id || messageLoading) return;
         setMessageLoading(true);
         try {
@@ -616,61 +707,91 @@ export default function UserPublicProfile() {
                 navigate(`/inbox/${convData.id}`);
             }
         } catch (e) {
-            console.error("Failed to open chat", e);
+            console.error('Failed to open chat', e);
         } finally {
             setMessageLoading(false);
         }
     };
 
-    const pageTitle = loading ? "Profile" : (role === "startup" ? startup?.name : profile?.fullName) || "Profile";
+    const pageTitle = loading ? 'Profile' : (role === 'startup' ? startup?.name : profile?.fullName) || 'Profile';
+
+    const profileContent = (
+        <div className="px-4 py-5 pb-6">
+            {loading ? (
+                <div className="flex justify-center py-20"><FaSpinner className="animate-spin text-evoa" size={32} /></div>
+            ) : error ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+                    <FaUser size={48} className="text-gray-400" />
+                    <p className={`font-semibold ${isDark ? 'text-white/70' : 'text-gray-600'}`}>{error}</p>
+                    <button onClick={() => navigate(-1)} className="text-sm text-evoa hover:underline">Go back</button>
+                </div>
+            ) : role === 'startup' ? (
+                <StartupProfile profile={profile} startup={startup} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} requireAuth={requireAuth} />
+            ) : (role === 'investor' || role === 'incubator') ? (
+                <InvestorIncubatorProfile profile={profile} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} requireAuth={requireAuth} />
+            ) : (
+                /* Viewer profile — minimal */
+                <div className="flex flex-col items-center py-8 gap-3">
+                    <div className={`w-24 h-24 rounded-full overflow-hidden ring-4 ${isDark ? 'ring-white/20' : 'ring-gray-200'}`}>
+                        {profile?.avatarUrl
+                            ? <img src={profile.avatarUrl} alt={profile.fullName} className="w-full h-full object-cover" />
+                            : <div className="w-full h-full bg-gray-600 flex items-center justify-center text-white text-3xl font-bold">{profile?.fullName?.[0] || '?'}</div>
+                        }
+                    </div>
+                    <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>{profile?.fullName}</h2>
+                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400">Viewer</span>
+                    {profile?.bio && <p className={`text-sm text-center max-w-xs leading-relaxed mt-1 ${isDark ? 'text-white/70' : 'text-gray-600'}`}>{profile.bio}</p>}
+
+                    {profile?.id !== currentUser?.id && (
+                        <button
+                            onClick={handleMessage}
+                            disabled={messageLoading}
+                            className={`flex items-center justify-center gap-2 px-4 py-2 mt-2 rounded-xl text-sm font-semibold border transition-all ${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 text-gray-800 hover:bg-gray-50'}`}
+                        >
+                            {messageLoading ? <FaSpinner size={12} className="animate-spin" /> : <><FaEnvelope size={12} /> Message</>}
+                        </button>
+                    )}
+
+                    {profile?.createdAt && (
+                        <p className={`text-xs mt-2 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
+                            Member since {new Date(profile.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
+                        </p>
+                    )}
+                </div>
+            )}
+        </div>
+    );
 
     return (
-        <AppShell>
-            <AppHeader title={pageTitle} showThemeToggle={true} />
-            <div className="px-4 py-5 pb-6">
-                {loading ? (
-                    <div className="flex justify-center py-20"><FaSpinner className="animate-spin text-evoa" size={32} /></div>
-                ) : error ? (
-                    <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
-                        <FaUser size={48} className="text-gray-400" />
-                        <p className={`font-semibold ${isDark ? "text-white/70" : "text-gray-600"}`}>{error}</p>
-                        <button onClick={() => navigate(-1)} className="text-sm text-evoa hover:underline">Go back</button>
-                    </div>
-                ) : role === "startup" ? (
-                    <StartupProfile profile={profile} startup={startup} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} />
-                ) : (role === "investor" || role === "incubator") ? (
-                    <InvestorIncubatorProfile profile={profile} isDark={isDark} currentUser={currentUser} userRole={userRole} navigate={navigate} />
-                ) : (
-                    /* Viewer profile — minimal */
-                    <div className="flex flex-col items-center py-8 gap-3">
-                        <div className={`w-24 h-24 rounded-full overflow-hidden ring-4 ${isDark ? "ring-white/20" : "ring-gray-200"}`}>
-                            {profile?.avatarUrl
-                                ? <img src={profile.avatarUrl} alt={profile.fullName} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gray-600 flex items-center justify-center text-white text-3xl font-bold">{profile?.fullName?.[0] || "?"}</div>
-                            }
-                        </div>
-                        <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-black"}`}>{profile?.fullName}</h2>
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-400">Viewer</span>
-                        {profile?.bio && <p className={`text-sm text-center max-w-xs leading-relaxed mt-1 ${isDark ? "text-white/70" : "text-gray-600"}`}>{profile.bio}</p>}
+        <>
+            {/* AuthPromptModal — shown when a guest tries to interact */}
+            <AuthPromptModal
+                isOpen={authPrompt.open}
+                action={authPrompt.action}
+                returnTo={`/u/${userId}`}
+                onClose={() => setAuthPrompt({ open: false, action: '' })}
+            />
 
-                        {profile?.id !== currentUser?.id && (
-                            <button
-                                onClick={handleMessage}
-                                disabled={messageLoading}
-                                className={`flex items-center justify-center gap-2 px-4 py-2 mt-2 rounded-xl text-sm font-semibold border transition-all ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-800 hover:bg-gray-50"}`}
-                            >
-                                {messageLoading ? <FaSpinner size={12} className="animate-spin" /> : <><FaEnvelope size={12} /> Message</>}
-                            </button>
-                        )}
-
-                        {profile?.createdAt && (
-                            <p className={`text-xs mt-2 ${isDark ? "text-white/30" : "text-gray-400"}`}>
-                                Member since {new Date(profile.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
-                            </p>
-                        )}
+            {currentUser ? (
+                /* ── Authenticated visitor: full AppShell with sidebar/nav ── */
+                <AppShell>
+                    <AppHeader title={pageTitle} showThemeToggle={true} />
+                    {profileContent}
+                </AppShell>
+            ) : (
+                /* ── Guest visitor: minimal standalone layout ── */
+                <div style={{
+                    minHeight: '100vh',
+                    background: isDark ? '#0a0a0e' : '#f2efe9',
+                    color: isDark ? '#fff' : '#111',
+                }}>
+                    <GuestTopBar isDark={isDark} navigate={navigate} />
+                    <div style={{ maxWidth: 430, margin: '0 auto', padding: '0 0 40px' }}>
+                        {profileContent}
                     </div>
-                )}
-            </div>
-        </AppShell>
+                </div>
+            )}
+        </>
     );
 }
+

@@ -147,7 +147,8 @@ export default function AppRoutes() {
       <Route path="/startup/profile"   element={<ProtectedRoute allowedRoles={['startup']}><Auth><StartupProfile /></Auth></ProtectedRoute>} />
       <Route path="/investor/profile"  element={<ProtectedRoute allowedRoles={['investor']}><Auth><InvestorProfile /></Auth></ProtectedRoute>} />
       <Route path="/incubator/profile" element={<ProtectedRoute allowedRoles={['incubator']}><Auth><IncubatorProfile /></Auth></ProtectedRoute>} />
-      <Route path="/u/:userId"         element={<ProtectedRoute><Auth><UserPublicProfile /></Auth></ProtectedRoute>} />
+      {/* Public profile — intentionally NO ProtectedRoute so shared links work for guests */}
+      <Route path="/u/:userId"         element={<Auth><UserPublicProfile /></Auth>} />
       <Route path="/inbox"             element={<ProtectedRoute><Auth><Inbox /></Auth></ProtectedRoute>} />
       <Route path="/inbox/:id"         element={<ProtectedRoute><Auth><Conversation /></Auth></ProtectedRoute>} />
 

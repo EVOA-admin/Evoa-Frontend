@@ -89,6 +89,7 @@ export default function Explore() {
   const [topPitches, setTopPitches] = useState(() => cache.get('explore_topPitches') || []);
   const [startupsOfWeek, setStartupsOfWeek] = useState(() => cache.get('explore_startupsOfWeek') || []);
   const [investorSpotlight, setInvestorSpotlight] = useState(() => cache.get('explore_investorSpotlight') || []);
+  const [showAllInvestors, setShowAllInvestors] = useState(false);
   const [loadingData, setLoadingData] = useState(() => {
     return !cache.get('explore_topPitches') || !cache.get('explore_startupsOfWeek') || !cache.get('explore_investorSpotlight');
   });
@@ -549,34 +550,48 @@ export default function Explore() {
                 ) : investorSpotlight.length === 0 ? (
                   <p className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>No investor spotlight this week.</p>
                 ) : (
-                  <div className="grid grid-cols-2 exp-investor-grid-lg gap-3">
-                    {investorSpotlight.map((investor) => (
-                      <div
-                        key={investor.id}
-                        className={`rounded-xl p-4 transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer ${isDark
-                          ? 'bg-white/5 border border-white/10'
-                          : 'bg-white border border-gray-200 shadow-sm'
-                        }`}
-                        onClick={() => goToProfile(investor.userId || investor.id, currentUser, navigate)}
-                      >
-                        <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
-                          {investor.avatarUrl ? (
-                            <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-xl">
-                              {(investor.fullName || 'I')[0].toUpperCase()}
-                            </div>
-                          )}
+                  <>
+                    <div className="grid grid-cols-2 exp-investor-grid-lg gap-3">
+                      {(showAllInvestors ? investorSpotlight : investorSpotlight.slice(0, 4)).map((investor) => (
+                        <div
+                          key={investor.id}
+                          className={`rounded-xl p-4 transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer ${isDark
+                            ? 'bg-white/5 border border-white/10'
+                            : 'bg-white border border-gray-200 shadow-sm'
+                          }`}
+                          onClick={() => goToProfile(investor.userId || investor.id, currentUser, navigate)}
+                        >
+                          <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
+                            {investor.avatarUrl ? (
+                              <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-xl">
+                                {(investor.fullName || 'I')[0].toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                            {investor.fullName}
+                          </h3>
+                          <p className={`text-center text-[10px] ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                            {investor.investorProfile?.investorType || 'Investor'}
+                          </p>
                         </div>
-                        <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                          {investor.fullName}
-                        </h3>
-                        <p className={`text-center text-[10px] ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
-                          {investor.investorProfile?.investorType || 'Investor'}
-                        </p>
+                      ))}
+                    </div>
+                    {investorSpotlight.length > 4 && (
+                      <div className="mt-4 flex justify-center">
+                        <button
+                          onClick={() => setShowAllInvestors(!showAllInvestors)}
+                          className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${isDark 
+                            ? 'bg-white/10 text-white hover:bg-white/20' 
+                            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}
+                        >
+                          {showAllInvestors ? 'Show Less' : 'Show More'}
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
           </>
