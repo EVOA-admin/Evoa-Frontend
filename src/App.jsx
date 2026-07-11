@@ -2,6 +2,7 @@ import { BrowserRouter, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { DataCacheProvider } from './contexts/DataCacheContext';
 import AppRoutes from './routes/app-routes';
 import { trackPageView } from './services/analytics';
 
@@ -20,16 +21,17 @@ function GARouteTracker() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
-          <GARouteTracker />
-          <AppRoutes />
-        </BrowserRouter>
-      </AuthProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <DataCacheProvider>
+            <GARouteTracker />
+            <AppRoutes />
+          </DataCacheProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 
 export default App;
-

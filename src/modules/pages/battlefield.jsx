@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaFire, FaRocket, FaUserTie, FaPlay, FaCheckCircle } from "react-icons/fa";
-import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -74,7 +73,7 @@ export default function BattlefieldPage() {
   };
 
   return (
-    <AppShell>
+    <>
       <AppHeader title="Battlefield" />
       <div className="px-3 py-4 space-y-6">
         {userRole === "startup" ? (
@@ -212,6 +211,6 @@ export default function BattlefieldPage() {
           )}
         </section>
       </div>
-    </AppShell>
+    </>
   );
 }

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useDataCache } from "../../contexts/DataCacheContext";
 import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay } from "react-icons/fa";
-import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
 import VideoThumbnail from "../../components/shared/VideoThumbnail";
@@ -80,23 +80,27 @@ export default function Explore() {
   const isDark = theme === 'dark';
   const navigate = useNavigate();
   const { user: currentUser, userRole } = useAuth();
+  const cache = useDataCache();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
-
-  const [topPitches, setTopPitches] = useState([]);
-  const [startupsOfWeek, setStartupsOfWeek] = useState([]);
-  const [investorSpotlight, setInvestorSpotlight] = useState([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [topPitches, setTopPitches] = useState(() => cache.get('explore_topPitches') || []);
+  const [startupsOfWeek, setStartupsOfWeek] = useState(() => cache.get('explore_startupsOfWeek') || []);
+  const [investorSpotlight, setInvestorSpotlight] = useState(() => cache.get('explore_investorSpotlight') || []);
+  const [loadingData, setLoadingData] = useState(() => {
+    return !cache.get('explore_topPitches') || !cache.get('explore_startupsOfWeek') || !cache.get('explore_investorSpotlight');
+  });
 
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   // Fetch all explore sections on mount
   useEffect(() => {
     const fetchExploreData = async () => {
-      setLoadingData(true);
+      // If we already have the data in cache, we don't need to load again
+      if (!loadingData) return;
+      
       try {
         const [topRes, weekRes, spotlightRes] = await Promise.allSettled([
           exploreService.getTopPitches(),
@@ -106,15 +110,21 @@ export default function Explore() {
 
         if (topRes.status === 'fulfilled' && topRes.value?.data) {
           const pitches = topRes.value.data?.data || topRes.value.data;
-          setTopPitches(Array.isArray(pitches) ? pitches : []);
+          const parsed = Array.isArray(pitches) ? pitches : [];
+          setTopPitches(parsed);
+          cache.set('explore_topPitches', parsed);
         }
         if (weekRes.status === 'fulfilled' && weekRes.value?.data) {
           const startups = weekRes.value.data?.data || weekRes.value.data;
-          setStartupsOfWeek(Array.isArray(startups) ? startups : []);
+          const parsed = Array.isArray(startups) ? startups : [];
+          setStartupsOfWeek(parsed);
+          cache.set('explore_startupsOfWeek', parsed);
         }
         if (spotlightRes.status === 'fulfilled' && spotlightRes.value?.data) {
           const investors = spotlightRes.value.data?.data || spotlightRes.value.data;
-          setInvestorSpotlight(Array.isArray(investors) ? investors : []);
+          const parsed = Array.isArray(investors) ? investors : [];
+          setInvestorSpotlight(parsed);
+          cache.set('explore_investorSpotlight', parsed);
         }
       } catch (err) {
         console.error('Failed to fetch explore data:', err);
@@ -158,7 +168,7 @@ export default function Explore() {
   }, [debouncedSearch]);
 
   return (
-    <AppShell>
+    <>
       <style>{EXPLORE_DESKTOP_CSS}</style>
       <AppHeader title="Explore" />
 
@@ -573,6 +583,6 @@ export default function Explore() {
         )}
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useDataCache } from "../../contexts/DataCacheContext";
 import { FaChartLine, FaArrowRight, FaFire, FaUsers, FaLightbulb } from "react-icons/fa";
 import { MdVerified } from "react-icons/md";
 import postsService from "../../services/postsService";
@@ -265,34 +266,46 @@ export default function DesktopFeedLayout({ children }) {
   const isDark = theme === "dark";
   const cls = isDark ? "dark" : "light";
   const navigate = useNavigate();
+  const cache = useDataCache();
 
-  const [risingStartups, setRisingStartups] = useState([]);
-  const [suggested, setSuggested] = useState([]);
-  const [loadingRising, setLoadingRising] = useState(true);
+  const [risingStartups, setRisingStartups] = useState(() => cache.get('layout_risingStartups') || []);
+  const [suggested, setSuggested] = useState(() => cache.get('layout_suggested') || []);
+  const [loadingRising, setLoadingRising] = useState(!cache.get('layout_risingStartups'));
   const [isRisingOpen, setIsRisingOpen] = useState(false);
   const [isSuggestedOpen, setIsSuggestedOpen] = useState(false);
 
   useEffect(() => {
     // Rising startups
-    postsService.getRisingStartups()
-      .then(res => {
-        const data = res?.data?.data || res?.data || [];
-        if (Array.isArray(data)) setRisingStartups(data);
-      })
-      .catch(() => { })
-      .finally(() => setLoadingRising(false));
+    if (!cache.get('layout_risingStartups')) {
+      postsService.getRisingStartups()
+        .then(res => {
+          const data = res?.data?.data || res?.data || [];
+          if (Array.isArray(data)) {
+            setRisingStartups(data);
+            cache.set('layout_risingStartups', data);
+          }
+        })
+        .catch(() => { })
+        .finally(() => setLoadingRising(false));
+    }
 
     // Suggested connections — investors for startup role, startups for others
-    const fetchSuggested = userRole === "startup"
-      ? exploreService.getInvestorSpotlight()
-      : exploreService.getStartupsOfWeek();
+    if (!cache.get('layout_suggested')) {
+      const fetchSuggested = userRole === "startup"
+        ? exploreService.getInvestorSpotlight()
+        : exploreService.getStartupsOfWeek();
 
-    fetchSuggested
-      .then(res => {
-        const data = res?.data?.data || res?.data || [];
-        if (Array.isArray(data)) setSuggested(data.slice(0, 4));
-      })
-      .catch(() => { });
+      fetchSuggested
+        .then(res => {
+          const data = res?.data?.data || res?.data || [];
+          if (Array.isArray(data)) {
+            const sliced = data.slice(0, 4);
+            setSuggested(sliced);
+            cache.set('layout_suggested', sliced);
+          }
+        })
+        .catch(() => { });
+    }
   }, [userRole]);
 
   const logoFallback = (name) =>

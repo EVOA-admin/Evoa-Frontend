@@ -2,18 +2,15 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useDataCache } from "../../contexts/DataCacheContext";
 import { FaRegNewspaper, FaPlus } from "react-icons/fa";
 import EmptyState from "../../components/shared/EmptyState";
-import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import DesktopFeedLayout from "../../components/layout/DesktopFeedLayout";
-import reelsService from "../../services/reelsService";
-import { getNotifications } from "../../services/notificationsService";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
 import postsService from "../../services/postsService";
-
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { getUnreadCount } from "../../services/chatService";
 
@@ -22,15 +19,18 @@ export default function Startup() {
   const isDark = theme === "dark";
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const cache = useDataCache();
 
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [risingStartups, setRisingStartups] = useState([]);
+
+  // Seed state from cache immediately to avoid a blank loading flash on re-visit
+  const [risingStartups, setRisingStartups] = useState(() => cache.get('risingStartups') || []);
   const risingDebounceRef = useRef(null);
-  const [risingLoading, setRisingLoading] = useState(true);
+  const [risingLoading, setRisingLoading] = useState(!cache.get('risingStartups'));
 
   useEffect(() => {
     if (authLoading || !user?.id) return;
@@ -57,16 +57,18 @@ export default function Startup() {
   };
 
   const _doFetchRising = async () => {
+    // Serve from cache if fresh — skip the API call entirely
+    const cached = cache.get('risingStartups');
+    if (cached) { setRisingStartups(cached); setRisingLoading(false); return; }
     try {
       setRisingLoading(true);
-      console.log('Fetching rising startups...');
       const res = await postsService.getRisingStartups();
-      console.log('Rising startups response:', res);
       const data = res?.data?.data || res?.data || [];
-      console.log('Rising startups data:', data);
-      if (Array.isArray(data)) setRisingStartups(data);
+      if (Array.isArray(data)) {
+        setRisingStartups(data);
+        cache.set('risingStartups', data);
+      }
     } catch (e) {
-      console.error('Error fetching rising startups:', e);
       // Keep stale data on error — don't blank the list
     } finally {
       setRisingLoading(false);
@@ -157,7 +159,7 @@ export default function Startup() {
   }, []);
 
   return (
-    <AppShell >
+    <>
       <AppHeader actions={uploadAction} />
       <main>
         <RisingStartupsSection
@@ -236,7 +238,6 @@ export default function Startup() {
           </div>
         </DesktopFeedLayout>
       </main>
-
-          </AppShell>
+    </>
   );
 }

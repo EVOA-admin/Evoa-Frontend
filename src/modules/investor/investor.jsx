@@ -2,15 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useDataCache } from "../../contexts/DataCacheContext";
 import PitchCard from "../../components/shared/PitchCard";
 import { FaRegNewspaper } from "react-icons/fa";
 import EmptyState from "../../components/shared/EmptyState";
-import AppShell from "../../components/layout/AppShell";
 import DesktopFeedLayout from "../../components/layout/DesktopFeedLayout";
 import AppHeader from "../../components/layout/AppHeader";
 import reelsService from "../../services/reelsService";
 import { getStartupDetails, followStartup, unfollowStartup } from "../../services/startupsService";
-import { getNotifications } from "../../services/notificationsService";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
@@ -24,6 +23,7 @@ export default function Investor() {
   const { loading: authLoading, user } = useAuth();
   const isDark = theme === 'dark';
   const navigate = useNavigate();
+  const cache = useDataCache();
 
   const [pitches, setPitches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,8 +31,8 @@ export default function Investor() {
   const [unreadCount, setUnreadCount] = useState(0);
     const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
-  const [risingStartups, setRisingStartups] = useState([]);
-  const [risingLoading, setRisingLoading] = useState(true);
+  const [risingStartups, setRisingStartups] = useState(() => cache.get('risingStartups') || []);
+  const [risingLoading, setRisingLoading] = useState(!cache.get('risingStartups'));
   const risingDebounceRef = useRef(null);
   const showPitchFeed = loading || pitches.length > 0 || (!loading && userPosts.length === 0);
 
@@ -55,11 +55,13 @@ export default function Investor() {
   };
 
   const _doFetchRising = async () => {
+    const cached = cache.get('risingStartups');
+    if (cached) { setRisingStartups(cached); setRisingLoading(false); return; }
     try {
       setRisingLoading(true);
       const res = await postsService.getRisingStartups();
       const data = res?.data?.data || res?.data || [];
-      if (Array.isArray(data)) setRisingStartups(data);
+      if (Array.isArray(data)) { setRisingStartups(data); cache.set('risingStartups', data); }
     } catch (_) {
       // Keep stale data on error
     } finally {
@@ -314,7 +316,7 @@ export default function Investor() {
   }, []);
 
   return (
-    <AppShell >
+    <>
       <AppHeader actions={plusAction} />
       <main>
         <RisingStartupsSection
@@ -404,6 +406,6 @@ export default function Investor() {
           )}
         </DesktopFeedLayout>
       </main>
-          </AppShell>
+    </>
   );
 }

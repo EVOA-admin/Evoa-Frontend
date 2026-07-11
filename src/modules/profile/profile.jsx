@@ -14,7 +14,6 @@ import { IoTrashOutline, IoLogOutOutline } from "react-icons/io5";
 import { getCurrentUserProfile } from "../../services/usersService";
 import { getStartupDetails } from "../../services/startupsService";
 import { useAuth } from "../../contexts/AuthContext";
-import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
 
@@ -309,28 +308,28 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <AppShell>
+      <>
         <AppHeader title="Profile" showThemeToggle={true} />
         <div className={`flex items-center justify-center h-40 ${isDark ? "text-white" : "text-black"}`}>
           Loading...
         </div>
-      </AppShell>
+      </>
     );
   }
 
   if (!user) {
     return (
-      <AppShell>
+      <>
         <AppHeader title="Profile" showThemeToggle={true} />
         <div className={`flex items-center justify-center h-40 ${isDark ? "text-white" : "text-black"}`}>
           User not found
         </div>
-      </AppShell>
+      </>
     );
   }
 
   return (
-    <AppShell>
+    <>
       <style>{MENU_CSS}</style>
       <AppHeader title="Profile" showThemeToggle={true} />
 
@@ -654,6 +653,6 @@ export default function Profile() {
         </div>
       </main>
       <DeleteAccountDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
-    </AppShell>
+    </>
   );
 }

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { FaBell, FaFire, FaDollarSign, FaRocket, FaCog, FaCheck, FaCircle } from "react-icons/fa";
-import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import {
   getNotifications,
@@ -284,7 +283,7 @@ export default function Notifications() {
   }));
 
   return (
-    <AppShell>
+    <>
       <style>{NOTIF_CSS}</style>
       <AppHeader title="Notifications" />
 
@@ -477,6 +476,6 @@ export default function Notifications() {
           </div>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }
