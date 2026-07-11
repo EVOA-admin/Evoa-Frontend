@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, memo, useMemo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AppShell from './AppShell';
@@ -9,6 +9,11 @@ import PageKeepAlive from './PageKeepAlive';
  * React.lazy guarantees the chunk is downloaded only when the page is first
  * visited.  After that the module stays cached by the browser — no second
  * network request, ever.
+ *
+ * IMPORTANT: These must be defined at MODULE scope (outside any component),
+ * not inside a component or useMemo. If defined inside a component, React
+ * creates a new lazy reference every render which causes Suspense to throw
+ * and remount the subtree — the root cause of the production remount bug.
  */
 const Startup       = lazy(() => import('../../modules/startup/startup'));
 const Investor      = lazy(() => import('../../modules/investor/investor'));
@@ -48,13 +53,70 @@ const DYNAMIC_PATHS = [
 ];
 
 /**
+ * KeepAlivePages
+ *
+ * Extracted into its own memoised component so that auth state changes
+ * (user object updates, token refreshes, syncing flag changes) that happen
+ * in the parent DashboardLayout do NOT cause this subtree to re-render.
+ *
+ * This is the production fix for the remount issue:
+ *   - DashboardLayout re-renders whenever useAuth() values change
+ *   - Without memo, the entire KeepAlive tree re-renders on every auth update
+ *   - With memo, KeepAlivePages only re-renders when userRole or isDynamic changes
+ *   - Since userRole is stable after initial sync, this effectively freezes
+ *     the KeepAlive tree during normal navigation
+ */
+const KeepAlivePages = memo(function KeepAlivePages({ userRole, isDynamic }) {
+  return (
+    <div style={isDynamic ? { display: 'none' } : undefined}>
+
+      {/* ── Role-specific Home feed ── */}
+      {userRole === 'startup' && (
+        <PageKeepAlive matchPaths="/startup" scrollKey="home-startup">
+          <Suspense fallback={<PageSpinner />}><Startup /></Suspense>
+        </PageKeepAlive>
+      )}
+      {userRole === 'investor' && (
+        <PageKeepAlive matchPaths="/investor" scrollKey="home-investor">
+          <Suspense fallback={<PageSpinner />}><Investor /></Suspense>
+        </PageKeepAlive>
+      )}
+      {userRole === 'incubator' && (
+        <PageKeepAlive matchPaths="/incubator" scrollKey="home-incubator">
+          <Suspense fallback={<PageSpinner />}><Incubator /></Suspense>
+        </PageKeepAlive>
+      )}
+      {userRole === 'viewer' && (
+        <PageKeepAlive matchPaths="/viewer" scrollKey="home-viewer">
+          <Suspense fallback={<PageSpinner />}><Viewer /></Suspense>
+        </PageKeepAlive>
+      )}
+
+      {/* ── Shared pages (all roles) ── */}
+      <PageKeepAlive matchPaths="/explore" scrollKey="explore">
+        <Suspense fallback={<PageSpinner />}><Explore /></Suspense>
+      </PageKeepAlive>
+
+      <PageKeepAlive matchPaths="/notifications" scrollKey="notifications">
+        <Suspense fallback={<PageSpinner />}><Notifications /></Suspense>
+      </PageKeepAlive>
+
+      <PageKeepAlive matchPaths="/profile" scrollKey="profile">
+        <Suspense fallback={<PageSpinner />}><Profile /></Suspense>
+      </PageKeepAlive>
+
+    </div>
+  );
+});
+
+/**
  * DashboardLayout
  *
  * The single persistent shell for the entire authenticated experience.
  *
  * KeepAlive pages (Home / Explore / Notifications / Profile) are ALL rendered
- * simultaneously inside this component.  The inactive ones are hidden with
- * `display:none` — they stay fully mounted, so React state, scroll position,
+ * simultaneously inside KeepAlivePages (memoised).  The inactive ones are hidden
+ * with `display:none` — they stay fully mounted, so React state, scroll position,
  * loaded posts, and video state are preserved across tab switches.
  *
  * This is the same architecture used by Instagram Web.
@@ -75,62 +137,18 @@ export default function DashboardLayout() {
     (p) => location.pathname === p || location.pathname.startsWith(p + '/'),
   );
 
-  /*
-   * Home feed path — determined by the user's role.
-   */
-  const homePath = userRole ? `/${userRole}` : null;
-
   return (
     <AppShell>
 
       {/*
-       * ── KeepAlive section ────────────────────────────────────────────────
-       * All pages are mounted once.  `display:none` when inactive.
-       * Wrapped in a div that itself is hidden while a dynamic page is active
-       * (keeps the DOM clean and avoids z-index conflicts with full-screen
-       * dynamic pages).
+       * ── KeepAlive section ─────────────────────────────────────────────────
+       * Wrapped in memo(KeepAlivePages) so auth state changes don't cause
+       * the KeepAlive tree to re-render or remount.
        */}
-      <div style={isDynamic ? { display: 'none' } : undefined}>
-
-        {/* ── Role-specific Home feed ── */}
-        {userRole === 'startup' && (
-          <PageKeepAlive matchPaths="/startup" scrollKey="home-startup">
-            <Suspense fallback={<PageSpinner />}><Startup /></Suspense>
-          </PageKeepAlive>
-        )}
-        {userRole === 'investor' && (
-          <PageKeepAlive matchPaths="/investor" scrollKey="home-investor">
-            <Suspense fallback={<PageSpinner />}><Investor /></Suspense>
-          </PageKeepAlive>
-        )}
-        {userRole === 'incubator' && (
-          <PageKeepAlive matchPaths="/incubator" scrollKey="home-incubator">
-            <Suspense fallback={<PageSpinner />}><Incubator /></Suspense>
-          </PageKeepAlive>
-        )}
-        {userRole === 'viewer' && (
-          <PageKeepAlive matchPaths="/viewer" scrollKey="home-viewer">
-            <Suspense fallback={<PageSpinner />}><Viewer /></Suspense>
-          </PageKeepAlive>
-        )}
-
-        {/* ── Shared pages (all roles) ── */}
-        <PageKeepAlive matchPaths="/explore" scrollKey="explore">
-          <Suspense fallback={<PageSpinner />}><Explore /></Suspense>
-        </PageKeepAlive>
-
-        <PageKeepAlive matchPaths="/notifications" scrollKey="notifications">
-          <Suspense fallback={<PageSpinner />}><Notifications /></Suspense>
-        </PageKeepAlive>
-
-        <PageKeepAlive matchPaths="/profile" scrollKey="profile">
-          <Suspense fallback={<PageSpinner />}><Profile /></Suspense>
-        </PageKeepAlive>
-
-      </div>
+      <KeepAlivePages userRole={userRole} isDynamic={isDynamic} />
 
       {/*
-       * ── Dynamic page section ────────────────────────────────────────────
+       * ── Dynamic page section ─────────────────────────────────────────────
        * Rendered by React Router's <Outlet /> for paths with URL params.
        * These pages ARE unmounted when you leave, which is intentional — a
        * reel pitch for /pitch/abc and /pitch/xyz are different screens.

@@ -1,12 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-
-/**
- * Module-level scroll position store.
- * Lives outside React — persists across ALL renders, navigations, and component
- * remounts without any re-render overhead.
- */
-const scrollStore = {};
+import { mountedPages, scrollStore } from './keepAliveStore';
 
 /**
  * PageKeepAlive
@@ -18,6 +12,17 @@ const scrollStore = {};
  * This is the same technique used by Instagram Web, LinkedIn, and X/Twitter
  * to preserve feed scroll position, loaded posts, and component state across
  * tab/navigation changes.
+ *
+ * ── Production-safe design ─────────────────────────────────────────────────
+ * The naive implementation stores `hasMounted` in React state, which resets
+ * to `false` whenever the parent component (DashboardLayout) remounts.
+ * In production, DashboardLayout remounts on auth state changes (token refresh,
+ * role sync completion) — causing every KeepAlive page to unmount and lose
+ * all state.
+ *
+ * Fix: `hasMounted` is tracked in the module-level `mountedPages` Set
+ * (see keepAliveStore.js), which lives completely outside React.  It survives
+ * any number of component remounts, hot reloads, and production builds.
  *
  * Props:
  *   matchPaths  — string | string[]  — one or more path prefixes that make
@@ -33,17 +38,23 @@ export default function PageKeepAlive({ matchPaths, scrollKey, children }) {
     (p) => location.pathname === p || location.pathname.startsWith(p + '/'),
   );
 
-  // Lazy mount: don't render a page until the user first visits it.
-  // Once mounted it is NEVER unmounted.
-  const [hasMounted, setHasMounted] = useState(false);
+  // ── Production-safe lazy mount ───────────────────────────────────────────
+  // hasMounted is seeded from the module-level Set so it survives any
+  // React remount of this component (e.g. caused by DashboardLayout
+  // re-rendering due to auth state changes in production).
+  const [hasMounted, setHasMounted] = useState(() => mountedPages.has(scrollKey));
   const wasActiveRef = useRef(false);
 
-  // ── Lazy mount on first visit ──────────────────────────────────────────────
+  // Mark as mounted the first time this page becomes active
   useEffect(() => {
-    if (isActive && !hasMounted) {
+    if (isActive && !mountedPages.has(scrollKey)) {
+      mountedPages.add(scrollKey);
+      setHasMounted(true);
+    } else if (!hasMounted && mountedPages.has(scrollKey)) {
+      // Module store says it was visited but React state was reset (remount) — sync back
       setHasMounted(true);
     }
-  }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isActive, scrollKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Scroll save / restore ─────────────────────────────────────────────────
   useEffect(() => {
@@ -53,9 +64,12 @@ export default function PageKeepAlive({ matchPaths, scrollKey, children }) {
       // Navigated TO this page — restore saved scroll position
       const saved = scrollStore[scrollKey];
       if (saved !== undefined && scrollEl) {
-        // Use rAF so the element has had a chance to paint before we scroll
+        // Double rAF: first frame lets React paint the new tree,
+        // second frame applies the scroll after layout is complete.
         requestAnimationFrame(() => {
-          scrollEl.scrollTop = saved;
+          requestAnimationFrame(() => {
+            scrollEl.scrollTop = saved;
+          });
         });
       }
     } else if (wasActiveRef.current) {

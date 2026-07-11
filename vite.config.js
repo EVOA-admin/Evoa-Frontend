@@ -12,11 +12,8 @@ export default defineConfig({
     sourcemap: false,
     // Ensures each lazy-loaded route gets its own CSS file (no flash of unstyled content)
     cssCodeSplit: true,
-    // Use Vite's built-in esbuild minifier; drop console/debugger in production
+    // Use Vite's built-in esbuild minifier
     minify: 'esbuild',
-    esbuildOptions: {
-      drop: ['console', 'debugger'],
-    },
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -39,5 +36,9 @@ export default defineConfig({
         },
       },
     },
+  },
+  // Drop console/debugger in production at the esbuild transform level
+  esbuild: {
+    drop: ['console', 'debugger'],
   },
 })
