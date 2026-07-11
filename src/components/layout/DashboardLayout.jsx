@@ -1,4 +1,4 @@
-import { lazy, Suspense, memo, useMemo } from 'react';
+import { lazy, Suspense, memo } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import AppShell from './AppShell';
@@ -6,14 +6,9 @@ import PageKeepAlive from './PageKeepAlive';
 
 /*
  * Lazy-import every major page exactly once.
- * React.lazy guarantees the chunk is downloaded only when the page is first
- * visited.  After that the module stays cached by the browser — no second
- * network request, ever.
- *
- * IMPORTANT: These must be defined at MODULE scope (outside any component),
- * not inside a component or useMemo. If defined inside a component, React
- * creates a new lazy reference every render which causes Suspense to throw
- * and remount the subtree — the root cause of the production remount bug.
+ * MUST be at module scope — never inside a component or useMemo.
+ * If defined inside a component, React creates a new lazy reference every
+ * render, causing Suspense to throw and remount the subtree.
  */
 const Startup       = lazy(() => import('../../modules/startup/startup'));
 const Investor      = lazy(() => import('../../modules/investor/investor'));
@@ -23,10 +18,6 @@ const Explore       = lazy(() => import('../../modules/explore/explore'));
 const Notifications = lazy(() => import('../../modules/notifications/notifications'));
 const Profile       = lazy(() => import('../../modules/profile/profile'));
 
-/*
- * Thin Suspense fallback that shows ONLY inside the page content area.
- * It never causes the shell (sidebar / bottom-nav) to flash or disappear.
- */
 const PageSpinner = () => (
   <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     <div style={{
@@ -41,36 +32,38 @@ const PageSpinner = () => (
 );
 
 /*
- * These path prefixes use React Router's <Outlet /> because they have dynamic
- * URL segments (/pitch/:id) or are one-off screens that don't benefit from
- * KeepAlive persistence.
+ * KeepAlive paths — ALL paths that are managed by PageKeepAlive.
+ * These are the only paths where the AppShell + KeepAlive tree is VISIBLE.
+ * On any other path the tree is hidden (display:none) but NEVER unmounted.
  */
-const DYNAMIC_PATHS = [
-  '/pitch',
-  '/battlefield',
-  '/battleground',
-  '/investor-payment',
+const KEEPALIVE_PATHS = [
+  '/startup',
+  '/investor',
+  '/incubator',
+  '/viewer',
+  '/explore',
+  '/notifications',
+  '/profile',
 ];
 
 /**
- * KeepAlivePages
- *
- * Extracted into its own memoised component so that auth state changes
- * (user object updates, token refreshes, syncing flag changes) that happen
- * in the parent DashboardLayout do NOT cause this subtree to re-render.
- *
- * This is the production fix for the remount issue:
- *   - DashboardLayout re-renders whenever useAuth() values change
- *   - Without memo, the entire KeepAlive tree re-renders on every auth update
- *   - With memo, KeepAlivePages only re-renders when userRole or isDynamic changes
- *   - Since userRole is stable after initial sync, this effectively freezes
- *     the KeepAlive tree during normal navigation
+ * isKeepAlivePath — returns true when the current path belongs to a
+ * KeepAlive page so the shell is visible.
  */
-const KeepAlivePages = memo(function KeepAlivePages({ userRole, isDynamic }) {
-  return (
-    <div style={isDynamic ? { display: 'none' } : undefined}>
+function isKeepAlivePath(pathname) {
+  return KEEPALIVE_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(p + '/'),
+  );
+}
 
-      {/* ── Role-specific Home feed ── */}
+/**
+ * KeepAlivePages — memoised so that auth state changes (token refresh,
+ * user updates, syncing) that cause DashboardLayout to re-render do NOT
+ * propagate into this subtree.  Only re-renders when userRole changes.
+ */
+const KeepAlivePages = memo(function KeepAlivePages({ userRole }) {
+  return (
+    <>
       {userRole === 'startup' && (
         <PageKeepAlive matchPaths="/startup" scrollKey="home-startup">
           <Suspense fallback={<PageSpinner />}><Startup /></Suspense>
@@ -92,7 +85,6 @@ const KeepAlivePages = memo(function KeepAlivePages({ userRole, isDynamic }) {
         </PageKeepAlive>
       )}
 
-      {/* ── Shared pages (all roles) ── */}
       <PageKeepAlive matchPaths="/explore" scrollKey="explore">
         <Suspense fallback={<PageSpinner />}><Explore /></Suspense>
       </PageKeepAlive>
@@ -104,57 +96,66 @@ const KeepAlivePages = memo(function KeepAlivePages({ userRole, isDynamic }) {
       <PageKeepAlive matchPaths="/profile" scrollKey="profile">
         <Suspense fallback={<PageSpinner />}><Profile /></Suspense>
       </PageKeepAlive>
-
-    </div>
+    </>
   );
 });
 
 /**
  * DashboardLayout
  *
- * The single persistent shell for the entire authenticated experience.
+ * The SINGLE persistent shell for the entire authenticated experience.
  *
- * KeepAlive pages (Home / Explore / Notifications / Profile) are ALL rendered
- * simultaneously inside KeepAlivePages (memoised).  The inactive ones are hidden
- * with `display:none` — they stay fully mounted, so React state, scroll position,
- * loaded posts, and video state are preserved across tab switches.
+ * ─── Key architecture decision ────────────────────────────────────────────
  *
- * This is the same architecture used by Instagram Web.
+ * ALL authenticated routes (home, explore, notifications, profile, own-profile
+ * edit, inbox, pitch, battlefield) are nested CHILDREN of this route.
  *
- * Dynamic pages (Pitch reels, Battlefield, etc.) still render via <Outlet />
- * because they embed the content ID in the URL and re-render by design.
+ * This guarantees DashboardLayout is NEVER unmounted during authenticated
+ * navigation — which is the fundamental requirement for KeepAlive to work.
+ *
+ * The rendering strategy is:
+ *
+ *   • KeepAlive paths (home/explore/notifications/profile-feed):
+ *       AppShell is visible.  Pages are kept in DOM with display:none when
+ *       inactive.  React state, scroll, posts, videos all preserved.
+ *
+ *   • Dynamic paths (own-profile edit, inbox, pitch, battlefield):
+ *       AppShell section is hidden (display:none but NOT unmounted).
+ *       <Outlet /> renders the page WITHOUT the AppShell wrapper — these
+ *       pages supply their own AppShell/layout as needed.
+ *
+ * The crucial difference from the old architecture:
+ *   OLD: Profile/Inbox routes were OUTSIDE DashboardLayout → unmounted it on nav.
+ *   NEW: All routes are INSIDE DashboardLayout → it never unmounts.
  */
 export default function DashboardLayout() {
   const { userRole } = useAuth();
   const location = useLocation();
 
-  /*
-   * Is the current route a "dynamic" page that should use <Outlet />?
-   * When true we also hide all KeepAlive pages so they don't interfere with
-   * the full-screen dynamic layouts.
-   */
-  const isDynamic = DYNAMIC_PATHS.some(
-    (p) => location.pathname === p || location.pathname.startsWith(p + '/'),
-  );
+  // True when the active route is NOT a KeepAlive-managed page.
+  // This hides (but never unmounts) the AppShell + KeepAlive tree.
+  const showOutlet = !isKeepAlivePath(location.pathname);
 
   return (
-    <AppShell>
-
+    <>
       {/*
-       * ── KeepAlive section ─────────────────────────────────────────────────
-       * Wrapped in memo(KeepAlivePages) so auth state changes don't cause
-       * the KeepAlive tree to re-render or remount.
+       * ── AppShell + KeepAlive section ─────────────────────────────────────
+       * Hidden (display:none) when on a dynamic route but NEVER unmounted.
+       * This preserves all KeepAlive page state — posts, scroll, videos, etc.
        */}
-      <KeepAlivePages userRole={userRole} isDynamic={isDynamic} />
+      <div style={showOutlet ? { display: 'none' } : undefined}>
+        <AppShell>
+          <KeepAlivePages userRole={userRole} />
+        </AppShell>
+      </div>
 
       {/*
        * ── Dynamic page section ─────────────────────────────────────────────
-       * Rendered by React Router's <Outlet /> for paths with URL params.
-       * These pages ARE unmounted when you leave, which is intentional — a
-       * reel pitch for /pitch/abc and /pitch/xyz are different screens.
+       * Pages that supply their own layout (own-profile, inbox, pitch, etc.)
+       * render here via Outlet.  They are NOT wrapped by AppShell because
+       * they import AppShell themselves.
        */}
-      {isDynamic && <Outlet />}
-
-    </AppShell>
+      {showOutlet && <Outlet />}
+    </>
   );
 }

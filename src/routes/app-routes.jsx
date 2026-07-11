@@ -16,7 +16,7 @@ const FullSpinner = () => (
   </div>
 );
 
-// ── Page spinner (for dynamic pages rendered inside the shell)
+// ── Page spinner (for pages rendered inside DashboardLayout via Outlet)
 const PageSpinner = () => (
   <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
     <div style={{ width: 32, height: 32, border: '3px solid rgba(59,130,246,0.15)', borderTopColor: '#3B82F6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
@@ -49,20 +49,21 @@ const PrivacyPolicy     = lazy(() => import('../modules/pages/privacy-policy'));
 const AmbassadorProgram = lazy(() => import('../modules/pages/ambassador-program'));
 const Pricing           = lazy(() => import('../modules/pages/pricing'));
 
-// Dynamic dashboard pages (use Outlet — NOT KeepAlive — intentional)
-// These pages change content based on URL params (/pitch/:id) and must remount.
+// ── Pages rendered INSIDE DashboardLayout (via Outlet) ───────────────────────
+// These pages supply their own AppShell/layout. DashboardLayout only hides the
+// KeepAlive section and renders the page via <Outlet /> without an extra shell.
 const ReelPitch       = lazy(() => import('../modules/pitch/reel-pitch'));
 const InvestorPayment = lazy(() => import('../modules/pages/investor-payment'));
 const Battlefield     = lazy(() => import('../modules/pages/battlefield'));
-
-// Full-screen pages (no AppShell)
 const ViewerProfile   = lazy(() => import('../modules/viewer/viewer-profile'));
 const StartupProfile  = lazy(() => import('../modules/startup/startup-profile'));
 const InvestorProfile = lazy(() => import('../modules/investor/investor-profile'));
 const IncubatorProfile = lazy(() => import('../modules/incubator/incubator-profile'));
+const Inbox           = lazy(() => import('../modules/chat/inbox'));
+const Conversation    = lazy(() => import('../modules/chat/conversation'));
+
+// Public profile — accessible by guests (no auth required)
 const UserPublicProfile = lazy(() => import('../modules/profile/user-public-profile'));
-const Inbox         = lazy(() => import('../modules/chat/inbox'));
-const Conversation  = lazy(() => import('../modules/chat/conversation'));
 
 const Auth = ({ children, fallback = <FullSpinner /> }) => (
   <Suspense fallback={fallback}>{children}</Suspense>
@@ -107,16 +108,28 @@ export default function AppRoutes() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
 
-      {/* ── Dashboard shell (DashboardLayout handles ALL page rendering) ─── */}
       {/*
-       * DashboardLayout renders all KeepAlive pages (Home/Explore/Notifications
-       * /Profile) simultaneously with display:none toggling.
+       * ── Public profile page ──────────────────────────────────────────────
+       * Intentionally outside DashboardLayout so guests can view it
+       * without authentication.  Auth users also see this without the
+       * dashboard shell (it has its own layout switching logic).
+       */}
+      <Route path="/u/:userId" element={<Auth><UserPublicProfile /></Auth>} />
+
+      {/*
+       * ── Dashboard — DashboardLayout wraps ALL authenticated pages ────────
        *
-       * The route elements for those pages are null because DashboardLayout
-       * owns their rendering — not the router.
+       * CRITICAL: Every page reachable from BottomNav or DesktopSidebar MUST
+       * be a child of this route.  If any such page is outside this route,
+       * DashboardLayout unmounts on navigation → all KeepAlive state is lost.
        *
-       * Dynamic pages (pitch/:id, battlefield, investor-payment) still use
-       * the Outlet pattern because they embed content ID in the URL.
+       * Pages fall into two categories:
+       *   1. KeepAlive pages (home/explore/notifications/profile feed):
+       *      element={null} — DashboardLayout renders them via PageKeepAlive.
+       *   2. Dynamic pages (own-profile edit, inbox, pitch, battlefield):
+       *      element={<Page>...</Page>} — rendered via <Outlet /> in DashboardLayout.
+       *      These pages have their own AppShell; DashboardLayout just hides the
+       *      KeepAlive section and renders the Outlet content.
        */}
       <Route
         element={
@@ -125,7 +138,7 @@ export default function AppRoutes() {
           </ProtectedRoute>
         }
       >
-        {/* KeepAlive pages — DashboardLayout renders them; route just matches the path */}
+        {/* ── KeepAlive pages (rendered by DashboardLayout/PageKeepAlive) ── */}
         <Route path="startup"       element={null} />
         <Route path="investor"      element={null} />
         <Route path="incubator"     element={null} />
@@ -134,23 +147,31 @@ export default function AppRoutes() {
         <Route path="notifications" element={null} />
         <Route path="profile"       element={null} />
 
-        {/* Dynamic pages — rendered via Outlet */}
+        {/* ── Dynamic pages — rendered via Outlet, supply own layout ───── */}
         <Route path="pitch/hashtag"     element={<Page><ReelPitch /></Page>} />
         <Route path="pitch/:id"         element={<Page><ReelPitch /></Page>} />
-        <Route path="investor-payment"  element={<ProtectedRoute allowedRoles={['investor']}><Page><InvestorPayment /></Page></ProtectedRoute>} />
         <Route path="battlefield"       element={<Page><Battlefield /></Page>} />
         <Route path="battleground"      element={<Page><Battlefield /></Page>} />
-      </Route>
+        <Route path="investor-payment"  element={<ProtectedRoute allowedRoles={['investor']}><Page><InvestorPayment /></Page></ProtectedRoute>} />
 
-      {/* ── Full-screen routes (no AppShell) ─────────────────────────────── */}
-      <Route path="/viewer/profile"    element={<ProtectedRoute allowedRoles={['viewer']}><Auth><ViewerProfile /></Auth></ProtectedRoute>} />
-      <Route path="/startup/profile"   element={<ProtectedRoute allowedRoles={['startup']}><Auth><StartupProfile /></Auth></ProtectedRoute>} />
-      <Route path="/investor/profile"  element={<ProtectedRoute allowedRoles={['investor']}><Auth><InvestorProfile /></Auth></ProtectedRoute>} />
-      <Route path="/incubator/profile" element={<ProtectedRoute allowedRoles={['incubator']}><Auth><IncubatorProfile /></Auth></ProtectedRoute>} />
-      {/* Public profile — intentionally NO ProtectedRoute so shared links work for guests */}
-      <Route path="/u/:userId"         element={<Auth><UserPublicProfile /></Auth>} />
-      <Route path="/inbox"             element={<ProtectedRoute><Auth><Inbox /></Auth></ProtectedRoute>} />
-      <Route path="/inbox/:id"         element={<ProtectedRoute><Auth><Conversation /></Auth></ProtectedRoute>} />
+        {/*
+         * Own-profile edit pages — previously OUTSIDE DashboardLayout.
+         * Moving them here ensures DashboardLayout never unmounts when the
+         * user taps the Profile tab in BottomNav or DesktopSidebar.
+         */}
+        <Route path="viewer/profile"    element={<ProtectedRoute allowedRoles={['viewer']}><Page><ViewerProfile /></Page></ProtectedRoute>} />
+        <Route path="startup/profile"   element={<ProtectedRoute allowedRoles={['startup']}><Page><StartupProfile /></Page></ProtectedRoute>} />
+        <Route path="investor/profile"  element={<ProtectedRoute allowedRoles={['investor']}><Page><InvestorProfile /></Page></ProtectedRoute>} />
+        <Route path="incubator/profile" element={<ProtectedRoute allowedRoles={['incubator']}><Page><IncubatorProfile /></Page></ProtectedRoute>} />
+
+        {/*
+         * Inbox — previously outside DashboardLayout.
+         * Moving here prevents unmount when user taps Messages in sidebar.
+         */}
+        <Route path="inbox"             element={<Page><Inbox /></Page>} />
+        <Route path="inbox/:id"         element={<Page><Conversation /></Page>} />
+
+      </Route>
 
     </Routes>
   );
