@@ -36,22 +36,39 @@ const PageSpinner = () => (
  * These are the only paths where the AppShell + KeepAlive tree is VISIBLE.
  * On any other path the tree is hidden (display:none) but NEVER unmounted.
  */
-const KEEPALIVE_PATHS = [
-  '/startup',
-  '/investor',
-  '/incubator',
-  '/viewer',
-  '/explore',
-  '/notifications',
-  '/profile',
+// Role home paths that are KeepAlive-managed — matched EXACTLY (not as a
+// prefix) to prevent /startup/profile etc. from being treated as KeepAlive.
+const KEEPALIVE_EXACT = ['/startup', '/investor', '/incubator', '/viewer'];
+
+// Paths matched as prefixes — these pages own their entire sub-tree.
+const KEEPALIVE_PREFIX = ['/explore', '/notifications', '/profile'];
+
+// Dynamic sub-paths under role homes that break OUT of KeepAlive mode.
+// Any route starting with one of these is rendered via <Outlet />, not AppShell.
+const DYNAMIC_SUBPATHS = [
+  '/startup/profile',
+  '/investor/profile',
+  '/incubator/profile',
+  '/viewer/profile',
 ];
 
 /**
  * isKeepAlivePath — returns true when the current path belongs to a
- * KeepAlive page so the shell is visible.
+ * KeepAlive page so the AppShell + KeepAlive section is visible.
+ *
+ * Role home paths (/startup, /investor, /incubator, /viewer) are matched
+ * EXACTLY so that sub-paths like /startup/profile fall through to the
+ * Outlet and render the correct dynamic page instead of the home feed.
  */
 function isKeepAlivePath(pathname) {
-  return KEEPALIVE_PATHS.some(
+  // Dynamic sub-paths always break out of KeepAlive mode
+  if (DYNAMIC_SUBPATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
+    return false;
+  }
+  // Exact match for role home paths
+  if (KEEPALIVE_EXACT.includes(pathname)) return true;
+  // Prefix match for explore / notifications / profile
+  return KEEPALIVE_PREFIX.some(
     (p) => pathname === p || pathname.startsWith(p + '/'),
   );
 }
