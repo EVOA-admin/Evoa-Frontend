@@ -290,6 +290,14 @@ export default function InvestorRegistration() {
   const handleFileUpload = (field, file) => {
     if (!file) return;
 
+    // Bug Fix 5: client-side size validation — 5 MB max for all uploaded documents/photos
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File too large. Please upload a file under 5 MB.`);
+      return;
+    }
+
+    setError("");
     setFormData((prev) => ({ ...prev, [field]: file }));
 
     if (file.type.startsWith("image/")) {
@@ -500,16 +508,16 @@ export default function InvestorRegistration() {
       case 1:
         return (
           <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-white">1. Identity &amp; Investor Type</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">1. Identity &amp; Investor Type</h2>
             <input type="text" placeholder="Full Name *" value={formData.fullName} onChange={(e) => handleInputChange("fullName", e.target.value)} className={inputCls} />
-            <label className="block text-sm text-white/60">
+            <label className="block text-sm text-slate-500">
               Profile Photo (Recommended)
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload("profilePhoto", e.target.files?.[0])} className="hidden" />
-              <div className="mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden border-white/20 hover:border-[#E8341A]/50">
+              <div className="mt-2 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer text-center transition-all overflow-hidden text-slate-400">
                 {previews.profilePhoto ? (
                   <div className="relative group">
                     <img src={previews.profilePhoto} alt="Profile preview" className="w-full h-32 object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="text-white text-xs font-semibold">Click to change</span>
                     </div>
                   </div>
@@ -524,28 +532,26 @@ export default function InvestorRegistration() {
               onChange={(value) => handleInputChange("investorType", value)}
               options={investorTypes.map((type) => ({ value: type, label: type }))}
               placeholder="Select Investor Type *"
-              isDark
             />
           </div>
         );
       case 2:
         return (
           <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-white">2. Investment Focus &amp; Verification</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">2. Investment Focus &amp; Verification</h2>
             <SearchableSelect
               value={formData.investmentRange}
               onChange={(value) => handleInputChange("investmentRange", value)}
               options={investmentRanges.map((range) => ({ value: range, label: range }))}
               placeholder="Investment Range *"
-              isDark
             />
             <div>
-              <label className="block text-sm font-semibold mb-2 text-white">Sector Focus * (Multi-Select)</label>
+              <label className="block text-sm font-semibold mb-2 text-slate-700">Sector Focus * (Multi-Select)</label>
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                 {sectors.map((sector) => (
-                  <label key={sector} className="flex items-center gap-2 p-1.5 rounded cursor-pointer hover:bg-white/5">
-                    <input type="checkbox" checked={formData.sectorFocus.includes(sector)} onChange={() => handleArrayChange("sectorFocus", sector)} className="w-4 h-4" />
-                    <span className="text-sm text-white">{sector}</span>
+                  <label key={sector} className="flex items-center gap-2 p-1.5 rounded cursor-pointer hover:bg-slate-50">
+                    <input type="checkbox" checked={formData.sectorFocus.includes(sector)} onChange={() => handleArrayChange("sectorFocus", sector)} className="w-4 h-4 accent-blue-600" />
+                    <span className="text-sm text-slate-700">{sector}</span>
                   </label>
                 ))}
               </div>
@@ -558,16 +564,15 @@ export default function InvestorRegistration() {
                 { value: "Non-SEBI", label: "Non-SEBI Angel Investor" },
               ]}
               placeholder="Select Verification Type *"
-              isDark
             />
             {formData.verificationOption === "SEBI" && (
               <div className="space-y-3">
                 <input type="text" placeholder="SEBI Registration Number *" value={formData.sebiNumber} onChange={(e) => handleInputChange("sebiNumber", e.target.value)} className={inputCls} />
-                <label className="block text-xs sm:text-sm text-white/60">
+              <label className="block text-xs sm:text-sm text-slate-500">
                   Upload SEBI Certificate (PDF)
                   <input type="file" accept=".pdf" onChange={(e) => handleFileUpload("sebiCertificate", e.target.files?.[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center border-white/20 hover:border-[#E8341A]/50 ${previews.sebiCertificate ? "border-evoa/40" : ""}`}>
-                    {previews.sebiCertificate ? <><span className="text-evoa">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.sebiCertificate}</span></> : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload PDF</span></>}
+                  <div className={`mt-2 p-3 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer text-center text-slate-400 transition-all ${previews.sebiCertificate ? "border-blue-400" : ""}`}>
+                    {previews.sebiCertificate ? <><span className="text-blue-600">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.sebiCertificate}</span></> : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload PDF</span></>}
                   </div>
                 </label>
               </div>
@@ -592,14 +597,14 @@ export default function InvestorRegistration() {
                   {formData.panNumber.trim() && panError === "invalid" ? <p className="text-xs text-red-500 mt-1 px-1">Invalid format. Please check the entered number.</p> : null}
                   {formData.panNumber.trim() && panError === "valid" ? <p className="text-xs text-green-500 mt-1 px-1">Valid PAN format</p> : null}
                 </div>
-                <label className="block text-xs sm:text-sm text-white/60">
+                <label className="block text-xs sm:text-sm text-slate-500">
                   Upload ID Proof (Aadhaar/Passport/Driving License)
                   <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload("idProof", e.target.files?.[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center border-white/20 hover:border-[#E8341A]/50 ${previews.idProof ? "border-evoa/40" : ""}`}>
+                  <div className={`mt-2 p-3 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer text-center text-slate-400 transition-all ${previews.idProof ? "border-blue-400" : ""}`}>
                     {previews.idProof
                       ? (typeof previews.idProof === "string" && previews.idProof.startsWith("blob:")
                         ? <img src={previews.idProof} alt="ID proof preview" className="h-20 mx-auto object-contain rounded" />
-                        : <><span className="text-evoa">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.idProof}</span></>)
+                        : <><span className="text-blue-600">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.idProof}</span></>)
                       : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload</span></>}
                   </div>
                 </label>
@@ -610,30 +615,30 @@ export default function InvestorRegistration() {
       case 3:
         return (
           <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-white">3. Background &amp; Preferences</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">3. Background &amp; Preferences</h2>
             <input type="text" placeholder="Company / Fund Name *" value={formData.companyName} onChange={(e) => handleInputChange("companyName", e.target.value)} className={inputCls} />
             <textarea placeholder="Short Bio / Investment Thesis" value={formData.bio} onChange={(e) => handleInputChange("bio", e.target.value)} rows={3} className={inputCls} />
             <input type="url" placeholder="Website / AngelList / Portfolio Site" value={formData.website} onChange={(e) => handleInputChange("website", e.target.value)} className={inputCls} />
             <div className="grid grid-cols-2 gap-3">
               <input type="text" placeholder="City" value={formData.city} onChange={(e) => handleInputChange("city", e.target.value)} className={inputCls} />
-              <SearchableSelect value={formData.state} onChange={(value) => handleInputChange("state", value)} options={states.map((state) => ({ value: state, label: state }))} placeholder="Select State" isDark />
+              <SearchableSelect value={formData.state} onChange={(value) => handleInputChange("state", value)} options={states.map((state) => ({ value: state, label: state }))} placeholder="Select State" />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2 text-white">Startup Stage Preference * (Multi-Select)</label>
+              <label className="block text-sm font-semibold mb-2 text-slate-700">Startup Stage Preference * (Multi-Select)</label>
               <div className="flex flex-wrap gap-2">
                 {startupStages.map((stage) => (
                   <button
                     key={stage}
                     type="button"
                     onClick={() => handleArrayChange("startupStagePreference", stage)}
-                    className={`px-3 py-1 text-xs rounded-full border transition-all ${formData.startupStagePreference.includes(stage) ? "bg-[#E8341A] text-white border-[#E8341A]" : "border-white/20 text-white/70 hover:border-[#E8341A]/50"}`}
+                    className={`px-3 py-1 text-xs rounded-full border transition-all ${formData.startupStagePreference.includes(stage) ? "bg-blue-600 text-white border-blue-600" : "border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600"}`}
                   >
                     {stage}
                   </button>
                 ))}
               </div>
             </div>
-            <SearchableSelect value={formData.engagementType} onChange={(value) => handleInputChange("engagementType", value)} options={engagementTypes.map((type) => ({ value: type, label: type }))} placeholder="Engagement Type" isDark />
+            <SearchableSelect value={formData.engagementType} onChange={(value) => handleInputChange("engagementType", value)} options={engagementTypes.map((type) => ({ value: type, label: type }))} placeholder="Engagement Type" />
           </div>
         );
       case 4:
@@ -719,7 +724,7 @@ export default function InvestorRegistration() {
         </div>
 
         <div className="reg-card">
-          {checkingExistingProfile ? <p className="text-sm text-white/60">Loading your registration progress...</p> : renderStep()}
+          {checkingExistingProfile ? <p className="text-sm text-slate-400">Loading your registration progress...</p> : renderStep()}
         </div>
 
         {infoMessage ? <div className="reg-info">{infoMessage}</div> : null}

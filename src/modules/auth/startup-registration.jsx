@@ -750,7 +750,7 @@ const getCountryVerificationConfig = (countryCode) => {
 
 export default function StartupRegistration() {
   useTheme();
-  const isDark = true;
+  const isDark = false;
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
@@ -1090,7 +1090,7 @@ export default function StartupRegistration() {
   };
 
   const FileUploadBox = ({ field, label, accept, previewHeight = "h-28", helperText = "" }) => (
-    <label className={`block text-sm ${isDark ? "text-white/60" : "text-black/60"}`}>
+    <label className="block text-sm text-slate-500">
       {label}
       <input
         type="file"
@@ -1099,9 +1099,7 @@ export default function StartupRegistration() {
         className="hidden"
       />
       <div
-        className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden transition-all ${
-          isDark ? "border-white/20 hover:border-[#E8341A]/50" : "border-black/20 hover:border-[#E8341A]/50"
-        }`}
+        className="mt-2 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer overflow-hidden transition-all"
       >
         {filePreviews[field]?.type === "image" && (
           <img src={filePreviews[field].url} alt="preview" className={`w-full ${previewHeight} object-cover`} />
@@ -1110,31 +1108,32 @@ export default function StartupRegistration() {
           <video src={filePreviews[field].url} controls className="w-full max-h-40 object-cover" />
         )}
         {filePreviews[field]?.type === "file" && (
-          <div className={`p-3 flex items-center gap-2 ${isDark ? "bg-white/5" : "bg-gray-50"}`}>
+          <div className="p-3 flex items-center gap-2 bg-slate-50">
             <span className="text-xl">PDF</span>
-            <span className={`text-xs truncate flex-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+            <span className="text-xs truncate flex-1 text-slate-600">
               {filePreviews[field].name}
             </span>
-            <span className="text-evoa text-xs">OK</span>
+            <span className="text-blue-600 text-xs">OK</span>
           </div>
         )}
         {!filePreviews[field] && (
-          <div className="p-4 text-center">
+          <div className="p-4 text-center text-slate-400">
             <FiUpload className="mx-auto mb-2" size={22} />
             <span className="text-xs">Click to upload</span>
-            {helperText ? <div className="mt-2 text-[11px] text-white/40">{helperText}</div> : null}
+            {helperText ? <div className="mt-2 text-[11px] text-slate-400">{helperText}</div> : null}
           </div>
         )}
       </div>
     </label>
   );
 
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
           <div className="space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold ${isDark ? "text-white" : "text-black"}`}>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
               1. Founder(s) &amp; Startup Basics
             </h2>
 
@@ -1142,15 +1141,15 @@ export default function StartupRegistration() {
               {formData.founders.map((founder, index) => (
                 <div
                   key={index}
-                  className={`p-3 sm:p-4 rounded-xl border ${isDark ? "bg-black/50 border-white/10" : "bg-gray-50 border-black/10"}`}
+                  className="p-3 sm:p-4 rounded-xl border bg-slate-50 border-slate-200"
                 >
-                  <div className="flex justify-between items-center mb-3">
-                    <span className={`text-sm font-semibold ${isDark ? "text-white" : "text-black"}`}>Founder {index + 1}</span>
+            <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-semibold text-slate-700">Founder {index + 1}</span>
                     {formData.founders.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeFounder(index)}
-                        className={`p-1 ${isDark ? "text-white/60 hover:text-white" : "text-black/60 hover:text-black"}`}
+                      className="p-1 text-slate-400 hover:text-slate-700 transition-colors"
                       >
                         <FiX size={16} />
                       </button>
@@ -1185,8 +1184,6 @@ export default function StartupRegistration() {
                       onChange={(value) => handleFounderChange(index, "role", value)}
                       options={FOUNDER_ROLES.map((role) => ({ value: role, label: role }))}
                       placeholder="Select Founder Role *"
-                      isDark={isDark}
-                      accentColor="#E8341A"
                     />
                     <input
                       type="url"
@@ -1195,7 +1192,7 @@ export default function StartupRegistration() {
                       onChange={(e) => handleFounderChange(index, "linkedin", e.target.value)}
                       className={inputCls}
                     />
-                    <label className={`block text-xs ${isDark ? "text-white/50" : "text-black/50"}`}>
+                    <label className="block text-xs text-slate-400">
                       Founder Photo (Optional)
                       <input
                         type="file"
@@ -1212,9 +1209,7 @@ export default function StartupRegistration() {
                         }}
                       />
                       <div
-                        className={`mt-1.5 border-2 border-dashed rounded-xl cursor-pointer overflow-hidden ${
-                          isDark ? "border-white/20 hover:border-[#E8341A]/50" : "border-black/20 hover:border-[#E8341A]/50"
-                        }`}
+                        className="mt-1.5 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer overflow-hidden transition-all"
                       >
                         {filePreviews[`founder_${index}`]?.type === "image" ? (
                           <img
@@ -1223,7 +1218,7 @@ export default function StartupRegistration() {
                             className="w-full h-20 object-cover"
                           />
                         ) : (
-                          <div className="p-3 text-center">
+                          <div className="p-3 text-center text-slate-400">
                             <FiUpload className="mx-auto mb-1" size={18} />
                             <span className="text-xs">Upload</span>
                           </div>
@@ -1237,14 +1232,14 @@ export default function StartupRegistration() {
               <button
                 type="button"
                 onClick={addFounder}
-                className={`w-full py-2 rounded-xl text-xs sm:text-sm font-semibold border ${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-black/20 text-black hover:bg-black/10"}`}
+                className="w-full py-2.5 rounded-xl text-xs sm:text-sm font-semibold border border-blue-200 text-blue-700 hover:bg-blue-50 transition-colors"
               >
                 + Add Another Founder
               </button>
             </div>
 
-            <div className={`border-t pt-4 ${isDark ? "border-[rgba(244,240,232,.07)]" : "border-[rgba(0,0,0,.08)]"}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? "text-white/40" : "text-black/40"}`}>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3 text-slate-400">
                 Startup Details
               </p>
               <div className="space-y-2.5">
@@ -1278,12 +1273,12 @@ export default function StartupRegistration() {
       case 2:
         return (
           <div className="space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold ${isDark ? "text-white" : "text-black"}`}>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
               2. Industry &amp; Verification
             </h2>
 
             <div>
-              <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-white" : "text-black"}`}>
+              <label className="block text-sm font-semibold mb-2 text-slate-700">
                 Industry * (Multi-Select)
               </label>
               <div className="flex flex-wrap gap-2">
@@ -1294,10 +1289,8 @@ export default function StartupRegistration() {
                     onClick={() => handleArrayChange("industries", industry)}
                     className={`px-2.5 py-1 text-xs rounded-full border transition-all ${
                       formData.industries.includes(industry)
-                        ? "bg-[#E8341A] text-white border-[#E8341A]"
-                        : isDark
-                          ? "border-white/20 text-white/70 hover:border-[#E8341A]/50"
-                          : "border-black/20 text-black/70 hover:border-[#E8341A]/50"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600"
                     }`}
                   >
                     {industry}
@@ -1311,12 +1304,10 @@ export default function StartupRegistration() {
               onChange={(value) => handleInputChange("stage", value)}
               options={STAGES.map((stage) => ({ value: stage, label: stage }))}
               placeholder="Stage of Startup *"
-              isDark={isDark}
-              accentColor="#E8341A"
             />
 
-            <div className={`border-t pt-4 ${isDark ? "border-[rgba(244,240,232,.07)]" : "border-[rgba(0,0,0,.08)]"}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? "text-white/40" : "text-black/40"}`}>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3 text-slate-400">
                 Business Verification
               </p>
               <div className="space-y-4">
@@ -1325,8 +1316,6 @@ export default function StartupRegistration() {
                   onChange={handleCountryChange}
                   options={COUNTRY_OPTIONS}
                   placeholder="Country of Incorporation *"
-                  isDark={isDark}
-                  accentColor="#E8341A"
                 />
 
                 {countryConfig && (
@@ -1435,7 +1424,7 @@ export default function StartupRegistration() {
       case 3:
         return (
           <div className="space-y-3 sm:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold ${isDark ? "text-white" : "text-black"}`}>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800">
               3. Pitch &amp; Links
             </h2>
             <textarea
@@ -1479,8 +1468,8 @@ export default function StartupRegistration() {
               className={inputCls}
             />
 
-            <div className={`border-t pt-4 ${isDark ? "border-[rgba(244,240,232,.07)]" : "border-[rgba(0,0,0,.08)]"}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? "text-white/40" : "text-black/40"}`}>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3 text-slate-400">
                 Links (Optional)
               </p>
               <div className="space-y-2.5">

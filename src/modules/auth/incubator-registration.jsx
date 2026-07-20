@@ -173,7 +173,7 @@ textarea.reg-input { resize:vertical; min-height:80px; }
 
 export default function IncubatorRegistration() {
   const { theme } = useTheme();
-  const isDark = true; // page shell is always dark — force dark styles throughout
+  const isDark = false;
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
@@ -232,8 +232,25 @@ export default function IncubatorRegistration() {
   };
 
   const [previews, setPreviews] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const MAX_DOC_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_LOGO_SIZE = 5 * 1024 * 1024; // 5 MB
+
   const handleFileUpload = (field, file) => {
     if (!file) return;
+
+    if (field === 'logo' && file.size > MAX_LOGO_SIZE) {
+      setError('Logo must be under 5 MB.');
+      return;
+    }
+    if (field === 'verificationDocument' && file.size > MAX_DOC_SIZE) {
+      setError('Verification document must be under 5 MB.');
+      return;
+    }
+
+    setError('');
     setFormData(prev => ({ ...prev, [field]: file }));
     if (file.type.startsWith('image/')) {
       setPreviews(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
@@ -241,9 +258,6 @@ export default function IncubatorRegistration() {
       setPreviews(prev => ({ ...prev, [field]: file.name }));
     }
   };
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const validateStep = () => {
     setError('');
@@ -305,6 +319,10 @@ export default function IncubatorRegistration() {
           : undefined,
         organizationType: formData.organizationType || undefined,
         affiliationType: formData.affiliationType || undefined,
+        // ── Verification document (Bug Fix 1: was uploaded but URL never saved) ──
+        verificationDocumentType: formData.verificationDocumentType || undefined,
+        verificationDocumentUrl: verificationDocUrl || undefined,
+        // ─────────────────────────────────────────────────────────────────────────
         equityPolicy: formData.equityPolicy === 'Custom Equity' ? formData.customEquity : formData.equityPolicy || undefined,
         fundingSupport: formData.fundingSupport || undefined,
         programDuration: formData.programDuration || undefined,
@@ -342,14 +360,14 @@ export default function IncubatorRegistration() {
       case 1:
         return (
           <div className="space-y-3 sm:space-y-4">
-            <h2 className={`text-lg sm:text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-black'}`}>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">
               1. Identity &amp; Location
             </h2>
             <input type="text" placeholder="Incubator Name *" value={formData.incubatorName} onChange={(e) => handleInputChange('incubatorName', e.target.value)} className={inputCls} />
-            <label className={`block text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
+            <label className="block text-sm text-slate-500">
               Logo Upload
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload('logo', e.target.files[0])} className="hidden" />
-              <div className={`mt-2 border-2 border-dashed rounded-xl cursor-pointer text-center transition-all overflow-hidden ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'}`}>
+              <div className="mt-2 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer text-center transition-all overflow-hidden text-slate-400">
                 {previews.logo ? (
                   <div className="relative group">
                     <img src={previews.logo} alt="Logo preview" className="w-full h-32 object-contain" />
@@ -367,7 +385,7 @@ export default function IncubatorRegistration() {
             <input type="tel" placeholder="Phone Number" value={formData.phoneNumber} onChange={(e) => handleInputChange('phoneNumber', e.target.value)} className={inputCls} />
             <div className="grid grid-cols-2 gap-3">
               <input type="text" placeholder="City *" value={formData.city} onChange={(e) => handleInputChange('city', e.target.value)} className={inputCls} />
-              <SearchableSelect value={formData.state} onChange={(value) => handleInputChange('state', value)} options={states.map(s => ({ value: s, label: s }))} placeholder="Select State *" isDark={isDark} />
+              <SearchableSelect value={formData.state} onChange={(value) => handleInputChange('state', value)} options={states.map(s => ({ value: s, label: s }))} placeholder="Select State *" />
             </div>
             <textarea placeholder="Full Address (Optional)" value={formData.fullAddress} onChange={(e) => handleInputChange('fullAddress', e.target.value)} rows={2} className={inputCls} />
           </div>
@@ -379,14 +397,14 @@ export default function IncubatorRegistration() {
             <h2 className={`text-lg sm:text-xl font-semibold mb-3 ${isDark ? 'text-white' : 'text-black'}`}>
               2. Verification &amp; Program Details
             </h2>
-            <SearchableSelect value={formData.organizationType} onChange={(value) => handleInputChange('organizationType', value)} options={organizationTypes.map(t => ({ value: t, label: t }))} placeholder="Type of Organization *" isDark={isDark} />
-            <SearchableSelect value={formData.affiliationType} onChange={(value) => handleInputChange('affiliationType', value)} options={affiliationTypes.map(t => ({ value: t, label: t }))} placeholder="Affiliation Type *" isDark={isDark} />
-            <SearchableSelect value={formData.verificationDocumentType} onChange={(value) => handleInputChange('verificationDocumentType', value)} options={verificationDocTypes.map(t => ({ value: t, label: t }))} placeholder="Verification Document Type *" isDark={isDark} />
+            <SearchableSelect value={formData.organizationType} onChange={(value) => handleInputChange('organizationType', value)} options={organizationTypes.map(t => ({ value: t, label: t }))} placeholder="Type of Organization *" />
+            <SearchableSelect value={formData.affiliationType} onChange={(value) => handleInputChange('affiliationType', value)} options={affiliationTypes.map(t => ({ value: t, label: t }))} placeholder="Affiliation Type *" />
+            <SearchableSelect value={formData.verificationDocumentType} onChange={(value) => handleInputChange('verificationDocumentType', value)} options={verificationDocTypes.map(t => ({ value: t, label: t }))} placeholder="Verification Document Type *" />
             {formData.verificationDocumentType && (
-              <label className={`block text-xs sm:text-sm ${isDark ? 'text-white/60' : 'text-black/60'}`}>
+              <label className="block text-xs sm:text-sm text-slate-500">
                 Upload Document (PDF/JPG/PNG)
                 <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('verificationDocument', e.target.files[0])} className="hidden" />
-                <div className={`mt-2 p-3 border-2 border-dashed rounded-xl cursor-pointer text-center ${isDark ? 'border-white/20 hover:border-[#E8341A]/50' : 'border-black/20 hover:border-[#E8341A]/50'} ${previews.verificationDocument ? 'border-evoa/40' : ''}`}>
+                <div className={`mt-2 p-3 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer text-center transition-all text-slate-400 ${previews.verificationDocument ? 'border-blue-400' : ''}`}>
                   {previews.verificationDocument
                     ? (typeof previews.verificationDocument === 'string' && previews.verificationDocument.startsWith('blob:')
                       ? <img src={previews.verificationDocument} alt="Doc" className="h-20 mx-auto object-contain rounded" />
@@ -395,26 +413,26 @@ export default function IncubatorRegistration() {
                 </div>
               </label>
             )}
-            <div className={`border-t pt-4 ${isDark ? 'border-[rgba(244,240,232,.07)]' : 'border-[rgba(0,0,0,.08)]'}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Program Details (Optional)</p>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3 text-slate-400">Program Details (Optional)</p>
               <div className="space-y-3">
-                <SearchableSelect value={formData.programType} onChange={(value) => handleInputChange('programType', value)} options={programTypes.map(t => ({ value: t, label: t }))} placeholder="Program Type" isDark={isDark} />
+                <SearchableSelect value={formData.programType} onChange={(value) => handleInputChange('programType', value)} options={programTypes.map(t => ({ value: t, label: t }))} placeholder="Program Type" />
                 <div>
-                  <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Sector Focus (Multi-Select)</label>
+                  <label className="block text-sm font-semibold mb-2 text-slate-700">Sector Focus (Multi-Select)</label>
                   <div className="flex flex-wrap gap-2">
                     {sectors.map(sector => (
                       <button key={sector} type="button" onClick={() => handleArrayChange('sectorFocus', sector)}
-                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.sectorFocus.includes(sector) ? 'bg-[#E8341A] text-white border-evoa' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
+                        className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.sectorFocus.includes(sector) ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'}`}>
                         {sector}
                       </button>
                     ))}
                   </div>
                 </div>
-                <SearchableSelect value={formData.equityPolicy} onChange={(value) => handleInputChange('equityPolicy', value)} options={equityPolicies.map(p => ({ value: p, label: p }))} placeholder="Equity Policy" isDark={isDark} />
+                <SearchableSelect value={formData.equityPolicy} onChange={(value) => handleInputChange('equityPolicy', value)} options={equityPolicies.map(p => ({ value: p, label: p }))} placeholder="Equity Policy" />
                 {formData.equityPolicy === 'Custom Equity' && (
                   <input type="text" placeholder="Enter Custom Equity %" value={formData.customEquity} onChange={(e) => handleInputChange('customEquity', e.target.value)} className={inputCls} />
                 )}
-                <SearchableSelect value={formData.fundingSupport} onChange={(value) => handleInputChange('fundingSupport', value)} options={fundingSupports.map(s => ({ value: s, label: s }))} placeholder="Funding Support" isDark={isDark} />
+                <SearchableSelect value={formData.fundingSupport} onChange={(value) => handleInputChange('fundingSupport', value)} options={fundingSupports.map(s => ({ value: s, label: s }))} placeholder="Funding Support" />
                 <div className="grid grid-cols-3 gap-3">
                   <input type="text" placeholder="Duration" value={formData.programDuration} onChange={(e) => handleInputChange('programDuration', e.target.value)} className={inputCls} />
                   <input type="number" placeholder="Cohort Size" value={formData.cohortSize} onChange={(e) => handleInputChange('cohortSize', e.target.value)} className={inputCls} />
@@ -432,18 +450,18 @@ export default function IncubatorRegistration() {
               3. Facilities &amp; Social Proof
             </h2>
             <div>
-              <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-white' : 'text-black'}`}>Facilities Offered</label>
+              <label className="block text-sm font-semibold mb-2 text-slate-700">Facilities Offered</label>
               <div className="flex flex-wrap gap-2">
                 {facilitiesList.map(facility => (
                   <button key={facility} type="button" onClick={() => handleArrayChange('facilities', facility)}
-                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.facilities.includes(facility) ? 'bg-[#E8341A] text-white border-evoa' : isDark ? 'border-white/20 text-white/70 hover:border-[#E8341A]/50' : 'border-black/20 text-black/70 hover:border-[#E8341A]/50'}`}>
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-all ${formData.facilities.includes(facility) ? 'bg-blue-600 text-white border-blue-600' : 'border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'}`}>
                     {facility}
                   </button>
                 ))}
               </div>
             </div>
-            <div className={`border-t pt-4 ${isDark ? 'border-[rgba(244,240,232,.07)]' : 'border-[rgba(0,0,0,.08)]'}`}>
-              <p className={`text-xs font-semibold uppercase tracking-wide mb-3 ${isDark ? 'text-white/40' : 'text-black/40'}`}>Social Proof (Optional)</p>
+            <div className="border-t border-slate-100 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3 text-slate-400">Social Proof (Optional)</p>
               <div className="space-y-3">
                 <textarea placeholder="Portfolio Startups (names or links)" value={formData.portfolioStartups} onChange={(e) => handleInputChange('portfolioStartups', e.target.value)} rows={2} className={inputCls} />
                 <textarea placeholder="Top Startup Success Stories" value={formData.successStories} onChange={(e) => handleInputChange('successStories', e.target.value)} rows={2} className={inputCls} />

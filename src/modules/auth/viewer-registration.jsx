@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FiUpload, FiArrowLeft } from "react-icons/fi";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { updateUserProfile } from "../../services/usersService";
 import storageService from "../../services/storageService";
 
@@ -150,7 +151,7 @@ textarea.reg-input { resize:vertical; min-height:80px; }
 
 export default function ViewerRegistration() {
   const { theme } = useTheme();
-  const isDark = true; // page shell is always dark — force dark styles throughout
+  const { completeRegistration } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -191,6 +192,12 @@ export default function ViewerRegistration() {
 
   const handleFileUpload = (file) => {
     if (!file) return;
+    // Bug Fix 5: client-side size validation (5 MB max for profile photos)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Profile photo must be under 5 MB.');
+      return;
+    }
+    setError('');
     setFormData(prev => ({ ...prev, profilePhoto: file }));
     // Show image preview immediately
     const reader = new FileReader();
@@ -224,12 +231,18 @@ export default function ViewerRegistration() {
       setLoading(true);
       setError('');
 
-      // Upload Profile Photo if selected
+      // Bug Fix 3+4: use evoa-media bucket (not non-existent 'avatars'),
+      // and remove the doubled 'avatars/' prefix from the path.
       let avatarUrl = undefined;
       if (formData.profilePhoto) {
         try {
-          const fileName = `avatars/${Date.now()}_${formData.profilePhoto.name.replace(/\s+/g, '_')}`;
-          avatarUrl = await storageService.uploadFile(formData.profilePhoto, 'avatars', fileName);
+          const ext = formData.profilePhoto.name.split('.').pop();
+          const path = `viewers/photos/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+          try {
+            avatarUrl = await storageService.uploadFile(formData.profilePhoto, 'evoa-media', path);
+          } catch {
+            avatarUrl = await storageService.uploadFile(formData.profilePhoto, 'public', path);
+          }
         } catch (uploadErr) {
           console.warn('Profile photo upload failed, continuing without it:', uploadErr.message);
           // Don't block registration if image upload fails
@@ -267,6 +280,9 @@ export default function ViewerRegistration() {
       });
 
       await updateUserProfile(profileData);
+      // Bug Fix 2: mark registration as complete in auth context
+      // (viewer was the only role not calling this, causing potential redirect loops on re-login)
+      await completeRegistration();
       navigate('/viewer');
     } catch (err) {
       console.error("Registration error:", err);
