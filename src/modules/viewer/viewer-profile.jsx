@@ -218,14 +218,14 @@ export default function ViewerProfile() {
             </button>
             {menuOpen && <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />}
             {menuOpen && (
-                <div className={`absolute right-0 top-12 z-50 w-52 rounded-2xl shadow-xl overflow-hidden border ${isDark ? "bg-gray-900 border-white/10" : "bg-white border-gray-100"
+                <div className={`absolute right-0 top-12 z-50 w-56 rounded-2xl shadow-xl overflow-hidden border ${isDark ? "bg-gray-900 border-white/10" : "bg-white border-gray-100"
                     }`}>
                     <button
                         onClick={() => { setMenuOpen(false); openEdit(); }}
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"
                             }`}
                     >
-                        <IoPencil size={16} className="text-evoa" />
+                        <IoPencil size={16} className="flex-shrink-0" />
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
@@ -233,8 +233,7 @@ export default function ViewerProfile() {
                     <button
                         id="viewer-ambassador-btn"
                         onClick={() => { setMenuOpen(false); setActiveSection("ambassador"); }}
-                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors"
-                        style={{ color: '#C9A84C' }}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"}`}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                         Ambassador Program
@@ -281,7 +280,7 @@ export default function ViewerProfile() {
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button
                         onClick={() => { setMenuOpen(false); handleLogout(); }}
-                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-red-400 hover:bg-red-500/8 transition-colors"
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"}`}
                     >
                         <IoLogOutOutline size={16} />
                         Log Out
