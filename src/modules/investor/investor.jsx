@@ -31,10 +31,12 @@ export default function Investor() {
   const [unreadCount, setUnreadCount] = useState(0);
     const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
+  const [feedError, setFeedError] = useState(false);
   const [risingStartups, setRisingStartups] = useState(() => cache.get('risingStartups') || []);
   const [risingLoading, setRisingLoading] = useState(!cache.get('risingStartups'));
   const risingDebounceRef = useRef(null);
-  const showPitchFeed = loading || pitches.length > 0 || (!loading && userPosts.length === 0);
+  const feedRetryRef = useRef(0);
+  const showPitchFeed = loading || pitches.length > 0 || (!loading && userPosts.length === 0 && !feedError);
 
   useEffect(() => {
     if (authLoading || !user?.id) return;
@@ -69,7 +71,7 @@ export default function Investor() {
     }
   };
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (isRetry = false) => {
     try {
       const res = await postsService.getAllPosts();
       const data = res?.data?.data || res?.data || [];
@@ -121,12 +123,19 @@ export default function Investor() {
           commentCount: p.commentCount || 0,
         };
       }) : []);
+      setFeedError(false);
     } catch (e) {
+      if (!isRetry && feedRetryRef.current === 0) {
+        feedRetryRef.current = 1;
+        setTimeout(() => fetchPosts(true), 2000);
+      } else {
+        setFeedError(true);
+      }
       window.__evoaDebug = e.message;
     }
   };
 
-  const fetchFeed = async () => {
+  const fetchFeed = async (isRetry = false) => {
     if (authLoading || !user?.id) return;
     try {
       setLoading(true);
@@ -171,7 +180,15 @@ export default function Investor() {
       }
       setHasMore(data?.hasMore ?? false);
       setCursor(nextCursor);
+      setFeedError(false);
+      feedRetryRef.current = 0;
     } catch (e) {
+      if (!isRetry && feedRetryRef.current === 0) {
+        feedRetryRef.current = 1;
+        setTimeout(() => fetchFeed(true), 2000);
+      } else {
+        setFeedError(true);
+      }
       window.__evoaDebug = (window.__evoaDebug || '') + ' | FeedError: ' + e.message;
     } finally {
       setLoading(false);
@@ -331,7 +348,7 @@ export default function Investor() {
           {showPitchFeed && (
             <div className="px-0 pt-0 pb-4">
               <div className="mt-2">
-                {!loading && pitches.length === 0 && userPosts.length === 0 && (
+                {!loading && pitches.length === 0 && userPosts.length === 0 && !feedError && (
                   <EmptyState
                     icon={FaRegNewspaper}
                     title="No Pitches Yet"
@@ -339,6 +356,22 @@ export default function Investor() {
                     actionLabel="Find Startups"
                     onAction={() => navigate('/explore')}
                   />
+                )}
+                {!loading && feedError && pitches.length === 0 && userPosts.length === 0 && (
+                  <div style={{
+                    background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:12,
+                    padding:'24px 20px', textAlign:'center', margin:'16px 0'
+                  }}>
+                    <p style={{color:'#DC2626', fontWeight:600, marginBottom:8}}>Couldn't load feed</p>
+                    <p style={{color:'#6B7280', fontSize:13, marginBottom:16}}>A temporary error occurred. Please try again.</p>
+                    <button
+                      onClick={() => { setFeedError(false); feedRetryRef.current = 0; fetchFeed(); fetchPosts(); }}
+                      style={{
+                        background:'#1565C0', color:'#fff', border:'none', borderRadius:8,
+                        padding:'10px 24px', fontWeight:600, cursor:'pointer', fontSize:14
+                      }}
+                    >Retry</button>
+                  </div>
                 )}
                 {pitches.map((pitch) => (
                   <PitchCard
