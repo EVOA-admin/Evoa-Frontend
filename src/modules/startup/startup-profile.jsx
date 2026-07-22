@@ -11,7 +11,7 @@ import {
     IoArrowBack, IoNotificationsOutline, IoPencil, IoCamera, IoCheckmark, IoClose,
     IoLocationOutline, IoLinkOutline, IoLogoLinkedin, IoLogoInstagram, IoLogoYoutube,
     IoPeopleOutline, IoRocketOutline, IoDocumentTextOutline, IoPlayCircleOutline,
-    IoAddCircleOutline, IoTrashOutline, IoLogOutOutline, IoEllipsisVertical,
+    IoAddCircleOutline, IoTrashOutline, IoLogOutOutline, IoEllipsisVertical, IoShieldCheckmarkOutline,
 } from "react-icons/io5";
 import { FiUser } from "react-icons/fi";
 import { HiSun, HiMoon } from "react-icons/hi";
@@ -207,6 +207,9 @@ export default function StartupProfile() {
         ? [startup.location.city, startup.location.state, startup.location.country].filter(Boolean).join(", ")
         : "";
 
+    // Check if startup profile is fully complete (same logic as popup)
+    const isProfileComplete = (s) => !!(s?.pitchVideoUrl && s?.description?.trim() && s?.industries?.length > 0 && s?.stage && s?.verification?.entityType);
+
     const headerActions = (
         <div className="relative">
             {/* Hamburger trigger */}
@@ -236,7 +239,16 @@ export default function StartupProfile() {
                         Edit Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
-                    {/* Ambassador Program */}
+                    {/* Complete Registration */}
+                    <button
+                        id="startup-complete-registration-btn"
+                        onClick={() => { setMenuOpen(false); navigate('/register/startup?mode=complete'); }}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"}`}
+                    >
+                        <IoShieldCheckmarkOutline size={16} className="text-evoa" />
+                        Complete Registration
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button
                         id="startup-ambassador-btn"
                         onClick={() => { setMenuOpen(false); setActiveSection("ambassador"); }}
@@ -332,12 +344,41 @@ export default function StartupProfile() {
                 ) : (
                     <>
                         {/* Hero Section */}
-                        <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b relative ${isDark ? "border-white/10" : "border-gray-100"}`}>
-                            {/* ── DESKTOP 3-DOT MENU ── */}
-                            <div className="hidden lg:block absolute top-4 right-4 z-50">
-                                {headerActions}
-                            </div>
-                            <div className="px-4 pt-6 pb-5">
+                        <div className={`${isDark ? "bg-gray-900" : "bg-white"} border-b ${isDark ? "border-white/10" : "border-gray-100"}`}>
+
+                            {/* ── Registration Incomplete Banner (full-width, always on top) ── */}
+                            {!isProfileComplete(startup) && (
+                                <div style={{
+                                    background: 'linear-gradient(135deg, #1565C0 0%, #1976D2 100%)',
+                                    padding: '10px 16px',
+                                    display: 'flex', alignItems: 'center', gap: 10,
+                                }}>
+                                    <IoShieldCheckmarkOutline size={16} color="rgba(255,255,255,.8)" style={{ flexShrink: 0 }} />
+                                    <p style={{ color: '#fff', fontSize: 12, flex: 1, margin: 0, lineHeight: 1.45 }}>
+                                        Complete registration to receive your <strong>Verified</strong> badge and boost investor visibility.
+                                    </p>
+                                    <button
+                                        onClick={() => navigate('/register/startup?mode=complete')}
+                                        style={{
+                                            background: 'rgba(255,255,255,.2)', border: '1px solid rgba(255,255,255,.35)',
+                                            color: '#fff', borderRadius: 8, padding: '5px 12px',
+                                            fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        Register Now
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* ── Hero content area: 3-dot menu sits here, BELOW the banner ── */}
+                            <div style={{ position: 'relative' }}>
+                                {/* Desktop 3-dot menu — anchored to hero content, never overlaps banner */}
+                                <div className="hidden lg:block absolute top-4 right-4 z-30">
+                                    {headerActions}
+                                </div>
+
+                                <div className="px-4 pt-6 pb-5">
                                 <div className="flex items-start gap-4">
                                     {/* Logo */}
                                     <div className={`w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center ${isDark ? "bg-gray-800" : "bg-gray-100"}`}>
@@ -409,7 +450,8 @@ export default function StartupProfile() {
                                     <IoPencil size={15} />Edit Startup Profile
                                 </button>
                             </div>
-                        </div>
+                            </div>{/* end inner hero wrapper */}
+                        </div>{/* end hero section */}
 
                         {/* Tabs */}
                         <div className={`sticky top-14 z-20 flex border-b ${isDark ? "bg-gray-950 border-white/10" : "bg-white border-gray-200"}`}>

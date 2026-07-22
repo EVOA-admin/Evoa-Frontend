@@ -43,6 +43,8 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     }
 
     const isOnboardingPath = location.pathname === '/choice-role' || location.pathname.startsWith('/register/');
+    // Allow already-registered users to reach /register/startup?mode=complete (Complete Registration flow)
+    const isCompleteRegistrationPath = location.pathname.startsWith('/register/') && location.search.includes('mode=complete');
     const isProfilePath = PROFILE_PATHS.includes(location.pathname);
     const isInvestorPaymentPath = location.pathname === '/investor-payment';
     // Only redirect investors to payment onboarding when the backend has
@@ -61,7 +63,8 @@ export default function ProtectedRoute({ children, allowedRoles = [] }) {
     }
 
     // Step 2: Registration already done → block access to onboarding pages
-    if (registrationCompleted && isOnboardingPath) {
+    // EXCEPTION: allow ?mode=complete so users can complete their full profile after Quick Onboarding
+    if (registrationCompleted && isOnboardingPath && !isCompleteRegistrationPath) {
         if (investorNeedsPayment) {
             if (location.pathname !== REGISTRATION_ROUTES.investor) {
                 return <Navigate to={REGISTRATION_ROUTES.investor} replace />;

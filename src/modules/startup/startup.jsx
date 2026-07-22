@@ -10,7 +10,9 @@ import DesktopFeedLayout from "../../components/layout/DesktopFeedLayout";
 import UserPostCard from "../../components/shared/UserPostCard";
 import StartupPostCard from "../../components/shared/StartupPostCard";
 import RisingStartupsSection from "../../components/shared/RisingStartupsSection";
+import RegistrationCompletionPopup from "../../components/shared/RegistrationCompletionPopup";
 import postsService from "../../services/postsService";
+import { getMyStartup } from "../../services/startupsService";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { getUnreadCount } from "../../services/chatService";
 
@@ -26,6 +28,7 @@ export default function Startup() {
   const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [myStartup, setMyStartup] = useState(null);
 
   // Seed state from cache immediately to avoid a blank loading flash on re-visit
   const [risingStartups, setRisingStartups] = useState(() => cache.get('risingStartups') || []);
@@ -39,6 +42,8 @@ export default function Startup() {
       const d = r?.data?.data || r?.data || {};
       setUnreadCount((d.unreadMessages || 0) + (d.pendingRequests || 0));
     }).catch(() => { });
+    // Fetch own startup profile for the completion popup
+    getMyStartup().then(r => setMyStartup(r?.data?.data || r?.data)).catch(() => {});
   }, [authLoading, user?.id]);
 
   useEffect(() => {
@@ -238,6 +243,13 @@ export default function Startup() {
           </div>
         </DesktopFeedLayout>
       </main>
+
+      {/* Registration completion popup — shows until all registration steps are done */}
+      <RegistrationCompletionPopup
+        startup={myStartup}
+        isDark={isDark}
+        onComplete={() => navigate('/register/startup?mode=complete')}
+      />
     </>
   );
 }

@@ -12,7 +12,7 @@ import { useAuth } from "../../contexts/AuthContext";
 
 /* ─── Dashboards / routes ─── */
 const DASHBOARDS = { startup: '/startup', investor: '/investor', incubator: '/incubator', viewer: '/viewer' };
-const ROUTES = { startup: '/register/startup', investor: '/register/investor', incubator: '/register/incubator', viewer: '/viewer' };
+const ROUTES = { startup: '/register/startup?mode=quick', investor: '/register/investor', incubator: '/register/incubator', viewer: '/viewer' };
 
 /* ─── Role definitions ─── */
 const roles = [

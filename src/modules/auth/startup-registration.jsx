@@ -1,11 +1,12 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FiUpload, FiX, FiArrowLeft } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { FiUpload, FiX, FiArrowLeft, FiVideo, FiImage } from "react-icons/fi";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import storageService from "../../services/storageService";
 import startupsService from "../../services/startupsService";
+import { getMyStartup, updateStartup } from "../../services/startupsService";
 import { updateUserProfile } from "../../services/usersService";
 
 const REG_CSS = `
@@ -752,11 +753,22 @@ export default function StartupRegistration() {
   useTheme();
   const isDark = false;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode') || 'quick';
+  const isQuickMode = mode === 'quick';
+  const isCompleteMode = mode === 'complete';
   const { completeRegistration } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filePreviews, setFilePreviews] = useState({});
+
+  // ── Quick Onboarding state (only used in ?mode=quick) ──────────────────────
+  const [quickForm, setQuickForm] = useState({ startupName: '', startupUsername: '', startupLogo: null, pitchVideo: null });
+  const [quickFilePreviews, setQuickFilePreviews] = useState({});
+
+  // ── Complete Registration state (only used in ?mode=complete) ──────────────
+  const [existingStartupId, setExistingStartupId] = useState(null);
 
   const [formData, setFormData] = useState({
     founders: [createFounder()],
@@ -796,6 +808,56 @@ export default function StartupRegistration() {
   const isManualCountry = formData.countryOfIncorporation === "OTHER";
   const requiresRegistrationProof =
     !!formData.countryOfIncorporation && formData.legalEntityType && formData.legalEntityType !== "Not Registered Yet";
+
+  // ── On mount: guard against duplicate startup (quick) or pre-fill (complete) ──
+  useEffect(() => {
+    if (!isQuickMode && !isCompleteMode) return;
+    getMyStartup().then(res => {
+      const s = res?.data?.data || res?.data;
+      if (!s?.id) return;
+
+      if (isQuickMode) {
+        // Startup already exists — skip quick onboarding, go straight to complete registration
+        navigate('/register/startup?mode=complete', { replace: true });
+        return;
+      }
+
+      // Complete mode: pre-fill form from existing startup data
+      setExistingStartupId(s.id);
+      setFormData(prev => ({
+        ...prev,
+        startupName: s.name || '',
+        startupUsername: s.username || '',
+        companyEmail: s.companyEmail || '',
+        industries: s.industries || [],
+        stage: s.stage || '',
+        countryOfIncorporation: s.verification?.countryCode || '',
+        legalEntityType: s.verification?.entityType || '',
+        registrationIdPrimary: s.verification?.value || '',
+        registrationIdSecondary: s.verification?.secondaryValue || '',
+        shortDescription: s.description || s.shortDescription || '',
+        pitchVideo: s.pitchVideoUrl || null,
+        pitchDeck: s.pitchDeckUrl || null,
+        hashtags: typeof s.hashtags === 'string' ? s.hashtags : (s.hashtags || []).join(' '),
+        websiteUrl: s.website || s.socialLinks?.website || '',
+        linkedin: s.socialLinks?.linkedin || '',
+        instagram: s.socialLinks?.instagram || '',
+        youtube: s.socialLinks?.youtube || '',
+        playStore: s.socialLinks?.playStore || '',
+        productDemo: s.socialLinks?.productDemo || '',
+        amountRaising: s.raisingAmount?.toString() || '',
+        equityGiving: s.equityPercentage?.toString() || '',
+        preMoneyValuation: s.preMoneyValuation?.toString() || '',
+        founders: s.founders?.length > 0
+          ? s.founders.map(f => ({ name: f.name || '', email: f.email || '', mobile: f.mobile || '', role: f.role || '', linkedin: f.linkedin || '', photo: null }))
+          : [createFounder()],
+      }));
+      // Show existing media in file previews
+      if (s.pitchVideoUrl) setFilePreviews(p => ({ ...p, pitchVideo: { type: 'video', url: s.pitchVideoUrl } }));
+      if (s.logoUrl)       setFilePreviews(p => ({ ...p, startupLogo: { type: 'image', url: s.logoUrl } }));
+      if (s.pitchDeckUrl)  setFilePreviews(p => ({ ...p, pitchDeck: { type: 'file', name: 'Existing pitch deck' } }));
+    }).catch(() => {}); // non-fatal: if no startup exists or network error, continue normally
+  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -976,6 +1038,8 @@ export default function StartupRegistration() {
 
   const uploadToStorage = async (file, path) => {
     if (!file) return null;
+    // If the value is already a URL string (pre-filled from existing startup), skip re-upload
+    if (typeof file === 'string') return file;
     try {
       return await storageService.uploadFile(file, "evoa-media", `startups/${Date.now()}_${path}_${file.name}`);
     } catch {
@@ -1073,14 +1137,19 @@ export default function StartupRegistration() {
         teamMembers: [],
       };
 
-      await startupsService.createStartup(payload);
+      // Use updateStartup if completing an existing profile, createStartup for new profiles
+      if (isCompleteMode && existingStartupId) {
+        await updateStartup(existingStartupId, payload);
+      } else {
+        await startupsService.createStartup(payload);
+      }
 
       if (logoUrl) {
         await updateUserProfile({ avatarUrl: logoUrl }).catch(() => {});
       }
 
       await completeRegistration();
-      navigate("/startup");
+      navigate(isCompleteMode ? "/startup/profile" : "/startup");
     } catch (err) {
       console.error("Registration failed:", err);
       setError(err.response?.data?.message || err.message || "Registration failed. Please try again.");
@@ -1526,24 +1595,217 @@ export default function StartupRegistration() {
     }
   };
 
+  // ── Quick File Upload handler (for quick onboarding form) ─────────────────
+  const handleQuickFileUpload = (field, file) => {
+    if (!file) return;
+    if (field === 'pitchVideo' && file.size > 50 * 1024 * 1024) {
+      setError('Video size must be under 50 MB.'); return;
+    }
+    if (field === 'startupLogo' && file.size > 5 * 1024 * 1024) {
+      setError('Logo must be under 5 MB.'); return;
+    }
+    setError('');
+    setQuickForm(prev => ({ ...prev, [field]: file }));
+    if (file.type.startsWith('image/')) {
+      setQuickFilePreviews(prev => ({ ...prev, [field]: { type: 'image', url: URL.createObjectURL(file) } }));
+    } else if (file.type.startsWith('video/')) {
+      setQuickFilePreviews(prev => ({ ...prev, [field]: { type: 'video', url: URL.createObjectURL(file) } }));
+    }
+  };
+
+  // ── Quick Onboarding submit ────────────────────────────────────────────────
+  const handleQuickSubmit = async () => {
+    setError('');
+    if (!quickForm.startupName.trim()) { setError('Startup name is required.'); return; }
+    if (!quickForm.startupUsername.trim()) { setError('Startup username / @handle is required.'); return; }
+    try {
+      setLoading(true);
+      const [logoUrl, pitchVideoUrl] = await Promise.all([
+        uploadToStorage(quickForm.startupLogo, 'logo'),
+        uploadToStorage(quickForm.pitchVideo, 'pitch_video'),
+      ]);
+      const payload = {
+        name: quickForm.startupName.trim(),
+        username: quickForm.startupUsername.trim().toLowerCase().replace(/\s+/g, ''),
+        logoUrl,
+        pitchVideoUrl,
+        founders: [],
+        teamMembers: [],
+        hashtags: '',
+      };
+      await startupsService.createStartup(payload);
+      if (logoUrl) await updateUserProfile({ avatarUrl: logoUrl }).catch(() => {});
+      await completeRegistration();
+      navigate('/startup');
+    } catch (err) {
+      setError(err?.response?.data?.message || err?.message || 'Failed to create startup. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Quick Onboarding upload box helper ────────────────────────────────────
+  const QuickUploadBox = ({ field, label, accept, icon: Icon, helperText }) => {
+    const preview = quickFilePreviews[field];
+    return (
+      <label className="block">
+        <span className="reg-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {Icon && <Icon size={13} />}{label}
+        </span>
+        <input type="file" accept={accept} className="hidden"
+          onChange={e => handleQuickFileUpload(field, e.target.files[0])} />
+        <div className={`reg-upload${preview ? ' filled' : ''}`} style={{ marginTop: 6 }}>
+          {preview?.type === 'image' && <img src={preview.url} alt="preview" style={{ width: '100%', height: 72, objectFit: 'cover', borderRadius: 6 }} />}
+          {preview?.type === 'video' && <video src={preview.url} style={{ width: '100%', maxHeight: 72, objectFit: 'cover', borderRadius: 6 }} />}
+          {!preview && (
+            <div style={{ padding: '16px 0' }}>
+              <FiUpload style={{ margin: '0 auto 6px', display: 'block' }} size={20} />
+              <div style={{ fontSize: 12 }}>Click to upload</div>
+              {helperText && <div style={{ fontSize: 11, marginTop: 4, opacity: .8 }}>{helperText}</div>}
+            </div>
+          )}
+          {preview && (
+            <div style={{ fontSize: 11, color: '#1565C0', marginTop: 4 }}>
+              ✓ {field === 'pitchVideo' ? 'Video selected' : 'Image selected'}
+              <span style={{ color: '#94A3B8', marginLeft: 8 }}>Click to change</span>
+            </div>
+          )}
+        </div>
+      </label>
+    );
+  };
+
+  // ── Quick Onboarding render ────────────────────────────────────────────────
+  if (isQuickMode) {
+    return (
+      <div className="reg-root">
+        <style>{REG_CSS}</style>
+        <div className="reg-topbar">
+          <div className="reg-brand">EVO<span>-A</span></div>
+          <button className="reg-back" onClick={() => navigate('/choice-role')}>
+            <FiArrowLeft size={12} /> Back
+          </button>
+        </div>
+        <div className="reg-inner" style={{ maxWidth: 560 }}>
+          <div className="reg-head">
+            <div className="reg-step-label">Quick Start · Startup</div>
+            <div className="reg-title">Launch Your Startup</div>
+            <div className="reg-subtitle">
+              Just the essentials — complete your full profile anytime after joining to get verified.
+            </div>
+          </div>
+
+          {/* Single step card */}
+          <div className="reg-card">
+            <p className="reg-step-title">Startup Basics</p>
+
+            {/* Name */}
+            <div style={{ marginBottom: 18 }}>
+              <label className="reg-label">Startup Name <span style={{ color: '#E53E3E' }}>*</span></label>
+              <input
+                type="text"
+                className="reg-input"
+                placeholder="e.g. FinVerse Technologies"
+                value={quickForm.startupName}
+                onChange={e => setQuickForm(p => ({ ...p, startupName: e.target.value }))}
+              />
+            </div>
+
+            {/* Username */}
+            <div style={{ marginBottom: 18 }}>
+              <label className="reg-label">Startup Username <span style={{ color: '#E53E3E' }}>*</span></label>
+              <div style={{ position: 'relative' }}>
+                <span style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                  color: '#94A3B8', fontFamily: 'DM Mono, monospace', fontSize: 14, pointerEvents: 'none'
+                }}>@</span>
+                <input
+                  type="text"
+                  className="reg-input"
+                  style={{ paddingLeft: 30 }}
+                  placeholder="finverse"
+                  value={quickForm.startupUsername}
+                  onChange={e => setQuickForm(p => ({ ...p, startupUsername: e.target.value.replace(/\s+/g, '').toLowerCase() }))}
+                />
+              </div>
+              <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 5 }}>This becomes your unique @handle on EVOA.</p>
+            </div>
+
+            {/* Logo (optional) */}
+            <div style={{ marginBottom: 18 }}>
+              <QuickUploadBox
+                field="startupLogo"
+                label={<>Startup Logo <span style={{ color: '#94A3B8', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></>}
+                accept="image/*"
+                icon={FiImage}
+                helperText="PNG, JPG · Max 5 MB"
+              />
+            </div>
+
+            {/* Pitch Video (optional) */}
+            <div>
+              <QuickUploadBox
+                field="pitchVideo"
+                label={<>Pitch Video <span style={{ color: '#94A3B8', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional · strongly recommended)</span></>}
+                accept="video/*"
+                icon={FiVideo}
+                helperText="MP4, MOV · Max 50 MB — investors watch this first!"
+              />
+            </div>
+          </div>
+
+          {error && <div className="reg-error">{error}</div>}
+
+          {/* Info strip */}
+          <div style={{
+            background: '#EEF5FF', border: '1px solid rgba(21,101,192,.15)', borderRadius: 10,
+            padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10
+          }}>
+            <span style={{ fontSize: 16 }}>💡</span>
+            <p style={{ fontSize: 12, color: '#1565C0', lineHeight: 1.55, margin: 0 }}>
+              You can complete your full registration (verification, team, financials) anytime from your profile.
+              A complete profile gets the <strong>Verified</strong> badge and increased investor visibility.
+            </p>
+          </div>
+
+          <div className="reg-nav" style={{ justifyContent: 'flex-end' }}>
+            <button
+              className="reg-btn-primary"
+              onClick={handleQuickSubmit}
+              disabled={loading}
+              style={{ minWidth: 180 }}
+            >
+              {loading ? 'Creating profile…' : 'Enter the App →'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Full / Complete Registration render (existing 3-step form) ─────────────
   return (
     <div className="reg-root">
       <style>{REG_CSS}</style>
       <div className="reg-topbar">
         <div className="reg-brand">EVO<span>-A</span></div>
-        <button className="reg-back" onClick={() => navigate("/choice-role")}>
+        <button className="reg-back" onClick={() => navigate(isCompleteMode ? '/startup/profile' : '/choice-role')}>
           <FiArrowLeft size={12} /> Back
         </button>
       </div>
       <div className="reg-inner">
         <div className="reg-head">
-          <div className="reg-step-label">Step {currentStep} / {TOTAL_STEPS} - Startup Registration</div>
+          <div className="reg-step-label">
+            Step {currentStep} / {TOTAL_STEPS} — {isCompleteMode ? 'Complete Registration' : 'Startup Registration'}
+          </div>
           <div className="reg-title">
             {currentStep === 1 && "Founders & Basics"}
             {currentStep === 2 && "Industry & Verification"}
             {currentStep === 3 && "Pitch & Links"}
           </div>
-          <div className="reg-subtitle">Complete all required fields to continue</div>
+          <div className="reg-subtitle">
+            {isCompleteMode ? 'Fill in the remaining details to get your Verified badge' : 'Complete all required fields to continue'}
+          </div>
         </div>
         <div className="reg-progress">
           {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
@@ -1565,7 +1827,7 @@ export default function StartupRegistration() {
             </button>
           ) : (
             <button className="reg-btn-primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? "Uploading..." : "Submit"}
+              {loading ? 'Uploading…' : isCompleteMode ? 'Save & Complete' : 'Submit'}
             </button>
           )}
         </div>
