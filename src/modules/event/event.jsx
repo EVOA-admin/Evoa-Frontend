@@ -9,16 +9,14 @@ import {
   IoTicketOutline,
   IoStarOutline,
   IoCheckmarkCircle,
-  IoRocketOutline,
-  IoChevronDown,
-  IoChevronUp,
-  IoFlashOutline,
   IoPeopleOutline,
   IoShieldCheckmarkOutline,
+  IoChevronDown,
+  IoChevronUp,
   IoArrowForward,
-  IoSparkles,
   IoAlertCircleOutline,
   IoCloseCircle,
+  IoCheckmark,
 } from "react-icons/io5";
 import { openRazorpayCheckout } from "../../utils/razorpay";
 import pricingService from "../../services/pricingService";
@@ -34,7 +32,7 @@ export default function EventPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // Check query param for payment success redirect (legacy external URL flow)
+  // Check query param for payment success redirect
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("status") === "success" || params.get("payment") === "success") {
@@ -52,7 +50,6 @@ export default function EventPage() {
   const handleJoinNow = async () => {
     if (isLoading) return;
 
-    // Must be logged in
     if (!user) {
       setErrorMsg("Please sign in to purchase the event bundle.");
       return;
@@ -73,13 +70,12 @@ export default function EventPage() {
           setShowSuccessModal(true);
         },
         onDismiss: async () => {
-          // User closed the modal — silently do nothing
+          // User closed the modal
         },
         cancelMessage: "Payment was cancelled.",
       });
     } catch (err) {
       const msg = err?.message || "Something went wrong. Please try again.";
-      // Don't show cancellation as an error
       if (!msg.toLowerCase().includes("cancel")) {
         setErrorMsg(msg);
       }
@@ -117,9 +113,9 @@ export default function EventPage() {
 
   const benefits = [
     {
-      icon: IoFlashOutline,
-      title: "Live 180s VC Pitch Stage",
-      desc: "Present your vision directly to a curated panel of VCs, Angel Investors & Incubator Heads.",
+      icon: IoCalendarOutline,
+      title: "Live 180s Pitch Stage",
+      desc: "Present your vision directly to a curated panel of VCs, Angel Investors, and Incubator Heads.",
     },
     {
       icon: IoStarOutline,
@@ -133,8 +129,8 @@ export default function EventPage() {
     },
     {
       icon: IoShieldCheckmarkOutline,
-      title: "Deck & Video Distribution",
-      desc: "Your pitch reel and deck get featured to EVOA's network of 500+ accredited investors.",
+      title: "Deck Distribution",
+      desc: "Your pitch reel and deck get featured to EVOA's network of accredited investors.",
     },
   ];
 
@@ -152,7 +148,7 @@ export default function EventPage() {
       val: "₹1,999",
     },
     {
-      icon: IoSparkles,
+      icon: IoShieldCheckmarkOutline,
       name: "Investor Deck Summary & Feedback",
       sub: "Actionable feedback from panel VCs & mentors",
       val: "₹999",
@@ -163,215 +159,230 @@ export default function EventPage() {
     <AppShell>
       <AppHeader title="Event" />
 
-      <main className={`min-h-screen pb-16 font-sans transition-colors ${isDark ? "bg-[#0a0a0e] text-slate-100" : "bg-slate-50 text-slate-900"}`}>
+      <main className={`min-h-screen pb-20 font-sans transition-colors ${
+        isDark ? "bg-[#0b0f17] text-slate-100" : "bg-slate-50 text-slate-900"
+      }`}>
 
-        {/* ── SUCCESS MODAL ── */}
+        {/* ── SUCCESS NOTIFICATION ── */}
         {showSuccessModal && (
-          <div className="mx-4 mt-4 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-start justify-between gap-3 animate-fadeIn">
-            <div className="flex items-start gap-3">
-              <IoCheckmarkCircle size={24} className="text-emerald-400 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-sm text-emerald-300">Payment Successful! 🎉</h4>
-                <p className="text-xs text-emerald-200/90 mt-1 leading-relaxed">
-                  Your <strong>PitchIn 180 Seconds</strong> pass &amp; <strong>1 Month EVOA Premium</strong> are now active.
-                  Check your email for the event confirmation and passkey.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowSuccessModal(false)}
-              className="text-xs font-semibold px-2 py-1 bg-emerald-500/20 rounded-lg hover:bg-emerald-500/30 text-emerald-200 flex-shrink-0 cursor-pointer"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-        {/* ── ERROR TOAST ── */}
-        {errorMsg && (
-          <div className="mx-4 mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-start justify-between gap-3 animate-fadeIn">
-            <div className="flex items-start gap-3">
-              <IoAlertCircleOutline size={22} className="text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-xs leading-relaxed text-red-300">{errorMsg}</p>
-            </div>
-            <button
-              onClick={() => setErrorMsg(null)}
-              className="text-red-400 hover:text-red-300 flex-shrink-0 cursor-pointer"
-            >
-              <IoCloseCircle size={18} />
-            </button>
-          </div>
-        )}
-
-        {/* ── HERO BANNER ── */}
-        <div className="relative overflow-hidden px-4 pt-8 pb-10 sm:px-8 border-b border-slate-200/10">
-          {/* Ambient Glow */}
-          <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-blue-600/15 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-
-          <div className="relative max-w-3xl mx-auto text-center space-y-4">
-            {/* Tag Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase bg-gradient-to-r from-blue-600/20 to-amber-500/20 border border-blue-500/30 text-blue-400 shadow-sm">
-              <IoSparkles size={14} className="text-amber-400 animate-pulse" />
-              EVOA × PitchIn Collaboration
-            </div>
-
-            {/* Event Name */}
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
-              EVOA × PitchIn <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-amber-400 bg-clip-text text-transparent">180 Seconds</span>
-            </h1>
-
-            {/* Short Description */}
-            <p className={`text-sm sm:text-base max-w-2xl mx-auto leading-relaxed ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-              Pitch your startup live in <strong>180 seconds</strong> to top VCs and Angel Investors, while unlocking <strong>1 Month of EVOA Premium</strong> to accelerate your fundraising journey.
-            </p>
-
-            {/* Meta Pill Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-              <span className={`text-xs px-3 py-1 rounded-full border ${isDark ? "bg-slate-900/80 border-slate-800 text-slate-300" : "bg-white border-slate-200 text-slate-700"}`}>
-                <IoCalendarOutline size={12} className="inline mr-1 text-blue-500" /> Live Stage Pitch
-              </span>
-              <span className={`text-xs px-3 py-1 rounded-full border ${isDark ? "bg-slate-900/80 border-slate-800 text-slate-300" : "bg-white border-slate-200 text-slate-700"}`}>
-                <IoStarOutline size={12} className="inline mr-1 text-amber-400" /> 1-Month EVOA Premium Included
-              </span>
-              <span className={`text-xs px-3 py-1 rounded-full border ${isDark ? "bg-slate-900/80 border-slate-800 text-slate-300" : "bg-white border-slate-200 text-slate-700"}`}>
-                <IoPeopleOutline size={12} className="inline mr-1 text-emerald-400" /> 500+ VCs &amp; Angels
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── BUNDLE & JOIN NOW CARD ── */}
-        <div className="px-4 py-8 max-w-3xl mx-auto">
-          <div className={`relative rounded-3xl p-6 sm:p-8 overflow-hidden border shadow-xl transition-all ${
-            isDark
-              ? "bg-gradient-to-b from-slate-900/90 to-slate-950/90 border-blue-500/30 shadow-blue-900/10"
-              : "bg-white border-slate-200 shadow-slate-200/60"
-          }`}>
-            {/* Ribbon */}
-            <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold text-[10px] uppercase tracking-widest px-3 py-1 rounded-full shadow-md">
-              Special Bundle
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-                  <IoTicketOutline className="text-blue-500" size={22} />
-                  Combined Offer Bundle
-                </h2>
-                <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                  Get complete access to PitchIn 180 Seconds event + EVOA Premium at 75% off.
-                </p>
-              </div>
-
-              {/* Offer Highlight Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className={`p-4 rounded-2xl border flex items-start gap-3 ${
-                  isDark ? "bg-slate-900/60 border-slate-800" : "bg-slate-50 border-slate-200/80"
-                }`}>
-                  <span className="text-2xl p-2 rounded-xl bg-blue-500/10 text-blue-500 flex-shrink-0">🎟️</span>
-                  <div>
-                    <h3 className="text-sm font-bold">PitchIn 180s Event Ticket</h3>
-                    <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                      Live stage pitching slot &amp; event pass for 2 founders.
-                    </p>
-                  </div>
-                </div>
-
-                <div className={`p-4 rounded-2xl border flex items-start gap-3 ${
-                  isDark ? "bg-slate-900/60 border-slate-800" : "bg-slate-50 border-slate-200/80"
-                }`}>
-                  <span className="text-2xl p-2 rounded-xl bg-amber-500/10 text-amber-400 flex-shrink-0">⭐</span>
-                  <div>
-                    <h3 className="text-sm font-bold">1 Month EVOA Premium</h3>
-                    <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                      Verified badge, pitch boost, direct VC inbox &amp; battlefield.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price & CTA Row */}
-              <div className={`p-5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${
-                isDark
-                  ? "bg-gradient-to-r from-blue-950/40 via-slate-900 to-amber-950/30 border-blue-500/20"
-                  : "bg-blue-50/60 border-blue-100"
-              }`}>
+          <div className="max-w-3xl mx-auto px-4 pt-4">
+            <div className={`p-4 rounded-xl flex items-start justify-between gap-3 border ${
+              isDark ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-200" : "bg-emerald-50 border-emerald-200 text-emerald-900"
+            }`}>
+              <div className="flex items-start gap-3">
+                <IoCheckmarkCircle size={20} className="text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-extrabold text-blue-500">₹999</span>
-                    <span className={`text-sm line-through ${isDark ? "text-slate-500" : "text-slate-400"}`}>₹4,497</span>
-                    <span className="text-xs font-bold text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md">Save ₹3,498</span>
-                  </div>
-                  <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                    All-inclusive single payment • Instant EVOA Premium activation
+                  <h4 className="font-semibold text-sm">Payment Successful</h4>
+                  <p className="text-xs opacity-90 mt-0.5 leading-relaxed">
+                    Your <strong>PitchIn 180 Seconds</strong> pass and <strong>1 Month EVOA Premium</strong> subscription are now active. Check your email for confirmation details.
                   </p>
                 </div>
-
-                {/* Prominent JOIN NOW Button */}
-                <button
-                  id="event-join-now-hero"
-                  onClick={handleJoinNow}
-                  disabled={isLoading}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-extrabold text-sm shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      Processing…
-                    </>
-                  ) : (
-                    <>
-                      <IoRocketOutline size={18} />
-                      Join Now — ₹999
-                      <IoArrowForward size={16} />
-                    </>
-                  )}
-                </button>
               </div>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="text-xs font-medium px-2 py-1 rounded-lg hover:bg-emerald-500/20 flex-shrink-0 cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── ERROR NOTIFICATION ── */}
+        {errorMsg && (
+          <div className="max-w-3xl mx-auto px-4 pt-4">
+            <div className={`p-4 rounded-xl flex items-start justify-between gap-3 border ${
+              isDark ? "bg-rose-950/30 border-rose-500/30 text-rose-200" : "bg-rose-50 border-rose-200 text-rose-900"
+            }`}>
+              <div className="flex items-start gap-3">
+                <IoAlertCircleOutline size={20} className="text-rose-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs leading-relaxed">{errorMsg}</p>
+              </div>
+              <button
+                onClick={() => setErrorMsg(null)}
+                className="hover:opacity-75 flex-shrink-0 cursor-pointer"
+              >
+                <IoCloseCircle size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── HERO HEADER ── */}
+        <div className={`px-4 pt-10 pb-10 border-b ${isDark ? "border-white/5 bg-slate-950/40" : "border-slate-200/80 bg-white"}`}>
+          <div className="max-w-3xl mx-auto text-center space-y-4">
+            {/* Tag Badge */}
+            <div>
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${
+                isDark ? "bg-evoa/15 text-evoa border border-evoa/30" : "bg-blue-50 text-blue-700 border border-blue-200"
+              }`}>
+                EVOA × PitchIn Collaboration
+              </span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
+              EVOA × PitchIn 180 Seconds
+            </h1>
+
+            {/* Description */}
+            <p className={`text-xs sm:text-sm max-w-2xl mx-auto font-normal leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium to accelerate your fundraising.
+            </p>
+
+            {/* Meta Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <span className={`text-xs px-3 py-1 rounded-lg border font-medium flex items-center gap-1.5 ${
+                isDark ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
+              }`}>
+                <IoCalendarOutline size={13} className={isDark ? "text-slate-400" : "text-slate-500"} /> Live Stage Pitch
+              </span>
+              <span className={`text-xs px-3 py-1 rounded-lg border font-medium flex items-center gap-1.5 ${
+                isDark ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
+              }`}>
+                <IoStarOutline size={13} className={isDark ? "text-slate-400" : "text-slate-500"} /> 1-Month Premium Included
+              </span>
+              <span className={`text-xs px-3 py-1 rounded-lg border font-medium flex items-center gap-1.5 ${
+                isDark ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
+              }`}>
+                <IoPeopleOutline size={13} className={isDark ? "text-slate-400" : "text-slate-500"} /> 500+ Investors
+              </span>
             </div>
           </div>
         </div>
 
-        {/* ── EVENT OVERVIEW SECTION ── */}
-        <div className="px-4 py-6 max-w-3xl mx-auto space-y-4">
-          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight flex items-center gap-2">
-            <IoSparkles className="text-amber-400" size={20} />
+        {/* ── MAIN BUNDLE & CTA CARD ── */}
+        <div className="px-4 py-8 max-w-3xl mx-auto">
+          <div className={`rounded-2xl p-6 sm:p-8 border shadow-sm ${
+            isDark ? "bg-slate-900/60 border-white/10" : "bg-white border-slate-200"
+          }`}>
+            <div className="flex items-center justify-between gap-4 mb-6">
+              <div>
+                <h2 className="text-lg font-bold tracking-tight">Combined Offer Bundle</h2>
+                <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                  Complete event access pass + 1 Month EVOA Premium subscription.
+                </p>
+              </div>
+              <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider uppercase ${
+                isDark ? "bg-evoa/15 text-evoa border border-evoa/30" : "bg-blue-50 text-blue-700 border border-blue-200"
+              }`}>
+                Event Pass
+              </span>
+            </div>
+
+            {/* Offer Items Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+              <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+                isDark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/80 border-slate-200"
+              }`}>
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  isDark ? "bg-slate-800 text-slate-300" : "bg-slate-200/80 text-slate-700"
+                }`}>
+                  <IoTicketOutline size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold">PitchIn 180s Event Ticket</h3>
+                  <p className={`text-[11px] mt-0.5 leading-normal ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                    Live stage pitching slot for up to 2 team members.
+                  </p>
+                </div>
+              </div>
+
+              <div className={`p-4 rounded-xl border flex items-start gap-3 ${
+                isDark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/80 border-slate-200"
+              }`}>
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  isDark ? "bg-slate-800 text-slate-300" : "bg-slate-200/80 text-slate-700"
+                }`}>
+                  <IoStarOutline size={18} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold">1 Month EVOA Premium</h3>
+                  <p className={`text-[11px] mt-0.5 leading-normal ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                    Verified badge, priority feed, and direct investor messaging.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing & CTA */}
+            <div className={`p-5 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${
+              isDark ? "bg-slate-950/60 border-slate-800" : "bg-slate-50 border-slate-200"
+            }`}>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold">₹999</span>
+                  <span className={`text-xs line-through ${isDark ? "text-slate-500" : "text-slate-400"}`}>₹4,497</span>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded ${
+                    isDark ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  }`}>
+                    Save ₹3,498
+                  </span>
+                </div>
+                <p className={`text-[11px] mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                  Single payment • Instant activation upon completion
+                </p>
+              </div>
+
+              <button
+                id="event-join-now-hero"
+                onClick={handleJoinNow}
+                disabled={isLoading}
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-evoa hover:bg-evoa/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-wide shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+              >
+                {isLoading ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Processing…
+                  </>
+                ) : (
+                  <>
+                    <span>Join Now — ₹999</span>
+                    <IoArrowForward size={14} />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── EVENT OVERVIEW ── */}
+        <div className="px-4 py-4 max-w-3xl mx-auto space-y-3">
+          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
             Event Overview
           </h2>
-          <div className={`p-6 rounded-2xl border leading-relaxed text-sm space-y-3 ${
-            isDark ? "bg-slate-900/50 border-slate-800 text-slate-300" : "bg-white border-slate-200 text-slate-700"
+          <div className={`p-6 rounded-2xl border text-xs leading-relaxed space-y-3 ${
+            isDark ? "bg-slate-900/40 border-white/5 text-slate-300" : "bg-white border-slate-200 text-slate-600"
           }`}>
             <p>
-              <strong>PitchIn 180 Seconds</strong> is India's most energetic startup pitching showcase. Founders take center stage to present their business model, traction, and funding ask in a crisp 3-minute pitch followed by direct interaction with top investors.
+              <strong>PitchIn 180 Seconds</strong> is a live startup pitching showcase where founders take the stage to present their business model, traction, and funding requirement in a structured 3-minute pitch followed by direct Q&amp;A with attending investors.
             </p>
             <p>
-              By joining this exclusive EVOA collaboration, your startup doesn't just get a live pitch stage — you also unlock <strong>30 Days of EVOA Premium</strong>. This powers up your digital presence with verified credentials, featured pitch reel spots, and unlimited investor messaging on EVOA.
+              By participating through this EVOA collaboration, your startup receives a live pitching pass along with <strong>30 Days of EVOA Premium</strong>, enhancing your digital presence with verified status, featured feed visibility, and direct messaging access.
             </p>
           </div>
         </div>
 
         {/* ── BENEFITS GRID ── */}
-        <div className="px-4 py-6 max-w-3xl mx-auto space-y-4">
-          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight flex items-center gap-2">
-            <IoStarOutline className="text-blue-500" size={20} />
-            Benefits of Participating
+        <div className="px-4 py-6 max-w-3xl mx-auto space-y-3">
+          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
+            Participation Benefits
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {benefits.map(({ icon: Icon, title, desc }, idx) => (
               <div
                 key={idx}
-                className={`p-5 rounded-2xl border transition-all ${
-                  isDark
-                    ? "bg-slate-900/50 border-slate-800 hover:border-slate-700"
-                    : "bg-white border-slate-200 hover:border-blue-300 shadow-sm"
+                className={`p-5 rounded-2xl border ${
+                  isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-200"
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-3">
-                  <Icon size={20} />
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${
+                  isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"
+                }`}>
+                  <Icon size={16} />
                 </div>
-                <h3 className="font-bold text-sm mb-1">{title}</h3>
-                <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                <h3 className="font-bold text-xs mb-1">{title}</h3>
+                <p className={`text-[11px] leading-relaxed ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                   {desc}
                 </p>
               </div>
@@ -379,65 +390,67 @@ export default function EventPage() {
           </div>
         </div>
 
-        {/* ── WHAT'S INCLUDED IN BUNDLE ── */}
-        <div className="px-4 py-6 max-w-3xl mx-auto space-y-4">
-          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight flex items-center gap-2">
-            <IoCheckmarkCircle className="text-emerald-400" size={20} />
-            What's Included in the ₹999 Bundle
+        {/* ── WHAT'S INCLUDED ── */}
+        <div className="px-4 py-6 max-w-3xl mx-auto space-y-3">
+          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
+            What's Included
           </h2>
           <div className={`rounded-2xl border divide-y overflow-hidden ${
-            isDark ? "bg-slate-900/50 border-slate-800 divide-slate-800/80" : "bg-white border-slate-200 divide-slate-100"
+            isDark ? "bg-slate-900/40 border-white/5 divide-white/5" : "bg-white border-slate-200 divide-slate-100"
           }`}>
             {bundleItems.map(({ icon: Icon, name, sub, val }, idx) => (
               <div key={idx} className="p-4 sm:p-5 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15 text-blue-400 flex items-center justify-center flex-shrink-0">
-                    <Icon size={18} />
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"
+                  }`}>
+                    <Icon size={16} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm">{name}</h4>
-                    <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>{sub}</p>
+                    <h4 className="font-bold text-xs">{name}</h4>
+                    <p className={`text-[11px] mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>{sub}</p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <span className={`text-xs line-through ${isDark ? "text-slate-500" : "text-slate-400"}`}>{val}</span>
-                  <div className="text-xs font-bold text-emerald-400">Included</div>
+                  <span className={`text-[11px] line-through block ${isDark ? "text-slate-500" : "text-slate-400"}`}>{val}</span>
+                  <span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1 justify-end">
+                    <IoCheckmark size={12} /> Included
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ── FAQ SECTION ── */}
-        <div className="px-4 py-6 max-w-3xl mx-auto space-y-4">
-          <h2 className="text-lg sm:text-xl font-extrabold tracking-tight flex items-center gap-2">
-            <IoShieldCheckmarkOutline className="text-amber-400" size={20} />
+        {/* ── FAQ ACCORDION ── */}
+        <div className="px-4 py-6 max-w-3xl mx-auto space-y-3">
+          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
             Frequently Asked Questions
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {faqs.map(({ q, a }, idx) => {
               const isOpen = expandedFaq === idx;
               return (
                 <div
                   key={idx}
-                  className={`rounded-2xl border transition-all overflow-hidden ${
-                    isDark ? "bg-slate-900/40 border-slate-800" : "bg-white border-slate-200"
+                  className={`rounded-xl border overflow-hidden transition-colors ${
+                    isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-200"
                   }`}
                 >
                   <button
                     onClick={() => toggleFaq(idx)}
-                    className="w-full p-4 text-left font-bold text-sm flex items-center justify-between gap-4 cursor-pointer"
+                    className="w-full p-4 text-left font-semibold text-xs flex items-center justify-between gap-4 cursor-pointer"
                   >
                     <span>{q}</span>
                     {isOpen ? (
-                      <IoChevronUp size={18} className="text-blue-400 flex-shrink-0" />
+                      <IoChevronUp size={16} className={isDark ? "text-slate-400" : "text-slate-500"} />
                     ) : (
-                      <IoChevronDown size={18} className="text-slate-400 flex-shrink-0" />
+                      <IoChevronDown size={16} className={isDark ? "text-slate-500" : "text-slate-400"} />
                     )}
                   </button>
                   {isOpen && (
                     <div className={`px-4 pb-4 text-xs leading-relaxed border-t pt-3 ${
-                      isDark ? "border-slate-800 text-slate-300" : "border-slate-100 text-slate-600"
+                      isDark ? "border-white/5 text-slate-300" : "border-slate-100 text-slate-600"
                     }`}>
                       {a}
                     </div>
@@ -448,32 +461,33 @@ export default function EventPage() {
           </div>
         </div>
 
-        {/* ── BOTTOM STICKY CTA BAR ── */}
-        <div className={`sticky bottom-0 z-40 border-t backdrop-blur-xl px-4 py-3.5 transition-colors ${
-          isDark
-            ? "bg-slate-950/90 border-slate-800/80"
-            : "bg-white/90 border-slate-200"
+        {/* ── STICKY BOTTOM BAR ── */}
+        <div className={`sticky bottom-0 z-40 border-t backdrop-blur-md px-4 py-3 ${
+          isDark ? "bg-[#0b0f17]/90 border-white/10" : "bg-white/90 border-slate-200"
         }`}>
           <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
             <div>
-              <div className="text-xs font-medium text-slate-400">EVOA × PitchIn 180s Bundle</div>
-              <div className="text-lg font-extrabold text-blue-500">₹999 <span className="text-xs font-normal text-slate-400 line-through">₹4,497</span></div>
+              <div className={`text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>EVOA × PitchIn 180s</div>
+              <div className="text-base font-bold flex items-baseline gap-1.5">
+                <span>₹999</span>
+                <span className={`text-xs line-through font-normal ${isDark ? "text-slate-500" : "text-slate-400"}`}>₹4,497</span>
+              </div>
             </div>
             <button
               id="event-join-now-sticky"
               onClick={handleJoinNow}
               disabled={isLoading}
-              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold text-xs shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+              className="px-5 py-2.5 rounded-xl bg-evoa hover:bg-evoa/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-wide shadow-sm flex items-center gap-1.5 cursor-pointer transition-all active:scale-98"
             >
               {isLoading ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Processing…
                 </>
               ) : (
                 <>
-                  <IoRocketOutline size={15} />
-                  Join Now
+                  <span>Join Now</span>
+                  <IoArrowForward size={13} />
                 </>
               )}
             </button>
@@ -484,3 +498,4 @@ export default function EventPage() {
     </AppShell>
   );
 }
+
