@@ -202,7 +202,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                                 {messageLoading ? <FaSpinner size={12} className="animate-spin" /> : <><FaEnvelope size={12} /> Message</>}
                             </button>
                         )}
-                        {startup?.pitchDeckUrl && (isOwner || ["investor", "incubator"].includes(currentUser?.role || userRole)) && (
+                        {startup?.pitchDeckUrl && (isOwner || (currentUser?.role || userRole) === "investor" || (currentUser?.role || userRole) === "admin") && (
                             <a
                                 href={startup.pitchDeckUrl}
                                 target="_blank"
@@ -212,6 +212,7 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
                                 <FaFilePdf size={12} className="text-red-500" /> Pitchdeck
                             </a>
                         )}
+
                     </div>
                 </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -6,17 +7,6 @@ import { FaTimes, FaPaperPlane, FaSpinner, FaRegComment } from "react-icons/fa";
 import postsService from "../../services/postsService";
 import { goToProfile } from "../../utils/profileNavigation";
 
-/**
- * PostCommentSheet — Instagram-style bottom sheet for post comments.
- * Matches the look and feel of the reel comment sheet in reel-pitch.jsx.
- *
- * Props:
- *   isOpen: boolean
- *   onClose: () => void
- *   postId: string
- *   postTitle: string  (shown in header, e.g. startup name or author name)
- *   onCommentAdded: () => void  (optional, increments count in parent)
- */
 export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, onCommentAdded }) {
     const { theme } = useTheme();
     const isDark = theme === "dark";
@@ -57,7 +47,6 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
         const trimmed = text.trim();
         if (!trimmed || posting) return;
         setPosting(true);
-        // Optimistic
         const optimistic = {
             id: `tmp-${Date.now()}`,
             content: trimmed,
@@ -83,24 +72,26 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
 
     if (!isOpen) return null;
 
-    return (
+    return ReactDOM.createPortal(
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99998]"
                 onClick={onClose}
             />
 
             {/* Sheet */}
             <div
-                className={`fixed bottom-0 left-0 right-0 z-[90] max-w-md mx-auto rounded-t-3xl flex flex-col shadow-2xl ${isDark ? "" : "bg-white"
-                    }`}
+                className={`fixed bottom-0 left-0 right-0 z-[99999] max-w-lg mx-auto rounded-t-3xl flex flex-col shadow-2xl ${isDark ? "" : "bg-white"}`}
                 style={{
-                    maxHeight: "75vh",
-                    background: isDark ? "#0e0e0e" : "#ffffff",
+                    maxHeight: "80vh",
+                    height: "60vh",
+                    background: isDark ? "#121212" : "#ffffff",
+                    borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)"}`,
                 }}
                 onClick={e => e.stopPropagation()}
             >
+
                 {/* Handle bar */}
                 <div className="flex justify-center pt-3 pb-1">
                     <div className={`w-10 h-1 rounded-full ${isDark ? "bg-white/30" : "bg-gray-300"}`} />
@@ -199,6 +190,8 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                     </button>
                 </div>
             </div>
-        </>
+        </>,
+        document.body
     );
 }
+

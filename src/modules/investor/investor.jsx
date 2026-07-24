@@ -18,20 +18,25 @@ import { FaPlus } from "react-icons/fa";
 import { IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import { getUnreadCount } from "../../services/chatService";
 
+import { buildRandomizedFeed } from "../../utils/feedShuffle";
+
 export default function Investor() {
   const { theme } = useTheme();
-  const { loading: authLoading, user } = useAuth();
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark";
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const cache = useDataCache();
 
   const [pitches, setPitches] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [userPosts, setUserPosts] = useState([]);
+  const [feedItems, setFeedItems] = useState(() => cache.get('feedItems') || []);
+  const [loading, setLoading] = useState(() => !cache.get('feedItems'));
   const [cursor, setCursor] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
-    const [showRisingStartups, setShowRisingStartups] = useState(false);
-  const [userPosts, setUserPosts] = useState([]);
+  const [showRisingStartups, setShowRisingStartups] = useState(false);
   const [feedError, setFeedError] = useState(false);
+  const [pinnedUploads, setPinnedUploads] = useState([]);
+
   const [risingStartups, setRisingStartups] = useState(() => cache.get('risingStartups') || []);
   const [risingLoading, setRisingLoading] = useState(!cache.get('risingStartups'));
   const risingDebounceRef = useRef(null);
@@ -40,9 +45,8 @@ export default function Investor() {
 
   useEffect(() => {
     if (authLoading || !user?.id) return;
-    fetchFeed();
+    loadFeed();
     fetchUnreadCount();
-    fetchPosts();
     fetchRisingStartups();
   }, [authLoading, user?.id]);
 
@@ -71,121 +75,125 @@ export default function Investor() {
     }
   };
 
-  const fetchPosts = async (isRetry = false) => {
+  // Single combined loader: fetches reels + posts in parallel, builds feed once, no flicker
+  const loadFeed = async (isRetry = false) => {
+    if (authLoading || !user?.id) return;
     try {
-      const res = await postsService.getAllPosts();
-      const data = res?.data?.data || res?.data || [];
-      setUserPosts(Array.isArray(data) ? data.map(p => {
-        const isStartup = !!(p.startupId || p.user?.role === 'startup');
-        const timeAgo = p.createdAt
-          ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-          : '';
+      if (!cache.get('feedItems') && feedItems.length === 0) {
+        setLoading(true);
+      }
 
-        if (isStartup) {
+      const [reelsRes, postsRes] = await Promise.allSettled([
+        reelsService.getFeed('for_you', cursor),
+        postsService.getAllPosts(),
+      ]);
+
+      // --- Map reels ---
+      let mappedPitches = [];
+      if (reelsRes.status === 'fulfilled' && !reelsRes.value?.error) {
+        const rawData = reelsRes.value?.data?.data || reelsRes.value?.data || {};
+        const feedData = Array.isArray(rawData?.reels) ? rawData.reels : Array.isArray(rawData) ? rawData : [];
+        const nextCursor = rawData?.nextCursor || null;
+        mappedPitches = feedData.map(reel => ({
+          id: reel.id,
+          startupId: reel.startupId,
+          authorId: reel.startup?.founderId || reel.startup?.founder?.id || reel.startupId,
+          isFollowing: reel.isFollowing,
+          username: reel.startup?.name || 'Unknown',
+          profilePhoto: reel.startup?.logoUrl || null,
+          summary: reel.title,
+          image: reel.thumbnailUrl,
+          video: reel.videoUrl,
+          caption: reel.description,
+          hashtags: reel.hashtags ? reel.hashtags.join(' ') : '',
+          likes: reel.likeCount || 0,
+          comments: reel.commentCount || 0,
+          shares: reel.shareCount || 0,
+          views: reel.viewCount || 0,
+          clickthroughs: 0,
+          liked: reel.isLiked || false,
+          saved: reel.isSaved || false,
+          dealInfo: reel.startup?.dealInfo || null,
+          links: {
+            website: reel.startup?.website,
+            linkedin: reel.startup?.linkedin,
+            instagram: reel.startup?.instagram
+          },
+          pitchDeck: reel.startup?.pitchDeckUrl,
+          investors: []
+        }));
+        setCursor(nextCursor);
+        feedRetryRef.current = 0;
+      }
+
+      // --- Map posts ---
+      let mappedPosts = [];
+      if (postsRes.status === 'fulfilled') {
+        const data = postsRes.value?.data?.data || postsRes.value?.data || [];
+        mappedPosts = Array.isArray(data) ? data.map(p => {
+          const isStartup = !!(p.startupId || p.user?.role === 'startup');
+          const timeAgo = p.createdAt
+            ? new Date(p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+            : '';
+          if (isStartup) {
+            return {
+              _type: 'startup',
+              id: p.id,
+              authorId: p.userId || p.user?.id,
+              startupName: p.startupName || p.user?.fullName || 'Startup',
+              startupLogo: p.startupLogo || p.user?.avatarUrl || null,
+              tagline: p.tagline || p.caption || '',
+              website: p.website || null,
+              sectors: p.sectors || p.hashtags || [],
+              imageUrl: p.imageUrl,
+              imageUrls: p.imageUrls || [],
+              timeAgo,
+              pitchViews: p.pitchViews ?? 0,
+              supporters: p.supporters ?? 0,
+              clickThrough: p.clickThrough ?? p.clickThroughCount ?? 0,
+              investorThoughts: p.investorThoughts || [],
+              isLiked: p.isLiked ?? false,
+              isSaved: false,
+              likeCount: p.likeCount || 0,
+              commentCount: p.commentCount || 0,
+            };
+          }
           return {
-            _type: 'startup',
+            _type: 'user',
             id: p.id,
             authorId: p.userId || p.user?.id,
-            startupName: p.startupName || p.user?.fullName || 'Startup',
-            startupLogo: p.startupLogo || p.user?.avatarUrl || null,
-            tagline: p.tagline || p.caption || '',
-            website: p.website || null,
-            sectors: p.sectors || p.hashtags || [],
+            authorName: p.user?.fullName || 'User',
+            authorAvatar: p.user?.avatarUrl || null,
+            authorRole: p.user?.role || 'viewer',
+            timeAgo,
             imageUrl: p.imageUrl,
             imageUrls: p.imageUrls || [],
-            timeAgo,
-            pitchViews: p.pitchViews ?? 0,
-            supporters: p.supporters ?? 0,
-            clickThrough: p.clickThrough ?? p.clickThroughCount ?? 0,
-            investorThoughts: p.investorThoughts || [],
+            caption: p.caption,
+            hashtags: p.hashtags || [],
             isLiked: p.isLiked ?? false,
             isSaved: false,
             likeCount: p.likeCount || 0,
             commentCount: p.commentCount || 0,
           };
-        }
+        }) : [];
+      }
 
-        return {
-          _type: 'user',
-          id: p.id,
-          authorId: p.userId || p.user?.id,
-          authorName: p.user?.fullName || 'User',
-          authorAvatar: p.user?.avatarUrl || null,
-          authorRole: p.user?.role || 'viewer',
-          timeAgo,
-          imageUrl: p.imageUrl,
-          imageUrls: p.imageUrls || [],
-          caption: p.caption,
-          hashtags: p.hashtags || [],
-          isLiked: p.isLiked ?? false,
-          isSaved: false,
-          likeCount: p.likeCount || 0,
-          commentCount: p.commentCount || 0,
-        };
-      }) : []);
-      setFeedError(false);
+      // Update source arrays
+      setPitches(mappedPitches);
+      setUserPosts(mappedPosts);
+
+      // Build or update feed atomically preserving card positions to eliminate flickering
+      setFeedItems(prevFeed => {
+        const updated = buildRandomizedFeed(mappedPitches, mappedPosts, pinnedUploads, prevFeed);
+        cache.set('feedItems', updated);
+        return updated;
+      });
+
+      if (reelsRes.status === 'fulfilled') setFeedError(false);
     } catch (e) {
       if (!isRetry && feedRetryRef.current === 0) {
         feedRetryRef.current = 1;
-        setTimeout(() => fetchPosts(true), 2000);
-      } else {
-        setFeedError(true);
-      }
-      window.__evoaDebug = e.message;
-    }
-  };
-
-  const fetchFeed = async (isRetry = false) => {
-    if (authLoading || !user?.id) return;
-    try {
-      setLoading(true);
-      const { data, error } = await reelsService.getFeed('for_you', cursor);
-      if (error) throw error;
-
-      const feedData = data?.reels || data || [];
-      const nextCursor = data?.nextCursor || null;
-
-      const mappedPitches = feedData.map(reel => ({
-        id: reel.id,
-        startupId: reel.startupId,
-        isFollowing: reel.isFollowing,
-        username: reel.startup?.name || 'Unknown',
-        profilePhoto: reel.startup?.logoUrl || null,
-        summary: reel.title,
-        image: reel.thumbnailUrl,
-        video: reel.videoUrl,
-        caption: reel.description,
-        hashtags: reel.hashtags ? reel.hashtags.join(' ') : '',
-        likes: reel.likeCount,
-        comments: reel.commentCount || 0,
-        shares: reel.shareCount || 0,
-        views: reel.viewCount,
-        clickthroughs: 0,
-        liked: reel.isLiked,
-        saved: reel.isSaved,
-        dealInfo: reel.startup?.dealInfo || null,
-        links: {
-          website: reel.startup?.website,
-          linkedin: reel.startup?.linkedin,
-          instagram: reel.startup?.instagram
-        },
-        pitchDeck: reel.startup?.pitchDeckUrl,
-        investors: []
-      }));
-
-      if (!cursor) {
-        setPitches(mappedPitches);
-      } else {
-        setPitches(prev => cursor ? [...prev, ...mappedPitches] : mappedPitches);
-      }
-      setHasMore(data?.hasMore ?? false);
-      setCursor(nextCursor);
-      setFeedError(false);
-      feedRetryRef.current = 0;
-    } catch (e) {
-      if (!isRetry && feedRetryRef.current === 0) {
-        feedRetryRef.current = 1;
-        setTimeout(() => fetchFeed(true), 2000);
+        setTimeout(() => loadFeed(true), 2000);
       } else {
         setFeedError(true);
       }
@@ -284,12 +292,13 @@ export default function Investor() {
   };
 
   const handleComment = (pitchId) => {
-    navigate(`/reels/${pitchId}/comments`);
+    // Handled in PitchCard with ReelCommentSheet
   };
 
   const handleShare = (pitchId) => {
     reelsService.shareReel(pitchId).catch(console.error);
   };
+
 
   const plusAction = (
     <div className="flex items-center gap-1">
@@ -325,12 +334,14 @@ export default function Investor() {
   // Global post creation listener
   useEffect(() => {
     const handlePostCreated = () => {
-      fetchPosts();
+      loadFeed();
       fetchRisingStartups();
     };
     window.addEventListener('evoa:contentCreated', handlePostCreated);
     return () => window.removeEventListener('evoa:contentCreated', handlePostCreated);
   }, []);
+
+  const hasContent = feedItems.length > 0 || pitches.length > 0 || userPosts.length > 0;
 
   return (
     <>
@@ -345,100 +356,135 @@ export default function Investor() {
           onClose={() => setShowRisingStartups(false)}
         />
         <DesktopFeedLayout>
-          {showPitchFeed && (
-            <div className="px-0 pt-0 pb-4">
-              <div className="mt-2">
-                {!loading && pitches.length === 0 && userPosts.length === 0 && !feedError && (
-                  <EmptyState
-                    icon={FaRegNewspaper}
-                    title="No Pitches Yet"
-                    description="Your feed is currently empty. Follow some startups to see their pitches here."
-                    actionLabel="Find Startups"
-                    onAction={() => navigate('/explore')}
-                  />
-                )}
-                {!loading && feedError && pitches.length === 0 && userPosts.length === 0 && (
-                  <div style={{
-                    background:'#FEF2F2', border:'1px solid #FECACA', borderRadius:12,
-                    padding:'24px 20px', textAlign:'center', margin:'16px 0'
-                  }}>
-                    <p style={{color:'#DC2626', fontWeight:600, marginBottom:8}}>Couldn't load feed</p>
-                    <p style={{color:'#6B7280', fontSize:13, marginBottom:16}}>A temporary error occurred. Please try again.</p>
-                    <button
-                      onClick={() => { setFeedError(false); feedRetryRef.current = 0; fetchFeed(); fetchPosts(); }}
-                      style={{
-                        background:'#1565C0', color:'#fff', border:'none', borderRadius:8,
-                        padding:'10px 24px', fontWeight:600, cursor:'pointer', fontSize:14
-                      }}
-                    >Retry</button>
-                  </div>
-                )}
-                {pitches.map((pitch) => (
-                  <PitchCard
-                    key={pitch.id}
-                    pitch={pitch}
-                    onLike={handleLike}
-                    onComment={handleComment}
-                    onShare={handleShare}
-                    onSave={handleSave}
-                    onFollow={handleFollow}
-                  />
-                ))}
-              </div>
+          <div className="pb-6">
+            <div className="pt-1">
+              {loading && !hasContent && (
+                <div className="py-12 flex justify-center items-center">
+                  <div className="w-8 h-8 border-2 border-evoa border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+
+              {!loading && feedError && !hasContent && (
+                <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-center my-4">
+                  <p className="text-red-500 font-semibold mb-2 text-sm">Couldn't load feed</p>
+                  <p className="text-gray-500 text-xs mb-4">A temporary error occurred while fetching pitches and posts.</p>
+                  <button
+                    onClick={() => { setFeedError(false); feedRetryRef.current = 0; loadFeed(); }}
+                    className="px-4 py-2 bg-evoa text-white font-semibold rounded-xl text-xs hover:opacity-90 transition-all"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {!loading && !feedError && !hasContent && (
+                <EmptyState
+                  icon={FaRegNewspaper}
+                  title="No Pitches Yet"
+                  description="Your feed is currently empty. Follow some startups to see their pitches here."
+                  actionLabel="Find Startups"
+                  onAction={() => navigate('/explore')}
+                />
+              )}
+
+              {feedItems.length > 0 && (
+                <div className="space-y-4 mb-4">
+                  {feedItems.map((item) => {
+                    if (item.itemType === 'pitch') {
+                      const pitch = item.data;
+                      return (
+                        <PitchCard
+                          key={item.id}
+                          pitch={pitch}
+                          onLike={handleLike}
+                          onComment={handleComment}
+                          onShare={handleShare}
+                          onSave={handleSave}
+                          onFollow={handleFollow}
+                        />
+                      );
+                    }
+
+                    const post = item.data;
+                    const handlePostLike = () => {
+                      setFeedItems((prev) =>
+                        prev.map((it) =>
+                          it.id === item.id
+                            ? { ...it, data: { ...it.data, isLiked: !it.data.isLiked, likeCount: it.data.isLiked ? it.data.likeCount - 1 : it.data.likeCount + 1 } }
+                            : it
+                        )
+                      );
+                      const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
+                      request.then(() => fetchRisingStartups(true)).catch(() => {});
+                    };
+
+                    const handlePostSave = () => {
+                      setFeedItems((prev) =>
+                        prev.map((it) =>
+                          it.id === item.id ? { ...it, data: { ...it.data, isSaved: !it.data.isSaved } } : it
+                        )
+                      );
+                      post.isSaved ? postsService.unsavePost(post.id) : postsService.savePost(post.id);
+                    };
+
+                    const handlePostComment = async () => {
+                      const text = window.prompt('Add a comment:');
+                      if (!text?.trim()) return;
+                      try {
+                        await postsService.addComment(post.id, text.trim());
+                        setFeedItems((prev) =>
+                          prev.map((it) =>
+                            it.id === item.id ? { ...it, data: { ...it.data, commentCount: (it.data.commentCount || 0) + 1 } } : it
+                          )
+                        );
+                      } catch (e) { /* silent */ }
+                    };
+
+                    const handlePostShare = () => {
+                      const url = `${window.location.origin}/post/${post.id}`;
+                      if (navigator.share) {
+                        navigator.share({ title: post.startupName || post.authorName || 'Post', url });
+                      } else {
+                        navigator.clipboard?.writeText(url);
+                        alert('Link copied to clipboard!');
+                      }
+                    };
+
+                    if (post._type === 'startup') {
+                      return (
+                        <StartupPostCard
+                          key={item.id}
+                          post={post}
+                          isDark={isDark}
+                          onLike={handlePostLike}
+                          onSave={handlePostSave}
+                          onComment={handlePostComment}
+                          onShare={handlePostShare}
+                          onEngagementChange={fetchRisingStartups}
+                        />
+                      );
+                    }
+                    return (
+                      <UserPostCard
+                        key={item.id}
+                        post={post}
+                        isDark={isDark}
+                        onLike={handlePostLike}
+                        onSave={handlePostSave}
+                        onComment={handlePostComment}
+                        onShare={handlePostShare}
+                        onEngagementChange={fetchRisingStartups}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
             </div>
-          )}
-          {userPosts.length > 0 && (
-            <div className={`${pitches.length > 0 ? "mt-4" : ""} pb-4`}>
-              {userPosts.map(post => {
-                const handleLike = () => {
-                  setUserPosts(prev => prev.map(p =>
-                    p.id === post.id
-                      ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
-                      : p
-                  ));
-                  const request = post.isLiked ? postsService.unlikePost(post.id) : postsService.likePost(post.id);
-                  request.then(() => fetchRisingStartups(true)).catch(() => {});
-                };
-
-                const handleSave = () => {
-                  setUserPosts(prev => prev.map(p =>
-                    p.id === post.id ? { ...p, isSaved: !p.isSaved } : p
-                  ));
-                  post.isSaved ? postsService.unsavePost(post.id) : postsService.savePost(post.id);
-                };
-
-                const handleComment = async () => {
-                  const text = window.prompt('Add a comment:');
-                  if (!text?.trim()) return;
-                  try {
-                    await postsService.addComment(post.id, text.trim());
-                    setUserPosts(prev => prev.map(p =>
-                      p.id === post.id ? { ...p, commentCount: (p.commentCount || 0) + 1 } : p
-                    ));
-                  } catch (e) { /* silent */ }
-                };
-
-                const handleShare = () => {
-                  const url = `${window.location.origin}/post/${post.id}`;
-                  if (navigator.share) {
-                    navigator.share({ title: post.startupName || post.authorName || 'Post', url });
-                  } else {
-                    navigator.clipboard?.writeText(url);
-                    alert('Link copied to clipboard!');
-                  }
-                };
-
-                if (post._type === 'startup') {
-                  return <StartupPostCard key={post.id} post={post} isDark={isDark}
-                    onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} onEngagementChange={fetchRisingStartups} />;
-                }
-                return <UserPostCard key={post.id} post={post} isDark={isDark}
-                  onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare} onEngagementChange={fetchRisingStartups} />;
-              })}
-            </div>
-          )}
+          </div>
         </DesktopFeedLayout>
       </main>
     </>
   );
 }
+

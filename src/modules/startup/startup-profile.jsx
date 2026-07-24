@@ -12,6 +12,7 @@ import {
     IoLocationOutline, IoLinkOutline, IoLogoLinkedin, IoLogoInstagram, IoLogoYoutube,
     IoPeopleOutline, IoRocketOutline, IoDocumentTextOutline, IoPlayCircleOutline,
     IoAddCircleOutline, IoTrashOutline, IoLogOutOutline, IoEllipsisVertical, IoShieldCheckmarkOutline,
+    IoCalendarOutline,
 } from "react-icons/io5";
 import { FiUser } from "react-icons/fi";
 import { HiSun, HiMoon } from "react-icons/hi";
@@ -270,6 +271,16 @@ export default function StartupProfile() {
                             <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                         </svg>
                         Share Profile
+                    </button>
+                    <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
+                    {/* Event */}
+                    <button
+                        id="startup-event-btn"
+                        onClick={() => { setMenuOpen(false); navigate('/event'); }}
+                        className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors text-left ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"}`}
+                    >
+                        <IoCalendarOutline size={16} className="flex-shrink-0" />
+                        Event
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button

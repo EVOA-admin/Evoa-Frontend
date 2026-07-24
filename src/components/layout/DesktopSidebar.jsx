@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { HiSun, HiMoon } from "react-icons/hi";
-import { FaHome, FaSearch, FaPlay, FaBell, FaUser, FaPlus, FaInbox } from "react-icons/fa";
+import { FaHome, FaSearch, FaPlay, FaBell, FaUser, FaPlus, FaInbox, FaCalendarAlt } from "react-icons/fa";
 import logo from "../../assets/logo.avif";
 import { getUnreadCount } from "../../services/chatService";
 import { getNotifications } from "../../services/notificationsService";
@@ -411,6 +411,7 @@ export default function DesktopSidebar({ onCreatePost }) {
     { key: "alerts", icon: FaBell, label: "Alerts", path: "/notifications", badge: unreadNotif },
     { key: "profile", icon: FaUser, label: "Profile", path: profile },
     { key: "inbox", icon: FaInbox, label: "Messages", path: "/inbox", badge: unreadChat },
+    { key: "event", icon: FaCalendarAlt, label: "Event", path: "/event" },
   ];
 
   const avatarSrc = user?.avatarUrl

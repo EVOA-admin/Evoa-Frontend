@@ -286,6 +286,14 @@ export default function Profile() {
             Ambassador Program
           </button>
           <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
+          <button className="profile-dot-menu-item" style={{ color: menuTxt }}
+            onMouseEnter={e => e.currentTarget.style.background = menuHov}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+            onClick={() => { setMenuOpen(false); navigate('/event'); }} role="menuitem">
+            <FaCalendarAlt size={14} />
+            Event
+          </button>
+          <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
           <button className="profile-dot-menu-item" style={{ color: "#ef4444" }}
             onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,.08)"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}

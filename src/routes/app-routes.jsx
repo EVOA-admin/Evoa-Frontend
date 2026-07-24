@@ -61,6 +61,7 @@ const InvestorProfile = lazy(() => import('../modules/investor/investor-profile'
 const IncubatorProfile = lazy(() => import('../modules/incubator/incubator-profile'));
 const Inbox           = lazy(() => import('../modules/chat/inbox'));
 const Conversation    = lazy(() => import('../modules/chat/conversation'));
+const EventPage       = lazy(() => import('../modules/event/event'));
 
 // Public profile — accessible by guests (no auth required)
 const UserPublicProfile = lazy(() => import('../modules/profile/user-public-profile'));
@@ -170,6 +171,7 @@ export default function AppRoutes() {
          */}
         <Route path="inbox"             element={<Page><Inbox /></Page>} />
         <Route path="inbox/:id"         element={<Page><Conversation /></Page>} />
+        <Route path="event"             element={<Page><EventPage /></Page>} />
 
       </Route>
 
