@@ -112,6 +112,7 @@ export default function Viewer() {
           id: reel.id,
           startupId: reel.startupId,
           authorId: reel.startup?.founderId || reel.startup?.founder?.id || reel.startupId,
+          authorRole: reel.startup?.founder?.role || reel.user?.role || 'startup',
           isFollowing: reel.isFollowing,
           username: reel.startup?.name || 'Unknown',
           profilePhoto: reel.startup?.logoUrl || null,
@@ -304,7 +305,7 @@ export default function Viewer() {
     }
   };
 
-  const actions = (
+  const plusAction = (
     <div className="flex items-center gap-1">
       <RisingStartupsSection
         startups={risingStartups}
@@ -313,13 +314,6 @@ export default function Viewer() {
         triggerOnly
         onOpen={() => setShowRisingStartups(true)}
       />
-      <button
-        onClick={() => setShowModal(true)}
-        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all active:scale-90 ${isDark ? "text-white/70 hover:text-evoa hover:bg-white/8" : "text-gray-600 hover:text-evoa hover:bg-gray-100"}`}
-        title="Create Post"
-      >
-        <FaPlus size={16} />
-      </button>
       <button
         onClick={() => window.open('https://021.evoa.co.in/', '_blank')}
         className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 active:scale-90 transition-all"

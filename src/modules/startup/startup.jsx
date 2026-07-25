@@ -111,6 +111,7 @@ export default function Startup() {
           id: reel.id,
           startupId: reel.startupId,
           authorId: reel.startup?.founderId || reel.startup?.founder?.id || reel.startupId,
+          authorRole: reel.startup?.founder?.role || reel.user?.role || 'startup',
           isFollowing: reel.isFollowing,
           username: reel.startup?.name || 'Unknown',
           profilePhoto: reel.startup?.logoUrl || null,

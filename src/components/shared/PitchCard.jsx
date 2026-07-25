@@ -5,6 +5,7 @@ import {
   FaBookmark, FaRegBookmark
 } from "react-icons/fa";
 import { IoVolumeMute, IoVolumeHigh } from "react-icons/io5";
+import { MdVerified } from "react-icons/md";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import ensureUrl from "../../utils/ensureUrl";
@@ -18,6 +19,13 @@ import {
 } from "../../utils/feedVideoManager";
 
 import { goToProfile } from "../../utils/profileNavigation";
+
+const ROLE_META = {
+  startup: 'Startup',
+  investor: 'Investor',
+  incubator: 'Incubator',
+  viewer: 'Viewer',
+};
 
 export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, onFollow }) {
   const { theme } = useTheme();
@@ -191,16 +199,10 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
               >
                 {pitch.username}
               </span>
-              <button
-
-                onClick={(e) => { e.stopPropagation(); onFollow && onFollow(pitch.startupId); }}
-                className={`text-xs px-2.5 py-1 rounded-full font-medium transition-all ${pitch.isFollowing
-                  ? 'bg-transparent border border-current opacity-60'
-                  : (isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/10 text-black hover:bg-black/20')
-                  }`}
-              >
-                {pitch.isFollowing ? 'Following' : '+ Follow'}
-              </button>
+              <MdVerified size={14} className="text-evoa flex-shrink-0" />
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${isDark ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}>
+                {ROLE_META[pitch.authorRole?.toLowerCase()] || pitch.role || 'Startup'}
+              </span>
             </div>
           </div>
         </div>

@@ -79,24 +79,28 @@ function isKeepAlivePath(pathname) {
  * propagate into this subtree.  Only re-renders when userRole changes.
  */
 const KeepAlivePages = memo(function KeepAlivePages({ userRole }) {
+  const location = useLocation();
+  const normalizedRole = (userRole || '').toLowerCase();
+  const path = location.pathname;
+
   return (
     <>
-      {userRole === 'startup' && (
+      {(normalizedRole === 'startup' || path === '/startup') && (
         <PageKeepAlive matchPaths="/startup" scrollKey="home-startup">
           <Suspense fallback={<PageSpinner />}><Startup /></Suspense>
         </PageKeepAlive>
       )}
-      {userRole === 'investor' && (
+      {(normalizedRole === 'investor' || path === '/investor') && (
         <PageKeepAlive matchPaths="/investor" scrollKey="home-investor">
           <Suspense fallback={<PageSpinner />}><Investor /></Suspense>
         </PageKeepAlive>
       )}
-      {userRole === 'incubator' && (
+      {(normalizedRole === 'incubator' || path === '/incubator') && (
         <PageKeepAlive matchPaths="/incubator" scrollKey="home-incubator">
           <Suspense fallback={<PageSpinner />}><Incubator /></Suspense>
         </PageKeepAlive>
       )}
-      {userRole === 'viewer' && (
+      {(normalizedRole === 'viewer' || path === '/viewer') && (
         <PageKeepAlive matchPaths="/viewer" scrollKey="home-viewer">
           <Suspense fallback={<PageSpinner />}><Viewer /></Suspense>
         </PageKeepAlive>

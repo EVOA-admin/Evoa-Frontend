@@ -101,7 +101,7 @@ export default function Explore() {
     const fetchExploreData = async () => {
       // If we already have the data in cache, we don't need to load again
       if (!loadingData) return;
-      
+
       try {
         const [topRes, weekRes, spotlightRes] = await Promise.allSettled([
           exploreService.getTopPitches(),
@@ -196,7 +196,7 @@ export default function Explore() {
                 className={`w-full pl-11 pr-4 py-3 rounded-xl text-sm border transition-all focus:outline-none focus:ring-1 ${isDark
                   ? 'bg-white/5 border-white/10 text-white placeholder-white/40 focus:border-evoa focus:ring-evoa/30'
                   : 'bg-white border-gray-200 text-black placeholder-gray-400 focus:border-evoa focus:ring-evoa/30 shadow-sm'
-                }`}
+                  }`}
               />
               {searchLoading && (
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-evoa border-t-transparent rounded-full animate-spin" />
@@ -205,194 +205,194 @@ export default function Explore() {
           </div>
 
 
-        {/* Search Results */}
-        {searchQuery.trim() && (
-          <div className="mb-8 space-y-5">
-            <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Search Results
-            </h2>
+          {/* Search Results */}
+          {searchQuery.trim() && (
+            <div className="mb-8 space-y-5">
+              <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Search Results
+              </h2>
 
-            {searchLoading ? (
-              <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>Searching...</div>
-            ) : searchResults && !searchResults.users?.length && !searchResults.startups?.length && !searchResults.investors?.length && !searchResults.incubators?.length && !searchResults.reels?.length && !searchResults.hashtags?.length ? (
-              <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-                No results for &ldquo;{searchQuery}&rdquo;
-              </div>
-            ) : searchResults ? (
-              <>
-                {/* Hashtag Pills */}
-                {searchResults.hashtags?.length > 0 && (
-                  <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Hashtags</p>
-                    <div className="flex flex-wrap gap-2">
-                      {searchResults.hashtags.map((tag, i) => (
-                        <button
-                          key={i}
-                          onClick={() => navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(tag)}`)}
-                          className="px-4 py-1.5 rounded-full text-sm font-medium bg-evoa/20 text-evoa hover:bg-evoa/30 transition-colors"
-                        >
-                          #{tag}
-                        </button>
-                      ))}
+              {searchLoading ? (
+                <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>Searching...</div>
+              ) : searchResults && !searchResults.users?.length && !searchResults.startups?.length && !searchResults.investors?.length && !searchResults.incubators?.length && !searchResults.reels?.length && !searchResults.hashtags?.length ? (
+                <div className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                  No results for &ldquo;{searchQuery}&rdquo;
+                </div>
+              ) : searchResults ? (
+                <>
+                  {/* Hashtag Pills */}
+                  {searchResults.hashtags?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Hashtags</p>
+                      <div className="flex flex-wrap gap-2">
+                        {searchResults.hashtags.map((tag, i) => (
+                          <button
+                            key={i}
+                            onClick={() => navigate(`/pitch/hashtag?hashtag=${encodeURIComponent(tag)}`)}
+                            className="px-4 py-1.5 rounded-full text-sm font-medium bg-evoa/20 text-evoa hover:bg-evoa/30 transition-colors"
+                          >
+                            #{tag}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Reels */}
-                {searchResults.reels?.length > 0 && (
-                  <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Pitch Reels</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {searchResults.reels.map((reel) => (
-                        <div
-                          key={reel.id}
-                          onClick={() => navigate(`/pitch/${reel.id}`)}
-                          className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}
-                        >
-                          <div className="relative h-28 bg-gray-800">
-                            {reel.thumbnailUrl
-                              ? <img src={reel.thumbnailUrl} alt={reel.title} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full bg-gradient-to-br from-evoa/30 to-gray-800 flex items-center justify-center"><FaPlay className="text-white/40" size={22} /></div>
-                            }
+                  {/* Reels */}
+                  {searchResults.reels?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Pitch Reels</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {searchResults.reels.map((reel) => (
+                          <div
+                            key={reel.id}
+                            onClick={() => navigate(`/pitch/${reel.id}`)}
+                            className={`rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.02] ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200 shadow-sm'}`}
+                          >
+                            <div className="relative h-28 bg-gray-800">
+                              {reel.thumbnailUrl
+                                ? <img src={reel.thumbnailUrl} alt={reel.title} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full bg-gradient-to-br from-evoa/30 to-gray-800 flex items-center justify-center"><FaPlay className="text-white/40" size={22} /></div>
+                              }
+                            </div>
+                            <div className="p-2.5">
+                              <p className={`font-semibold text-xs truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{reel.title}</p>
+                              <p className={`text-[10px] truncate mt-0.5 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{reel.startup?.name || '—'}</p>
+                            </div>
                           </div>
-                          <div className="p-2.5">
-                            <p className={`font-semibold text-xs truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{reel.title}</p>
-                            <p className={`text-[10px] truncate mt-0.5 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{reel.startup?.name || '—'}</p>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Startups */}
-                {searchResults.startups?.length > 0 && (
-                  <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Startups</p>
-                    <div className="exp-search-people-grid space-y-0 gap-2">
-                      {searchResults.startups.map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => goToProfile(item.founder?.id || item.id, currentUser, navigate)}
-                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01] ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
-                        >
-                          <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-                            {item.logoUrl
-                              ? <img src={item.logoUrl} alt={item.name} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{(item.name || 'U')[0].toUpperCase()}</div>
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
-                            {item.tagline && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Investors */}
-                {searchResults.investors?.length > 0 && (
-                  <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Investors</p>
-                    <div className="exp-search-people-grid gap-2">
-                      {searchResults.investors.map((item) => {
-                        const avatarSrc = item.logoUrl || item.user?.avatarUrl;
-                        const displayName = item.name || item.user?.fullName || 'Investor';
-                        return (
+                  {/* Startups */}
+                  {searchResults.startups?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Startups</p>
+                      <div className="exp-search-people-grid space-y-0 gap-2">
+                        {searchResults.startups.map((item) => (
                           <div
                             key={item.id}
-                            onClick={() => goToProfile(item.userId || item.user?.id || item.id, currentUser, navigate)}
+                            onClick={() => goToProfile(item.founder?.id || item.id, currentUser, navigate)}
                             className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01] ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
                           >
                             <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-                              {avatarSrc
-                                ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
+                              {item.logoUrl
+                                ? <img src={item.logoUrl} alt={item.name} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{(item.name || 'U')[0].toUpperCase()}</div>
                               }
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
-                              {item.companyName && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.companyName}</p>}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Incubators */}
-                {searchResults.incubators?.length > 0 && (
-                  <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Incubators</p>
-                    <div className="space-y-2">
-                      {searchResults.incubators.map((item) => {
-                        const displayName = item.user?.fullName || item.organizationType || 'Incubator';
-                        const avatarSrc = item.logoUrl || item.user?.avatarUrl;
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => goToProfile(item.userId || item.user?.id || item.id, currentUser, navigate)}
-                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
-                          >
-                            <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-                              {avatarSrc
-                                ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
-                                : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
-                              }
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.name}</p>
                               {item.tagline && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
                             </div>
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* People */}
-                {searchResults.users?.length > 0 && (
-                  <div>
-                    <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>People</p>
-                    <div className="space-y-2">
-                      {searchResults.users.map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => goToProfile(item.id, currentUser, navigate)}
-                          className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
-                        >
-                          <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
-                            {item.avatarUrl
-                              ? <img src={item.avatarUrl} alt={item.fullName} className="w-full h-full object-cover" />
-                              : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{(item.fullName || 'U')[0].toUpperCase()}</div>
-                            }
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.fullName}</p>
-                            <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-                              <span className="capitalize">{item.role || 'User'}</span>
-                              {item.company && ` at ${item.company}`}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
+                  {/* Investors */}
+                  {searchResults.investors?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Investors</p>
+                      <div className="exp-search-people-grid gap-2">
+                        {searchResults.investors.map((item) => {
+                          const avatarSrc = item.logoUrl || item.user?.avatarUrl;
+                          const displayName = item.name || item.user?.fullName || 'Investor';
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => goToProfile(item.userId || item.user?.id || item.id, currentUser, navigate)}
+                              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.01] ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                            >
+                              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                                {avatarSrc
+                                  ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+                                  : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
+                                }
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+                                {item.companyName && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.companyName}</p>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </>
-            ) : null}
-          </div>
-        )}
+                  )}
 
-        {/* Trending section — shown when not searching */}
-        {!searchQuery.trim() && (
-          <>
+                  {/* Incubators */}
+                  {searchResults.incubators?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>Incubators</p>
+                      <div className="space-y-2">
+                        {searchResults.incubators.map((item) => {
+                          const displayName = item.user?.fullName || item.organizationType || 'Incubator';
+                          const avatarSrc = item.logoUrl || item.user?.avatarUrl;
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => goToProfile(item.userId || item.user?.id || item.id, currentUser, navigate)}
+                              className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                            >
+                              <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                                {avatarSrc
+                                  ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
+                                  : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{displayName[0].toUpperCase()}</div>
+                                }
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+                                {item.tagline && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.tagline}</p>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-            {/*
+                  {/* People */}
+                  {searchResults.users?.length > 0 && (
+                    <div>
+                      <p className={`text-xs font-bold uppercase tracking-widest mb-3 mt-4 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>People</p>
+                      <div className="space-y-2">
+                        {searchResults.users.map((item) => (
+                          <div
+                            key={item.id}
+                            onClick={() => goToProfile(item.id, currentUser, navigate)}
+                            className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-white hover:bg-gray-50 border border-gray-200 shadow-sm'}`}
+                          >
+                            <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                              {item.avatarUrl
+                                ? <img src={item.avatarUrl} alt={item.fullName} className="w-full h-full object-cover" />
+                                : <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-sm">{(item.fullName || 'U')[0].toUpperCase()}</div>
+                              }
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{item.fullName}</p>
+                              <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                                <span className="capitalize">{item.role || 'User'}</span>
+                                {item.company && ` at ${item.company}`}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
+
+          {/* Trending section — shown when not searching */}
+          {!searchQuery.trim() && (
+            <>
+
+              {/*
               -----------------------------------------------------------------
               TEMPORARILY DISABLED: Battleground Spotlight
               Uncomment below to re-enable Battleground Spotlight
@@ -432,78 +432,78 @@ export default function Explore() {
               </div>
             */}
 
-            {/* Event Spotlight */}
-            {(() => {
-              const role = (userRole || currentUser?.role || 'viewer').toLowerCase();
+              {/* Event Spotlight */}
+              {(() => {
+                const role = (userRole || currentUser?.role || 'viewer').toLowerCase();
 
-              const contentMap = {
-                startup: {
-                  title: "Pitch Live to VCs & Angel Investors",
-                  badge: "Open Now",
-                  description: "Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium.",
-                  buttonText: "Join Event",
-                },
-                investor: {
-                  title: "Exclusive Deal Flow & Live Pitch Stage",
-                  badge: "VIP Access",
-                  description: "Evaluate top high-growth startups pitching live in 3-minute rounds. Connect 1-on-1 with vetted founders & access curated pitch decks.",
-                  buttonText: "Access Deal Flow",
-                },
-                incubator: {
-                  title: "Showcase Cohort Startups Live on Stage",
-                  badge: "Partner Stage",
-                  description: "Present your accelerated startups to top angel syndicates, VCs, and mentors. Expand your ecosystem network & discover co-investment deals.",
-                  buttonText: "Join Partner Event",
-                },
-                viewer: {
-                  title: "Watch Live Pitch In 180 Seconds",
-                  badge: "Live Event",
-                  description: "Watch ambitious founders pitch live to top investors in 3 minutes. Discover breakthrough innovations and vote for your favorite startups.",
-                  buttonText: "Watch Live Event",
-                },
-              };
+                const contentMap = {
+                  startup: {
+                    title: "Startup Investor Meetup",
+                    badge: "Open Now",
+                    description: "Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium.",
+                    buttonText: "Register",
+                  },
+                  investor: {
+                    title: "Startup Investor Meetup",
+                    badge: "VIP Access",
+                    description: "Evaluate top high-growth startups pitching live in 3-minute rounds. Connect 1-on-1 with vetted founders & access curated pitch decks.",
+                    buttonText: "Resgiter",
+                  },
+                  incubator: {
+                    title: "Startup Investor Meetup",
+                    badge: "Partner Stage",
+                    description: "Present your accelerated startups to top angel syndicates, VCs, and mentors. Expand your ecosystem network & discover co-investment deals.",
+                    buttonText: "Join Event",
+                  },
+                  viewer: {
+                    title: "Startup Investor Meetup",
+                    badge: "Live Event",
+                    description: "Watch ambitious founders pitch live to top investors in 3 minutes. Discover breakthrough innovations and vote for your favorite startups.",
+                    buttonText: "Join Event",
+                  },
+                };
 
-              const cardContent = contentMap[role] || contentMap.viewer;
+                const cardContent = contentMap[role] || contentMap.viewer;
 
-              return (
-                <div className="mb-8">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FaCalendarAlt className={isDark ? 'text-blue-400' : 'text-blue-600'} size={16} />
-                    <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      Featured Event
-                    </h2>
-                  </div>
-                  <div
-                    onClick={() => navigate('/event')}
-                    className={`rounded-2xl p-6 transition-all cursor-pointer ${isDark
-                      ? 'bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/40 border border-blue-500/20 hover:border-blue-500/40'
-                      : 'bg-gradient-to-r from-blue-50 via-slate-50 to-indigo-50 border border-blue-200 shadow-md hover:shadow-lg'
-                      }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        {cardContent.title}
-                      </h3>
-                      <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20' : 'bg-blue-600/10 text-blue-700 border border-blue-600/15'
-                        }`}>
-                        {cardContent.badge}
-                      </div>
+                return (
+                  <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FaCalendarAlt className={isDark ? 'text-blue-400' : 'text-blue-600'} size={16} />
+                      <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Featured Event
+                      </h2>
                     </div>
-                    <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-                      {cardContent.description}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); navigate('/event'); }}
-                      className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+                    <div
+                      onClick={() => navigate('/event')}
+                      className={`rounded-2xl p-6 transition-all cursor-pointer ${isDark
+                        ? 'bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/40 border border-blue-500/20 hover:border-blue-500/40'
+                        : 'bg-gradient-to-r from-blue-50 via-slate-50 to-indigo-50 border border-blue-200 shadow-md hover:shadow-lg'
                         }`}
                     >
-                      {cardContent.buttonText}
-                    </button>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          {cardContent.title}
+                        </h3>
+                        <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20' : 'bg-blue-600/10 text-blue-700 border border-blue-600/15'
+                          }`}>
+                          {cardContent.badge}
+                        </div>
+                      </div>
+                      <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                        {cardContent.description}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); navigate('/event'); }}
+                        className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+                          }`}
+                      >
+                        {cardContent.buttonText}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
 
               {/* Top Performing Pitches */}
               <div className="mb-8">
@@ -529,7 +529,7 @@ export default function Explore() {
                         className={`relative rounded-xl overflow-hidden cursor-pointer transition-all hover:scale-[1.03] hover:shadow-2xl aspect-[9/16] exp-pitch-tile-lg ${isDark
                           ? 'bg-white/5 border border-white/10'
                           : 'bg-white border border-gray-200 shadow-sm'
-                        }`}
+                          }`}
                       >
                         <div className="absolute inset-0">
                           {pitch.thumbnailUrl || pitch.image ? (
@@ -569,7 +569,7 @@ export default function Explore() {
                 )}
               </div>
 
-            {/* Startups of the Week */}
+              {/* Startups of the Week */}
               <div className="mb-8">
                 <h2 className={`text-base font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Startups of the Week
@@ -591,7 +591,7 @@ export default function Explore() {
                         className={`rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl ${isDark
                           ? 'bg-white/5 border border-white/10'
                           : 'bg-white border border-gray-200 shadow-sm'
-                        }`}
+                          }`}
                       >
                         <div className="w-12 h-12 rounded-full overflow-hidden mx-auto mb-2 bg-gradient-to-br from-evoa to-evoa-hover">
                           {startup.logoUrl ? (
@@ -636,7 +636,7 @@ export default function Explore() {
                           className={`rounded-xl p-4 transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer ${isDark
                             ? 'bg-white/5 border border-white/10'
                             : 'bg-white border border-gray-200 shadow-sm'
-                          }`}
+                            }`}
                           onClick={() => goToProfile(investor.userId || investor.id, currentUser, navigate)}
                         >
                           <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
@@ -661,8 +661,8 @@ export default function Explore() {
                       <div className="mt-4 flex justify-center">
                         <button
                           onClick={() => setShowAllInvestors(!showAllInvestors)}
-                          className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${isDark 
-                            ? 'bg-white/10 text-white hover:bg-white/20' 
+                          className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${isDark
+                            ? 'bg-white/10 text-white hover:bg-white/20'
                             : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}
                         >
                           {showAllInvestors ? 'Show Less' : 'Show More'}
@@ -672,8 +672,8 @@ export default function Explore() {
                   </>
                 )}
               </div>
-          </>
-        )}
+            </>
+          )}
         </div>
       </div>
     </>
