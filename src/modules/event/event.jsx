@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import AppShell from "../../components/layout/AppShell";
@@ -15,30 +15,97 @@ import {
   IoChevronUp,
   IoArrowForward,
   IoAlertCircleOutline,
-  IoCloseCircle,
-  IoCheckmark,
+  IoLocationOutline,
+  IoTimeOutline,
+  IoMapOutline,
+  IoVideocamOutline,
+  IoInformationCircleOutline,
 } from "react-icons/io5";
 import { openRazorpayCheckout } from "../../utils/razorpay";
 import pricingService from "../../services/pricingService";
+import { eventService } from "../../services/eventService";
+
+// Helper map for dynamic icon strings from backend
+const ICON_MAP = {
+  IoCalendarOutline,
+  IoStarOutline,
+  IoPeopleOutline,
+  IoShieldCheckmarkOutline,
+  IoTicketOutline,
+  IoLocationOutline,
+  IoTimeOutline,
+  IoMapOutline,
+  IoVideocamOutline,
+};
+
+function renderIcon(iconName, fallbackIcon = IoStarOutline, props = {}) {
+  const IconComp = ICON_MAP[iconName] || fallbackIcon;
+  return <IconComp {...props} />;
+}
 
 export default function EventPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, userRole } = useAuth();
+
+  const [eventData, setEventData] = useState(null);
+  const [publishedEvents, setPublishedEvents] = useState([]);
+  const [fetchingEvent, setFetchingEvent] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
 
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // Check query param for payment success redirect
+  // Parse search query for slug or payment status
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get("status") === "success" || params.get("payment") === "success") {
       setShowSuccessModal(true);
     }
+    const slugParam = params.get("slug");
+    loadEventData(slugParam);
   }, [location.search]);
+
+  async function loadEventData(slugParam = null) {
+    try {
+      setFetchingEvent(true);
+      setFetchError(null);
+
+      // Fetch all published events
+      let allList = [];
+      try {
+        const allRes = await eventService.getAllPublishedEvents();
+        allList = Array.isArray(allRes) ? allRes : (allRes?.data || []);
+        setPublishedEvents(allList);
+      } catch (_) { /* fallback */ }
+
+      let target = null;
+      if (slugParam) {
+        target = allList.find(e => e.slug === slugParam);
+        if (!target) {
+          const res = await eventService.getEventBySlug(slugParam);
+          target = res?.data || res;
+        }
+      } else {
+        target = allList.find(e => e.isFeatured) || allList[0];
+        if (!target) {
+          const res = await eventService.getFeaturedEvent();
+          target = res?.data || res;
+        }
+      }
+
+      const cleanItem = target?.data || target;
+      setEventData(cleanItem || null);
+    } catch (err) {
+      setFetchError(err?.message || "Unable to load event details right now.");
+    } finally {
+      setFetchingEvent(false);
+    }
+  }
 
   // Auto-dismiss error after 6 seconds
   useEffect(() => {
@@ -47,11 +114,42 @@ export default function EventPage() {
     return () => clearTimeout(t);
   }, [errorMsg]);
 
+  // Derived primary ticket & status
+  const tickets = eventData?.tickets || [];
+  const activeTicket = tickets.find((t) => t.isActive) || tickets[0];
+  const isPublished = eventData?.status === "published";
+  const isBookingAllowed = eventData?.allowBookings && eventData?.isRegistrationOpen && isPublished;
+  const isSoldOut = activeTicket && activeTicket.remainingSeats !== null && activeTicket.remainingSeats <= 0;
+
+  // Dynamic Role-Based Pricing & Benefits Resolution
+  const role = (userRole || user?.role || 'viewer').toLowerCase();
+
+  const rolePricingConfig = eventData?.rolePricing?.[role] || eventData?.role_pricing?.[role];
+  const isRoleActive = rolePricingConfig?.isActive !== false;
+
+  const roleTicketPrice = rolePricingConfig?.price !== undefined
+    ? parseFloat(rolePricingConfig.price)
+    : (activeTicket ? parseFloat(activeTicket.price) : 999);
+
+  const roleOriginalPrice = rolePricingConfig?.originalPrice !== undefined
+    ? parseFloat(rolePricingConfig.originalPrice)
+    : (activeTicket?.originalPrice ? parseFloat(activeTicket.originalPrice) : (roleTicketPrice > 0 ? Math.round(roleTicketPrice * 1.5) : 0));
+
+  const roleBadgeText = rolePricingConfig?.badgeText || (roleTicketPrice === 0 ? "FREE ACCESS" : "OFFICIAL PASS");
+
+  const roleBenefitsConfig = eventData?.roleBenefits?.[role] || eventData?.role_benefits?.[role];
+  const activeBenefits = (Array.isArray(roleBenefitsConfig) && roleBenefitsConfig.length > 0)
+    ? roleBenefitsConfig
+    : (Array.isArray(eventData?.benefits) && eventData.benefits.length > 0 ? eventData.benefits : [
+        { title: "Live Event Pass", desc: "Access to live event sessions & presentations." },
+        { title: "Community Access", desc: "Connect with event participants & ecosystem members." }
+      ]);
+
   const handleJoinNow = async () => {
-    if (isLoading) return;
+    if (isLoading || !isBookingAllowed || isSoldOut || !isRoleActive) return;
 
     if (!user) {
-      setErrorMsg("Please sign in to purchase the event bundle.");
+      setErrorMsg("Please sign in to join this event.");
       return;
     }
 
@@ -59,19 +157,27 @@ export default function EventPage() {
     setErrorMsg(null);
 
     try {
+      const price = roleTicketPrice;
+      const title = eventData?.collaborationName || eventData?.title || "EVOA Event Pass";
+
+      if (price === 0) {
+        // Free Pass Registration
+        setShowSuccessModal(true);
+        setIsLoading(false);
+        return;
+      }
+
       await openRazorpayCheckout({
         planType: "startup_pro",
         user,
-        description: "EVOA × PitchIn 180 Seconds Bundle — ₹999",
-        notes: { eventBundle: "pitchin_180s" },
-        createOrder: () => pricingService.createEventOrder(),
+        description: `${title} (${role.toUpperCase()}) — ₹${price}`,
+        notes: { eventId: eventData?.id, userRole: role },
+        createOrder: () => pricingService.createEventOrder({ amount: price }),
         verifyPayment: (payload) => pricingService.verifyPayment(payload),
         onSuccess: async () => {
           setShowSuccessModal(true);
         },
-        onDismiss: async () => {
-          // User closed the modal
-        },
+        onDismiss: async () => {},
         cancelMessage: "Payment was cancelled.",
       });
     } catch (err) {
@@ -88,93 +194,40 @@ export default function EventPage() {
     setExpandedFaq(expandedFaq === index ? null : index);
   };
 
-  const faqs = [
-    {
-      q: "What is PitchIn 180 Seconds?",
-      a: "PitchIn 180 Seconds is a fast-paced live pitch event where founders get exactly 3 minutes (180 seconds) on stage to present their startup to active Angel Investors, VCs, and Ecosystem Leaders.",
-    },
-    {
-      q: "How do I claim my 1 Month EVOA Premium subscription?",
-      a: "Upon completing your payment of ₹999, your 1-Month EVOA Premium subscription is automatically activated on your EVOA account instantly. You will receive a confirmation email with your event pass and passkey within 24 hours.",
-    },
-    {
-      q: "Who can participate in this event?",
-      a: "Any early-stage, seed, or growth startup across all industries can apply. Whether you have an MVP or an operating business, PitchIn 180 Seconds is designed to get your pitch in front of decision-makers.",
-    },
-    {
-      q: "Can co-founders attend together?",
-      a: "Yes! Your ₹999 bundle pass covers entry for up to 2 team members (Founder & Co-founder) to attend and pitch.",
-    },
-    {
-      q: "What happens after I click 'Join Now'?",
-      a: "A secure Razorpay checkout modal opens directly in the app. After completing the ₹999 payment, your EVOA Premium is activated instantly and you'll receive your official event ticket and pitching slot confirmation.",
-    },
-  ];
-
-  const benefits = [
-    {
-      icon: IoCalendarOutline,
-      title: "Live 180s Pitch Stage",
-      desc: "Present your vision directly to a curated panel of VCs, Angel Investors, and Incubator Heads.",
-    },
-    {
-      icon: IoStarOutline,
-      title: "1 Month EVOA Premium",
-      desc: "Unlock top feed placement, direct investor messaging, verified badge, and priority battlefield entries.",
-    },
-    {
-      icon: IoPeopleOutline,
-      title: "Exclusive Networking",
-      desc: "Connect 1-on-1 with founders, investors, and ecosystem mentors during post-pitch networking.",
-    },
-    {
-      icon: IoShieldCheckmarkOutline,
-      title: "Deck Distribution",
-      desc: "Your pitch reel and deck get featured to EVOA's network of accredited investors.",
-    },
-  ];
-
-  const bundleItems = [
-    {
-      icon: IoTicketOutline,
-      name: "PitchIn 180 Seconds Event Ticket",
-      sub: "Live Pitching Pass for Founder & Co-founder",
-      val: "₹1,499",
-    },
-    {
-      icon: IoStarOutline,
-      name: "1 Month EVOA Premium Subscription",
-      sub: "Verified Badge, Pitch Boost & Direct Messaging",
-      val: "₹1,999",
-    },
-    {
-      icon: IoShieldCheckmarkOutline,
-      name: "Investor Deck Summary & Feedback",
-      sub: "Actionable feedback from panel VCs & mentors",
-      val: "₹999",
-    },
-  ];
+  const formattedDate = eventData?.startDate
+    ? new Date(eventData.startDate).toLocaleDateString("en-IN", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "Date to be announced";
 
   return (
     <AppShell>
       <AppHeader title="Event" />
 
-      <main className={`min-h-screen pb-20 font-sans transition-colors ${
-        isDark ? "bg-[#0b0f17] text-slate-100" : "bg-slate-50 text-slate-900"
-      }`}>
-
+      <main
+        className={`min-h-screen pb-24 font-sans transition-colors ${
+          isDark ? "bg-[#0b0f17] text-slate-100" : "bg-slate-50 text-slate-900"
+        }`}
+      >
         {/* ── SUCCESS NOTIFICATION ── */}
         {showSuccessModal && (
           <div className="max-w-3xl mx-auto px-4 pt-4">
-            <div className={`p-4 rounded-xl flex items-start justify-between gap-3 border ${
-              isDark ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-200" : "bg-emerald-50 border-emerald-200 text-emerald-900"
-            }`}>
+            <div
+              className={`p-4 rounded-xl flex items-start justify-between gap-3 border ${
+                isDark
+                  ? "bg-emerald-950/30 border-emerald-500/30 text-emerald-200"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-900"
+              }`}
+            >
               <div className="flex items-start gap-3">
                 <IoCheckmarkCircle size={20} className="text-emerald-500 flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-sm">Payment Successful</h4>
                   <p className="text-xs opacity-90 mt-0.5 leading-relaxed">
-                    Your <strong>PitchIn 180 Seconds</strong> pass and <strong>1 Month EVOA Premium</strong> subscription are now active. Check your email for confirmation details.
+                    Your <strong>{eventData?.title || "Event"}</strong> pass and <strong>1 Month EVOA Premium</strong> subscription are now active. Check your email for confirmation details.
                   </p>
                 </div>
               </div>
@@ -191,311 +244,397 @@ export default function EventPage() {
         {/* ── ERROR NOTIFICATION ── */}
         {errorMsg && (
           <div className="max-w-3xl mx-auto px-4 pt-4">
-            <div className={`p-4 rounded-xl flex items-start justify-between gap-3 border ${
-              isDark ? "bg-rose-950/30 border-rose-500/30 text-rose-200" : "bg-rose-50 border-rose-200 text-rose-900"
-            }`}>
+            <div
+              className={`p-4 rounded-xl flex items-start justify-between gap-3 border ${
+                isDark
+                  ? "bg-rose-950/30 border-rose-500/30 text-rose-200"
+                  : "bg-rose-50 border-rose-200 text-rose-900"
+              }`}
+            >
               <div className="flex items-start gap-3">
                 <IoAlertCircleOutline size={20} className="text-rose-500 flex-shrink-0 mt-0.5" />
                 <p className="text-xs leading-relaxed">{errorMsg}</p>
               </div>
               <button
                 onClick={() => setErrorMsg(null)}
-                className="hover:opacity-75 flex-shrink-0 cursor-pointer"
+                className="text-xs font-medium px-2 py-1 rounded-lg hover:bg-rose-500/20 flex-shrink-0 cursor-pointer"
               >
-                <IoCloseCircle size={18} />
+                Dismiss
               </button>
             </div>
           </div>
         )}
 
-        {/* ── HERO HEADER ── */}
-        <div className={`px-4 pt-10 pb-10 border-b ${isDark ? "border-white/5 bg-slate-950/40" : "border-slate-200/80 bg-white"}`}>
-          <div className="max-w-3xl mx-auto text-center space-y-4">
-            {/* Tag Badge */}
-            <div>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase ${
-                isDark ? "bg-evoa/15 text-evoa border border-evoa/30" : "bg-blue-50 text-blue-700 border border-blue-200"
-              }`}>
-                EVOA × PitchIn Collaboration
-              </span>
-            </div>
-
-            {/* Title */}
-            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
-              EVOA × PitchIn 180 Seconds
-            </h1>
-
-            {/* Description */}
-            <p className={`text-xs sm:text-sm max-w-2xl mx-auto font-normal leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-              Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium to accelerate your fundraising.
-            </p>
-
-            {/* Meta Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-              <span className={`text-xs px-3 py-1 rounded-lg border font-medium flex items-center gap-1.5 ${
-                isDark ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
-              }`}>
-                <IoCalendarOutline size={13} className={isDark ? "text-slate-400" : "text-slate-500"} /> Live Stage Pitch
-              </span>
-              <span className={`text-xs px-3 py-1 rounded-lg border font-medium flex items-center gap-1.5 ${
-                isDark ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
-              }`}>
-                <IoStarOutline size={13} className={isDark ? "text-slate-400" : "text-slate-500"} /> 1-Month Premium Included
-              </span>
-              <span className={`text-xs px-3 py-1 rounded-lg border font-medium flex items-center gap-1.5 ${
-                isDark ? "bg-slate-900 border-slate-800 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
-              }`}>
-                <IoPeopleOutline size={13} className={isDark ? "text-slate-400" : "text-slate-500"} /> 500+ Investors
-              </span>
+        {/* ── LOADING SKELETON ── */}
+        {fetchingEvent ? (
+          <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+            <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-sm opacity-70">Loading event details…</p>
+          </div>
+        ) : fetchError || !eventData || !isPublished ? (
+          /* ── UNPUBLISHED / ARCHIVED / NOT FOUND STATE ── */
+          <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+            <div
+              className={`p-8 rounded-3xl border ${
+                isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"
+              } shadow-xl max-w-md mx-auto`}
+            >
+              <IoInformationCircleOutline size={48} className="mx-auto text-indigo-500 mb-4 opacity-80" />
+              <h3 className="text-xl font-bold mb-2">No Active Event</h3>
+              <p className="text-sm opacity-70 mb-6 leading-relaxed">
+                {fetchError || "The requested event is currently unavailable, archived, or undergoing updates."}
+              </p>
+              <a
+                href="/"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-all"
+              >
+                Return to Home Feed
+              </a>
             </div>
           </div>
-        </div>
+        ) : (
+          /* ── DYNAMIC DRAFT / PUBLISHED EVENT VIEW ── */
+          <div className="max-w-3xl mx-auto px-4 pt-6 space-y-6">
+            {/* ── EVENT SELECTOR TABS (If multiple published events exist) ── */}
+            {publishedEvents.length > 1 && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {publishedEvents.map((evt) => {
+                  const isSelected = (eventData?.id === evt.id) || (eventData?.slug === evt.slug);
+                  return (
+                    <button
+                      key={evt.id}
+                      type="button"
+                      onClick={() => {
+                        setEventData(evt);
+                        navigate(`/event?slug=${evt.slug}`, { replace: true });
+                      }}
+                      className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
+                          : isDark
+                          ? "bg-slate-800/80 text-slate-300 hover:bg-slate-700 border border-slate-700/50"
+                          : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span>{evt.title}</span>
+                      {evt.isFeatured && <span className="text-amber-400 font-bold">★</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-        {/* ── MAIN BUNDLE & CTA CARD ── */}
-        <div className="px-4 py-8 max-w-3xl mx-auto">
-          <div className={`rounded-2xl p-6 sm:p-8 border shadow-sm ${
-            isDark ? "bg-slate-900/60 border-white/10" : "bg-white border-slate-200"
-          }`}>
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div>
-                <h2 className="text-lg font-bold tracking-tight">Combined Offer Bundle</h2>
-                <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                  Complete event access pass + 1 Month EVOA Premium subscription.
+            {/* ── HERO BANNER CARD ── */}
+            <div
+              className={`relative overflow-hidden rounded-3xl border ${
+                isDark
+                  ? "bg-gradient-to-b from-indigo-950/40 via-slate-900 to-slate-900 border-indigo-500/20"
+                  : "bg-gradient-to-b from-indigo-50 via-white to-white border-indigo-100"
+              } p-6 sm:p-8 shadow-xl`}
+            >
+              {/* Optional Poster Background Image Blur */}
+              {eventData.bannerUrl && (
+                <div
+                  className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none"
+                  style={{ backgroundImage: `url(${eventData.bannerUrl})` }}
+                />
+              )}
+
+              {/* Collaboration Tag & Badge */}
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-600/10 text-indigo-500 border border-indigo-500/20 uppercase tracking-wider">
+                  {eventData.collaborationName || "EVOA Collaboration"}
+                </span>
+
+                {activeTicket?.badgeText && (
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    {activeTicket.badgeText}
+                  </span>
+                )}
+              </div>
+
+              {/* Title & Subtitle */}
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+                {eventData.title}
+              </h1>
+
+              {eventData.subtitle && (
+                <p className="text-sm sm:text-base opacity-80 leading-relaxed max-w-2xl mb-6">
+                  {eventData.subtitle}
                 </p>
-              </div>
-              <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider uppercase ${
-                isDark ? "bg-evoa/15 text-evoa border border-evoa/30" : "bg-blue-50 text-blue-700 border border-blue-200"
-              }`}>
-                Event Pass
-              </span>
-            </div>
+              )}
 
-            {/* Offer Items Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              <div className={`p-4 rounded-xl border flex items-start gap-3 ${
-                isDark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/80 border-slate-200"
-              }`}>
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  isDark ? "bg-slate-800 text-slate-300" : "bg-slate-200/80 text-slate-700"
-                }`}>
-                  <IoTicketOutline size={18} />
+              {/* Event Quick Info Strip */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-700/20 text-xs sm:text-sm">
+                <div className="flex items-center gap-2.5 opacity-90">
+                  <IoCalendarOutline size={18} className="text-indigo-500 flex-shrink-0" />
+                  <span>{formattedDate} {eventData.startTime ? `• ${eventData.startTime} ${eventData.timezone || "IST"}` : ""}</span>
                 </div>
-                <div>
-                  <h3 className="text-xs font-bold">PitchIn 180s Event Ticket</h3>
-                  <p className={`text-[11px] mt-0.5 leading-normal ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                    Live stage pitching slot for up to 2 team members.
-                  </p>
-                </div>
-              </div>
 
-              <div className={`p-4 rounded-xl border flex items-start gap-3 ${
-                isDark ? "bg-slate-950/40 border-slate-800" : "bg-slate-50/80 border-slate-200"
-              }`}>
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  isDark ? "bg-slate-800 text-slate-300" : "bg-slate-200/80 text-slate-700"
-                }`}>
-                  <IoStarOutline size={18} />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold">1 Month EVOA Premium</h3>
-                  <p className={`text-[11px] mt-0.5 leading-normal ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                    Verified badge, priority feed, and direct investor messaging.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Pricing & CTA */}
-            <div className={`p-5 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${
-              isDark ? "bg-slate-950/60 border-slate-800" : "bg-slate-50 border-slate-200"
-            }`}>
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold">₹999</span>
-                  <span className={`text-xs line-through ${isDark ? "text-slate-500" : "text-slate-400"}`}>₹4,497</span>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded ${
-                    isDark ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  }`}>
-                    Save ₹3,498
+                <div className="flex items-center gap-2.5 opacity-90">
+                  <IoLocationOutline size={18} className="text-indigo-500 flex-shrink-0" />
+                  <span>
+                    {eventData.venueName || eventData.city || "Virtual Main Stage"}
+                    {eventData.venueType ? ` (${eventData.venueType})` : ""}
                   </span>
                 </div>
-                <p className={`text-[11px] mt-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                  Single payment • Instant activation upon completion
+              </div>
+
+              {/* Dynamic Highlight Badges */}
+              {Array.isArray(eventData.highlights) && eventData.highlights.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-4 border-t border-slate-700/20">
+                  {eventData.highlights.map((hl, idx) => {
+                    const text = typeof hl === "string" ? hl : (hl.value || hl.label || "");
+                    const subtext = typeof hl !== "string" && hl.value && hl.label ? hl.label : null;
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-3 rounded-2xl text-center border ${
+                          isDark ? "bg-slate-800/40 border-slate-700/40" : "bg-white/80 border-slate-200"
+                        }`}
+                      >
+                        <div className="text-sm sm:text-base font-extrabold text-indigo-500 leading-snug">
+                          {text}
+                        </div>
+                        {subtext && <div className="text-[11px] opacity-70 font-medium mt-0.5">{subtext}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* ── EVENT DESCRIPTION ── */}
+            {eventData.description && (
+              <div
+                className={`p-6 rounded-3xl border ${
+                  isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"
+                } shadow-md`}
+              >
+                <h3 className="text-base font-bold mb-2 flex items-center gap-2">
+                  <IoInformationCircleOutline size={18} className="text-indigo-500" /> About the Event
+                </h3>
+                <p className="text-sm opacity-80 leading-relaxed whitespace-pre-line">
+                  {eventData.description}
                 </p>
+              </div>
+            )}
+
+            {/* ── DYNAMIC ROLE-BASED BENEFITS CARDS ── */}
+            {Array.isArray(activeBenefits) && activeBenefits.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-lg font-bold px-1 flex items-center gap-2">
+                  <IoStarOutline className="text-amber-400" /> What You Get ({role.toUpperCase()})
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {activeBenefits.map((b, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-5 rounded-2xl border transition-all ${
+                        isDark
+                          ? "bg-slate-900/60 border-slate-800 hover:border-indigo-500/30"
+                          : "bg-white border-slate-200 hover:border-indigo-200"
+                      } shadow-sm`}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-500 mb-3">
+                        {renderIcon(b.icon, IoStarOutline, { size: 20 })}
+                      </div>
+                      <h4 className="font-bold text-sm mb-1">{b.title}</h4>
+                      {b.desc && <p className="text-xs opacity-70 leading-relaxed">{b.desc}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── PRICING & TICKET BUNDLE CARD (ROLE-BASED) ── */}
+            <div
+              className={`p-6 sm:p-8 rounded-3xl border relative overflow-hidden ${
+                isDark
+                  ? "bg-gradient-to-br from-indigo-950/50 via-slate-900 to-slate-900 border-indigo-500/30"
+                  : "bg-gradient-to-br from-indigo-50/70 via-white to-white border-indigo-200"
+              } shadow-xl`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-700/20">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-extrabold">{eventData.title} Pass</h3>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 uppercase">
+                      {roleBadgeText}
+                    </span>
+                  </div>
+                  <p className="text-xs opacity-70">Custom pass and features configured for {role.toUpperCase()} role</p>
+                </div>
+
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black text-emerald-500">
+                    {roleTicketPrice === 0 ? "FREE" : `₹${roleTicketPrice}`}
+                  </span>
+                  {roleOriginalPrice > roleTicketPrice && (
+                    <span className="text-sm opacity-50 line-through">
+                      ₹{roleOriginalPrice}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Bundle Breakdown Items */}
+              {Array.isArray(eventData.bundleItems) && eventData.bundleItems.length > 0 && (
+                <div className="space-y-3 mb-6">
+                  {eventData.bundleItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3.5 rounded-xl flex items-center justify-between gap-3 border ${
+                        isDark ? "bg-slate-800/40 border-slate-700/30" : "bg-white border-slate-100"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600/10 flex items-center justify-center text-indigo-500 flex-shrink-0">
+                          {renderIcon(item.icon, IoTicketOutline, { size: 16 })}
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold">{item.name}</div>
+                          {item.sub && <div className="text-[11px] opacity-60">{item.sub}</div>}
+                        </div>
+                      </div>
+                      {item.val && (
+                        <span className="text-xs font-bold text-indigo-400 flex-shrink-0">
+                          {item.val}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Remaining Seats & Booking Button */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                {eventData.showRemainingSeats && activeTicket?.remainingSeats !== null && (
+                  <div className="text-xs font-semibold text-amber-500 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    Limited passes remaining for {role.toUpperCase()}!
+                  </div>
+                )}
+
+                <button
+                  onClick={handleJoinNow}
+                  disabled={isLoading || !isBookingAllowed || isSoldOut || !isRoleActive}
+                  className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer ${
+                    !isBookingAllowed || isSoldOut || !isRoleActive
+                      ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-indigo-500/25"
+                  }`}
+                >
+                  {isLoading ? (
+                    <span>Processing…</span>
+                  ) : isSoldOut ? (
+                    <span>Passes Sold Out</span>
+                  ) : !isRoleActive ? (
+                    <span>Unavailable for {role.toUpperCase()}</span>
+                  ) : !isBookingAllowed ? (
+                    <span>Registration Closed</span>
+                  ) : (
+                    <>
+                      <span>{roleTicketPrice === 0 ? "Claim Free Pass" : `Get Pass for ₹${roleTicketPrice}`}</span>
+                      <IoArrowForward size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* ── FREQUENTLY ASKED QUESTIONS (FAQS) ── */}
+            {Array.isArray(eventData.faqs) && eventData.faqs.length > 0 && (
+              <div className="space-y-3 pt-4">
+                <h3 className="text-lg font-bold px-1">Frequently Asked Questions</h3>
+
+                <div className="space-y-2">
+                  {eventData.faqs.map((faq, idx) => {
+                    const isExpanded = expandedFaq === idx;
+                    return (
+                      <div
+                        key={idx}
+                        className={`rounded-2xl border transition-all ${
+                          isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"
+                        }`}
+                      >
+                        <button
+                          onClick={() => toggleFaq(idx)}
+                          className="w-full p-4 flex items-center justify-between text-left font-semibold text-sm cursor-pointer"
+                        >
+                          <span>{faq.q}</span>
+                          {isExpanded ? (
+                            <IoChevronUp size={18} className="text-indigo-500 flex-shrink-0" />
+                          ) : (
+                            <IoChevronDown size={18} className="text-slate-400 flex-shrink-0" />
+                          )}
+                        </button>
+
+                        {isExpanded && (
+                          <div className="px-4 pb-4 text-xs opacity-75 leading-relaxed border-t border-slate-700/10 pt-3">
+                            {faq.a}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── STICKY BOTTOM BOOKING BAR FOR MOBILE/TABLET/DESKTOP ── */}
+        {eventData && isPublished && (
+          <div
+            className={`fixed bottom-0 left-0 right-0 lg:left-[104px] xl:left-[272px] p-3 sm:px-6 border-t backdrop-blur-xl z-40 transition-all ${
+              isDark ? "bg-[#0b0f17]/90 border-slate-800 shadow-[0_-4px_20px_rgba(0,0,0,0.5)]" : "bg-white/90 border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+            }`}
+          >
+            <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+              <div>
+                <div className="text-[11px] opacity-60 uppercase font-bold tracking-wider">
+                  {eventData.collaborationName || eventData.title}
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-lg font-black text-emerald-500">
+                    {roleTicketPrice === 0 ? "FREE" : `₹${roleTicketPrice}`}
+                  </span>
+                  {roleOriginalPrice > roleTicketPrice && (
+                    <span className="text-xs opacity-50 line-through">₹{roleOriginalPrice}</span>
+                  )}
+                </div>
               </div>
 
               <button
-                id="event-join-now-hero"
                 onClick={handleJoinNow}
-                disabled={isLoading}
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-evoa hover:bg-evoa/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-wide shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                disabled={isLoading || !isBookingAllowed || isSoldOut || !isRoleActive}
+                className={`px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition-all cursor-pointer ${
+                  !isBookingAllowed || isSoldOut || !isRoleActive
+                    ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md"
+                }`}
               >
                 {isLoading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Processing…
-                  </>
+                  "Processing…"
+                ) : isSoldOut ? (
+                  "Sold Out"
+                ) : !isRoleActive ? (
+                  "Unavailable"
+                ) : !isBookingAllowed ? (
+                  "Closed"
                 ) : (
                   <>
-                    <span>Join Now — ₹999</span>
+                    <span>{roleTicketPrice === 0 ? "Claim Pass" : "Book Pass"}</span>
                     <IoArrowForward size={14} />
                   </>
                 )}
               </button>
             </div>
           </div>
-        </div>
-
-        {/* ── EVENT OVERVIEW ── */}
-        <div className="px-4 py-4 max-w-3xl mx-auto space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
-            Event Overview
-          </h2>
-          <div className={`p-6 rounded-2xl border text-xs leading-relaxed space-y-3 ${
-            isDark ? "bg-slate-900/40 border-white/5 text-slate-300" : "bg-white border-slate-200 text-slate-600"
-          }`}>
-            <p>
-              <strong>PitchIn 180 Seconds</strong> is a live startup pitching showcase where founders take the stage to present their business model, traction, and funding requirement in a structured 3-minute pitch followed by direct Q&amp;A with attending investors.
-            </p>
-            <p>
-              By participating through this EVOA collaboration, your startup receives a live pitching pass along with <strong>30 Days of EVOA Premium</strong>, enhancing your digital presence with verified status, featured feed visibility, and direct messaging access.
-            </p>
-          </div>
-        </div>
-
-        {/* ── BENEFITS GRID ── */}
-        <div className="px-4 py-6 max-w-3xl mx-auto space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
-            Participation Benefits
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {benefits.map(({ icon: Icon, title, desc }, idx) => (
-              <div
-                key={idx}
-                className={`p-5 rounded-2xl border ${
-                  isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-200"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${
-                  isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"
-                }`}>
-                  <Icon size={16} />
-                </div>
-                <h3 className="font-bold text-xs mb-1">{title}</h3>
-                <p className={`text-[11px] leading-relaxed ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                  {desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── WHAT'S INCLUDED ── */}
-        <div className="px-4 py-6 max-w-3xl mx-auto space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
-            What's Included
-          </h2>
-          <div className={`rounded-2xl border divide-y overflow-hidden ${
-            isDark ? "bg-slate-900/40 border-white/5 divide-white/5" : "bg-white border-slate-200 divide-slate-100"
-          }`}>
-            {bundleItems.map(({ icon: Icon, name, sub, val }, idx) => (
-              <div key={idx} className="p-4 sm:p-5 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-slate-700"
-                  }`}>
-                    <Icon size={16} />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs">{name}</h4>
-                    <p className={`text-[11px] mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>{sub}</p>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <span className={`text-[11px] line-through block ${isDark ? "text-slate-500" : "text-slate-400"}`}>{val}</span>
-                  <span className="text-[11px] font-semibold text-emerald-500 flex items-center gap-1 justify-end">
-                    <IoCheckmark size={12} /> Included
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ── FAQ ACCORDION ── */}
-        <div className="px-4 py-6 max-w-3xl mx-auto space-y-3">
-          <h2 className="text-sm font-semibold tracking-wide uppercase text-slate-400">
-            Frequently Asked Questions
-          </h2>
-          <div className="space-y-2">
-            {faqs.map(({ q, a }, idx) => {
-              const isOpen = expandedFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className={`rounded-xl border overflow-hidden transition-colors ${
-                    isDark ? "bg-slate-900/40 border-white/5" : "bg-white border-slate-200"
-                  }`}
-                >
-                  <button
-                    onClick={() => toggleFaq(idx)}
-                    className="w-full p-4 text-left font-semibold text-xs flex items-center justify-between gap-4 cursor-pointer"
-                  >
-                    <span>{q}</span>
-                    {isOpen ? (
-                      <IoChevronUp size={16} className={isDark ? "text-slate-400" : "text-slate-500"} />
-                    ) : (
-                      <IoChevronDown size={16} className={isDark ? "text-slate-500" : "text-slate-400"} />
-                    )}
-                  </button>
-                  {isOpen && (
-                    <div className={`px-4 pb-4 text-xs leading-relaxed border-t pt-3 ${
-                      isDark ? "border-white/5 text-slate-300" : "border-slate-100 text-slate-600"
-                    }`}>
-                      {a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── STICKY BOTTOM BAR ── */}
-        <div className={`sticky bottom-0 z-40 border-t backdrop-blur-md px-4 py-3 ${
-          isDark ? "bg-[#0b0f17]/90 border-white/10" : "bg-white/90 border-slate-200"
-        }`}>
-          <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
-            <div>
-              <div className={`text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>EVOA × PitchIn 180s</div>
-              <div className="text-base font-bold flex items-baseline gap-1.5">
-                <span>₹999</span>
-                <span className={`text-xs line-through font-normal ${isDark ? "text-slate-500" : "text-slate-400"}`}>₹4,497</span>
-              </div>
-            </div>
-            <button
-              id="event-join-now-sticky"
-              onClick={handleJoinNow}
-              disabled={isLoading}
-              className="px-5 py-2.5 rounded-xl bg-evoa hover:bg-evoa/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-xs tracking-wide shadow-sm flex items-center gap-1.5 cursor-pointer transition-all active:scale-98"
-            >
-              {isLoading ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing…
-                </>
-              ) : (
-                <>
-                  <span>Join Now</span>
-                  <IoArrowForward size={13} />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
+        )}
       </main>
     </AppShell>
   );
 }
-

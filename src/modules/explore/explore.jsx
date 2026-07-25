@@ -433,42 +433,77 @@ export default function Explore() {
             */}
 
             {/* Event Spotlight */}
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <FaCalendarAlt className={isDark ? 'text-blue-400' : 'text-blue-600'} size={16} />
-                <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Featured Event
-                </h2>
-              </div>
-              <div
-                onClick={() => navigate('/event')}
-                className={`rounded-2xl p-6 transition-all cursor-pointer ${isDark
-                  ? 'bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/40 border border-blue-500/20 hover:border-blue-500/40'
-                  : 'bg-gradient-to-r from-blue-50 via-slate-50 to-indigo-50 border border-blue-200 shadow-md hover:shadow-lg'
-                  }`}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Pitch Live to VCs &amp; Angel Investors
-                  </h3>
-                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20' : 'bg-blue-600/10 text-blue-700 border border-blue-600/15'
-                    }`}>
-                    Open Now
+            {(() => {
+              const role = (userRole || currentUser?.role || 'viewer').toLowerCase();
+
+              const contentMap = {
+                startup: {
+                  title: "Pitch Live to VCs & Angel Investors",
+                  badge: "Open Now",
+                  description: "Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium.",
+                  buttonText: "Join Event",
+                },
+                investor: {
+                  title: "Exclusive Deal Flow & Live Pitch Stage",
+                  badge: "VIP Access",
+                  description: "Evaluate top high-growth startups pitching live in 3-minute rounds. Connect 1-on-1 with vetted founders & access curated pitch decks.",
+                  buttonText: "Access Deal Flow",
+                },
+                incubator: {
+                  title: "Showcase Cohort Startups Live on Stage",
+                  badge: "Partner Stage",
+                  description: "Present your accelerated startups to top angel syndicates, VCs, and mentors. Expand your ecosystem network & discover co-investment deals.",
+                  buttonText: "Join Partner Event",
+                },
+                viewer: {
+                  title: "Watch Live Pitch In 180 Seconds",
+                  badge: "Live Event",
+                  description: "Watch ambitious founders pitch live to top investors in 3 minutes. Discover breakthrough innovations and vote for your favorite startups.",
+                  buttonText: "Watch Live Event",
+                },
+              };
+
+              const cardContent = contentMap[role] || contentMap.viewer;
+
+              return (
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FaCalendarAlt className={isDark ? 'text-blue-400' : 'text-blue-600'} size={16} />
+                    <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      Featured Event
+                    </h2>
+                  </div>
+                  <div
+                    onClick={() => navigate('/event')}
+                    className={`rounded-2xl p-6 transition-all cursor-pointer ${isDark
+                      ? 'bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/40 border border-blue-500/20 hover:border-blue-500/40'
+                      : 'bg-gradient-to-r from-blue-50 via-slate-50 to-indigo-50 border border-blue-200 shadow-md hover:shadow-lg'
+                      }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        {cardContent.title}
+                      </h3>
+                      <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20' : 'bg-blue-600/10 text-blue-700 border border-blue-600/15'
+                        }`}>
+                        {cardContent.badge}
+                      </div>
+                    </div>
+                    <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                      {cardContent.description}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigate('/event'); }}
+                      className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                    >
+                      {cardContent.buttonText}
+                    </button>
                   </div>
                 </div>
-                <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-                  Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium.
-                </p>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); navigate('/event'); }}
-                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                >
-                  Join Event
-                </button>
-              </div>
-            </div>
+              );
+            })()}
 
               {/* Top Performing Pitches */}
               <div className="mb-8">
