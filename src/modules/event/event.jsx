@@ -79,7 +79,9 @@ export default function EventPage() {
       let allList = [];
       try {
         const allRes = await eventService.getAllPublishedEvents();
-        allList = Array.isArray(allRes) ? allRes : (allRes?.data || []);
+        const rawList = Array.isArray(allRes) ? allRes : (allRes?.data || []);
+        // Only include events with status 'published'
+        allList = rawList.filter(e => e.status === 'published');
         setPublishedEvents(allList);
       } catch (_) { /* fallback */ }
 
@@ -87,19 +89,29 @@ export default function EventPage() {
       if (slugParam) {
         target = allList.find(e => e.slug === slugParam);
         if (!target) {
-          const res = await eventService.getEventBySlug(slugParam);
-          target = res?.data || res;
+          try {
+            const res = await eventService.getEventBySlug(slugParam);
+            const item = res?.data || res;
+            if (item && item.status === 'published') target = item;
+          } catch (_) {}
         }
       } else {
         target = allList.find(e => e.isFeatured) || allList[0];
-        if (!target) {
-          const res = await eventService.getFeaturedEvent();
-          target = res?.data || res;
+        if (!target && allList.length === 0) {
+          try {
+            const res = await eventService.getFeaturedEvent();
+            const item = res?.data || res;
+            if (item && item.status === 'published') target = item;
+          } catch (_) {}
         }
       }
 
       const cleanItem = target?.data || target;
-      setEventData(cleanItem || null);
+      if (cleanItem && cleanItem.status === 'published') {
+        setEventData(cleanItem);
+      } else {
+        setEventData(null);
+      }
     } catch (err) {
       setFetchError(err?.message || "Unable to load event details right now.");
     } finally {
