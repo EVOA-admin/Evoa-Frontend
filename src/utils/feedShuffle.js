@@ -12,26 +12,60 @@ export function shuffleArray(array) {
 }
 
 /**
- * Combines pitch reels and post cards into a single array and shuffles them randomly.
- * If existingFeedItems are provided (e.g. during a session update), it updates items in-place
- * to preserve card positions and completely prevent layout flicker or position jumps.
+ * Interleaves pitch reel items and post items so both appear mixed together throughout the feed.
+ */
+function interleaveFeedItems(pitches, posts) {
+  if (!posts || posts.length === 0) return shuffleArray(pitches);
+  if (!pitches || pitches.length === 0) return shuffleArray(posts);
+
+  const shuffledPitches = shuffleArray(pitches);
+  const shuffledPosts = shuffleArray(posts);
+  const result = [];
+
+  const totalPitches = shuffledPitches.length;
+  const totalPosts = shuffledPosts.length;
+  
+  // Calculate ratio so posts and pitches are evenly distributed
+  const ratio = Math.max(1, Math.floor(totalPitches / totalPosts));
+  let postIdx = 0;
+  let pitchIdx = 0;
+
+  while (pitchIdx < totalPitches || postIdx < totalPosts) {
+    for (let k = 0; k < ratio && pitchIdx < totalPitches; k++) {
+      result.push(shuffledPitches[pitchIdx++]);
+    }
+    if (postIdx < totalPosts) {
+      result.push(shuffledPosts[postIdx++]);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Combines pitch reels and post cards into a single feed.
+ * If existingFeedItems is provided, it updates items in-place to preserve established card positions,
+ * eliminating visual flickering and layout jumps.
  */
 export function buildRandomizedFeed(pitchList = [], postList = [], pinnedUploads = [], existingFeedItems = null) {
-  const pitchItemsMap = new Map((pitchList || []).map(p => [`pitch-${p.id}`, p]));
-  const postItemsMap = new Map((postList || []).map(p => [`post-${p.id}`, p]));
+  const pitchItems = (pitchList || []).map(p => ({ itemType: 'pitch', id: `pitch-${p.id}`, data: p }));
+  const postItems = (postList || []).map(p => ({ itemType: 'post', id: `post-${p.id}`, data: p }));
 
-  // If we already have feed items in the active session, update them in-place
+  const pitchItemsMap = new Map(pitchItems.map(p => [p.id, p.data]));
+  const postItemsMap = new Map(postItems.map(p => [p.id, p.data]));
+
+  // In-place update if existingFeedItems exist to prevent flickering
   if (Array.isArray(existingFeedItems) && existingFeedItems.length > 0) {
     const updatedFeed = [];
     const seenIds = new Set();
 
-    // Preserve pinned uploads at top
+    // Preserve pinned uploads
     (pinnedUploads || []).forEach(pinned => {
       updatedFeed.push(pinned);
       seenIds.add(pinned.id);
     });
 
-    // Update existing items in their established positions
+    // Update existing items in their exact established positions
     existingFeedItems.forEach(item => {
       if (seenIds.has(item.id)) return;
 
@@ -50,40 +84,22 @@ export function buildRandomizedFeed(pitchList = [], postList = [], pinnedUploads
       }
     });
 
-    // Append any new items not yet present in existingFeedItems
-    const newItems = [];
-    (pitchList || []).forEach(p => {
-      const id = `pitch-${p.id}`;
-      if (!seenIds.has(id)) {
-        newItems.push({ itemType: 'pitch', id, data: p });
-        seenIds.add(id);
-      }
-    });
-    (postList || []).forEach(p => {
-      const id = `post-${p.id}`;
-      if (!seenIds.has(id)) {
-        newItems.push({ itemType: 'post', id, data: p });
-        seenIds.add(id);
-      }
-    });
+    // Append any newly discovered items (interleaved)
+    const newPitches = pitchItems.filter(p => !seenIds.has(p.id));
+    const newPosts = postItems.filter(p => !seenIds.has(p.id));
 
-    if (newItems.length > 0) {
-      updatedFeed.push(...shuffleArray(newItems));
+    if (newPitches.length > 0 || newPosts.length > 0) {
+      const newInterleaved = interleaveFeedItems(newPitches, newPosts);
+      updatedFeed.push(...newInterleaved);
     }
 
     return updatedFeed;
   }
 
-  // Initial page load / fresh refresh: generate a new randomized feed
-  const pitchItems = (pitchList || []).map(p => ({ itemType: 'pitch', id: `pitch-${p.id}`, data: p }));
-  const postItems = (postList || []).map(p => ({ itemType: 'post', id: `post-${p.id}`, data: p }));
-
-  const combined = [...pitchItems, ...postItems];
-  const shuffled = shuffleArray(combined);
-
+  // Initial cold load: generate a fresh interleaved feed
+  const interleaved = interleaveFeedItems(pitchItems, postItems);
   const pinnedIds = new Set((pinnedUploads || []).map(item => item.id));
-  const filteredShuffled = shuffled.filter(item => !pinnedIds.has(item.id));
+  const filteredInterleaved = interleaved.filter(item => !pinnedIds.has(item.id));
 
-  return [...(pinnedUploads || []), ...filteredShuffled];
+  return [...(pinnedUploads || []), ...filteredInterleaved];
 }
-

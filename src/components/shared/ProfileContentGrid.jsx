@@ -249,25 +249,28 @@ function ContentCard({
                 </div>
             )}
 
-            {isReel && showBattlegroundSelection && (
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onSelectForBattleground?.();
-                    }}
-                    disabled={selectingForBattleground || isSelectedForBattleground}
-                    className={`absolute left-1.5 top-1.5 z-10 rounded-full px-2 py-1 text-[9px] font-semibold backdrop-blur-sm transition-all ${isSelectedForBattleground
-                        ? "bg-emerald-500/90 text-white"
-                        : "bg-black/60 text-white hover:bg-black/75"} ${selectingForBattleground ? "opacity-70" : ""}`}
-                >
-                    {selectingForBattleground
-                        ? "Selecting..."
-                        : isSelectedForBattleground
-                            ? "Selected for Battleground \u2705"
-                            : "Add to Battleground"}
-                </button>
-            )}
+            {/*
+              TEMPORARILY DISABLED: Battleground Reel Selection
+              {isReel && showBattlegroundSelection && (
+                  <button
+                      type="button"
+                      onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectForBattleground?.();
+                      }}
+                      disabled={selectingForBattleground || isSelectedForBattleground}
+                      className={`absolute left-1.5 top-1.5 z-10 rounded-full px-2 py-1 text-[9px] font-semibold backdrop-blur-sm transition-all ${isSelectedForBattleground
+                          ? "bg-emerald-500/90 text-white"
+                          : "bg-black/60 text-white hover:bg-black/75"} ${selectingForBattleground ? "opacity-70" : ""}`}
+                  >
+                      {selectingForBattleground
+                          ? "Selecting..."
+                          : isSelectedForBattleground
+                              ? "Selected for Battleground \u2705"
+                              : "Add to Battleground"}
+                  </button>
+              )}
+            */}
 
             {/* Stats overlay at bottom */}
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/75 to-transparent px-2 pb-1.5 pt-5">

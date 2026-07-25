@@ -98,6 +98,9 @@ export default function Startup() {
         postsService.getAllPosts(),
       ]);
 
+      console.log('[FeedFetch] Raw reels response:', reelsRes);
+      console.log('[FeedFetch] Raw posts response:', postsRes);
+
       // --- Map reels ---
       let mappedPitches = [];
       if (reelsRes.status === 'fulfilled') {
@@ -138,37 +141,41 @@ export default function Startup() {
       // --- Map posts ---
       let mappedPosts = [];
       if (postsRes.status === 'fulfilled') {
-        const data = postsRes.value?.data?.data || postsRes.value?.data || [];
-        mappedPosts = Array.isArray(data)
-          ? data.map((p) => {
-            const isStartup = !!(p.startupId || p.user?.role === 'startup');
-            const timeAgo = p.createdAt
-              ? new Date(p.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-              : "";
-            if (isStartup) {
-              return {
-                _type: 'startup', id: p.id, authorId: p.userId || p.user?.id,
-                startupName: p.startupName || p.user?.fullName || 'Startup',
-                startupLogo: p.startupLogo || p.user?.avatarUrl || null,
-                tagline: p.tagline || p.caption || '', website: p.website || null,
-                sectors: p.sectors || p.hashtags || [], imageUrl: p.imageUrl, imageUrls: p.imageUrls || [], timeAgo,
-                pitchViews: p.pitchViews ?? 0, supporters: p.supporters ?? 0,
-                clickThrough: p.clickThrough ?? p.clickThroughCount ?? 0,
-                investorThoughts: p.investorThoughts || [],
-                isLiked: p.isLiked ?? false, isSaved: false,
-                likeCount: p.likeCount || 0, commentCount: p.commentCount || 0,
-              };
-            }
+        const rawPosts = postsRes.value?.data?.data || postsRes.value?.data?.posts || postsRes.value?.data || [];
+        const postArray = Array.isArray(rawPosts)
+          ? rawPosts
+          : (Array.isArray(rawPosts?.posts)
+            ? rawPosts.posts
+            : (Array.isArray(rawPosts?.data) ? rawPosts.data : []));
+
+        mappedPosts = postArray.map((p) => {
+          const isStartup = !!(p.startupId || p.user?.role === 'startup');
+          const timeAgo = p.createdAt
+            ? new Date(p.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+            : "";
+          if (isStartup) {
             return {
-              _type: 'user', id: p.id, authorId: p.userId || p.user?.id,
-              authorName: p.user?.fullName || "User", authorAvatar: p.user?.avatarUrl || null,
-              authorRole: p.user?.role || "viewer", timeAgo, imageUrl: p.imageUrl, imageUrls: p.imageUrls || [],
-              caption: p.caption, hashtags: p.hashtags || [],
+              _type: 'startup', id: p.id, authorId: p.userId || p.user?.id,
+              startupName: p.startupName || p.user?.fullName || 'Startup',
+              startupLogo: p.startupLogo || p.user?.avatarUrl || null,
+              tagline: p.tagline || p.caption || '', website: p.website || null,
+              sectors: p.sectors || p.hashtags || [], imageUrl: p.imageUrl, imageUrls: p.imageUrls || [], timeAgo,
+              pitchViews: p.pitchViews ?? 0, supporters: p.supporters ?? 0,
+              clickThrough: p.clickThrough ?? p.clickThroughCount ?? 0,
+              investorThoughts: p.investorThoughts || [],
               isLiked: p.isLiked ?? false, isSaved: false,
               likeCount: p.likeCount || 0, commentCount: p.commentCount || 0,
             };
-          })
-          : [];
+          }
+          return {
+            _type: 'user', id: p.id, authorId: p.userId || p.user?.id,
+            authorName: p.user?.fullName || "User", authorAvatar: p.user?.avatarUrl || null,
+            authorRole: p.user?.role || "viewer", timeAgo, imageUrl: p.imageUrl, imageUrls: p.imageUrls || [],
+            caption: p.caption, hashtags: p.hashtags || [],
+            isLiked: p.isLiked ?? false, isSaved: false,
+            likeCount: p.likeCount || 0, commentCount: p.commentCount || 0,
+          };
+        });
       }
 
       // Update source arrays
@@ -266,6 +273,7 @@ export default function Startup() {
 
   useEffect(() => {
     const handlePostCreated = () => {
+      cache.invalidate('feedItems');
       loadFeed();
       fetchRisingStartups();
     };

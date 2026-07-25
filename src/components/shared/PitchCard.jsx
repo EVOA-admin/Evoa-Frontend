@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaHandshake, FaRegComment, FaRegPaperPlane, FaExternalLinkAlt,
@@ -10,6 +10,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import ensureUrl from "../../utils/ensureUrl";
 import reelsService from "../../services/reelsService";
 import ReelCommentSheet from "./ReelCommentSheet";
+import {
+  getGlobalMuted,
+  setGlobalMuted,
+  registerActiveVideo,
+  unregisterActiveVideo
+} from "../../utils/feedVideoManager";
 
 import { goToProfile } from "../../utils/profileNavigation";
 
@@ -28,10 +34,65 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
   const [commentSheetOpen, setCommentSheetOpen] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
-  // Audio / Mute control
-  const [isMuted, setIsMuted] = useState(true);
+  // Audio / Mute control — synced with global feed preference
+  const [isMuted, setIsMuted] = useState(getGlobalMuted);
   const videoRef = useRef(null);
   const commentInputRef = useRef(null);
+
+  // Listen to global audio preference changes from any card in the feed
+  useEffect(() => {
+    const handleAudioChange = (e) => {
+      const newMuted = e.detail?.muted;
+      if (typeof newMuted === 'boolean') {
+        setIsMuted(newMuted);
+        if (videoRef.current) {
+          videoRef.current.muted = newMuted;
+        }
+      }
+    };
+    window.addEventListener('evoa:audio-preference-changed', handleAudioChange);
+    return () => window.removeEventListener('evoa:audio-preference-changed', handleAudioChange);
+  }, []);
+
+  // Viewport Intersection Observer: Play ONLY when active video in viewport; pause immediately when scrolled out
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl || !pitch.video) return;
+
+    videoEl.muted = getGlobalMuted();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
+            registerActiveVideo(videoEl);
+            videoEl.muted = getGlobalMuted();
+            videoEl.play().catch(() => {});
+          } else {
+            if (!videoEl.paused) {
+              videoEl.pause();
+            }
+            unregisterActiveVideo(videoEl);
+          }
+        });
+      },
+      {
+        threshold: [0, 0.55, 0.8, 1.0],
+      }
+    );
+
+    observer.observe(videoEl);
+
+    return () => {
+      observer.unobserve(videoEl);
+      if (videoEl) {
+        if (!videoEl.paused) {
+          videoEl.pause();
+        }
+        unregisterActiveVideo(videoEl);
+      }
+    };
+  }, [pitch.video]);
 
   const profileUserId = pitch.authorId || pitch.founderId || pitch.startupId;
 
@@ -89,6 +150,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
     e.stopPropagation();
     const nextMuted = !isMuted;
     setIsMuted(nextMuted);
+    setGlobalMuted(nextMuted);
     if (videoRef.current) {
       videoRef.current.muted = nextMuted;
     }
@@ -163,7 +225,6 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
                   muted={isMuted}
                   loop
                   playsInline
-                  autoPlay
                   onClick={() => navigate(`/pitch/${pitch.id}`)}
                 />
                 <button

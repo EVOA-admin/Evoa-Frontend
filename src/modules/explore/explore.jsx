@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useDataCache } from "../../contexts/DataCacheContext";
-import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay } from "react-icons/fa";
+import { FaSearch, FaFire, FaTrophy, FaEye, FaPlay, FaCalendarAlt } from "react-icons/fa";
 import AppHeader from "../../components/layout/AppHeader";
 import exploreService from "../../services/exploreService";
 import VideoThumbnail from "../../components/shared/VideoThumbnail";
@@ -392,37 +392,80 @@ export default function Explore() {
         {!searchQuery.trim() && (
           <>
 
-            {/* Battleground Spotlight */}
+            {/*
+              -----------------------------------------------------------------
+              TEMPORARILY DISABLED: Battleground Spotlight
+              Uncomment below to re-enable Battleground Spotlight
+              -----------------------------------------------------------------
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-3">
+                  <FaFire className={isDark ? 'text-orange-400' : 'text-orange-600'} size={16} />
+                  <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Battleground Spotlight
+                  </h2>
+                </div>
+                <div className={`rounded-2xl p-6 transition-all ${isDark
+                  ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20'
+                  : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
+                  }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                      Live Pitch Battle
+                    </h3>
+                    <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-[#E8341A]/15 text-[#ff9c8f] border border-[#E8341A]/20' : 'bg-[#E8341A]/10 text-[#E8341A] border border-[#E8341A]/15'
+                      }`}>
+                      Open Now
+                    </div>
+                  </div>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                    Watch startups compete for investment in real-time
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/battlefield')}
+                    className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-[#E8341A] text-white hover:bg-[#c92a13]' : 'bg-[#E8341A] text-white hover:bg-[#c92a13]'
+                      }`}
+                  >
+                    {userRole === 'startup' ? 'Enter Battlefield' : 'Watch Here'}
+                  </button>
+                </div>
+              </div>
+            */}
+
+            {/* Event Spotlight */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-3">
-                <FaFire className={isDark ? 'text-orange-400' : 'text-orange-600'} size={16} />
+                <FaCalendarAlt className={isDark ? 'text-blue-400' : 'text-blue-600'} size={16} />
                 <h2 className={`text-base font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Battleground Spotlight
+                  Featured Event
                 </h2>
               </div>
-              <div className={`rounded-2xl p-6 transition-all ${isDark
-                ? 'bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-500/20'
-                : 'bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 shadow-md'
-                }`}>
+              <div
+                onClick={() => navigate('/event')}
+                className={`rounded-2xl p-6 transition-all cursor-pointer ${isDark
+                  ? 'bg-gradient-to-r from-blue-950/40 via-indigo-950/30 to-slate-900/40 border border-blue-500/20 hover:border-blue-500/40'
+                  : 'bg-gradient-to-r from-blue-50 via-slate-50 to-indigo-50 border border-blue-200 shadow-md hover:shadow-lg'
+                  }`}
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Live Pitch Battle
+                    Pitch Live to VCs &amp; Angel Investors
                   </h3>
-                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-[#E8341A]/15 text-[#ff9c8f] border border-[#E8341A]/20' : 'bg-[#E8341A]/10 text-[#E8341A] border border-[#E8341A]/15'
+                  <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isDark ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20' : 'bg-blue-600/10 text-blue-700 border border-blue-600/15'
                     }`}>
                     Open Now
                   </div>
                 </div>
                 <p className={`text-sm mb-4 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
-                  Watch startups compete for investment in real-time
+                  Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium.
                 </p>
                 <button
                   type="button"
-                  onClick={() => navigate('/battlefield')}
-                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-[#E8341A] text-white hover:bg-[#c92a13]' : 'bg-[#E8341A] text-white hover:bg-[#c92a13]'
+                  onClick={(e) => { e.stopPropagation(); navigate('/event'); }}
+                  className={`px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 text-sm transition-all ${isDark ? 'bg-blue-600 text-white hover:bg-blue-500' : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                 >
-                  {userRole === 'startup' ? 'Enter Battlefield' : 'Watch Here'}
+                  Join Event
                 </button>
               </div>
             </div>
