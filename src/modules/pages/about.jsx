@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import AdityaImg from "../../../team_images/Aditya_image.jpg";
 import AbhishekImg from "../../../team_images/Abhishek_Image.jpeg";
-import DivyanshuImg from "../../../team_images/Divyanshu_Image.jpeg";
 import Footer from "../../components/layout/footer";
 import LandingNav from "../../components/layout/LandingNav";
 
@@ -435,7 +434,6 @@ function Team() {
   const members = [
     { name: 'Aditya Singh', role: 'CEO & Co-Founder', photo: AdityaImg, acc: 'var(--blue)' },
     { name: 'Abhishek Kumar', role: 'CTO & Co-Founder', photo: AbhishekImg, acc: 'var(--blue-mid)' },
-    { name: 'Divyanshu Singh', role: 'Full Stack Developer', photo: DivyanshuImg, acc: 'var(--blue-bright)' },
   ];
 
   return (
@@ -449,7 +447,7 @@ function Team() {
         <p className="abt-sec-sub">A small, focused team of builders, thinkers, and operators driven by a shared belief in the power of ideas.</p>
       </div>
 
-      <div className="abt-team-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+      <div className="abt-team-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 24, maxWidth: 640, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         {members.map((m, i) => (
           <div key={m.name} className={`abt-card abt-reveal delay-${i + 1}`} style={{ padding: '40px 28px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,transparent,${m.acc},transparent)` }} />

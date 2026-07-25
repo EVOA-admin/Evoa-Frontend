@@ -371,7 +371,7 @@ export default function Incubator() {
               )}
 
               {feedItems.length > 0 && (
-                <div className="space-y-4 mb-4">
+                <div className="space-y-2.5 mb-2.5">
                   {feedItems.map((item) => {
                     if (item.itemType === 'pitch') {
                       const pitch = item.data;

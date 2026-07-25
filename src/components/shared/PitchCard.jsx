@@ -98,7 +98,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
 
   return (
     <>
-      <div className={`rounded-2xl overflow-hidden transition-all duration-300 mb-4 border ${
+      <div className={`rounded-2xl overflow-hidden transition-all duration-300 mb-2.5 border ${
         isDark
           ? 'bg-black/60 backdrop-blur-xl border-white/10 shadow-lg shadow-black/40'
           : 'bg-white border-gray-200/80 shadow-sm shadow-gray-200/50'
@@ -182,22 +182,24 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-4">
-              {/* Support (handshake) button - Icon only */}
+              {/* Support (handshake) button */}
               <button
                 onClick={handleSupport}
-                className={`cursor-pointer transition-colors ${isSupported ? 'text-evoa' : isDark ? 'text-white hover:text-white/80' : 'text-black hover:text-gray-700'}`}
+                className={`flex items-center gap-1.5 cursor-pointer transition-colors ${isSupported ? 'text-evoa' : isDark ? 'text-white hover:text-white/80' : 'text-black hover:text-gray-700'}`}
                 title={isSupported ? "Supported" : "Support"}
               >
                 <FaHandshake size={20} />
+                <span className="text-xs font-semibold">{likesCount}</span>
               </button>
 
-              {/* Comment button - Icon only */}
+              {/* Comment button */}
               <button
                 onClick={handleCommentClick}
-                className={`cursor-pointer transition-colors ${isDark ? 'text-white hover:text-white/80' : 'text-black hover:text-gray-700'}`}
+                className={`flex items-center gap-1.5 cursor-pointer transition-colors ${isDark ? 'text-white hover:text-white/80' : 'text-black hover:text-gray-700'}`}
                 title="Comment"
               >
                 <FaRegComment size={18} />
+                <span className="text-xs font-semibold">{commentCount}</span>
               </button>
 
               {/* Share button - Icon only */}
@@ -231,22 +233,6 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
             >
               {isSaved ? <FaBookmark size={18} /> : <FaRegBookmark size={18} />}
             </button>
-          </div>
-
-          {/* Metrics */}
-          <div className="flex items-center gap-4 mb-2 text-xs font-medium">
-            <span className={isDark ? 'text-white/60' : 'text-black/60'}>
-              {likesCount} {likesCount === 1 ? 'support' : 'supports'}
-            </span>
-            <span className={isDark ? 'text-white/60' : 'text-black/60'}>
-              {commentCount} {commentCount === 1 ? 'comment' : 'comments'}
-            </span>
-            <span className={isDark ? 'text-white/60' : 'text-black/60'}>
-              {pitch.views || 0} views
-            </span>
-            <span className={isDark ? 'text-white/60' : 'text-black/60'}>
-              {pitch.clickthroughs || 0} clickthroughs
-            </span>
           </div>
 
           {/* Description & Hashtags — Hashtags moved below description, 1-line truncation with ... more / Show Less */}

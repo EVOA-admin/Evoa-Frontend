@@ -122,6 +122,7 @@ const CSS = `
 
 /* ── Breadcrumb ── */
 .ba-breadcrumb {
+  max-width:860px;margin:0 auto;
   padding:24px 80px 0;
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--text-mute);
@@ -135,7 +136,8 @@ const CSS = `
 /* ── Back button ── */
 .ba-back {
   display:inline-flex;align-items:center;gap:8px;
-  padding:28px 80px 0;
+  max-width:860px;margin:0 auto;
+  padding:16px 80px 0;
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;
   text-transform:uppercase;color:var(--blue);
   background:none;border:none;cursor:pointer;
@@ -146,27 +148,13 @@ const CSS = `
 .ba-back svg { width:14px;height:14px;transition:transform .2s; }
 .ba-back:hover svg { transform:translateX(-4px); }
 
-/* ── Hero image ── */
-.ba-hero-img {
-  position:relative;width:100%;height:clamp(300px,45vw,560px);overflow:hidden;
-  margin-top:32px;
-  animation:ba-fadeUp .6s .15s ease both;opacity:0;animation-fill-mode:forwards;
-}
-.ba-hero-img img {
-  width:100%;height:100%;object-fit:cover;display:block;
-}
-.ba-hero-img-overlay {
-  position:absolute;inset:0;
-  background:linear-gradient(to bottom,var(--bg-alt) 0%,var(--bg-alt) 100%);
-}
-
 /* ── Article meta header ── */
 .ba-meta {
-  max-width:860px;margin:0 auto;padding:52px 80px 0;
+  max-width:860px;margin:0 auto;padding:24px 80px 0;
   animation:ba-fadeUp .6s .2s ease both;opacity:0;animation-fill-mode:forwards;
 }
 .ba-cat-row {
-  display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;
+  display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap;
 }
 .ba-cat-badge {
   font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;
@@ -179,18 +167,34 @@ const CSS = `
 }
 .ba-title {
   font-family:'Inter', sans-serif; font-weight: 800;
-  font-size:clamp(40px,6vw,84px);
-  letter-spacing:.03em;line-height:.95;
-  margin-bottom:28px;
+  font-size:clamp(32px,4.5vw,56px);
+  letter-spacing:.02em;line-height:1.1;
+  margin-bottom:24px;
 }
 .ba-byline {
   display:flex;align-items:center;gap:20px;
   font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:var(--text-mute);
-  padding-bottom:36px;
+  padding-bottom:24px;
   border-bottom:1px solid var(--border);
 }
 .ba-byline-dot { width:4px;height:4px;border-radius:50%;background:var(--text-mute); }
+
+/* ── Hero image ── */
+.ba-hero-img {
+  position:relative;max-width:860px;margin:32px auto 0;height:clamp(240px,36vw,440px);overflow:hidden;
+  border-radius:12px;
+  border:1px solid var(--border);
+  animation:ba-fadeUp .6s .25s ease both;opacity:0;animation-fill-mode:forwards;
+}
+.ba-hero-img img {
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.ba-hero-img-overlay {
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 70%,rgba(0,0,0,0.3) 100%);
+  pointer-events:none;
+}
 
 /* ── Divider ── */
 .ba-divider {
@@ -200,7 +204,7 @@ const CSS = `
 
 /* ── ARTICLE PROSE ── */
 .ba-prose-wrap {
-  max-width:860px;margin:0 auto;padding:48px 80px 96px;
+  max-width:860px;margin:0 auto;padding:40px 80px 96px;
   animation:ba-fadeUp .7s .35s ease both;opacity:0;animation-fill-mode:forwards;
 }
 
@@ -324,13 +328,14 @@ const CSS = `
 
 /* ── Responsive ── */
 @media(max-width:1024px){
-  .ba-breadcrumb,.ba-back,.ba-meta,.ba-prose-wrap,.ba-share { padding-left:40px;padding-right:40px; }
+  .ba-breadcrumb,.ba-back,.ba-meta,.ba-hero-img,.ba-prose-wrap,.ba-share { padding-left:40px;padding-right:40px; }
 }
 @media(max-width:640px){
   .ba-breadcrumb,.ba-back { padding-left:20px;padding-right:20px; }
   .ba-meta { padding-left:20px;padding-right:20px; }
+  .ba-hero-img { padding-left:20px;padding-right:20px; }
   .ba-prose-wrap,.ba-share { padding-left:20px;padding-right:20px; }
-  .ba-title { font-size:clamp(36px,10vw,56px); }
+  .ba-title { font-size:clamp(28px,8vw,44px); }
 }
 `;
 
@@ -469,15 +474,7 @@ export default function BlogArticle() {
       {/* Article */}
       {!loading && post && (
         <>
-          {/* Cover image */}
-          {post.cover_image && (
-            <div className="ba-hero-img">
-              <img src={post.cover_image} alt={post.title} />
-              <div className="ba-hero-img-overlay" />
-            </div>
-          )}
-
-          {/* Meta header */}
+          {/* Meta header (Category, Title, Author & Date) */}
           <header className="ba-meta">
             <div className="ba-cat-row">
               <span className="ba-cat-badge">{post.category}</span>
@@ -490,6 +487,14 @@ export default function BlogArticle() {
               <span>{formatDate(post.created_at)}</span>
             </div>
           </header>
+
+          {/* Cover image (below header, above body) */}
+          {post.cover_image && (
+            <div className="ba-hero-img">
+              <img src={post.cover_image} alt={post.title} />
+              <div className="ba-hero-img-overlay" />
+            </div>
+          )}
 
           {/* Prose content */}
           <main className="ba-prose-wrap">

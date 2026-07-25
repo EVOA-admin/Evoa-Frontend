@@ -764,7 +764,7 @@ export default function StartupRegistration() {
   const [filePreviews, setFilePreviews] = useState({});
 
   // ── Quick Onboarding state (only used in ?mode=quick) ──────────────────────
-  const [quickForm, setQuickForm] = useState({ startupName: '', startupUsername: '', startupLogo: null, pitchVideo: null });
+  const [quickForm, setQuickForm] = useState({ startupName: '', startupUsername: '', phone: '', startupLogo: null, pitchVideo: null });
   const [quickFilePreviews, setQuickFilePreviews] = useState({});
 
   // ── Complete Registration state (only used in ?mode=complete) ──────────────
@@ -774,6 +774,7 @@ export default function StartupRegistration() {
     founders: [createFounder()],
     startupName: "",
     startupUsername: "",
+    phone: "",
     startupLogo: null,
     companyEmail: "",
     country: "India",
@@ -967,6 +968,10 @@ export default function StartupRegistration() {
           setError("Startup username / handle is required.");
           return false;
         }
+        if (!formData.phone.trim()) {
+          setError("Phone number is required.");
+          return false;
+        }
         if (!formData.companyEmail.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(formData.companyEmail)) {
           setError("A valid company email is required.");
           return false;
@@ -1099,6 +1104,8 @@ export default function StartupRegistration() {
       const payload = {
         name: formData.startupName,
         username: formData.startupUsername,
+        phone: formData.phone.trim(),
+        mobile: formData.phone.trim(),
         companyEmail: formData.companyEmail,
         website: formData.websiteUrl,
         stage: formData.stage,
@@ -1324,6 +1331,13 @@ export default function StartupRegistration() {
                   placeholder="Startup Username (@handle) *"
                   value={formData.startupUsername}
                   onChange={(e) => handleInputChange("startupUsername", e.target.value)}
+                  className={inputCls}
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone Number *"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
                   className={inputCls}
                 />
                 <FileUploadBox field="startupLogo" label="Startup Logo" accept="image/*" previewHeight="h-24" />
@@ -1618,6 +1632,7 @@ export default function StartupRegistration() {
     setError('');
     if (!quickForm.startupName.trim()) { setError('Startup name is required.'); return; }
     if (!quickForm.startupUsername.trim()) { setError('Startup username / @handle is required.'); return; }
+    if (!quickForm.phone.trim()) { setError('Phone number is required.'); return; }
     try {
       setLoading(true);
       const [logoUrl, pitchVideoUrl] = await Promise.all([
@@ -1627,6 +1642,8 @@ export default function StartupRegistration() {
       const payload = {
         name: quickForm.startupName.trim(),
         username: quickForm.startupUsername.trim().toLowerCase().replace(/\s+/g, ''),
+        phone: quickForm.phone.trim(),
+        mobile: quickForm.phone.trim(),
         logoUrl,
         pitchVideoUrl,
         founders: [],
@@ -1729,6 +1746,18 @@ export default function StartupRegistration() {
                 />
               </div>
               <p style={{ fontSize: 11, color: '#94A3B8', marginTop: 5 }}>This becomes your unique @handle on EVOA.</p>
+            </div>
+
+            {/* Phone Number */}
+            <div style={{ marginBottom: 18 }}>
+              <label className="reg-label">Phone Number <span style={{ color: '#E53E3E' }}>*</span></label>
+              <input
+                type="tel"
+                className="reg-input"
+                placeholder="e.g. +91 9876543210"
+                value={quickForm.phone}
+                onChange={e => setQuickForm(p => ({ ...p, phone: e.target.value }))}
+              />
             </div>
 
             {/* Logo (optional) */}

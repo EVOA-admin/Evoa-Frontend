@@ -172,6 +172,7 @@ const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
 const createInitialFormData = () => ({
   fullName: "",
+  phone: "",
   profilePhoto: null,
   designation: "",
   investorType: "",
@@ -328,6 +329,10 @@ export default function InvestorRegistration() {
           setError("Full name is required.");
           return false;
         }
+        if (!formData.phone.trim()) {
+          setError("Phone number is required.");
+          return false;
+        }
         if (!formData.investorType) {
           setError("Please select your investor type.");
           return false;
@@ -412,6 +417,8 @@ export default function InvestorRegistration() {
       const { min, max } = parseInvestmentRange(formData.investmentRange);
       const investorData = {
         name: formData.companyName || formData.fullName,
+        phone: formData.phone.trim() || undefined,
+        mobile: formData.phone.trim() || undefined,
         type: formData.investorType || undefined,
         designation: formData.designation || undefined,
         companyName: formData.companyName || undefined,
@@ -510,6 +517,7 @@ export default function InvestorRegistration() {
           <div className="space-y-3 sm:space-y-4">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">1. Identity &amp; Investor Type</h2>
             <input type="text" placeholder="Full Name *" value={formData.fullName} onChange={(e) => handleInputChange("fullName", e.target.value)} className={inputCls} />
+            <input type="tel" placeholder="Phone Number *" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} className={inputCls} />
             <label className="block text-sm text-slate-500">
               Profile Photo (Recommended)
               <input type="file" accept="image/*" onChange={(e) => handleFileUpload("profilePhoto", e.target.files?.[0])} className="hidden" />
