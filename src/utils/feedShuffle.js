@@ -24,7 +24,7 @@ function interleaveFeedItems(pitches, posts) {
 
   const totalPitches = shuffledPitches.length;
   const totalPosts = shuffledPosts.length;
-  
+
   // Calculate ratio so posts and pitches are evenly distributed
   const ratio = Math.max(1, Math.floor(totalPitches / totalPosts));
   let postIdx = 0;
@@ -45,7 +45,7 @@ function interleaveFeedItems(pitches, posts) {
 /**
  * Combines pitch reels and post cards into a single feed.
  * If existingFeedItems is provided, it updates items in-place to preserve established card positions,
- * eliminating visual flickering and layout jumps.
+ * eliminating visual flickering and preventing accidental card purges.
  */
 export function buildRandomizedFeed(pitchList = [], postList = [], pinnedUploads = [], existingFeedItems = null) {
   const pitchItems = (pitchList || []).map(p => ({ itemType: 'pitch', id: `pitch-${p.id}`, data: p }));
@@ -54,7 +54,10 @@ export function buildRandomizedFeed(pitchList = [], postList = [], pinnedUploads
   const pitchItemsMap = new Map(pitchItems.map(p => [p.id, p.data]));
   const postItemsMap = new Map(postItems.map(p => [p.id, p.data]));
 
-  // In-place update if existingFeedItems exist to prevent flickering
+  const hasNewPitches = Array.isArray(pitchList) && pitchList.length > 0;
+  const hasNewPosts = Array.isArray(postList) && postList.length > 0;
+
+  // In-place update if existingFeedItems exist to preserve established card positions
   if (Array.isArray(existingFeedItems) && existingFeedItems.length > 0) {
     const updatedFeed = [];
     const seenIds = new Set();
@@ -74,11 +77,19 @@ export function buildRandomizedFeed(pitchList = [], postList = [], pinnedUploads
         if (freshData) {
           updatedFeed.push({ ...item, data: freshData });
           seenIds.add(item.id);
+        } else if (!hasNewPitches) {
+          // Preserve existing pitch if pitch fetch returned empty/failed
+          updatedFeed.push(item);
+          seenIds.add(item.id);
         }
       } else if (item.itemType === 'post') {
         const freshData = postItemsMap.get(item.id);
         if (freshData) {
           updatedFeed.push({ ...item, data: freshData });
+          seenIds.add(item.id);
+        } else if (!hasNewPosts) {
+          // Preserve existing post card if post fetch returned empty/failed
+          updatedFeed.push(item);
           seenIds.add(item.id);
         }
       }
@@ -98,8 +109,13 @@ export function buildRandomizedFeed(pitchList = [], postList = [], pinnedUploads
 
   // Initial cold load: generate a fresh interleaved feed
   const interleaved = interleaveFeedItems(pitchItems, postItems);
-  const pinnedIds = new Set((pinnedUploads || []).map(item => item.id));
-  const filteredInterleaved = interleaved.filter(item => !pinnedIds.has(item.id));
 
-  return [...(pinnedUploads || []), ...filteredInterleaved];
+  // Prepend pinned uploads if any exist
+  if (pinnedUploads && pinnedUploads.length > 0) {
+    const pinnedIds = new Set(pinnedUploads.map(p => p.id));
+    const filteredInterleaved = interleaved.filter(item => !pinnedIds.has(item.id));
+    return [...pinnedUploads, ...filteredInterleaved];
+  }
+
+  return interleaved;
 }

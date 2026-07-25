@@ -142,13 +142,15 @@ export default function Viewer() {
 
       // --- Map posts ---
       let mappedPosts = [];
-      if (postsRes.status === 'fulfilled') {
-        const rawPosts = postsRes.value?.data?.data || postsRes.value?.data?.posts || postsRes.value?.data || [];
-        const postArray = Array.isArray(rawPosts)
-          ? rawPosts
-          : (Array.isArray(rawPosts?.posts)
-            ? rawPosts.posts
-            : (Array.isArray(rawPosts?.data) ? rawPosts.data : []));
+      if (postsRes.status === 'fulfilled' && !postsRes.value?.error) {
+        const val = postsRes.value;
+        const postArray = Array.isArray(val?.data?.data)
+          ? val.data.data
+          : (Array.isArray(val?.data)
+            ? val.data
+            : (Array.isArray(val?.data?.posts)
+              ? val.data.posts
+              : (Array.isArray(val) ? val : [])));
 
         mappedPosts = postArray.map(p => {
           const isStartup = !!(p.startupId || p.user?.role === 'startup');
