@@ -209,7 +209,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
 
         {/* Pitch Media with Mute/Unmute overlay */}
         {(pitch.image || pitch.video) && (
-          <div className="relative w-full aspect-square bg-gray-900 overflow-hidden group">
+          <div className="relative w-full aspect-square bg-gray-900 overflow-hidden group isolate">
             {pitch.image ? (
               <img
                 src={pitch.image}
@@ -231,7 +231,7 @@ export default function PitchCard({ pitch, onLike, onComment, onShare, onSave, o
                 />
                 <button
                   onClick={toggleAudio}
-                  className="absolute bottom-3 right-3 p-2.5 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-all z-10 cursor-pointer shadow-lg active:scale-90"
+                  className="absolute bottom-3 right-3 p-2.5 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-all z-[2] cursor-pointer shadow-lg active:scale-90"
                   title={isMuted ? "Unmute video" : "Mute video"}
                 >
                   {isMuted ? <IoVolumeMute size={18} /> : <IoVolumeHigh size={18} />}

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRight, FaChartLine, FaFire, FaTimes } from "react-icons/fa";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -131,7 +132,7 @@ const RSS_CSS = `
 .rss-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: 99999;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -591,7 +592,7 @@ export default function RisingStartupsSection({
         inlineSection
       ) : null}
 
-      {panel}
+      {panel && typeof document !== 'undefined' ? ReactDOM.createPortal(panel, document.body) : null}
     </>
   );
 }

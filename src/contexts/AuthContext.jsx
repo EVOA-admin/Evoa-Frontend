@@ -218,13 +218,17 @@ export function AuthProvider({ children }) {
                     });
                 }
 
+                const meta = session.user.user_metadata || {};
+                const resolvedFullName = userData.fullName || meta.full_name || meta.name || meta.fullName || session.user.email?.split('@')[0] || 'User';
+                const resolvedAvatarUrl = userData.avatarUrl || meta.avatar_url || meta.picture || null;
+
                 setUser(prev => ({
                     ...prev,
                     ...userData,
                     email: session.user.email,
                     id: userData.id || session.user.id,
-                    avatarUrl: userData.avatarUrl || null,
-                    fullName: userData.fullName || null,
+                    avatarUrl: resolvedAvatarUrl,
+                    fullName: resolvedFullName,
                 }));
             }
         } catch (err) {

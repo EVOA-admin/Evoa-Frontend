@@ -49,12 +49,13 @@ export default function ReelCommentSheet({ isOpen, onClose, pitchId, pitchTitle,
         const trimmed = text.trim();
         if (!trimmed || posting) return;
         setPosting(true);
+        const authorName = currentUser?.fullName || currentUser?.email?.split('@')[0] || "User";
         const optimistic = {
             id: `tmp-${Date.now()}`,
             content: trimmed,
             userId: "me",
             createdAt: new Date().toISOString(),
-            user: { fullName: currentUser?.fullName, avatarUrl: currentUser?.avatarUrl },
+            user: { fullName: authorName, avatarUrl: currentUser?.avatarUrl },
         };
         setComments(prev => [...prev, optimistic]);
         setText("");
@@ -125,7 +126,7 @@ export default function ReelCommentSheet({ isOpen, onClose, pitchId, pitchTitle,
                         </div>
                     ) : (
                         comments.map(c => {
-                            const name = c.user?.fullName || c.authorName || "User";
+                            const name = c.user?.fullName || c.authorName || c.user?.email?.split('@')[0] || (c.userId === "me" ? (currentUser?.fullName || currentUser?.email?.split('@')[0]) : null) || "User";
                             const avatar = c.user?.avatarUrl || c.authorAvatar;
                             const time = c.createdAt ? new Date(c.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
                             return (

@@ -47,12 +47,13 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
         const trimmed = text.trim();
         if (!trimmed || posting) return;
         setPosting(true);
+        const authorName = currentUser?.fullName || currentUser?.email?.split('@')[0] || "User";
         const optimistic = {
             id: `tmp-${Date.now()}`,
             content: trimmed,
             userId: "me",
             createdAt: new Date().toISOString(),
-            user: { fullName: currentUser?.fullName, avatarUrl: currentUser?.avatarUrl },
+            user: { fullName: authorName, avatarUrl: currentUser?.avatarUrl },
         };
         setComments(prev => [...prev, optimistic]);
         setText("");
@@ -142,7 +143,7 @@ export default function PostCommentSheet({ isOpen, onClose, postId, postTitle, o
                                         onClick={() => c.userId && c.userId !== "me" && goToProfile(c.userId, currentUser, navigate)}
                                         className={`text-xs font-semibold hover:text-evoa transition-colors text-left ${isDark ? "text-white/80" : "text-gray-800"}`}
                                     >
-                                        {c.user?.fullName || c.user?.email?.split("@")[0] || "User"}
+                                        {c.user?.fullName || c.user?.email?.split("@")[0] || (c.userId === "me" ? (currentUser?.fullName || currentUser?.email?.split("@")[0]) : "User")}
                                     </button>
                                     <p className={`text-sm leading-relaxed mt-0.5 ${isDark ? "text-white/90" : "text-gray-800"}`}>{c.content}</p>
                                     <p className={`text-[10px] mt-1 ${isDark ? "text-white/40" : "text-gray-400"}`}>
