@@ -167,7 +167,8 @@ textarea.reg-input { resize:vertical; min-height:80px; }
 }
 `;
 
-const TOTAL_STEPS = 4;
+// TEMPORARY: Subscription step (Step 4) is paused for Investors.
+const TOTAL_STEPS = 3;
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
 const createInitialFormData = () => ({
@@ -455,9 +456,11 @@ export default function InvestorRegistration() {
         await updateUserProfile({ avatarUrl: profilePhotoUrl }).catch(() => {});
       }
 
-      setProfileReadyForPayment(true);
-      setCurrentStep(4);
-      setInfoMessage("Profile saved. Your account will be activated right after successful payment.");
+      // TEMPORARY: Subscription/payment step is paused for Investors.
+      // Mark registration as complete and navigate directly to /investor dashboard.
+      await completeRegistration();
+      await refreshUserProfile();
+      navigate("/investor", { replace: true });
     } catch (err) {
       console.error("Investor registration save failed:", err);
       setError(err?.message || "Failed to save your investor profile. Please try again.");
@@ -687,17 +690,9 @@ export default function InvestorRegistration() {
       return <button className="reg-btn-primary" onClick={nextStep}>Next →</button>;
     }
 
-    if (currentStep === 3) {
-      return (
-        <button className="reg-btn-primary" onClick={handleProfileSubmission} disabled={submittingProfile || checkingExistingProfile}>
-          {submittingProfile ? "Saving..." : "Go to Payment →"}
-        </button>
-      );
-    }
-
     return (
-      <button className="reg-btn-primary" onClick={handlePayment} disabled={paymentLoading || !profileReadyForPayment || checkingExistingProfile}>
-        {paymentLoading ? "Opening Payment..." : "Continue to Payment"}
+      <button className="reg-btn-primary" onClick={handleProfileSubmission} disabled={submittingProfile || checkingExistingProfile}>
+        {submittingProfile ? "Saving..." : "Complete Registration ✓"}
       </button>
     );
   };
