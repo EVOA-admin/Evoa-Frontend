@@ -439,27 +439,27 @@ export default function Explore() {
                 const contentMap = {
                   startup: {
                     title: "Startup Investor Meetup",
-                    badge: "Open Now",
-                    description: "Pitch your startup live in 3 minutes to active VCs and Angel Investors, and receive 1 Month of EVOA Premium.",
-                    buttonText: "Register",
+                    badge: "Applications Open",
+                    description: "Pitch your startup live to VCs and angel investors, gain valuable feedback, build connections, and unlock new funding opportunities.",
+                    buttonText: "Register Now",
                   },
                   investor: {
                     title: "Startup Investor Meetup",
                     badge: "VIP Access",
-                    description: "Evaluate top high-growth startups pitching live in 3-minute rounds. Connect 1-on-1 with vetted founders & access curated pitch decks.",
-                    buttonText: "Register",
+                    description: "Meet promising startups, discover investment opportunities, connect with founders, and access curated deal flow before everyone else.",
+                    buttonText: "Reserve Seat",
                   },
                   incubator: {
                     title: "Startup Investor Meetup",
                     badge: "Partner Stage",
-                    description: "Present your accelerated startups to top angel syndicates, VCs, and mentors. Expand your ecosystem network & discover co-investment deals.",
-                    buttonText: "Join Event",
+                    description: "Showcase your startup portfolio, connect with investors, discover partnerships, and strengthen your innovation ecosystem.",
+                    buttonText: "Join as Partner",
                   },
                   viewer: {
                     title: "Startup Investor Meetup",
                     badge: "Live Event",
-                    description: "Watch ambitious founders pitch live to top investors in 3 minutes. Discover breakthrough innovations and vote for your favorite startups.",
-                    buttonText: "Join Event",
+                    description: "Watch founders pitch live, explore innovative startups, learn from industry experts, and network with the startup community.",
+                    buttonText: "Join",
                   },
                 };
 
@@ -489,7 +489,7 @@ export default function Explore() {
                           {cardContent.badge}
                         </div>
                       </div>
-                      <p className={`text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed line-clamp-2 sm:line-clamp-3 ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
+                      <p className={`text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed ${isDark ? 'text-white/60' : 'text-gray-500'}`}>
                         {cardContent.description}
                       </p>
                       <button
