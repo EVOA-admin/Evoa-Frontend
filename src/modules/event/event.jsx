@@ -171,6 +171,7 @@ export default function EventPage() {
     try {
       const price = roleTicketPrice;
       const title = eventData?.collaborationName || eventData?.title || "EVOA Event Pass";
+      const currentEventType = eventData?.eventType || eventData?.event_type || 'event_with_subscription';
 
       if (price === 0) {
         // Free Pass Registration
@@ -183,8 +184,8 @@ export default function EventPage() {
         planType: "startup_pro",
         user,
         description: `${title} (${role.toUpperCase()}) — ₹${price}`,
-        notes: { eventId: eventData?.id, userRole: role },
-        createOrder: () => pricingService.createEventOrder({ amount: price }),
+        notes: { eventId: eventData?.id, userRole: role, eventType: currentEventType },
+        createOrder: () => pricingService.createEventOrder({ eventId: eventData?.id, amount: price, eventType: currentEventType }),
         verifyPayment: (payload) => pricingService.verifyPayment(payload),
         onSuccess: async () => {
           setShowSuccessModal(true);

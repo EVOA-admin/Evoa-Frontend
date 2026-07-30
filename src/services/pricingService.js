@@ -12,8 +12,8 @@ export const verifyPayment = async (payload) => {
   return await apiClient.post('/verify-payment', payload);
 };
 
-export const createEventOrder = async () => {
-  return await apiClient.post('/create-event-order');
+export const createEventOrder = async (payload = {}) => {
+  return await apiClient.post('/create-event-order', payload);
 };
 
 export default {
