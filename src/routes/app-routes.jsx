@@ -62,6 +62,7 @@ const IncubatorProfile = lazy(() => import('../modules/incubator/incubator-profi
 const Inbox           = lazy(() => import('../modules/chat/inbox'));
 const Conversation    = lazy(() => import('../modules/chat/conversation'));
 const EventPage       = lazy(() => import('../modules/event/event'));
+const MyTicketsPage   = lazy(() => import('../modules/event/my-tickets'));
 
 // Public profile — accessible by guests (no auth required)
 const UserPublicProfile = lazy(() => import('../modules/profile/user-public-profile'));
@@ -172,6 +173,8 @@ export default function AppRoutes() {
         <Route path="inbox"             element={<Page><Inbox /></Page>} />
         <Route path="inbox/:id"         element={<Page><Conversation /></Page>} />
         <Route path="event"             element={<Page><EventPage /></Page>} />
+        <Route path="event/my-tickets"  element={<Page><MyTicketsPage /></Page>} />
+        <Route path="my-tickets"        element={<Page><MyTicketsPage /></Page>} />
 
       </Route>
 

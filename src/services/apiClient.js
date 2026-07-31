@@ -30,11 +30,18 @@ const normalizeApiUrl = (rawUrl) => {
   return `${trimmedUrl}/api`;
 };
 
-const API_URL = normalizeApiUrl(import.meta.env.VITE_API_BASE_URL || '');
-
-if (!API_URL) {
-  console.warn('⚠️ VITE_API_BASE_URL not set! Add it to .env file');
+function resolveApiUrl() {
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL;
+  if (configuredUrl) {
+    return normalizeApiUrl(configuredUrl);
+  }
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return 'https://evoa-backend.onrender.com/api';
+  }
+  return 'http://localhost:3000/api';
 }
+
+const API_URL = resolveApiUrl();
 
 export const setAuthToken = (token) => {
   token ? localStorage.setItem('authToken', token) : localStorage.removeItem('authToken');
