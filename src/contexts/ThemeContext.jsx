@@ -22,16 +22,22 @@ const adjustHexColor = (hex, amount) => {
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      try { return localStorage.getItem('theme') || 'dark'; } catch (e) {}
+      try {
+        const saved = localStorage.getItem('theme');
+        if (saved) return saved;
+      } catch (e) {}
     }
-    return 'dark';
+    return 'light';
   });
 
   const [accentColor, setAccentColor] = useState(() => {
     if (typeof window !== 'undefined') {
-      try { return localStorage.getItem('evoa_ui_theme_accent') || 'var(--evoa-accent-primary)'; } catch (e) {}
+      try {
+        const saved = localStorage.getItem('evoa_ui_theme_accent');
+        if (saved && saved !== 'var(--evoa-accent-primary)') return saved;
+      } catch (e) {}
     }
-    return 'var(--evoa-accent-primary)';
+    return '#3B82F6';
   });
 
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
