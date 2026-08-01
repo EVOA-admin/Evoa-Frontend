@@ -209,7 +209,16 @@ export default function StartupProfile() {
         : "";
 
     // Check if startup profile is fully complete (same logic as popup)
-    const isProfileComplete = (s) => !!(s?.pitchVideoUrl && s?.description?.trim() && s?.industries?.length > 0 && s?.stage && s?.verification?.entityType);
+    const isProfileComplete = (s) => {
+        if (!s) return false;
+        const hasDesc = !!((s.description && s.description.trim()) || (s.shortDescription && s.shortDescription.trim()));
+        const hasIndustry = !!((s.industries && s.industries.length > 0) || s.industry);
+        const hasStage = !!s.stage;
+        const hasVerification = !!(s.verification?.entityType || s.verification?.countryCode);
+        const hasEmail = !!((s.companyEmail && s.companyEmail.trim()) || (s.founders?.[0]?.email && s.founders[0].email.trim()) || (s.founder?.email && s.founder.email.trim()));
+        const hasFounder = !!(s.founders?.length > 0 && s.founders[0]?.role);
+        return hasDesc && hasIndustry && hasStage && hasVerification && hasEmail && hasFounder;
+    };
 
     const headerActions = (
         <div className="relative">

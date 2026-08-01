@@ -10,13 +10,13 @@ const DISMISS_KEY = 'evoa_reg_popup_dismissed';
  */
 function isProfileComplete(startup) {
   if (!startup) return false;
-  return !!(
-    startup.pitchVideoUrl &&
-    startup.description?.trim() &&
-    startup.industries?.length > 0 &&
-    startup.stage &&
-    startup.verification?.entityType
-  );
+  const hasDesc = !!((startup.description && startup.description.trim()) || (startup.shortDescription && startup.shortDescription.trim()));
+  const hasIndustry = !!((startup.industries && startup.industries.length > 0) || startup.industry);
+  const hasStage = !!startup.stage;
+  const hasVerification = !!(startup.verification?.entityType || startup.verification?.countryCode);
+  const hasEmail = !!((startup.companyEmail && startup.companyEmail.trim()) || (startup.founders?.[0]?.email && startup.founders[0].email.trim()) || (startup.founder?.email && startup.founder.email.trim()));
+  const hasFounder = !!(startup.founders?.length > 0 && startup.founders[0]?.role);
+  return hasDesc && hasIndustry && hasStage && hasVerification && hasEmail && hasFounder;
 }
 
 const CSS = `

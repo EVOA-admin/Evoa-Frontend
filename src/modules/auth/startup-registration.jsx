@@ -248,6 +248,11 @@ const INDUSTRIES = [
   "Others",
 ];
 const STAGES = ["Idea Stage", "Pre-Seed", "Seed", "Series A", "Series B+", "Growth / Scale"];
+const STATES_LIST = [
+  "Uttar Pradesh", "Delhi NCR", "Maharashtra", "Karnataka", "Tamil Nadu",
+  "Gujarat", "Rajasthan", "West Bengal", "Telangana", "Kerala", "Haryana",
+  "Madhya Pradesh", "Punjab", "Bihar", "Odisha", "Others"
+];
 const COUNTRY_OPTIONS = [
   { value: "IN", label: "🇮🇳 India" },
   { value: "US", label: "🇺🇸 United States" },
@@ -764,7 +769,20 @@ export default function StartupRegistration() {
   const [filePreviews, setFilePreviews] = useState({});
 
   // ── Quick Onboarding state (only used in ?mode=quick) ──────────────────────
-  const [quickForm, setQuickForm] = useState({ startupName: '', startupUsername: '', phone: '', startupLogo: null, pitchVideo: null });
+  const [quickForm, setQuickForm] = useState({
+    startupName: '',
+    startupUsername: '',
+    phone: '',
+    startupLogo: null,
+    pitchVideo: null,
+    founders: [{ name: '', role: 'Founder' }],
+    pitchDeck: null,
+    websiteUrl: '',
+    city: '',
+    state: '',
+    stage: '',
+    revenue: '',
+  });
   const [quickFilePreviews, setQuickFilePreviews] = useState({});
 
   // ── Complete Registration state (only used in ?mode=complete) ──────────────
@@ -829,9 +847,13 @@ export default function StartupRegistration() {
         ...prev,
         startupName: s.name || '',
         startupUsername: s.username || '',
+        phone: s.phone || s.mobile || '',
         companyEmail: s.companyEmail || '',
         industries: s.industries || [],
         stage: s.stage || '',
+        city: s.location?.city || '',
+        state: s.location?.state || '',
+        revenue: s.revenue !== null && s.revenue !== undefined ? s.revenue.toString() : '',
         countryOfIncorporation: s.verification?.countryCode || '',
         legalEntityType: s.verification?.entityType || '',
         registrationIdPrimary: s.verification?.value || '',
@@ -947,10 +969,6 @@ export default function StartupRegistration() {
       case 1: {
         for (let i = 0; i < formData.founders.length; i += 1) {
           const founder = formData.founders[i];
-          if (!founder.name.trim()) {
-            setError(`Founder ${i + 1}: Full name is required.`);
-            return false;
-          }
           if (!founder.email.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(founder.email)) {
             setError(`Founder ${i + 1}: A valid email is required.`);
             return false;
@@ -959,18 +977,6 @@ export default function StartupRegistration() {
             setError(`Founder ${i + 1}: Please select a role.`);
             return false;
           }
-        }
-        if (!formData.startupName.trim()) {
-          setError("Startup name is required.");
-          return false;
-        }
-        if (!formData.startupUsername.trim()) {
-          setError("Startup username / handle is required.");
-          return false;
-        }
-        if (!formData.phone.trim()) {
-          setError("Phone number is required.");
-          return false;
         }
         if (!formData.companyEmail.trim() || !/^[^@]+@[^@]+\.[^@]+$/.test(formData.companyEmail)) {
           setError("A valid company email is required.");
@@ -981,10 +987,6 @@ export default function StartupRegistration() {
       case 2: {
         if (formData.industries.length === 0) {
           setError("Please select at least one industry.");
-          return false;
-        }
-        if (!formData.stage) {
-          setError("Please select the startup stage.");
           return false;
         }
         if (!formData.countryOfIncorporation) {
@@ -1104,14 +1106,17 @@ export default function StartupRegistration() {
       const payload = {
         name: formData.startupName,
         username: formData.startupUsername,
-        phone: formData.phone.trim(),
-        mobile: formData.phone.trim(),
+        phone: formData.phone ? formData.phone.trim() : undefined,
+        mobile: formData.phone ? formData.phone.trim() : undefined,
         companyEmail: formData.companyEmail,
         website: formData.websiteUrl,
         stage: formData.stage,
+        revenue: formData.revenue ? Number(formData.revenue) : undefined,
         industries: formData.industries,
         location: {
-          country: formData.country,
+          city: formData.city || undefined,
+          state: formData.state || undefined,
+          country: formData.country || 'India',
         },
         founders: foundersWithPhotos.map((founder) => ({
           name: founder.name,
@@ -1220,7 +1225,7 @@ export default function StartupRegistration() {
                   className="p-3 sm:p-4 rounded-xl border bg-slate-50 border-slate-200"
                 >
             <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-semibold text-slate-700">Founder {index + 1}</span>
+                    <span className="text-sm font-semibold text-slate-700">Founder {index + 1}{founder.name ? `: ${founder.name}` : ''}</span>
                     {formData.founders.length > 1 && (
                       <button
                         type="button"
@@ -1232,13 +1237,6 @@ export default function StartupRegistration() {
                     )}
                   </div>
                   <div className="space-y-2.5">
-                    <input
-                      type="text"
-                      placeholder="Founder Name *"
-                      value={founder.name}
-                      onChange={(e) => handleFounderChange(index, "name", e.target.value)}
-                      className={inputCls}
-                    />
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="email"
@@ -1319,27 +1317,6 @@ export default function StartupRegistration() {
                 Startup Details
               </p>
               <div className="space-y-2.5">
-                <input
-                  type="text"
-                  placeholder="Startup Name *"
-                  value={formData.startupName}
-                  onChange={(e) => handleInputChange("startupName", e.target.value)}
-                  className={inputCls}
-                />
-                <input
-                  type="text"
-                  placeholder="Startup Username (@handle) *"
-                  value={formData.startupUsername}
-                  onChange={(e) => handleInputChange("startupUsername", e.target.value)}
-                  className={inputCls}
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone Number *"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  className={inputCls}
-                />
                 <FileUploadBox field="startupLogo" label="Startup Logo" accept="image/*" previewHeight="h-24" />
                 <input
                   type="email"
@@ -1381,13 +1358,6 @@ export default function StartupRegistration() {
                 ))}
               </div>
             </div>
-
-            <SearchableSelect
-              value={formData.stage}
-              onChange={(value) => handleInputChange("stage", value)}
-              options={STAGES.map((stage) => ({ value: stage, label: stage }))}
-              placeholder="Stage of Startup *"
-            />
 
             <div className="border-t border-slate-100 pt-4">
               <p className="text-xs font-semibold uppercase tracking-wide mb-3 text-slate-400">
@@ -1519,7 +1489,6 @@ export default function StartupRegistration() {
               className={inputCls}
             />
             <FileUploadBox field="pitchVideo" label="Pitch Video (90 sec - 3 min)" accept="video/*" previewHeight="h-32" />
-            <FileUploadBox field="pitchDeck" label="Pitch Deck PDF" accept=".pdf" />
             <div className="grid grid-cols-3 gap-2">
               <input
                 type="number"
@@ -1556,13 +1525,6 @@ export default function StartupRegistration() {
                 Links (Optional)
               </p>
               <div className="space-y-2.5">
-                <input
-                  type="url"
-                  placeholder="Website URL"
-                  value={formData.websiteUrl}
-                  onChange={(e) => handleInputChange("websiteUrl", e.target.value)}
-                  className={inputCls}
-                />
                 <input
                   type="url"
                   placeholder="LinkedIn Page"
@@ -1609,7 +1571,29 @@ export default function StartupRegistration() {
     }
   };
 
-  // ── Quick File Upload handler (for quick onboarding form) ─────────────────
+  // ── Quick Onboarding helper handlers ──────────────────────────────────────
+  const handleQuickFounderChange = (index, field, value) => {
+    setQuickForm(prev => {
+      const founders = [...prev.founders];
+      founders[index] = { ...founders[index], [field]: value };
+      return { ...prev, founders };
+    });
+  };
+
+  const addQuickFounder = () => {
+    setQuickForm(prev => ({
+      ...prev,
+      founders: [...prev.founders, { name: '', role: 'Co-founder' }],
+    }));
+  };
+
+  const removeQuickFounder = (index) => {
+    setQuickForm(prev => ({
+      ...prev,
+      founders: prev.founders.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleQuickFileUpload = (field, file) => {
     if (!file) return;
     if (field === 'pitchVideo' && file.size > 50 * 1024 * 1024) {
@@ -1618,12 +1602,17 @@ export default function StartupRegistration() {
     if (field === 'startupLogo' && file.size > 5 * 1024 * 1024) {
       setError('Logo must be under 5 MB.'); return;
     }
+    if (field === 'pitchDeck' && file.size > 20 * 1024 * 1024) {
+      setError('Pitch Deck PDF size must be under 20 MB.'); return;
+    }
     setError('');
     setQuickForm(prev => ({ ...prev, [field]: file }));
     if (file.type.startsWith('image/')) {
       setQuickFilePreviews(prev => ({ ...prev, [field]: { type: 'image', url: URL.createObjectURL(file) } }));
     } else if (file.type.startsWith('video/')) {
       setQuickFilePreviews(prev => ({ ...prev, [field]: { type: 'video', url: URL.createObjectURL(file) } }));
+    } else {
+      setQuickFilePreviews(prev => ({ ...prev, [field]: { type: 'file', name: file.name } }));
     }
   };
 
@@ -1633,25 +1622,35 @@ export default function StartupRegistration() {
     if (!quickForm.startupName.trim()) { setError('Startup name is required.'); return; }
     if (!quickForm.startupUsername.trim()) { setError('Startup username / @handle is required.'); return; }
     if (!quickForm.phone.trim()) { setError('Phone number is required.'); return; }
+
+    const validFounders = (quickForm.founders || []).filter(f => f.name && f.name.trim());
+    if (validFounders.length === 0) { setError('At least one founder/co-founder name is required.'); return; }
+
     try {
       setLoading(true);
-      const [logoUrl, pitchVideoUrl] = await Promise.all([
-        uploadToStorage(quickForm.startupLogo, 'logo'),
+      const [pitchVideoUrl, pitchDeckUrl] = await Promise.all([
         uploadToStorage(quickForm.pitchVideo, 'pitch_video'),
+        uploadToStorage(quickForm.pitchDeck, 'pitch_deck'),
       ]);
       const payload = {
         name: quickForm.startupName.trim(),
         username: quickForm.startupUsername.trim().toLowerCase().replace(/\s+/g, ''),
         phone: quickForm.phone.trim(),
         mobile: quickForm.phone.trim(),
-        logoUrl,
+        website: quickForm.websiteUrl.trim() || undefined,
+        stage: quickForm.stage || undefined,
+        revenue: Number(quickForm.revenue) || undefined,
+        location: (quickForm.city.trim() || quickForm.state)
+          ? { city: quickForm.city.trim(), state: quickForm.state, country: 'India' }
+          : undefined,
+        founders: validFounders.map(f => ({ name: f.name.trim(), role: f.role || 'Founder' })),
+        socialLinks: quickForm.websiteUrl.trim() ? { website: quickForm.websiteUrl.trim() } : undefined,
         pitchVideoUrl,
-        founders: [],
+        pitchDeckUrl,
         teamMembers: [],
         hashtags: '',
       };
       await startupsService.createStartup(payload);
-      if (logoUrl) await updateUserProfile({ avatarUrl: logoUrl }).catch(() => {});
       await completeRegistration();
       navigate('/startup');
     } catch (err) {
@@ -1674,6 +1673,13 @@ export default function StartupRegistration() {
         <div className={`reg-upload${preview ? ' filled' : ''}`} style={{ marginTop: 6 }}>
           {preview?.type === 'image' && <img src={preview.url} alt="preview" style={{ width: '100%', height: 72, objectFit: 'cover', borderRadius: 6 }} />}
           {preview?.type === 'video' && <video src={preview.url} style={{ width: '100%', maxHeight: 72, objectFit: 'cover', borderRadius: 6 }} />}
+          {preview?.type === 'file' && (
+            <div style={{ padding: '10px 14px', background: '#F8FAFC', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left' }}>
+              <span style={{ fontSize: 18 }}>📄</span>
+              <span style={{ fontSize: 12, color: '#334155', flex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{preview.name}</span>
+              <span style={{ fontSize: 11, color: '#1565C0', fontWeight: 600 }}>PDF OK</span>
+            </div>
+          )}
           {!preview && (
             <div style={{ padding: '16px 0' }}>
               <FiUpload style={{ margin: '0 auto 6px', display: 'block' }} size={20} />
@@ -1683,7 +1689,7 @@ export default function StartupRegistration() {
           )}
           {preview && (
             <div style={{ fontSize: 11, color: '#1565C0', marginTop: 4 }}>
-              ✓ {field === 'pitchVideo' ? 'Video selected' : 'Image selected'}
+              ✓ {field === 'pitchVideo' ? 'Video selected' : field === 'pitchDeck' ? 'PDF selected' : 'Image selected'}
               <span style={{ color: '#94A3B8', marginLeft: 8 }}>Click to change</span>
             </div>
           )}
@@ -1703,18 +1709,18 @@ export default function StartupRegistration() {
             <FiArrowLeft size={12} /> Back
           </button>
         </div>
-        <div className="reg-inner" style={{ maxWidth: 560 }}>
+        <div className="reg-inner" style={{ maxWidth: 580 }}>
           <div className="reg-head">
             <div className="reg-step-label">Quick Start · Startup</div>
             <div className="reg-title">Launch Your Startup</div>
             <div className="reg-subtitle">
-              Just the essentials — complete your full profile anytime after joining to get verified.
+              Fill in your startup &amp; founder details to launch your profile on EVOA.
             </div>
           </div>
 
           {/* Single step card */}
           <div className="reg-card">
-            <p className="reg-step-title">Startup Basics</p>
+            <p className="reg-step-title">Startup Basics &amp; Founders</p>
 
             {/* Name */}
             <div style={{ marginBottom: 18 }}>
@@ -1760,25 +1766,120 @@ export default function StartupRegistration() {
               />
             </div>
 
-            {/* Logo (optional) */}
+            {/* Founder/Co-founder Name(s) */}
+            <div style={{ marginBottom: 18, background: '#F8FAFC', padding: 16, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+              <label className="reg-label" style={{ marginBottom: 10 }}>Founder / Co-Founder Name(s) <span style={{ color: '#E53E3E' }}>*</span></label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {quickForm.founders.map((founder, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      className="reg-input"
+                      placeholder={`Founder ${idx + 1} Name *`}
+                      value={founder.name}
+                      onChange={e => handleQuickFounderChange(idx, 'name', e.target.value)}
+                    />
+                    {quickForm.founders.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeQuickFounder(idx)}
+                        style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 4 }}
+                      >
+                        <FiX size={16} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addQuickFounder}
+                  style={{
+                    background: '#fff', border: '1px dashed #CBD5E1', padding: '8px 14px', borderRadius: 6,
+                    color: '#1565C0', fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'center', marginTop: 4
+                  }}
+                >
+                  + Add Co-Founder
+                </button>
+              </div>
+            </div>
+
+            {/* City & State */}
+            <div style={{ marginBottom: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label className="reg-label">City</label>
+                <input
+                  type="text"
+                  className="reg-input"
+                  placeholder="e.g. Bengaluru"
+                  value={quickForm.city}
+                  onChange={e => setQuickForm(p => ({ ...p, city: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="reg-label">State</label>
+                <SearchableSelect
+                  value={quickForm.state}
+                  onChange={value => setQuickForm(p => ({ ...p, state: value }))}
+                  options={STATES_LIST.map(s => ({ value: s, label: s }))}
+                  placeholder="Select State"
+                />
+              </div>
+            </div>
+
+            {/* Stage & Revenue */}
+            <div style={{ marginBottom: 18, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label className="reg-label">Startup Stage</label>
+                <SearchableSelect
+                  value={quickForm.stage}
+                  onChange={value => setQuickForm(p => ({ ...p, stage: value }))}
+                  options={STAGES.map(s => ({ value: s, label: s }))}
+                  placeholder="Select Stage"
+                />
+              </div>
+              <div>
+                <label className="reg-label">Annual Revenue (INR)</label>
+                <input
+                  type="number"
+                  className="reg-input"
+                  placeholder="e.g. 500000"
+                  value={quickForm.revenue}
+                  onChange={e => setQuickForm(p => ({ ...p, revenue: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            {/* Website Link */}
             <div style={{ marginBottom: 18 }}>
-              <QuickUploadBox
-                field="startupLogo"
-                label={<>Startup Logo <span style={{ color: '#94A3B8', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></>}
-                accept="image/*"
-                icon={FiImage}
-                helperText="PNG, JPG · Max 5 MB"
+              <label className="reg-label">Website Link</label>
+              <input
+                type="url"
+                className="reg-input"
+                placeholder="https://yourstartup.com"
+                value={quickForm.websiteUrl}
+                onChange={e => setQuickForm(p => ({ ...p, websiteUrl: e.target.value }))}
               />
             </div>
 
             {/* Pitch Video (optional) */}
-            <div>
+            <div style={{ marginBottom: 18 }}>
               <QuickUploadBox
                 field="pitchVideo"
                 label={<>Pitch Video <span style={{ color: '#94A3B8', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional · strongly recommended)</span></>}
                 accept="video/*"
                 icon={FiVideo}
                 helperText="MP4, MOV · Max 50 MB — investors watch this first!"
+              />
+            </div>
+
+            {/* Pitch Deck Upload (optional) */}
+            <div>
+              <QuickUploadBox
+                field="pitchDeck"
+                label={<>Pitch Deck PDF <span style={{ color: '#94A3B8', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></>}
+                accept=".pdf"
+                icon={FiUpload}
+                helperText="PDF · Max 20 MB"
               />
             </div>
           </div>
@@ -1792,8 +1893,7 @@ export default function StartupRegistration() {
           }}>
             <span style={{ fontSize: 16 }}>💡</span>
             <p style={{ fontSize: 12, color: '#1565C0', lineHeight: 1.55, margin: 0 }}>
-              You can complete your full registration (verification, team, financials) anytime from your profile.
-              A complete profile gets the <strong>Verified</strong> badge and increased investor visibility.
+              You can complete your full verification and business credentials anytime from your profile to get the <strong>Verified</strong> badge.
             </p>
           </div>
 

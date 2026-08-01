@@ -167,8 +167,8 @@ textarea.reg-input { resize:vertical; min-height:80px; }
 }
 `;
 
-// TEMPORARY: Subscription step (Step 4) is paused for Investors.
-const TOTAL_STEPS = 3;
+// 2-Step Investor Registration
+const TOTAL_STEPS = 2;
 const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
 
 const createInitialFormData = () => ({
@@ -238,9 +238,33 @@ export default function InvestorRegistration() {
         if (!mounted) return;
 
         if (investorProfile) {
-          setProfileReadyForPayment(true);
-          setCurrentStep(4);
-          setInfoMessage("Your investor profile is saved. Complete payment to activate full access.");
+          const sebiCred = (investorProfile.credentials || []).find(c => typeof c === 'string' && c.startsWith('SEBI:'));
+          const panCred = (investorProfile.credentials || []).find(c => typeof c === 'string' && c.startsWith('PAN:'));
+          const portfolioCred = (investorProfile.credentials || []).find(c => typeof c === 'string' && c.startsWith('Portfolio:'));
+
+          setFormData(prev => ({
+            ...prev,
+            fullName: investorProfile.name || user?.fullName || '',
+            phone: investorProfile.phone || investorProfile.mobile || '',
+            designation: investorProfile.designation || investorProfile.tagline || '',
+            investorType: investorProfile.type || '',
+            companyName: investorProfile.companyName || '',
+            bio: investorProfile.description || '',
+            website: investorProfile.website || '',
+            city: investorProfile.location?.city || '',
+            state: investorProfile.location?.state || '',
+            country: investorProfile.location?.country || 'India',
+            sectorFocus: investorProfile.sectors || [],
+            startupStagePreference: investorProfile.stages || [],
+            linkedinProfile: investorProfile.linkedin || '',
+            portfolioLink: portfolioCred ? portfolioCred.replace('Portfolio:', '').trim() : '',
+            sebiNumber: sebiCred ? sebiCred.replace('SEBI:', '').trim() : '',
+            panNumber: panCred ? panCred.replace('PAN:', '').trim() : '',
+            verificationOption: sebiCred ? 'SEBI' : panCred ? 'Non-SEBI' : '',
+          }));
+          if (investorProfile.logoUrl) {
+            setPreviews(p => ({ ...p, profilePhoto: investorProfile.logoUrl }));
+          }
         }
       } catch (err) {
         if (err?.status !== 404) {
@@ -310,15 +334,73 @@ export default function InvestorRegistration() {
     setPreviews((prev) => ({ ...prev, [field]: file.name }));
   };
 
-  const validatePan = (value) => {
-    if (!value.trim()) {
-      setPanError("");
-      return true;
-    }
+  const uploadToStorage = async (file, folder) => {
+    if (!file) return null;
+    if (typeof file === "string") return file;
 
-    const isValid = PAN_REGEX.test(value.trim().toUpperCase());
-    setPanError(isValid ? "valid" : "invalid");
-    return isValid;
+    const extension = file.name.split(".").pop();
+    const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${extension}`;
+
+    try {
+      return await uploadFile(file, "evoa-media", path);
+    } catch {
+      return await uploadFile(file, "public", path);
+    }
+  };
+
+  const handleProfileSubmission = async () => {
+    if (!validateStep(2)) return;
+
+    try {
+      setSubmittingProfile(true);
+      setError("");
+      setInfoMessage("");
+
+      const profilePhotoUrl = await uploadToStorage(formData.profilePhoto, "investors/photos");
+      const { min, max } = parseInvestmentRange(formData.investmentRange);
+
+      const investorData = {
+        name: formData.fullName.trim() || formData.companyName || undefined,
+        phone: formData.phone.trim() || undefined,
+        mobile: formData.phone.trim() || undefined,
+        type: formData.investorType || undefined,
+        designation: formData.designation || undefined,
+        companyName: formData.companyName || undefined,
+        tagline: formData.designation || undefined,
+        description: formData.bio || undefined,
+        website: formData.website || undefined,
+        logoUrl: profilePhotoUrl || undefined,
+        sectors: formData.sectorFocus,
+        stages: formData.startupStagePreference || [],
+        minTicketSize: min || undefined,
+        maxTicketSize: max || undefined,
+        location: (formData.city || formData.state)
+          ? { city: formData.city, state: formData.state, country: formData.country || 'India' }
+          : undefined,
+        linkedin: formData.linkedinProfile || undefined,
+      };
+
+      Object.keys(investorData).forEach((key) => {
+        if (investorData[key] === undefined) {
+          delete investorData[key];
+        }
+      });
+
+      await createInvestor(investorData);
+
+      if (profilePhotoUrl) {
+        await updateUserProfile({ avatarUrl: profilePhotoUrl }).catch(() => {});
+      }
+
+      await completeRegistration();
+      await refreshUserProfile();
+      navigate("/investor", { replace: true });
+    } catch (err) {
+      console.error("Investor registration save failed:", err);
+      setError(err?.message || "Failed to save your investor profile. Please try again.");
+    } finally {
+      setSubmittingProfile(false);
+    }
   };
 
   const validateStep = (step = currentStep) => {
@@ -348,157 +430,15 @@ export default function InvestorRegistration() {
           setError("Please select at least one sector of focus.");
           return false;
         }
-        if (!formData.verificationOption) {
-          setError("Please select a verification option.");
-          return false;
-        }
-        if (formData.verificationOption === "SEBI" && !formData.sebiNumber.trim()) {
-          setError("SEBI Registration Number is required.");
-          return false;
-        }
-        if (formData.verificationOption === "Non-SEBI") {
-          if (!formData.panNumber.trim()) {
-            setError("PAN Number is required.");
-            return false;
-          }
-          if (!validatePan(formData.panNumber)) {
-            setError("Invalid PAN format. Please check the entered number.");
-            return false;
-          }
-        }
-        return true;
-      case 3:
-        if (!formData.companyName.trim()) {
-          setError("Company / Fund Name is required.");
-          return false;
-        }
-        if (formData.startupStagePreference.length === 0) {
-          setError("Please select at least one startup stage preference.");
-          return false;
-        }
-        return true;
-      case 4:
-        if (!profileReadyForPayment) {
-          setError("Please complete the profile step before continuing to payment.");
-          return false;
-        }
         return true;
       default:
         return true;
     }
   };
 
-  const uploadToStorage = async (file, folder) => {
-    if (!file) return null;
-
-    const extension = file.name.split(".").pop();
-    const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${extension}`;
-
-    try {
-      return await uploadFile(file, "evoa-media", path);
-    } catch {
-      return await uploadFile(file, "public", path);
-    }
-  };
-
-  const handleProfileSubmission = async () => {
-    if (!validateStep(3)) return;
-
-    try {
-      setSubmittingProfile(true);
-      setError("");
-      setInfoMessage("");
-
-      const [profilePhotoUrl, sebiCertUrl, idProofUrl] = await Promise.all([
-        uploadToStorage(formData.profilePhoto, "investors/photos"),
-        uploadToStorage(formData.sebiCertificate, "investors/documents"),
-        uploadToStorage(formData.idProof, "investors/documents"),
-      ]);
-
-      const { min, max } = parseInvestmentRange(formData.investmentRange);
-      const investorData = {
-        name: formData.companyName || formData.fullName,
-        phone: formData.phone.trim() || undefined,
-        mobile: formData.phone.trim() || undefined,
-        type: formData.investorType || undefined,
-        designation: formData.designation || undefined,
-        companyName: formData.companyName || undefined,
-        tagline: formData.designation || undefined,
-        description: formData.bio || undefined,
-        website: formData.website || undefined,
-        logoUrl: profilePhotoUrl || undefined,
-        sectors: formData.sectorFocus,
-        stages: formData.startupStagePreference,
-        minTicketSize: min || undefined,
-        maxTicketSize: max || undefined,
-        location: (formData.city || formData.state)
-          ? { city: formData.city, state: formData.state, country: formData.country }
-          : undefined,
-        linkedin: formData.linkedinProfile || undefined,
-        credentials: [
-          formData.verificationOption === "SEBI" && formData.sebiNumber.trim() ? `SEBI: ${formData.sebiNumber.trim()}` : null,
-          formData.verificationOption === "Non-SEBI" && formData.panNumber.trim() ? `PAN: ${formData.panNumber.trim().toUpperCase()}` : null,
-          formData.portfolioLink.trim() ? `Portfolio: ${formData.portfolioLink.trim()}` : null,
-          sebiCertUrl ? `SEBI Certificate: ${sebiCertUrl}` : null,
-          idProofUrl ? `ID Proof: ${idProofUrl}` : null,
-        ].filter(Boolean),
-      };
-
-      Object.keys(investorData).forEach((key) => {
-        if (investorData[key] === undefined) {
-          delete investorData[key];
-        }
-      });
-
-      await createInvestor(investorData);
-
-      if (profilePhotoUrl) {
-        await updateUserProfile({ avatarUrl: profilePhotoUrl }).catch(() => {});
-      }
-
-      // TEMPORARY: Subscription/payment step is paused for Investors.
-      // Mark registration as complete and navigate directly to /investor dashboard.
-      await completeRegistration();
-      await refreshUserProfile();
-      navigate("/investor", { replace: true });
-    } catch (err) {
-      console.error("Investor registration save failed:", err);
-      setError(err?.message || "Failed to save your investor profile. Please try again.");
-    } finally {
-      setSubmittingProfile(false);
-    }
-  };
-
-  const handlePayment = async () => {
-    if (!validateStep(4)) return;
-
-    try {
-      setPaymentLoading(true);
-      setError("");
-      setInfoMessage("");
-
-      await openRazorpayCheckout({
-        planType: "investor_premium",
-        user,
-        description: "Investor Premium Activation",
-        cancelMessage: "Payment was cancelled. Your registration is saved and you can retry anytime.",
-        onSuccess: async () => {
-          await completeRegistration();
-          await refreshUserProfile();
-          navigate("/investor", { replace: true });
-        },
-      });
-    } catch (err) {
-      console.error("Investor payment failed:", err);
-      setError(err?.message || "Unable to complete payment. Please try again.");
-    } finally {
-      setPaymentLoading(false);
-    }
-  };
-
   const nextStep = () => {
     if (!validateStep()) return;
-    if (currentStep < 3) {
+    if (currentStep < TOTAL_STEPS) {
       setCurrentStep((prev) => prev + 1);
     }
   };
@@ -518,7 +458,7 @@ export default function InvestorRegistration() {
       case 1:
         return (
           <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">1. Identity &amp; Investor Type</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">1. Identity &amp; Location</h2>
             <input type="text" placeholder="Full Name *" value={formData.fullName} onChange={(e) => handleInputChange("fullName", e.target.value)} className={inputCls} />
             <input type="tel" placeholder="Phone Number *" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} className={inputCls} />
             <label className="block text-sm text-slate-500">
@@ -544,12 +484,16 @@ export default function InvestorRegistration() {
               options={investorTypes.map((type) => ({ value: type, label: type }))}
               placeholder="Select Investor Type *"
             />
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <input type="text" placeholder="City" value={formData.city} onChange={(e) => handleInputChange("city", e.target.value)} className={inputCls} />
+              <SearchableSelect value={formData.state} onChange={(value) => handleInputChange("state", value)} options={states.map((state) => ({ value: state, label: state }))} placeholder="Select State" />
+            </div>
           </div>
         );
       case 2:
         return (
           <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">2. Investment Focus &amp; Verification</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">2. Investment Focus &amp; Links</h2>
             <SearchableSelect
               value={formData.investmentRange}
               onChange={(value) => handleInputChange("investmentRange", value)}
@@ -567,117 +511,8 @@ export default function InvestorRegistration() {
                 ))}
               </div>
             </div>
-            <SearchableSelect
-              value={formData.verificationOption}
-              onChange={(value) => handleInputChange("verificationOption", value)}
-              options={[
-                { value: "SEBI", label: "SEBI-Registered Investor" },
-                { value: "Non-SEBI", label: "Non-SEBI Angel Investor" },
-              ]}
-              placeholder="Select Verification Type *"
-            />
-            {formData.verificationOption === "SEBI" && (
-              <div className="space-y-3">
-                <input type="text" placeholder="SEBI Registration Number *" value={formData.sebiNumber} onChange={(e) => handleInputChange("sebiNumber", e.target.value)} className={inputCls} />
-              <label className="block text-xs sm:text-sm text-slate-500">
-                  Upload SEBI Certificate (PDF)
-                  <input type="file" accept=".pdf" onChange={(e) => handleFileUpload("sebiCertificate", e.target.files?.[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer text-center text-slate-400 transition-all ${previews.sebiCertificate ? "border-blue-400" : ""}`}>
-                    {previews.sebiCertificate ? <><span className="text-blue-600">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.sebiCertificate}</span></> : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload PDF</span></>}
-                  </div>
-                </label>
-              </div>
-            )}
-            {formData.verificationOption === "Non-SEBI" && (
-              <div className="space-y-3">
-                <input type="url" placeholder="LinkedIn Profile (Mandatory)" value={formData.linkedinProfile} onChange={(e) => handleInputChange("linkedinProfile", e.target.value)} className={inputCls} />
-                <input type="url" placeholder="Portfolio / Past Deals Link" value={formData.portfolioLink} onChange={(e) => handleInputChange("portfolioLink", e.target.value)} className={inputCls} />
-                <div>
-                  <input
-                    type="text"
-                    placeholder="PAN Number * (e.g. ABCDE1234F)"
-                    value={formData.panNumber}
-                    onChange={(e) => {
-                      const value = e.target.value.toUpperCase();
-                      handleInputChange("panNumber", value);
-                      if (panError) validatePan(value);
-                    }}
-                    onBlur={(e) => validatePan(e.target.value.toUpperCase())}
-                    className={inputCls}
-                  />
-                  {formData.panNumber.trim() && panError === "invalid" ? <p className="text-xs text-red-500 mt-1 px-1">Invalid format. Please check the entered number.</p> : null}
-                  {formData.panNumber.trim() && panError === "valid" ? <p className="text-xs text-green-500 mt-1 px-1">Valid PAN format</p> : null}
-                </div>
-                <label className="block text-xs sm:text-sm text-slate-500">
-                  Upload ID Proof (Aadhaar/Passport/Driving License)
-                  <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileUpload("idProof", e.target.files?.[0])} className="hidden" />
-                  <div className={`mt-2 p-3 border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl cursor-pointer text-center text-slate-400 transition-all ${previews.idProof ? "border-blue-400" : ""}`}>
-                    {previews.idProof
-                      ? (typeof previews.idProof === "string" && previews.idProof.startsWith("blob:")
-                        ? <img src={previews.idProof} alt="ID proof preview" className="h-20 mx-auto object-contain rounded" />
-                        : <><span className="text-blue-600">✔</span><span className="block text-xs mt-1 truncate px-2">{previews.idProof}</span></>)
-                      : <><FiUpload className="mx-auto mb-1" size={18} /><span className="text-xs">Click to upload</span></>}
-                  </div>
-                </label>
-              </div>
-            )}
-          </div>
-        );
-      case 3:
-        return (
-          <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 text-slate-800">3. Background &amp; Preferences</h2>
-            <input type="text" placeholder="Company / Fund Name *" value={formData.companyName} onChange={(e) => handleInputChange("companyName", e.target.value)} className={inputCls} />
-            <textarea placeholder="Short Bio / Investment Thesis" value={formData.bio} onChange={(e) => handleInputChange("bio", e.target.value)} rows={3} className={inputCls} />
-            <input type="url" placeholder="Website / AngelList / Portfolio Site" value={formData.website} onChange={(e) => handleInputChange("website", e.target.value)} className={inputCls} />
-            <div className="grid grid-cols-2 gap-3">
-              <input type="text" placeholder="City" value={formData.city} onChange={(e) => handleInputChange("city", e.target.value)} className={inputCls} />
-              <SearchableSelect value={formData.state} onChange={(value) => handleInputChange("state", value)} options={states.map((state) => ({ value: state, label: state }))} placeholder="Select State" />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-slate-700">Startup Stage Preference * (Multi-Select)</label>
-              <div className="flex flex-wrap gap-2">
-                {startupStages.map((stage) => (
-                  <button
-                    key={stage}
-                    type="button"
-                    onClick={() => handleArrayChange("startupStagePreference", stage)}
-                    className={`px-3 py-1 text-xs rounded-full border transition-all ${formData.startupStagePreference.includes(stage) ? "bg-blue-600 text-white border-blue-600" : "border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600"}`}
-                  >
-                    {stage}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <SearchableSelect value={formData.engagementType} onChange={(value) => handleInputChange("engagementType", value)} options={engagementTypes.map((type) => ({ value: type, label: type }))} placeholder="Engagement Type" />
-          </div>
-        );
-      case 4:
-        return (
-          <div className="space-y-5">
-            <div>
-              <div className="reg-plan-kicker">Step 4</div>
-              <h2 className="reg-plan-title">Payment &amp; Activation 💼</h2>
-              <p className="reg-plan-copy">Complete your payment to unlock full investor access on Evoa.</p>
-            </div>
-
-            <div className="reg-plan">
-              <div className="reg-plan-card">
-                <div className="reg-plan-kicker">Investor Premium</div>
-                <div className="reg-plan-price">₹4999/month</div>
-                <div className="reg-feature-list">
-                  <div className="reg-feature-item"><FiCheckCircle size={16} /> <span>Access all startup insights</span></div>
-                  <div className="reg-feature-item"><FiCheckCircle size={16} /> <span>Connect with founders</span></div>
-                  <div className="reg-feature-item"><FiCheckCircle size={16} /> <span>Discover high-potential opportunities</span></div>
-                </div>
-              </div>
-
-              <div className="reg-pay-meta">
-                <div className="reg-meta-chip"><FiCreditCard size={14} /> Secure Razorpay checkout</div>
-                <p className="reg-helper">Your profile details are already saved. We’ll only unlock the dashboard after Razorpay confirms the payment successfully.</p>
-                <p className="reg-helper">If payment fails or you close checkout, your account stays pending and you can retry from this step anytime.</p>
-              </div>
-            </div>
+            <input type="url" placeholder="Website Link (e.g. https://yourfund.com)" value={formData.website} onChange={(e) => handleInputChange("website", e.target.value)} className={inputCls} />
+            <input type="url" placeholder="LinkedIn Profile (e.g. https://linkedin.com/in/username)" value={formData.linkedinProfile} onChange={(e) => handleInputChange("linkedinProfile", e.target.value)} className={inputCls} />
           </div>
         );
       default:
@@ -686,7 +521,7 @@ export default function InvestorRegistration() {
   };
 
   const renderPrimaryAction = () => {
-    if (currentStep < 3) {
+    if (currentStep < 2) {
       return <button className="reg-btn-primary" onClick={nextStep}>Next →</button>;
     }
 
@@ -712,10 +547,8 @@ export default function InvestorRegistration() {
         <div className="reg-head">
           <div className="reg-step-label">Step {currentStep} / {TOTAL_STEPS} — Investor Registration</div>
           <div className="reg-title">
-            {currentStep === 1 && "Identity & Type"}
-            {currentStep === 2 && "Investment Focus"}
-            {currentStep === 3 && "Background & Preferences"}
-            {currentStep === 4 && "Payment & Activation"}
+            {currentStep === 1 && "Identity & Location"}
+            {currentStep === 2 && "Investment Focus & Links"}
           </div>
           <div className="reg-subtitle">Complete all required fields to continue</div>
         </div>
@@ -734,7 +567,7 @@ export default function InvestorRegistration() {
         {error ? <div className="reg-error">{error}</div> : null}
 
         <div className="reg-nav">
-          <button className="reg-btn-ghost" onClick={prevStep} disabled={currentStep === 1 || paymentLoading || submittingProfile}>
+          <button className="reg-btn-ghost" onClick={prevStep} disabled={currentStep === 1 || submittingProfile}>
             ← Previous
           </button>
           {renderPrimaryAction()}

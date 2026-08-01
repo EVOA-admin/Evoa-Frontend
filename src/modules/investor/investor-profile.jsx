@@ -293,6 +293,12 @@ export default function InvestorProfile() {
                         {locationStr && (
                             <span className="flex items-center gap-1"><IoLocationOutline size={12} />{locationStr}</span>
                         )}
+                        {profile?.website && (
+                            <a href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-evoa text-blue-600 dark:text-blue-400"><IoLinkOutline size={12} />{profile.website.replace(/^https?:\/\//, '')}</a>
+                        )}
+                        {profile?.linkedin && (
+                            <a href={profile.linkedin.startsWith('http') ? profile.linkedin : `https://${profile.linkedin}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-evoa text-blue-600 dark:text-blue-400"><IoLinkOutline size={12} />LinkedIn</a>
+                        )}
                         {profile?.officialEmail && (
                             <span className="flex items-center gap-1"><IoMailOutline size={12} />{profile.officialEmail}</span>
                         )}
