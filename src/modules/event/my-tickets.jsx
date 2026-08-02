@@ -10,26 +10,43 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 export default function MyTicketsPage() {
   const { isDark } = useTheme();
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState(() => {
+    try {
+      const cached = localStorage.getItem("evoa_user_purchased_tickets");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
+  const [loading, setLoading] = useState(() => tickets.length === 0);
   const [error, setError] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     async function fetchMyTickets() {
       try {
-        setLoading(true);
+        if (tickets.length === 0) setLoading(true);
         setError(null);
         const data = await eventService.getMyTickets();
-        setTickets(Array.isArray(data) ? data : []);
+        if (isMounted) {
+          setTickets(Array.isArray(data) ? data : []);
+        }
       } catch (err) {
         console.error("Error loading tickets:", err);
-        setError(err?.message || "Unable to load your event tickets.");
+        if (isMounted && tickets.length === 0) {
+          setError(err?.message || "Unable to load your event tickets.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
     fetchMyTickets();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Compute status based on current date vs event end date or start date

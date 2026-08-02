@@ -169,6 +169,10 @@ export const eventService = {
       });
     }
 
+    try {
+      localStorage.setItem('evoa_user_purchased_tickets', JSON.stringify(mergedList));
+    } catch (_) {}
+
     return mergedList;
   },
 
