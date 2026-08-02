@@ -148,13 +148,25 @@ export const eventService = {
 
     const mergedList = Array.from(ticketMap.values());
 
-    // Enrich tickets missing event relation by fetching event data
-    for (const t of mergedList) {
-      if (!t.event && t.eventId) {
-        try {
-          t.event = await this.getEventById(t.eventId);
-        } catch (_) {}
-      }
+    // Parallelize event enrichment for tickets missing event data (fetch unique eventIds in parallel)
+    const missingEventTickets = mergedList.filter((t) => !t.event && (t.eventId || t.event_id));
+    if (missingEventTickets.length > 0) {
+      const uniqueEventIds = [...new Set(missingEventTickets.map((t) => t.eventId || t.event_id))];
+      const eventCache = {};
+      await Promise.all(
+        uniqueEventIds.map(async (eId) => {
+          try {
+            const evtData = await this.getEventById(eId);
+            if (evtData) eventCache[eId] = evtData;
+          } catch (_) {}
+        })
+      );
+      mergedList.forEach((t) => {
+        const eId = t.eventId || t.event_id;
+        if (!t.event && eId && eventCache[eId]) {
+          t.event = eventCache[eId];
+        }
+      });
     }
 
     return mergedList;
@@ -168,11 +180,14 @@ export const eventService = {
       if (ticket && (ticket.id || ticket.ticketCode)) return ticket;
     } catch (_) {}
 
-    // Fallback check in user tickets
+    // Direct check in local tickets without recursive getMyTickets calls
     try {
-      const myTickets = await this.getMyTickets();
-      const found = myTickets.find((t) => (t.eventId || t.event?.id) === eventId);
-      if (found) return found;
+      const existingStr = localStorage.getItem('evoa_user_purchased_tickets');
+      if (existingStr) {
+        const localTickets = JSON.parse(existingStr);
+        const found = localTickets.find((t) => (t.eventId || t.event?.id || t.event_id) === eventId);
+        if (found) return found;
+      }
     } catch (_) {}
 
     return null;

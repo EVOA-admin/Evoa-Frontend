@@ -16,6 +16,7 @@ import {
     IoEllipsisVertical,
     IoTrashOutline,
     IoCalendarOutline,
+    IoNotificationsOutline,
 } from "react-icons/io5";
 import { MdVerified } from "react-icons/md";
 import EditIncubatorModal from "./edit-incubator-modal";
@@ -146,14 +147,14 @@ export default function IncubatorProfile() {
                         Share Profile
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
-                    {/* Event */}
+                    {/* Alerts */}
                     <button
-                        id="incubator-event-btn"
-                        onClick={() => { setMenuOpen(false); navigate('/event'); }}
+                        id="incubator-alerts-btn"
+                        onClick={() => { setMenuOpen(false); navigate('/notifications'); }}
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium transition-colors text-left ${isDark ? "text-white/80 hover:bg-white/8" : "text-gray-700 hover:bg-gray-50"}`}
                     >
-                        <IoCalendarOutline size={16} className="flex-shrink-0" />
-                        Event
+                        <IoNotificationsOutline size={16} className="flex-shrink-0" />
+                        Alerts
                     </button>
                     <div className={`mx-4 h-px ${isDark ? "bg-white/8" : "bg-gray-100"}`} />
                     <button

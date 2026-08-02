@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { FaHome, FaSearch, FaPlay, FaBell, FaUser } from "react-icons/fa";
+import { FaHome, FaSearch, FaPlay, FaBell, FaUser, FaCalendarAlt } from "react-icons/fa";
 import { getNotifications } from "../../services/notificationsService";
 
 /* ─── EVOA BottomNav — Apple Glassmorphism Design System ─── */
@@ -197,11 +197,11 @@ export default function BottomNav() {
   const profile = ROLE_PROFILE[role] || "/viewer/profile";
 
   const tabs = [
-    { key:"home",          icon:FaHome,  label:"Home",    path:home },
-    { key:"explore",       icon:FaSearch,label:"Explore", path:"/explore" },
-    { key:"pitch",         icon:FaPlay,  label:"Pitch",   path:"/pitch/hashtag", center:true },
-    { key:"notifications", icon:FaBell,  label:"Alerts",  path:"/notifications", badge:unread },
-    { key:"profile",       icon:FaUser,  label:"Profile", path:profile },
+    { key:"home",          icon:FaHome,        label:"Home",    path:home },
+    { key:"explore",       icon:FaSearch,      label:"Explore", path:"/explore" },
+    { key:"pitch",         icon:FaPlay,        label:"Pitch",   path:"/pitch/hashtag", center:true },
+    { key:"event",         icon:FaCalendarAlt, label:"Event",   path:"/event" },
+    { key:"profile",       icon:FaUser,        label:"Profile", path:profile },
   ];
 
   const isActive = (path) => {

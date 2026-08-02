@@ -5,7 +5,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import ensureUrl from "../../utils/ensureUrl";
 import {
   FaEdit, FaCamera, FaMapMarkerAlt, FaLink,
-  FaCalendarAlt, FaEnvelope, FaPhone,
+  FaCalendarAlt, FaBell, FaEnvelope, FaPhone,
   FaLinkedin, FaTwitter, FaInstagram,
   FaHeart, FaRegComment,
 } from "react-icons/fa";
@@ -289,9 +289,9 @@ export default function Profile() {
           <button className="profile-dot-menu-item" style={{ color: menuTxt }}
             onMouseEnter={e => e.currentTarget.style.background = menuHov}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-            onClick={() => { setMenuOpen(false); navigate('/event'); }} role="menuitem">
-            <FaCalendarAlt size={14} />
-            Event
+            onClick={() => { setMenuOpen(false); navigate('/notifications'); }} role="menuitem">
+            <FaBell size={14} />
+            Alerts
           </button>
           <div style={{ height: 1, background: menuBdr, margin: "2px 0" }} />
           <button className="profile-dot-menu-item" style={{ color: "#ef4444" }}

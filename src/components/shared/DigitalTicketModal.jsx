@@ -58,8 +58,11 @@ export default function DigitalTicketModal({ ticket, onClose }) {
   const eventTitle = event?.collaborationName || event?.title || "EVOA Exclusive Event Pass";
   const bannerUrl = event?.posterUrl || event?.bannerUrl || event?.poster_url || event?.banner_url || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop";
 
-  const formattedDate = event?.startDate
-    ? new Date(event.startDate).toLocaleDateString("en-IN", {
+  const startDateVal = event?.startDate || event?.start_date || event?.date;
+  const startTimeVal = event?.startTime || event?.start_time || event?.time;
+
+  const formattedDate = startDateVal
+    ? new Date(startDateVal).toLocaleDateString("en-IN", {
         weekday: "short",
         day: "numeric",
         month: "short",
@@ -67,11 +70,11 @@ export default function DigitalTicketModal({ ticket, onClose }) {
       })
     : "Date Announced Soon";
 
-  const formattedTime = event?.startTime
-    ? `${event.startTime} ${event?.timezone || "IST"}`
+  const formattedTime = startTimeVal
+    ? `${startTimeVal} ${event?.timezone || "IST"}`
     : "Time TBA";
 
-  const venueText = event?.venueName || event?.venue_name || event?.meetingUrl || event?.meeting_url || "Venue Details Announced Soon";
+  const venueText = event?.venueName || event?.venue_name || event?.venue || event?.meetingUrl || event?.meeting_url || "Venue Details Announced Soon";
   const cityText = event?.city || event?.state || "India";
 
   // Generate QR Code containing Name, Email, Access Role, Event Title & Pass Code
@@ -236,12 +239,24 @@ export default function DigitalTicketModal({ ticket, onClose }) {
               EVOA DIGITAL PASS
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <FiX size={20} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleDownloadTicket}
+              disabled={downloading}
+              title={downloading ? "Downloading..." : "Download Ticket"}
+              aria-label="Download Ticket"
+              className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
+            >
+              <FiDownload size={18} />
+            </button>
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <FiX size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Modal Body */}
@@ -353,23 +368,6 @@ export default function DigitalTicketModal({ ticket, onClose }) {
           </div>
         </div>
 
-        {/* ── ACTION FOOTER ── */}
-        <div className="p-3.5 sm:p-5 bg-slate-900 border-t border-slate-800 flex items-center gap-2.5 sm:gap-3 shrink-0">
-          <button
-            onClick={handleDownloadTicket}
-            disabled={downloading}
-            className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all shadow-lg shadow-blue-600/25 disabled:opacity-50"
-          >
-            <FiDownload size={16} className="shrink-0" />
-            <span>{downloading ? "Downloading..." : "Download Ticket"}</span>
-          </button>
-          <button
-            onClick={onClose}
-            className="py-2.5 sm:py-3 px-3.5 sm:px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs sm:text-sm transition-colors shrink-0"
-          >
-            Close
-          </button>
-        </div>
       </div>
     </div>
   );

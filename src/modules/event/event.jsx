@@ -135,20 +135,13 @@ export default function EventPage() {
         ticketsList.forEach((t) => {
           const eId = t.eventId || t.event_id || t.event?.id;
           if (eId) {
-            ticketMap[eId] = t;
+            const matchingEvt = publishedEvents.find((pe) => pe.id === eId);
+            ticketMap[eId] = {
+              ...t,
+              event: t.event || matchingEvt || {},
+            };
           }
         });
-
-        if (publishedEvents.length > 0) {
-          for (const evt of publishedEvents) {
-            if (!ticketMap[evt.id]) {
-              try {
-                const t = await eventService.getUserTicketForEvent(evt.id);
-                if (t) ticketMap[evt.id] = t;
-              } catch (_) {}
-            }
-          }
-        }
 
         setUserTicketsMap(ticketMap);
         localStorage.setItem("evoa_user_tickets_map", JSON.stringify(ticketMap));
@@ -217,7 +210,7 @@ export default function EventPage() {
     try {
       if (roleTicketPrice === 0) {
         // Free Pass Registration
-        const ticketPass = await eventService.bookTicket({
+        const rawPass = await eventService.bookTicket({
           eventId: evt.id,
           price: 0,
           userRole: role,
@@ -225,7 +218,11 @@ export default function EventPage() {
           userEmail: attendeeEmail,
         }).catch((e) => console.error("Ticket booking failed:", e));
 
-        if (ticketPass) {
+        if (rawPass) {
+          const ticketPass = {
+            ...rawPass,
+            event: rawPass.event || evt,
+          };
           setUserTicketsMap((prev) => ({ ...prev, [evt.id]: ticketPass }));
           setDigitalTicket(ticketPass);
         }
@@ -243,7 +240,7 @@ export default function EventPage() {
         createOrder: () => pricingService.createEventOrder({ eventId: evt?.id, amount: roleTicketPrice, eventType: currentEventType }),
         verifyPayment: (payload) => pricingService.verifyPayment(payload),
         onSuccess: async (paymentResult) => {
-          const ticketPass = await eventService.bookTicket({
+          const rawPass = await eventService.bookTicket({
             eventId: evt.id,
             price: roleTicketPrice,
             userRole: role,
@@ -253,7 +250,11 @@ export default function EventPage() {
             paymentId: paymentResult?.razorpay_payment_id,
           }).catch((e) => console.error("Ticket booking failed:", e));
 
-          if (ticketPass) {
+          if (rawPass) {
+            const ticketPass = {
+              ...rawPass,
+              event: rawPass.event || evt,
+            };
             setUserTicketsMap((prev) => ({ ...prev, [evt.id]: ticketPass }));
             setDigitalTicket(ticketPass);
           }
