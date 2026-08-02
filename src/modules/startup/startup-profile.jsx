@@ -38,8 +38,14 @@ export default function StartupProfile() {
         navigate('/');
     };
 
-    const [startup, setStartup] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [startup, setStartup] = useState(() => {
+        try {
+            const cached = localStorage.getItem("evoa_startup_profile_cache");
+            if (cached) return JSON.parse(cached);
+        } catch (_) {}
+        return null;
+    });
+    const [loading, setLoading] = useState(() => startup === null);
     const [activeTab, setActiveTab] = useState("posts");
     const [unreadCount, setUnreadCount] = useState(0);
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -87,10 +93,15 @@ export default function StartupProfile() {
 
     const fetchStartup = async () => {
         try {
-            setLoading(true);
+            if (startup === null) setLoading(true);
             const res = await getMyStartup();
             const s = res?.data?.data || res?.data || res;
-            setStartup(s);
+            if (s) {
+                setStartup(s);
+                try {
+                    localStorage.setItem("evoa_startup_profile_cache", JSON.stringify(s));
+                } catch (_) {}
+            }
         } catch (err) {
             console.error("Failed to load startup:", err);
         } finally {

@@ -106,17 +106,24 @@ export default function Profile() {
   const { user: authUser } = useAuth();
   const isDark = theme === "dark";
 
-  const [user, setUser]         = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem("evoa_user_profile_cache");
+      if (cached) return JSON.parse(cached);
+    } catch (_) {}
+    return null;
+  });
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
+    localStorage.removeItem('evoa_user_profile_cache');
     navigate('/');
   };
   const [posts, setPosts]       = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading]   = useState(() => user === null);
   const [activeTab, setActiveTab]         = useState("posts");
   const [activeSection, setActiveSection] = useState("main"); // 'main' | 'ambassador'
   const [menuOpen, setMenuOpen]           = useState(false);
@@ -165,7 +172,7 @@ export default function Profile() {
 
   const fetchProfileData = async () => {
     try {
-      setLoading(true);
+      if (user === null) setLoading(true);
       const userData = await getCurrentUserProfile();
 
       let profileData = {
@@ -219,9 +226,9 @@ export default function Profile() {
               image: reel.thumbnailUrl || reel.videoUrl,
               caption: reel.description,
               tags: reel.hashtags || [],
-              likes: reel.likeCount,
-              comments: reel.commentCount,
-              shares: reel.shareCount,
+              likes: reel.likeCount || 0,
+              comments: reel.commentCount || 0,
+              shares: reel.shareCount || 0,
               timeAgo: new Date(reel.createdAt).toLocaleDateString(),
               liked: false,
               saved: false,
@@ -231,6 +238,9 @@ export default function Profile() {
       }
 
       setUser(profileData);
+      try {
+        localStorage.setItem("evoa_user_profile_cache", JSON.stringify(profileData));
+      } catch (_) {}
     } catch (err) {
       console.error("Failed to fetch profile data:", err);
     } finally {

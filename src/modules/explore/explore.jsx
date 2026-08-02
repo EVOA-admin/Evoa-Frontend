@@ -86,49 +86,84 @@ export default function Explore() {
   const [searchResults, setSearchResults] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  const [topPitches, setTopPitches] = useState(() => cache.get('explore_topPitches') || []);
-  const [startupsOfWeek, setStartupsOfWeek] = useState(() => cache.get('explore_startupsOfWeek') || []);
-  const [investorSpotlight, setInvestorSpotlight] = useState(() => cache.get('explore_investorSpotlight') || []);
+  const [topPitches, setTopPitches] = useState(() => {
+    try {
+      const cached = localStorage.getItem("evoa_explore_top_pitches_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return cache.get("explore_topPitches") || [];
+  });
+  const [startupsOfWeek, setStartupsOfWeek] = useState(() => {
+    try {
+      const cached = localStorage.getItem("evoa_explore_startups_week_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return cache.get("explore_startupsOfWeek") || [];
+  });
+  const [investorSpotlight, setInvestorSpotlight] = useState(() => {
+    try {
+      const cached = localStorage.getItem("evoa_explore_investors_spotlight_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return cache.get("explore_investorSpotlight") || [];
+  });
   const [showAllInvestors, setShowAllInvestors] = useState(false);
   const [loadingData, setLoadingData] = useState(() => {
-    return !cache.get('explore_topPitches') || !cache.get('explore_startupsOfWeek') || !cache.get('explore_investorSpotlight');
+    return topPitches.length === 0 && startupsOfWeek.length === 0 && investorSpotlight.length === 0;
   });
 
   const debouncedSearch = useDebounce(searchQuery, 400);
 
-  // Fetch all explore sections on mount
+  // Fetch all explore sections on mount with background refresh
   useEffect(() => {
     const fetchExploreData = async () => {
-      // If we already have the data in cache, we don't need to load again
-      if (!loadingData) return;
-
       try {
+        if (topPitches.length === 0) setLoadingData(true);
+
         const [topRes, weekRes, spotlightRes] = await Promise.allSettled([
           exploreService.getTopPitches(),
           exploreService.getStartupsOfWeek(),
           exploreService.getInvestorSpotlight(),
         ]);
 
-        if (topRes.status === 'fulfilled' && topRes.value?.data) {
+        if (topRes.status === "fulfilled" && topRes.value?.data) {
           const pitches = topRes.value.data?.data || topRes.value.data;
           const parsed = Array.isArray(pitches) ? pitches : [];
           setTopPitches(parsed);
-          cache.set('explore_topPitches', parsed);
+          cache.set("explore_topPitches", parsed);
+          try {
+            localStorage.setItem("evoa_explore_top_pitches_cache", JSON.stringify(parsed));
+          } catch (_) {}
         }
-        if (weekRes.status === 'fulfilled' && weekRes.value?.data) {
+        if (weekRes.status === "fulfilled" && weekRes.value?.data) {
           const startups = weekRes.value.data?.data || weekRes.value.data;
           const parsed = Array.isArray(startups) ? startups : [];
           setStartupsOfWeek(parsed);
-          cache.set('explore_startupsOfWeek', parsed);
+          cache.set("explore_startupsOfWeek", parsed);
+          try {
+            localStorage.setItem("evoa_explore_startups_week_cache", JSON.stringify(parsed));
+          } catch (_) {}
         }
-        if (spotlightRes.status === 'fulfilled' && spotlightRes.value?.data) {
+        if (spotlightRes.status === "fulfilled" && spotlightRes.value?.data) {
           const investors = spotlightRes.value.data?.data || spotlightRes.value.data;
           const parsed = Array.isArray(investors) ? investors : [];
           setInvestorSpotlight(parsed);
-          cache.set('explore_investorSpotlight', parsed);
+          cache.set("explore_investorSpotlight", parsed);
+          try {
+            localStorage.setItem("evoa_explore_investors_spotlight_cache", JSON.stringify(parsed));
+          } catch (_) {}
         }
       } catch (err) {
-        console.error('Failed to fetch explore data:', err);
+        console.error("Failed to fetch explore data:", err);
       } finally {
         setLoadingData(false);
       }

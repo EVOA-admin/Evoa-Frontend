@@ -36,8 +36,14 @@ export default function InvestorProfile() {
     const navigate = useNavigate();
     const { user: authUser } = useAuth();
 
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState(() => {
+        try {
+            const cached = localStorage.getItem("evoa_investor_profile_cache");
+            if (cached) return JSON.parse(cached);
+        } catch (_) {}
+        return null;
+    });
+    const [loading, setLoading] = useState(() => profile === null);
     const [editOpen, setEditOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("posts");
     const [deleteOpen, setDeleteOpen] = useState(false);
@@ -73,10 +79,15 @@ export default function InvestorProfile() {
 
     const fetchInvestorProfile = async () => {
         try {
-            setLoading(true);
+            if (profile === null) setLoading(true);
             const res = await getMyInvestorProfile();
             const data = res?.data?.data || res?.data || res;
-            setProfile(data);
+            if (data) {
+                setProfile(data);
+                try {
+                    localStorage.setItem("evoa_investor_profile_cache", JSON.stringify(data));
+                } catch (_) {}
+            }
         } catch (err) {
             console.error("Failed to load investor profile:", err);
         } finally {

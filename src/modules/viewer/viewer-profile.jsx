@@ -60,8 +60,14 @@ export default function ViewerProfile() {
         navigate('/');
     };
 
-    const [profile, setProfile] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [profile, setProfile] = useState(() => {
+        try {
+            const cached = localStorage.getItem("evoa_viewer_profile_cache");
+            if (cached) return JSON.parse(cached);
+        } catch (_) {}
+        return null;
+    });
+    const [loading, setLoading] = useState(() => profile === null);
     const [activeTab, setActiveTab] = useState("watching");
     const [deleteOpen, setDeleteOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -106,10 +112,15 @@ export default function ViewerProfile() {
 
     const fetchProfile = async () => {
         try {
-            setLoading(true);
+            if (profile === null) setLoading(true);
             const res = await getCurrentUserProfile();
             const u = res?.data?.data || res?.data || res;
-            setProfile(u);
+            if (u) {
+                setProfile(u);
+                try {
+                    localStorage.setItem("evoa_viewer_profile_cache", JSON.stringify(u));
+                } catch (_) {}
+            }
         } catch (err) {
             console.error("Failed to load profile:", err);
         } finally {
