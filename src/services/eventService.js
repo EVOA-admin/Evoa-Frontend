@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import { supabase } from '../config/supabase';
 
 const PRODUCTION_API_FALLBACK = 'https://evoa-backend.onrender.com/api';
 
@@ -77,6 +78,35 @@ export const eventService = {
           timestamp: Date.now(),
         }),
       };
+    }
+
+    // Persist to Supabase database so Super Admin Dashboard can view customer tickets
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const userId = currentUser?.id || payload.userId || 'anonymous-user';
+      const userEmail = payload.userEmail || currentUser?.email || '';
+      const userName = payload.userName || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '';
+      const ticketCode = ticket?.ticketCode || ticket?.id || `TKT-EVOA-${Date.now()}`;
+
+      await supabase.from('user_event_tickets').upsert({
+        ticket_code: ticketCode,
+        user_id: userId,
+        event_id: payload.eventId,
+        user_role: (payload.userRole || 'ATTENDEE').toUpperCase(),
+        user_name: userName,
+        user_email: userEmail,
+        price: payload.price ?? 0,
+        order_id: payload.orderId || '',
+        payment_id: payload.paymentId || '',
+        qr_code_data: JSON.stringify({
+          ticketId: ticketCode,
+          userId,
+          eventId: payload.eventId,
+          timestamp: Date.now(),
+        }),
+      }, { onConflict: 'ticket_code' }).catch((err) => console.warn('Supabase ticket upsert warn:', err));
+    } catch (sbErr) {
+      console.warn('Supabase ticket sync error:', sbErr);
     }
 
     // Save to local storage for instant availability in My Tickets

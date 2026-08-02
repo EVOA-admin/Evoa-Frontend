@@ -71,7 +71,14 @@ export default function EventPage() {
   const [expandedFaqs, setExpandedFaqs] = useState({});
 
   // Ticket status map per event: { [eventId]: ticketPass }
-  const [userTicketsMap, setUserTicketsMap] = useState({});
+  const [userTicketsMap, setUserTicketsMap] = useState(() => {
+    try {
+      const cached = localStorage.getItem("evoa_user_tickets_map");
+      return cached ? JSON.parse(cached) : {};
+    } catch {
+      return {};
+    }
+  });
   const [digitalTicket, setDigitalTicket] = useState(null);
   const [selectedEventModal, setSelectedEventModal] = useState(null);
 
@@ -119,17 +126,34 @@ export default function EventPage() {
   // Check ticket booking status for all events when user or publishedEvents change
   useEffect(() => {
     async function checkUserTickets() {
-      if (user && publishedEvents.length > 0) {
+      if (!user) return;
+      try {
+        const myTickets = await eventService.getMyTickets();
+        const ticketsList = Array.isArray(myTickets) ? myTickets : myTickets?.data || [];
         const ticketMap = {};
-        for (const evt of publishedEvents) {
-          try {
-            const ticket = await eventService.getUserTicketForEvent(evt.id);
-            if (ticket) {
-              ticketMap[evt.id] = ticket;
+
+        ticketsList.forEach((t) => {
+          const eId = t.eventId || t.event_id || t.event?.id;
+          if (eId) {
+            ticketMap[eId] = t;
+          }
+        });
+
+        if (publishedEvents.length > 0) {
+          for (const evt of publishedEvents) {
+            if (!ticketMap[evt.id]) {
+              try {
+                const t = await eventService.getUserTicketForEvent(evt.id);
+                if (t) ticketMap[evt.id] = t;
+              } catch (_) {}
             }
-          } catch (_) {}
+          }
         }
+
         setUserTicketsMap(ticketMap);
+        localStorage.setItem("evoa_user_tickets_map", JSON.stringify(ticketMap));
+      } catch (err) {
+        console.error("Error checking user tickets:", err);
       }
     }
     checkUserTickets();
@@ -340,17 +364,11 @@ export default function EventPage() {
             </div>
           </div>
 
-          {/* Title & Subtitle */}
+          {/* Title */}
           <div className="relative z-10 mb-5">
-            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               {cleanText(evt.title)}
             </h3>
-
-            {evt.subtitle && (
-              <p className="text-sm sm:text-base opacity-80 leading-relaxed max-w-3xl">
-                {cleanText(evt.subtitle)}
-              </p>
-            )}
           </div>
 
           {/* Quick Info Strip */}
@@ -726,23 +744,32 @@ export default function EventPage() {
             /* ── SMALL PROFESSIONAL EVENT CARDS GRID ── */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {publishedEvents.map((evt) => {
-                const coverImage = evt.coverImageUrl || evt.cover_image_url || DEFAULT_EVENT_COVER;
+                const isUserRegistered = Boolean(userTicketsMap[evt.id]);
+                const coverImage =
+                  evt.coverImageUrl ||
+                  evt.cover_image_url ||
+                  evt.coverUrl ||
+                  evt.cover_url ||
+                  evt.posterUrl ||
+                  evt.bannerUrl ||
+                  evt.poster_url ||
+                  evt.banner_url ||
+                  DEFAULT_EVENT_COVER;
                 const formattedDate = evt.startDate
                   ? new Date(evt.startDate).toLocaleDateString("en-IN", {
                       day: "numeric",
                       month: "short",
-                      year: "numeric",
                     })
                   : "Upcoming";
 
                 return (
                   <div
                     key={evt.id}
-                    className={`group relative overflow-hidden rounded-3xl border transition-all duration-300 hover:-translate-y-1 ${
+                    className={`group relative rounded-2xl overflow-hidden border transition-all duration-300 ${
                       isDark
-                        ? "bg-slate-900/90 border-slate-800 hover:border-indigo-500/40 hover:shadow-2xl hover:shadow-indigo-500/10"
-                        : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-xl shadow-sm"
-                    } flex flex-col`}
+                        ? "bg-slate-900/80 border-slate-800 hover:border-indigo-500/40"
+                        : "bg-white border-slate-200 hover:border-indigo-300 shadow-sm hover:shadow-md"
+                    }`}
                   >
                     {/* Thumbnail Cover Image (3:4 Ratio) */}
                     <div
@@ -780,7 +807,6 @@ export default function EventPage() {
                         className={`font-bold text-sm sm:text-base leading-snug line-clamp-2 flex-1 cursor-pointer transition-colors ${
                           isDark ? "text-white hover:text-indigo-400" : "text-slate-900 hover:text-indigo-600"
                         }`}
-                        style={{ color: isDark ? "#ffffff" : "#0f172a" }}
                         onClick={() => {
                           setSelectedEventModal(evt);
                           setExpandedEvents((prev) => ({ ...prev, [evt.id]: true }));
@@ -789,17 +815,31 @@ export default function EventPage() {
                         {evt.title}
                       </h3>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedEventModal(evt);
-                          setExpandedEvents((prev) => ({ ...prev, [evt.id]: true }));
-                        }}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-sm flex-shrink-0 active:scale-95 transition-all cursor-pointer"
-                      >
-                        <span>Register</span>
-                        <IoArrowForward size={12} />
-                      </button>
+                      {isUserRegistered ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedEventModal(evt);
+                            setExpandedEvents((prev) => ({ ...prev, [evt.id]: true }));
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm flex-shrink-0 active:scale-95 transition-all cursor-pointer"
+                        >
+                          <IoCheckmarkCircle size={14} />
+                          <span>Registered</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedEventModal(evt);
+                            setExpandedEvents((prev) => ({ ...prev, [evt.id]: true }));
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-sm flex-shrink-0 active:scale-95 transition-all cursor-pointer"
+                        >
+                          <span>Register</span>
+                          <IoArrowForward size={12} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
