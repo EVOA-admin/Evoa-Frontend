@@ -61,8 +61,17 @@ export default function EventPage() {
   const navigate = useNavigate();
   const { user, userRole } = useAuth();
 
-  const [publishedEvents, setPublishedEvents] = useState([]);
-  const [fetchingEvents, setFetchingEvents] = useState(true);
+  const [publishedEvents, setPublishedEvents] = useState(() => {
+    try {
+      const cached = localStorage.getItem("evoa_published_events_cache");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (_) {}
+    return [];
+  });
+  const [fetchingEvents, setFetchingEvents] = useState(() => publishedEvents.length === 0);
   const [fetchError, setFetchError] = useState(null);
 
   // Expanded details state per event: { [eventId]: boolean }
@@ -99,7 +108,7 @@ export default function EventPage() {
   // Load all published events
   async function loadEventsData(targetSlug = null) {
     try {
-      setFetchingEvents(true);
+      if (publishedEvents.length === 0) setFetchingEvents(true);
       setFetchError(null);
 
       const res = await eventService.getAllPublishedEvents();
@@ -107,6 +116,9 @@ export default function EventPage() {
       const cleanList = rawList.filter((e) => e.status === "published");
 
       setPublishedEvents(cleanList);
+      try {
+        localStorage.setItem("evoa_published_events_cache", JSON.stringify(cleanList));
+      } catch (_) {}
 
       // If target slug is provided, expand & open that specific event by default
       if (targetSlug && cleanList.length > 0) {
@@ -117,7 +129,9 @@ export default function EventPage() {
         }
       }
     } catch (err) {
-      setFetchError(err?.message || "Unable to load live events right now.");
+      if (publishedEvents.length === 0) {
+        setFetchError(err?.message || "Unable to load live events right now.");
+      }
     } finally {
       setFetchingEvents(false);
     }

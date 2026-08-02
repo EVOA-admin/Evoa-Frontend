@@ -136,11 +136,26 @@ export default function Conversation() {
     const navigate = useNavigate();
     const { user: authUser } = useAuth();
 
-    const [messages, setMessages] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [messages, setMessages] = useState(() => {
+        try {
+            const cached = localStorage.getItem(`evoa_chat_messages_${conversationId}`);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (_) {}
+        return [];
+    });
+    const [otherUser, setOtherUser] = useState(() => {
+        try {
+            const cached = localStorage.getItem(`evoa_chat_user_${conversationId}`);
+            if (cached) return JSON.parse(cached);
+        } catch (_) {}
+        return null;
+    });
+    const [loading, setLoading] = useState(() => messages.length === 0);
     const [text, setText] = useState("");
     const [sending, setSending] = useState(false);
-    const [otherUser, setOtherUser] = useState(null);
     const bottomRef = useRef();
 
     const [permission, setPermission] = useState(null);
@@ -155,7 +170,7 @@ export default function Conversation() {
 
     const fetchAll = async () => {
         try {
-            setLoading(true);
+            if (messages.length === 0) setLoading(true);
             const [convRes, msgRes] = await Promise.all([
                 getConversations(),
                 getMessages(conversationId)
@@ -166,12 +181,19 @@ export default function Conversation() {
 
             if (currConv?.otherUser) {
                 setOtherUser(currConv.otherUser);
-                const pRes = await getPermission(currConv.otherUser.id);
-                setPermission(pRes?.data?.data || pRes?.data);
+                try {
+                    localStorage.setItem(`evoa_chat_user_${conversationId}`, JSON.stringify(currConv.otherUser));
+                } catch (_) {}
+                getPermission(currConv.otherUser.id)
+                    .then(pRes => setPermission(pRes?.data?.data || pRes?.data))
+                    .catch(() => {});
             }
 
             const msgs = msgRes?.data?.data || msgRes?.data || [];
             setMessages(msgs);
+            try {
+                localStorage.setItem(`evoa_chat_messages_${conversationId}`, JSON.stringify(msgs));
+            } catch (_) {}
         } catch (err) {
             console.error("Failed to load chat:", err);
         } finally {

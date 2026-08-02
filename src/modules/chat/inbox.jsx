@@ -14,26 +14,60 @@ export default function Inbox() {
     const { user: authUser } = useAuth();
 
     const [tab, setTab] = useState("messages");
-    const [conversations, setConversations] = useState([]);
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [unread, setUnread] = useState({ unreadMessages: 0, pendingRequests: 0 });
+    const [conversations, setConversations] = useState(() => {
+        try {
+            const cached = localStorage.getItem("evoa_chat_conversations_cache");
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            }
+        } catch (_) {}
+        return [];
+    });
+    const [requests, setRequests] = useState(() => {
+        try {
+            const cached = localStorage.getItem("evoa_chat_requests_cache");
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed)) return parsed;
+            }
+        } catch (_) {}
+        return [];
+    });
+    const [unread, setUnread] = useState(() => {
+        try {
+            const cached = localStorage.getItem("evoa_chat_unread_cache");
+            if (cached) return JSON.parse(cached);
+        } catch (_) {}
+        return { unreadMessages: 0, pendingRequests: 0 };
+    });
+    const [loading, setLoading] = useState(() => conversations.length === 0 && requests.length === 0);
 
     useEffect(() => {
         fetchAll();
     }, []);
 
     const fetchAll = async () => {
-        setLoading(true);
+        if (conversations.length === 0) setLoading(true);
         try {
             const [convRes, reqRes, countRes] = await Promise.all([
                 getConversations(),
                 getMessageRequests(),
                 getUnreadCount(),
             ]);
-            setConversations(convRes?.data?.data || convRes?.data || []);
-            setRequests(reqRes?.data?.data || reqRes?.data || []);
-            setUnread(countRes?.data?.data || countRes?.data || {});
+            const fetchedConvs = convRes?.data?.data || convRes?.data || [];
+            const fetchedReqs = reqRes?.data?.data || reqRes?.data || [];
+            const fetchedUnread = countRes?.data?.data || countRes?.data || {};
+
+            setConversations(fetchedConvs);
+            setRequests(fetchedReqs);
+            setUnread(fetchedUnread);
+
+            try {
+                localStorage.setItem("evoa_chat_conversations_cache", JSON.stringify(fetchedConvs));
+                localStorage.setItem("evoa_chat_requests_cache", JSON.stringify(fetchedReqs));
+                localStorage.setItem("evoa_chat_unread_cache", JSON.stringify(fetchedUnread));
+            } catch (_) {}
         } catch (err) {
             console.error("Failed to load inbox:", err);
         } finally {
