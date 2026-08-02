@@ -13,31 +13,38 @@ export default function DigitalTicketModal({ ticket, onClose }) {
   const ticketCode = ticket?.ticketCode || ticket?.id || "TKT-EVOA-PASS";
 
   const resolveAttendeeName = (t, currUser) => {
-    // 1. Direct ticket userName if set and not generic fallback
-    if (t?.userName && t.userName.trim() && t.userName.trim() !== "Evoa Attendee") {
-      return t.userName.trim();
-    }
-    if (t?.user_name && t.user_name.trim() && t.user_name.trim() !== "Evoa Attendee") {
-      return t.user_name.trim();
-    }
+    const isEmail = (str) => typeof str === "string" && str.includes("@");
 
-    // 2. Auth user or ticket user actual Name
+    // 1. Check logged in user or ticket user object for actual Name
     const u = currUser || t?.user || {};
-    const name = u?.fullName || u?.name || u?.namePrimary || u?.founderName || u?.companyName;
-    if (name && name.trim() && name.trim() !== "Evoa Attendee") {
-      return name.trim();
+    const candidateNames = [
+      u?.fullName,
+      u?.name,
+      u?.namePrimary,
+      u?.founderName,
+      u?.companyName,
+      t?.userName,
+      t?.user_name,
+      u?.username,
+      u?.startupUsername,
+      u?.startup_username,
+      t?.username,
+    ];
+
+    for (const raw of candidateNames) {
+      if (raw && typeof raw === "string") {
+        const trimmed = raw.trim();
+        if (trimmed && trimmed !== "Evoa Attendee" && !isEmail(trimmed)) {
+          return trimmed;
+        }
+      }
     }
 
-    // 3. Username
-    const username = u?.username || u?.startupUsername || u?.startup_username || t?.username;
-    if (username && username.trim()) {
-      return username.trim();
-    }
-
-    // 4. Email Address used during registration
-    const email = t?.userEmail || t?.user_email || u?.email;
-    if (email && email.trim()) {
-      return email.trim();
+    // 2. If all name candidates are missing or are emails, derive a clean name from email handle
+    const email = t?.userEmail || t?.user_email || u?.email || "";
+    if (email && isEmail(email)) {
+      const handle = email.split("@")[0].replace(/[._-]/g, " ");
+      return handle.replace(/\b\w/g, (c) => c.toUpperCase());
     }
 
     return "Evoa Attendee";
@@ -67,17 +74,13 @@ export default function DigitalTicketModal({ ticket, onClose }) {
   const venueText = event?.venueName || event?.venue_name || event?.meetingUrl || event?.meeting_url || "Venue Details Announced Soon";
   const cityText = event?.city || event?.state || "India";
 
-  // Generate QR Code
+  // Generate QR Code containing Name, Email, Access Role, Event Title & Pass Code
   useEffect(() => {
     async function generateQrCode() {
       try {
-        const rawPayload = ticket?.qrCodeData || JSON.stringify({
-          ticketId: ticketCode,
-          userId: ticket?.userId,
-          eventId: event?.id,
-          timestamp: Date.now(),
-        });
-        const url = await QRCode.toDataURL(rawPayload, {
+        const qrContent = `EVOA OFFICIAL EVENT PASS\nName: ${userName}\nEmail: ${userEmail || "N/A"}\nAccess Role: ${userRole}\nEvent: ${eventTitle}\nPass Code: ${ticketCode}`;
+        
+        const url = await QRCode.toDataURL(qrContent, {
           width: 240,
           margin: 1,
           color: {
@@ -91,7 +94,7 @@ export default function DigitalTicketModal({ ticket, onClose }) {
       }
     }
     generateQrCode();
-  }, [ticket, ticketCode, event?.id]);
+  }, [ticket, ticketCode, userName, userEmail, userRole, eventTitle]);
 
   // Download Ticket as PNG Image via Canvas rendering
   const handleDownloadTicket = async () => {
