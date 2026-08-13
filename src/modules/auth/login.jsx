@@ -323,7 +323,9 @@ export default function Login() {
       const { error, data } = await signIn(formData.email, formData.password);
       if (error) {
         const msg = error.message?.toLowerCase() || '';
-        if (msg.includes('invalid login credentials') || msg.includes('email not confirmed') || msg.includes('invalid credentials')) {
+        if (msg.includes('not verified') || msg.includes('not confirmed') || msg.includes('verify your email')) {
+          setError(error.message || 'Your email is not verified yet. Please check your inbox and verify your email address before logging in.');
+        } else if (msg.includes('invalid login credentials') || msg.includes('invalid credentials')) {
           setError('Invalid email or password. If you signed up with Google, please use "Login with Google" below.');
         } else {
           setError(error.message || 'Failed to sign in. Please try again.');

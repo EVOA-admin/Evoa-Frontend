@@ -117,6 +117,16 @@ export function AuthProvider({ children }) {
                 session = recoveredSession;
             }
 
+            // Prevent unverified email/password users from acquiring active auth state
+            const isEmailProvider = session.user.app_metadata?.provider === 'email' || !session.user.app_metadata?.provider;
+            const isConfirmed = !!(session.user.email_confirmed_at || session.user.confirmed_at);
+            if (isEmailProvider && !isConfirmed) {
+                clearAuthState(false);
+                clearCachedOnboarding(session.user.id);
+                await supabase.auth.signOut();
+                return;
+            }
+
             setSession(session);
             setUser(session.user);
             localStorage.setItem('authToken', session.access_token);
@@ -246,23 +256,63 @@ export function AuthProvider({ children }) {
     };
 
     const signUp = async (email, password, metadata = {}) => {
-        return await supabase.auth.signUp({
-            email,
-            password,
-            options: { data: metadata },
-        });
+        try {
+            const response = await apiClient.post('/auth/register', {
+                email,
+                password,
+                metadata,
+                redirectTo: `${window.location.origin}/auth/callback`,
+            }, { requiresAuth: false });
+            return { data: response?.data || response, error: null };
+        } catch (err) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to sign up';
+            return { data: null, error: new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage) };
+        }
     };
 
     const resendVerification = async (email) => {
-        const { error } = await supabase.auth.resend({
-            type: 'signup',
-            email,
-        });
-        if (error) throw error;
+        try {
+            const response = await apiClient.post('/auth/resend-verification', {
+                email,
+                redirectTo: `${window.location.origin}/auth/callback`,
+            }, { requiresAuth: false });
+            return response?.data || response;
+        } catch (err) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to resend verification email';
+            throw new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
+        }
     };
 
     const signIn = async (email, password) => {
-        return await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+            const msg = error.message?.toLowerCase() || '';
+            if (msg.includes('email not confirmed')) {
+                return {
+                    data: null,
+                    error: new Error('Your email is not verified yet. Please check your inbox and click the verification link before logging in.'),
+                };
+            }
+            return { data: null, error };
+        }
+
+        if (data?.user) {
+            const isConfirmed = !!(data.user.email_confirmed_at || data.user.confirmed_at);
+            if (!isConfirmed) {
+                const uid = currentSupabaseUidRef.current;
+                clearAuthState(false);
+                if (uid) clearCachedOnboarding(uid);
+                await supabase.auth.signOut();
+
+                return {
+                    data: null,
+                    error: new Error('Your email is not verified yet. Please check your inbox and click the verification link before logging in.'),
+                };
+            }
+        }
+
+        return { data, error: null };
     };
 
     const signInWithGoogle = async () => {
