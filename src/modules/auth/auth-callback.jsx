@@ -31,6 +31,22 @@ export default function AuthCallback() {
         let cancelled = false;
 
         const handleCallback = async () => {
+            const hash = window.location.hash || '';
+            const search = window.location.search || '';
+            const searchParams = new URLSearchParams(search);
+            const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+
+            const isRecovery =
+                hash.includes('type=recovery') ||
+                search.includes('type=recovery') ||
+                searchParams.get('type') === 'recovery' ||
+                hashParams.get('type') === 'recovery';
+
+            if (isRecovery) {
+                navigate(`/create-new-password${hash}${search ? (hash ? '&' + search.slice(1) : search) : ''}`, { replace: true });
+                return;
+            }
+
             const { data, error } = await supabase.auth.getSession();
 
             if (cancelled) return;
@@ -38,13 +54,6 @@ export default function AuthCallback() {
             if (error) {
                 console.error('[AuthCallback] Session error:', error.message);
                 navigate('/login', { replace: true });
-                return;
-            }
-
-            const hash = window.location.hash || '';
-            const search = window.location.search || '';
-            if (hash.includes('type=recovery') || search.includes('type=recovery')) {
-                navigate(`/create-new-password${hash}`, { replace: true });
                 return;
             }
 

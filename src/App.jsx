@@ -19,6 +19,32 @@ function GARouteTracker() {
   return null;
 }
 
+/**
+ * RecoveryRouteHandler — intercepts password recovery tokens landing at any URL
+ * (such as root / or OAuth redirects) and instantly forwards to /create-new-password.
+ */
+function RecoveryRouteHandler() {
+  const location = useLocation();
+  useEffect(() => {
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    const searchParams = new URLSearchParams(search);
+    const hashParams = new URLSearchParams(hash.replace(/^#/, ''));
+
+    const isRecovery =
+      hash.includes('type=recovery') ||
+      search.includes('type=recovery') ||
+      searchParams.get('type') === 'recovery' ||
+      hashParams.get('type') === 'recovery';
+
+    if (isRecovery && location.pathname !== '/create-new-password' && location.pathname !== '/reset-password') {
+      const target = `/create-new-password${hash}${search ? (hash ? '&' + search.slice(1) : search) : ''}`;
+      window.location.replace(target);
+    }
+  }, [location]);
+  return null;
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -26,6 +52,7 @@ function App() {
         <AuthProvider>
           <DataCacheProvider>
             <GARouteTracker />
+            <RecoveryRouteHandler />
             <AppRoutes />
           </DataCacheProvider>
         </AuthProvider>

@@ -87,7 +87,8 @@ export default function AppRoutes() {
         <Route path="register"           element={<PublicRoute><Auth><Register /></Auth></PublicRoute>} />
         <Route path="forget-password"    element={<PublicRoute><Auth><ForgetPassword /></Auth></PublicRoute>} />
         <Route path="verify-otp"         element={<PublicRoute><Auth><VerifyOTP /></Auth></PublicRoute>} />
-        <Route path="create-new-password" element={<PublicRoute><Auth><CreateNewPassword /></Auth></PublicRoute>} />
+        <Route path="create-new-password" element={<Auth><CreateNewPassword /></Auth>} />
+        <Route path="reset-password"     element={<Auth><CreateNewPassword /></Auth>} />
         <Route path="verify-email"       element={<Auth><VerifyEmail /></Auth>} />
 
         <Route path="auth/callback"      element={<Auth><AuthCallback /></Auth>} />

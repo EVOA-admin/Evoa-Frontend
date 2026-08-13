@@ -20,6 +20,19 @@ const DASHBOARD_ROUTES = {
 export default function PublicRoute({ children }) {
     const { user, loading, userRole, roleSelected, registrationCompleted } = useAuth();
 
+    // If currently on password recovery or reset flow, do NOT redirect away
+    const isRecovery =
+        typeof window !== 'undefined' && (
+            window.location.pathname.includes('create-new-password') ||
+            window.location.pathname.includes('reset-password') ||
+            window.location.hash.includes('type=recovery') ||
+            window.location.search.includes('type=recovery')
+        );
+
+    if (isRecovery) {
+        return children;
+    }
+
     // Only block on initial loading. The localStorage cache seeds state before sync,
     // so we don't need to wait for syncing to complete here.
     if (loading) {

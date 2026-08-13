@@ -230,19 +230,79 @@ export default function CreateNewPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading]         = useState(false);
+  const [checking, setChecking]       = useState(true);
   const [error, setError]             = useState(null);
   const [success, setSuccess]         = useState(false);
   const [invalidToken, setInvalidToken] = useState(false);
   const navigate                      = useNavigate();
 
   useEffect(() => {
-    // Check URL parameters / hash for recovery errors
-    const hash = window.location.hash || "";
-    const search = window.location.search || "";
-    if (hash.includes("error=") || search.includes("error=")) {
-      setInvalidToken(true);
-      setError("This password reset link is invalid or has expired. Please request a new reset link.");
-    }
+    let isMounted = true;
+
+    const verifySession = async () => {
+      const hash = window.location.hash || "";
+      const search = window.location.search || "";
+      const searchParams = new URLSearchParams(search);
+
+      // Check URL parameters for explicit errors (e.g. expired link)
+      if (hash.includes("error=") || search.includes("error=") || hash.includes("error_description=")) {
+        if (!isMounted) return;
+        setInvalidToken(true);
+        setError("This password reset link is invalid or has expired. Please request a new reset link.");
+        setChecking(false);
+        return;
+      }
+
+      // Handle PKCE code in query if present
+      const code = searchParams.get("code");
+      if (code) {
+        try {
+          await supabase.auth.exchangeCodeForSession(code);
+        } catch (e) {
+          console.warn("PKCE code exchange error:", e?.message || e);
+        }
+      }
+
+      // Check for active session
+      const { data } = await supabase.auth.getSession();
+      if (!isMounted) return;
+
+      if (data?.session) {
+        setInvalidToken(false);
+        setChecking(false);
+      } else {
+        // Allow a brief moment for hash token parsing
+        setTimeout(async () => {
+          if (!isMounted) return;
+          const { data: retryData } = await supabase.auth.getSession();
+          if (retryData?.session) {
+            setInvalidToken(false);
+          } else {
+            // Only flag invalid if there's no hash or code at all
+            if (!hash.includes("access_token") && !code) {
+              setInvalidToken(true);
+              setError("No active password reset session found. The link may have expired or already been used.");
+            }
+          }
+          setChecking(false);
+        }, 1200);
+      }
+    };
+
+    verifySession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+      if (event === "PASSWORD_RECOVERY" || session?.user) {
+        setInvalidToken(false);
+        setChecking(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e) => {
@@ -265,18 +325,23 @@ export default function CreateNewPassword() {
 
       if (updateErr) {
         const msg = updateErr.message?.toLowerCase() || "";
-        if (msg.includes("same as") || msg.includes("different") || msg.includes("expired") || msg.includes("session")) {
+        if (msg.includes("same as") || msg.includes("different") || msg.includes("expired") || msg.includes("session") || msg.includes("invalid") || msg.includes("token")) {
           setInvalidToken(true);
+          setError("This reset link is expired or invalid. Please request a new password reset link.");
+        } else {
+          setError(updateErr.message || "Failed to update password. Please try again.");
         }
-        throw updateErr;
+        return;
       }
 
       setSuccess(true);
-      // Revoke temporary recovery session and redirect to login
+      // Revoke temporary recovery session and redirect to normal login
       setTimeout(async () => {
-        await supabase.auth.signOut();
-        navigate("/login", { replace: true });
-      }, 2000);
+        try {
+          await supabase.auth.signOut();
+        } catch (_) { /* ignore */ }
+        navigate("/login", { replace: true, state: { message: "Password updated successfully. Please log in with your new password." } });
+      }, 1800);
     } catch (err) {
       setError(err?.message || "Failed to update password. Please try again.");
     } finally {
@@ -309,7 +374,12 @@ export default function CreateNewPassword() {
             )}
             {error && <div className="auth-error">{error}</div>}
 
-            {invalidToken ? (
+            {checking ? (
+              <div style={{ textAlign: "center", padding: "28px 0" }}>
+                <div style={{ width: 32, height: 32, border: "3px solid #2563EB", borderTopColor: "transparent", borderRadius: "50%", margin: "0 auto 12px auto", animation: "auth-pulse 1s linear infinite" }} />
+                <p style={{ fontSize: 13, color: "var(--text-sub)", margin: 0 }}>Verifying reset token…</p>
+              </div>
+            ) : invalidToken ? (
               <div style={{ textAlign: "center", marginTop: 16 }}>
                 <Link to="/forget-password" className="auth-btn" style={{ display: "inline-block", textDecoration: "none", boxSizing: "border-box" }}>
                   Request New Reset Link

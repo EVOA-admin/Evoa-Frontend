@@ -102,6 +102,15 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         const handleAuthStateChange = async (event, session) => {
+            const isRecovery =
+                event === 'PASSWORD_RECOVERY' ||
+                (typeof window !== 'undefined' && (
+                    window.location.pathname.includes('create-new-password') ||
+                    window.location.pathname.includes('reset-password') ||
+                    window.location.hash.includes('type=recovery') ||
+                    window.location.search.includes('type=recovery')
+                ));
+
             if (!session?.user) {
                 if (event === 'SIGNED_OUT') {
                     clearAuthState(false);
@@ -117,7 +126,16 @@ export function AuthProvider({ children }) {
                 session = recoveredSession;
             }
 
-            // Prevent unverified email/password users from acquiring active auth state
+            // In password recovery flow: keep the recovery session available for updateUser({ password }),
+            // but do NOT trigger onboarding routing, profile sync, or premature sign-out.
+            if (isRecovery && session?.user) {
+                setSession(session);
+                setUser(session.user);
+                setLoading(false);
+                return;
+            }
+
+            // Prevent unverified email/password users from acquiring active auth state (except in recovery flow)
             const isEmailProvider = session.user.app_metadata?.provider === 'email' || !session.user.app_metadata?.provider;
             const isConfirmed = !!(session.user.email_confirmed_at || session.user.confirmed_at);
             if (isEmailProvider && !isConfirmed) {
