@@ -419,6 +419,19 @@ export function AuthProvider({ children }) {
         return true;
     };
 
+    const forgotPassword = async (email) => {
+        try {
+            const response = await apiClient.post('/auth/forgot-password', {
+                email,
+                redirectTo: `${window.location.origin}/create-new-password`,
+            }, { requiresAuth: false });
+            return response?.data || response;
+        } catch (err) {
+            const errorMessage = err?.response?.data?.message || err?.message || 'Failed to send password reset link';
+            throw new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
+        }
+    };
+
     const value = {
         user,
         session,
@@ -437,6 +450,7 @@ export function AuthProvider({ children }) {
         completeRegistration,
         refreshUserProfile,
         resendVerification,
+        forgotPassword,
         isAuthenticated: !!user,
     };
 

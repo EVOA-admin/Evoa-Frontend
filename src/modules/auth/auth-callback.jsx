@@ -41,6 +41,13 @@ export default function AuthCallback() {
                 return;
             }
 
+            const hash = window.location.hash || '';
+            const search = window.location.search || '';
+            if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+                navigate(`/create-new-password${hash}`, { replace: true });
+                return;
+            }
+
             if (data?.session) {
                 await tryApplyPendingReferral();
                 navigate('/', { replace: true });
