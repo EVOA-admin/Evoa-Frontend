@@ -54,6 +54,42 @@ function renderIcon(iconName, fallbackIcon = IoStarOutline, props = {}) {
   return <IconComp {...props} />;
 }
 
+const checkIsEventExpired = (evt) => {
+  if (!evt) return true;
+  if (evt.isRegistrationOpen === false || evt.allowBookings === false || evt.status === "archived" || evt.status === "cancelled") return true;
+
+  const now = new Date();
+
+  if (evt.bookingEndDate || evt.booking_end_date) {
+    const bookingEnd = new Date(evt.bookingEndDate || evt.booking_end_date);
+    if (!isNaN(bookingEnd.getTime()) && now > bookingEnd) return true;
+  }
+
+  const dateStr = evt.endDate || evt.end_date || evt.startDate || evt.start_date;
+  if (dateStr) {
+    let endTimestamp = null;
+    if (typeof dateStr === "string" && dateStr.includes("T")) {
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) endTimestamp = parsed.getTime();
+    } else if (typeof dateStr === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())) {
+      const timeStr = evt.endTime || evt.end_time || evt.startTime || evt.start_time || "23:59:59";
+      const fullStr = `${dateStr.trim()}T${timeStr.includes(":") ? timeStr : "23:59:59"}`;
+      const parsed = new Date(fullStr);
+      if (!isNaN(parsed.getTime())) endTimestamp = parsed.getTime();
+      else endTimestamp = new Date(`${dateStr.trim()}T23:59:59.999Z`).getTime();
+    } else if (typeof dateStr === "string") {
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        parsed.setHours(23, 59, 59, 999);
+        endTimestamp = parsed.getTime();
+      }
+    }
+    if (endTimestamp !== null && now.getTime() > endTimestamp) return true;
+  }
+
+  return false;
+};
+
 export default function EventPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -79,10 +115,11 @@ export default function EventPage() {
   // Expanded FAQ state per event: { [eventId_faqIndex]: boolean }
   const [expandedFaqs, setExpandedFaqs] = useState({});
 
-  // Ticket status map per event: { [eventId]: ticketPass }
+  // Ticket status map per event strictly scoped to user.id: { [eventId]: ticketPass }
   const [userTicketsMap, setUserTicketsMap] = useState(() => {
+    if (!user?.id) return {};
     try {
-      const cached = localStorage.getItem("evoa_user_tickets_map");
+      const cached = localStorage.getItem(`evoa_user_tickets_map_${user.id}`);
       return cached ? JSON.parse(cached) : {};
     } catch {
       return {};
@@ -140,25 +177,34 @@ export default function EventPage() {
   // Check ticket booking status for all events when user or publishedEvents change
   useEffect(() => {
     async function checkUserTickets() {
-      if (!user) return;
+      if (!user) {
+        setUserTicketsMap({});
+        return;
+      }
       try {
         const myTickets = await eventService.getMyTickets();
         const ticketsList = Array.isArray(myTickets) ? myTickets : myTickets?.data || [];
         const ticketMap = {};
 
         ticketsList.forEach((t) => {
-          const eId = t.eventId || t.event_id || t.event?.id;
-          if (eId) {
-            const matchingEvt = publishedEvents.find((pe) => pe.id === eId);
-            ticketMap[eId] = {
-              ...t,
-              event: t.event || matchingEvt || {},
-            };
+          const tUserId = t.userId || t.user_id;
+          const tEmail = t.userEmail || t.user_email;
+          if ((tUserId && tUserId === user.id) || (tEmail && tEmail.toLowerCase() === user.email?.toLowerCase())) {
+            const eId = t.eventId || t.event_id || t.event?.id;
+            if (eId) {
+              const matchingEvt = publishedEvents.find((pe) => pe.id === eId);
+              ticketMap[eId] = {
+                ...t,
+                event: t.event || matchingEvt || {},
+              };
+            }
           }
         });
 
         setUserTicketsMap(ticketMap);
-        localStorage.setItem("evoa_user_tickets_map", JSON.stringify(ticketMap));
+        if (user?.id) {
+          localStorage.setItem(`evoa_user_tickets_map_${user.id}`, JSON.stringify(ticketMap));
+        }
       } catch (err) {
         console.error("Error checking user tickets:", err);
       }
@@ -196,6 +242,11 @@ export default function EventPage() {
 
     if (!user) {
       setErrorMsg("Please sign in to join this event.");
+      return;
+    }
+
+    if (checkIsEventExpired(evt)) {
+      setErrorMsg("Registration for this event has expired and is now closed.");
       return;
     }
 
@@ -314,7 +365,8 @@ export default function EventPage() {
 
     const rolePricingConfig = evt.rolePricing?.[role] || evt.role_pricing?.[role];
     const isRoleActive = rolePricingConfig?.isActive !== false;
-    const isBookingAllowed = evt.allowBookings && evt.isRegistrationOpen && evt.status === "published";
+    const isExpired = checkIsEventExpired(evt);
+    const isBookingAllowed = !isExpired && evt.allowBookings && evt.isRegistrationOpen && evt.status === "published";
     const isSoldOut = activeTicket && activeTicket.remainingSeats !== null && activeTicket.remainingSeats <= 0;
 
     const roleTicketPrice = rolePricingConfig?.price !== undefined
@@ -574,15 +626,17 @@ export default function EventPage() {
                   <button
                     type="button"
                     onClick={() => handleBookEvent(evt)}
-                    disabled={isLoading || !isBookingAllowed || isSoldOut || !isRoleActive}
+                    disabled={isLoading || !isBookingAllowed || isSoldOut || !isRoleActive || isExpired}
                     className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer ${
-                      !isBookingAllowed || isSoldOut || !isRoleActive
+                      !isBookingAllowed || isSoldOut || !isRoleActive || isExpired
                         ? "bg-slate-700 text-slate-400 cursor-not-allowed"
                         : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/25"
                     }`}
                   >
                     {isLoading ? (
                       <span>Processing…</span>
+                    ) : isExpired ? (
+                      <span>Registration Expired</span>
                     ) : isSoldOut ? (
                       <span>Passes Sold Out</span>
                     ) : !isRoleActive ? (
@@ -774,6 +828,7 @@ export default function EventPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {publishedEvents.map((evt) => {
                 const isUserRegistered = Boolean(userTicketsMap[evt.id]);
+                const isExpired = checkIsEventExpired(evt);
                 const coverImage =
                   evt.coverImageUrl ||
                   evt.cover_image_url ||
@@ -855,6 +910,14 @@ export default function EventPage() {
                         >
                           <IoCheckmarkCircle size={14} />
                           <span>Registered</span>
+                        </button>
+                      ) : isExpired ? (
+                        <button
+                          type="button"
+                          disabled={true}
+                          className="px-3.5 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1 bg-slate-700/80 text-slate-400 border border-slate-600/30 flex-shrink-0 cursor-not-allowed"
+                        >
+                          <span>Expired</span>
                         </button>
                       ) : (
                         <button
