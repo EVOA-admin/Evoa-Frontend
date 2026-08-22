@@ -67,7 +67,7 @@ export default function MyTicketsPage() {
     <AppShell>
       <AppHeader title="My Event Tickets" />
 
-      <main className={`min-h-screen transition-colors ${isDark ? "bg-[#0b0f17] text-slate-100" : "bg-[#fdfbf7] text-slate-900"}`}>
+      <main className={`min-h-screen transition-colors ${isDark ? "bg-[#0a0a0e] text-slate-100" : "bg-[#f2efe9] text-slate-900"}`}>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
           {/* Navigation Tab Bar */}
           <div className={`flex items-center justify-between border-b pb-4 ${isDark ? "border-slate-800" : "border-slate-200"}`}>

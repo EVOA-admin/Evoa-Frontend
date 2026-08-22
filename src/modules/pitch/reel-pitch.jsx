@@ -927,19 +927,19 @@ export default function ReelPitch() {
       <DesktopSidebar />
 
       {/* Outer reel overlay */}
-      <div className={`fixed inset-0 z-50 ${isDark ? 'bg-[#000000]' : 'bg-gray-50'}`}>
+      <div className={`fixed inset-0 z-50 transition-colors ${isDark ? 'bg-[#0a0a0e]' : 'bg-[#f2efe9]'}`}>
         <div className="relative w-full h-full overflow-hidden">
           {/* Header */}
-          <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 min-h-[56px] bg-gradient-to-b from-black/80 to-transparent">
-            <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 active:scale-95">
-              <FaArrowLeft size={18} />
+          <div className={`absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 py-3 min-h-[56px] bg-transparent ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <button onClick={() => navigate(-1)} className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${isDark ? 'bg-black/50 text-white hover:bg-black/70' : 'bg-white/80 text-gray-800 hover:bg-white border border-gray-200/60 shadow-sm'} active:scale-95`}>
+              <FaArrowLeft size={16} />
             </button>
-            <h1 className="text-lg font-bold text-white flex items-center gap-1.5">
+            <h1 className={`text-base font-bold flex items-center gap-1.5 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {hashtagFilter ? (
                 <><FaHashtag size={14} className="text-evoa" />{hashtagFilter}</>
               ) : 'Pitch Reels'}
             </h1>
-            <div className="w-11" />
+            <div className="w-10" />
           </div>
 
           {loading ? (
@@ -967,7 +967,6 @@ export default function ReelPitch() {
                   ))}
                   <div ref={sentinelRef} style={{ height: '1px', flexShrink: 0 }} />
                 </div>
-                <div className="reel-kbd-hint">↑ ↓ to navigate · Space to play/pause</div>
               </div>
 
               {/* RIGHT PANEL — fixed glass cards, same style as home feed */}

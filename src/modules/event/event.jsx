@@ -704,7 +704,7 @@ export default function EventPage() {
       <AppHeader title="Event" />
 
       {/* Top Navigation Bar */}
-      <div className={`border-b sticky top-0 z-30 backdrop-blur-md ${isDark ? "bg-slate-900/80 border-slate-800" : "bg-white/80 border-slate-200"}`}>
+      <div className={`border-b sticky top-0 z-30 bg-transparent ${isDark ? "border-slate-800/40" : "border-slate-200/40"}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           {selectedEventModal ? (
             <button
@@ -732,7 +732,7 @@ export default function EventPage() {
 
       <main
         className={`min-h-screen pb-24 font-sans transition-colors ${
-          isDark ? "bg-[#0b0f17] text-slate-100" : "bg-slate-50 text-slate-900"
+          isDark ? "bg-[#0a0a0e] text-slate-100" : "bg-[#f2efe9] text-slate-900"
         }`}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
