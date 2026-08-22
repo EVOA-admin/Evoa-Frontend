@@ -254,21 +254,35 @@ export default function EventPage() {
         createOrder: () => pricingService.createEventOrder({ eventId: evt?.id, amount: roleTicketPrice, eventType: currentEventType }),
         verifyPayment: (payload) => pricingService.verifyPayment(payload),
         onSuccess: async (paymentResult) => {
-          const rawPass = await eventService.bookTicket({
-            eventId: evt.id,
-            price: roleTicketPrice,
-            userRole: role,
-            userName: attendeeName,
-            userEmail: attendeeEmail,
-            orderId: paymentResult?.razorpay_order_id,
-            paymentId: paymentResult?.razorpay_payment_id,
-          }).catch((e) => console.error("Ticket booking failed:", e));
+          let ticketPass = paymentResult?.ticket || paymentResult?.data?.ticket;
+          if (!ticketPass || (!ticketPass.ticketCode && !ticketPass.ticket_code && !ticketPass.id)) {
+            const rawPass = await eventService.bookTicket({
+              eventId: evt.id,
+              price: roleTicketPrice,
+              userRole: role,
+              userName: attendeeName,
+              userEmail: attendeeEmail,
+              orderId: paymentResult?.razorpay_order_id,
+              paymentId: paymentResult?.razorpay_payment_id,
+            }).catch((e) => console.error("Ticket booking failed:", e));
 
-          if (rawPass) {
-            const ticketPass = {
-              ...rawPass,
-              event: rawPass.event || evt,
+            if (rawPass) {
+              ticketPass = {
+                ...rawPass,
+                event: rawPass.event || evt,
+              };
+            }
+          } else {
+            ticketPass = {
+              ...ticketPass,
+              event: ticketPass.event || evt,
             };
+          }
+
+          if (ticketPass) {
+            const code = ticketPass.ticketCode || ticketPass.ticket_code || ticketPass.id;
+            ticketPass.ticketCode = code;
+            ticketPass.ticket_code = code;
             setUserTicketsMap((prev) => ({ ...prev, [evt.id]: ticketPass }));
             setDigitalTicket(ticketPass);
           }
@@ -689,7 +703,7 @@ export default function EventPage() {
                       onClick={() => setDigitalTicket(digitalTicket)}
                       className="mt-2 text-xs font-bold text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      View Digital Pass ({digitalTicket.ticketCode})
+                      View Digital Pass ({digitalTicket.ticketCode || digitalTicket.ticket_code})
                     </button>
                   ) : null}
                 </div>

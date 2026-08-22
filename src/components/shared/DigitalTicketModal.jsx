@@ -10,7 +10,7 @@ export default function DigitalTicketModal({ ticket, onClose }) {
   const ticketCardRef = useRef(null);
 
   const event = ticket?.event || {};
-  const ticketCode = ticket?.ticketCode || ticket?.id || "TKT-EVOA-PASS";
+  const ticketCode = ticket?.ticketCode || ticket?.ticket_code || ticket?.id || "TKT-EVOA-PASS";
 
   const resolveAttendeeName = (t, currUser) => {
     const isEmail = (str) => typeof str === "string" && str.includes("@");

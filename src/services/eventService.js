@@ -55,100 +55,104 @@ export const eventService = {
     let ticket = null;
     try {
       const raw = await apiClient.post('/events/book-ticket', payload);
-      ticket = raw?.data !== undefined ? raw.data : raw;
-      if (!ticket || (!ticket.ticketCode && !ticket.id)) ticket = null;
+      let resData = raw?.data !== undefined ? raw.data : raw;
+      if (resData?.data !== undefined) resData = resData.data;
+      if (resData?.data !== undefined) resData = resData.data;
+
+      if (resData && (resData.ticketCode || resData.ticket_code || resData.id)) {
+        ticket = resData;
+        const code = ticket.ticketCode || ticket.ticket_code || ticket.id;
+        ticket.ticketCode = code;
+        ticket.ticket_code = code;
+      }
     } catch (err) {
-      console.warn('Backend ticket booking network issue, using local fallback:', err);
+      console.warn('Backend ticket booking API warning, attempting to fetch existing ticket from DB:', err);
+      try {
+        ticket = await this.getUserTicketForEvent(payload.eventId);
+      } catch (_) {}
     }
 
-    if (!ticket) {
-      const randomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-      ticket = {
-        id: `local-${Date.now()}`,
-        ticketCode: `TKT-EVOA-${randomCode}`,
-        eventId: payload.eventId,
-        price: payload.price ?? 0,
-        userRole: payload.userRole || 'user',
-        orderId: payload.orderId || '',
-        paymentId: payload.paymentId || '',
-        createdAt: new Date().toISOString(),
-        qrCodeData: JSON.stringify({
-          ticketId: `TKT-EVOA-${randomCode}`,
-          eventId: payload.eventId,
-          timestamp: Date.now(),
-        }),
-      };
+    if (!ticket && payload.eventId) {
+      try {
+        ticket = await this.getUserTicketForEvent(payload.eventId);
+      } catch (_) {}
     }
 
-    // Persist to Supabase database so Super Admin Dashboard can view customer tickets
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      const userId = currentUser?.id || payload.userId || 'anonymous-user';
-      const userEmail = payload.userEmail || currentUser?.email || '';
-      const userName = payload.userName || currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || '';
-      const ticketCode = ticket?.ticketCode || ticket?.id || `TKT-EVOA-${Date.now()}`;
+    if (ticket) {
+      const finalPassCode = ticket.ticketCode || ticket.ticket_code || ticket.id;
+      ticket.ticketCode = finalPassCode;
+      ticket.ticket_code = finalPassCode;
 
-      await supabase.from('user_event_tickets').upsert({
-        ticket_code: ticketCode,
-        user_id: userId,
-        event_id: payload.eventId,
-        user_role: (payload.userRole || 'ATTENDEE').toUpperCase(),
-        user_name: userName,
-        user_email: userEmail,
-        price: payload.price ?? 0,
-        order_id: payload.orderId || '',
-        payment_id: payload.paymentId || '',
-        qr_code_data: JSON.stringify({
-          ticketId: ticketCode,
-          userId,
-          eventId: payload.eventId,
-          timestamp: Date.now(),
-        }),
-      }, { onConflict: 'ticket_code' }).catch((err) => console.warn('Supabase ticket upsert warn:', err));
-    } catch (sbErr) {
-      console.warn('Supabase ticket sync error:', sbErr);
+      // Update local storage cache with canonical backend ticket
+      try {
+        const existingStr = localStorage.getItem('evoa_user_purchased_tickets');
+        const existing = existingStr ? JSON.parse(existingStr) : [];
+        const updated = [
+          ticket,
+          ...existing.filter((t) => (t.eventId || t.event_id) !== payload.eventId && (t.ticketCode || t.ticket_code || t.id) !== finalPassCode && !String(t.id).startsWith('local-')),
+        ];
+        localStorage.setItem('evoa_user_purchased_tickets', JSON.stringify(updated));
+      } catch (_) {}
     }
-
-    // Save to local storage for instant availability in My Tickets
-    try {
-      const existingStr = localStorage.getItem('evoa_user_purchased_tickets');
-      const existing = existingStr ? JSON.parse(existingStr) : [];
-      const updated = [ticket, ...existing.filter((t) => (t.ticketCode || t.id) !== (ticket.ticketCode || ticket.id))];
-      localStorage.setItem('evoa_user_purchased_tickets', JSON.stringify(updated));
-    } catch (_) {}
 
     return ticket;
   },
 
   async getMyTickets() {
     let apiTickets = [];
+    let fetchSuccess = false;
     try {
       const res = await apiClient.get('/events/my-tickets');
-      const dataPayload = res?.data !== undefined ? res.data : res;
-      if (Array.isArray(dataPayload)) apiTickets = dataPayload;
+      let dataPayload = res?.data !== undefined ? res.data : res;
+      if (dataPayload?.data !== undefined) dataPayload = dataPayload.data;
+      if (dataPayload?.data !== undefined) dataPayload = dataPayload.data;
+      if (Array.isArray(dataPayload)) {
+        apiTickets = dataPayload;
+        fetchSuccess = true;
+      }
     } catch (err) {
       console.warn('Could not fetch backend tickets:', err);
     }
 
-    // Retrieve local tickets
-    let localTickets = [];
-    try {
-      const existingStr = localStorage.getItem('evoa_user_purchased_tickets');
-      if (existingStr) localTickets = JSON.parse(existingStr);
-    } catch (_) {}
-
-    // Combine and deduplicate
+    // Normalize API tickets
     const ticketMap = new Map();
-    [...apiTickets, ...localTickets].forEach((t) => {
-      const key = t?.ticketCode || t?.id;
-      if (key && !ticketMap.has(key)) {
-        ticketMap.set(key, t);
+    apiTickets.forEach((t) => {
+      const code = t?.ticketCode || t?.ticket_code || t?.id;
+      const eId = t.eventId || t.event_id || t.event?.id;
+      if (code) {
+        t.ticketCode = code;
+        t.ticket_code = code;
+        const key = eId ? `evt_${eId}` : code;
+        if (!ticketMap.has(key)) {
+          ticketMap.set(key, t);
+        }
       }
     });
 
+    // Only merge local tickets if API fetch failed, and ignore any legacy fake local tickets
+    if (!fetchSuccess) {
+      try {
+        const existingStr = localStorage.getItem('evoa_user_purchased_tickets');
+        if (existingStr) {
+          const localTickets = JSON.parse(existingStr);
+          localTickets.forEach((t) => {
+            if (t?.id && String(t.id).startsWith('local-')) return; // Ignore legacy local fake codes
+            const code = t?.ticketCode || t?.ticket_code || t?.id;
+            const eId = t.eventId || t.event_id || t.event?.id;
+            const key = eId ? `evt_${eId}` : code;
+            if (code && !ticketMap.has(key)) {
+              t.ticketCode = code;
+              t.ticket_code = code;
+              ticketMap.set(key, t);
+            }
+          });
+        }
+      } catch (_) {}
+    }
+
     const mergedList = Array.from(ticketMap.values());
 
-    // Parallelize event enrichment for tickets missing event data (fetch unique eventIds in parallel)
+    // Parallelize event enrichment for tickets missing event data
     const missingEventTickets = mergedList.filter((t) => !t.event && (t.eventId || t.event_id));
     if (missingEventTickets.length > 0) {
       const uniqueEventIds = [...new Set(missingEventTickets.map((t) => t.eventId || t.event_id))];
@@ -180,8 +184,16 @@ export const eventService = {
     if (!eventId) return null;
     try {
       const res = await apiClient.get(`/events/user-ticket/${eventId}`);
-      const ticket = res?.data !== undefined ? res.data : res;
-      if (ticket && (ticket.id || ticket.ticketCode)) return ticket;
+      let ticket = res?.data !== undefined ? res.data : res;
+      if (ticket?.data !== undefined) ticket = ticket.data;
+      if (ticket?.data !== undefined) ticket = ticket.data;
+
+      if (ticket && (ticket.id || ticket.ticketCode || ticket.ticket_code)) {
+        const code = ticket.ticketCode || ticket.ticket_code || ticket.id;
+        ticket.ticketCode = code;
+        ticket.ticket_code = code;
+        return ticket;
+      }
     } catch (_) {}
 
     // Direct check in local tickets without recursive getMyTickets calls
@@ -190,7 +202,12 @@ export const eventService = {
       if (existingStr) {
         const localTickets = JSON.parse(existingStr);
         const found = localTickets.find((t) => (t.eventId || t.event?.id || t.event_id) === eventId);
-        if (found) return found;
+        if (found) {
+          const code = found.ticketCode || found.ticket_code || found.id;
+          found.ticketCode = code;
+          found.ticket_code = code;
+          return found;
+        }
       }
     } catch (_) {}
 
@@ -199,5 +216,9 @@ export const eventService = {
 
   async getTicketByCode(code) {
     return await apiClient.get(`/events/ticket-code/${code}`, { requiresAuth: false });
+  },
+
+  async resendPass(ticketId) {
+    return await apiClient.post(`/events/resend-pass/${ticketId}`);
   },
 };

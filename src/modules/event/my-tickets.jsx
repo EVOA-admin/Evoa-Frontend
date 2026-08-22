@@ -162,7 +162,7 @@ export default function MyTicketsPage() {
                         {/* Top Badges */}
                         <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
                           <span className="px-2.5 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-white font-mono text-[11px] font-semibold border border-white/10">
-                            {t.ticketCode || "TKT-EVOA"}
+                            {t.ticketCode || t.ticket_code || "TKT-EVOA"}
                           </span>
                           <span
                             className={`px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase shadow-sm ${
@@ -199,7 +199,7 @@ export default function MyTicketsPage() {
                         <div className={`flex items-center justify-between pt-2 border-t text-[11px] ${
                           isDark ? "border-slate-800 text-slate-400" : "border-slate-100 text-slate-500"
                         }`}>
-                          <span>Ticket ID: <span className={`font-mono font-semibold ${isDark ? "text-slate-200" : "text-slate-700"}`}>{t.ticketCode}</span></span>
+                          <span>Ticket ID: <span className={`font-mono font-semibold ${isDark ? "text-slate-200" : "text-slate-700"}`}>{t.ticketCode || t.ticket_code}</span></span>
                           <span className="font-bold text-emerald-600 dark:text-emerald-400">
                             {t.price === 0 ? "FREE PASS" : `₹${t.price}`}
                           </span>
