@@ -381,9 +381,6 @@ export default function DesktopFeedLayout({ children }) {
                 <p className={`text-[10px] ${isDark ? "text-white/35" : "text-gray-500"}`}>Suggested for you</p>
               </div>
             </div>
-            <button className="dfl-view-all" onClick={() => setIsSuggestedOpen(true)}>
-              All <FaArrowRight size={8} />
-            </button>
           </div>
 
           <div className="dfl-panel-div" />
@@ -435,7 +432,7 @@ export default function DesktopFeedLayout({ children }) {
           {[
             { val: `${risingStartups.length}`, lbl: "Rising Now" },
             { val: `${suggested.length}`, lbl: "Suggested" },
-            { val: "Live", lbl: "Battlefield" },
+            { val: "Live", lbl: "Events" },
             { val: "AI", lbl: "Investor AI" },
           ].map(({ val, lbl }) => (
             <div key={lbl} className="dfl-stat-tile">

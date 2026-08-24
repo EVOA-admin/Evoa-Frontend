@@ -400,70 +400,65 @@ export default function EventPage() {
         })
       : "Date Announced Soon";
 
+    const eventHeroImage =
+      evt.bannerUrl ||
+      evt.banner_url ||
+      evt.coverImageUrl ||
+      evt.cover_image_url ||
+      evt.posterUrl ||
+      evt.poster_url ||
+      evt.coverUrl ||
+      evt.cover_url ||
+      DEFAULT_EVENT_COVER;
+
     return (
       <div key={evt.id} className="space-y-6">
-        {/* TOP HERO EVENT CARD */}
-        <div
-          className={`relative overflow-hidden rounded-3xl border transition-all ${
-            isDark
-              ? "bg-gradient-to-b from-indigo-950/40 via-slate-900 to-slate-900 border-indigo-500/20"
-              : "bg-gradient-to-b from-indigo-50/80 via-white to-white border-indigo-100"
-          } p-6 sm:p-8 shadow-lg`}
-        >
-          {/* Banner Image Overlay (Uses Banner Upload / Image URL) */}
-          {evt.bannerUrl && (
-            <div
-              className="absolute inset-0 bg-cover bg-center opacity-10 pointer-events-none"
-              style={{ backgroundImage: `url(${evt.bannerUrl})` }}
-            />
-          )}
+        {/* EVENT HERO IMAGE CONTAINER (No border, outline, ring, or shadow) */}
+        <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] max-h-[480px] overflow-hidden flex items-center justify-center">
+          <img
+            src={eventHeroImage}
+            alt={evt.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.src = DEFAULT_EVENT_COVER;
+            }}
+          />
 
-          {/* Collaboration Tag & Right Controls */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 relative z-10">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-600/10 text-indigo-500 border border-indigo-500/20 uppercase tracking-wider">
-              {evt.collaborationName || "EVOA Collaboration"}
+          {/* Top Badges Overlay: "EVOA COLLABORATION" (Left) -> "FREE ENTRY" / Badge (Right) */}
+          <div className="absolute top-3.5 left-3.5 right-3.5 sm:top-5 sm:left-5 sm:right-5 flex items-center justify-between gap-3 pointer-events-none z-10">
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-slate-950/80 backdrop-blur-md text-white border border-white/20 uppercase tracking-wider shadow-md">
+              {evt.collaborationName || "EVOA COLLABORATION"}
             </span>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={() => toggleEventDetails(evt.id)}
-                className="px-3.5 py-1.5 rounded-full text-xs font-extrabold flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
-              >
-                <span>{isExpanded ? "Hide Details" : "Show Details"}</span>
-                <IoChevronDown
-                  size={14}
-                  className={`transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {activeTicket?.badgeText && (
-                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">
-                  {activeTicket.badgeText}
-                </span>
-              )}
-            </div>
+            <span className="inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-blue-600 text-white border border-blue-400/30 uppercase tracking-wider shadow-md">
+              {roleTicketPrice === 0 ? (activeTicket?.badgeText || "FREE ENTRY") : (activeTicket?.badgeText || roleBadgeText || "OFFICIAL PASS")}
+            </span>
           </div>
+        </div>
 
-          {/* Title */}
-          <div className="relative z-10 mb-5">
-            <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        {/* EVENT INFORMATION DIRECTLY ON PAGE BACKGROUND (Completely outside any box) */}
+        <div className="space-y-4 px-2 sm:px-4 pt-1">
+          {/* Event Title */}
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               {cleanText(evt.title)}
-            </h3>
+            </h1>
           </div>
 
-          {/* Quick Info Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-slate-700/20 text-xs sm:text-sm relative z-10">
-            <div className="flex items-center gap-2.5 opacity-90">
-              <IoCalendarOutline size={18} className="text-indigo-500 flex-shrink-0" />
+          {/* Date & Time | Location */}
+          <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
+            <div className="flex items-center gap-2">
+              <IoCalendarOutline size={18} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
               <span>
                 {formattedDate}
                 {evt.startTime ? ` • ${evt.startTime} ${evt.timezone || "IST"}` : ""}
               </span>
             </div>
 
-            <div className="flex items-center gap-2.5 opacity-90">
-              <IoLocationOutline size={18} className="text-indigo-500 flex-shrink-0" />
+            <div className="hidden sm:block text-slate-400 dark:text-slate-600">|</div>
+
+            <div className="flex items-center gap-2">
+              <IoLocationOutline size={18} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
               <span>
                 {evt.venueName || evt.city || "Virtual Main Stage"}
                 {evt.venueType ? ` (${evt.venueType})` : ""}
@@ -473,21 +468,19 @@ export default function EventPage() {
 
           {/* Dynamic Highlights */}
           {Array.isArray(evt.highlights) && evt.highlights.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-700/20 relative z-10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-300/40 dark:border-slate-800">
               {evt.highlights.map((hl, idx) => {
                 const text = typeof hl === "string" ? hl : hl.value || hl.label || "";
                 const subtext = typeof hl !== "string" && hl.value && hl.label ? hl.label : null;
                 return (
                   <div
                     key={idx}
-                    className={`p-3 rounded-2xl text-center border ${
-                      isDark ? "bg-slate-800/40 border-slate-700/40" : "bg-white/80 border-slate-200"
-                    }`}
+                    className="p-3 text-center border border-slate-300/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40"
                   >
-                    <div className="text-sm sm:text-base font-extrabold text-indigo-500 leading-snug">
+                    <div className="text-sm sm:text-base font-extrabold text-blue-600 dark:text-blue-400 leading-snug">
                       {text}
                     </div>
-                    {subtext && <div className="text-[11px] opacity-70 font-medium mt-0.5">{subtext}</div>}
+                    {subtext && <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">{subtext}</div>}
                   </div>
                 );
               })}
@@ -495,206 +488,182 @@ export default function EventPage() {
           )}
         </div>
 
-        {/* EXPANDABLE EVENT DETAILS SECTION */}
-        {isExpanded && (
-          <div className="space-y-6 pt-2 transition-all animate-fadeIn">
-            {/* ABOUT THE EVENT */}
-            {evt.description && (
-              <div
-                className={`p-6 rounded-3xl border ${
-                  isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"
-                } shadow-md`}
-              >
-                <h3 className="text-base font-bold mb-2 flex items-center gap-2">
-                  <IoInformationCircleOutline size={18} className="text-indigo-500" /> About the Event
-                </h3>
-                <p className="text-sm opacity-80 leading-relaxed whitespace-pre-line">
-                  {cleanText(evt.description)}
+        {/* FULL EVENT DETAILS SECTION (Always displayed directly without expand/collapse) */}
+        <div className="space-y-8 pt-4 px-2 sm:px-4 transition-all animate-fadeIn">
+          {/* ABOUT THE EVENT */}
+          {evt.description && (
+            <div className="space-y-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <IoInformationCircleOutline size={18} className="text-blue-600 dark:text-blue-400" /> About the Event
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                {cleanText(evt.description)}
+              </p>
+            </div>
+          )}
+
+          {/* WHAT YOU GET / BENEFITS */}
+          {Array.isArray(activeBenefits) && activeBenefits.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                What You Get ({role.toUpperCase()})
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                {activeBenefits.map((b, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">{b.title}</h4>
+                    {b.desc && <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{b.desc}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* PRICING & PASS REGISTRATION SECTION (NO BOX) */}
+          <div className="pt-4 border-t border-slate-300/40 dark:border-slate-700/40 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{cleanText(evt.title)} Pass</h3>
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase">
+                    {roleBadgeText}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Custom pass and features configured for {role.toUpperCase()} role
                 </p>
               </div>
-            )}
 
-            {/* WHAT YOU GET / BENEFITS CARDS */}
-            {Array.isArray(activeBenefits) && activeBenefits.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-base font-bold px-1 flex items-center gap-2">
-                  <IoStarOutline className="text-amber-400" /> What You Get ({role.toUpperCase()})
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {activeBenefits.map((b, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-5 rounded-2xl border transition-all ${
-                        isDark
-                          ? "bg-slate-900/60 border-slate-800 hover:border-indigo-500/30"
-                          : "bg-white border-slate-200 hover:border-indigo-200"
-                      } shadow-sm`}
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-500 mb-3">
-                        {renderIcon(b.icon, IoStarOutline, { size: 20 })}
-                      </div>
-                      <h4 className="font-bold text-sm mb-1">{b.title}</h4>
-                      {b.desc && <p className="text-xs opacity-70 leading-relaxed">{b.desc}</p>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* PRICING & TICKET BUNDLE CARD */}
-            <div
-              className={`p-6 sm:p-8 rounded-3xl border relative overflow-hidden ${
-                isDark
-                  ? "bg-gradient-to-br from-indigo-950/50 via-slate-900 to-slate-900 border-indigo-500/30"
-                  : "bg-gradient-to-br from-indigo-50/70 via-white to-white border-indigo-200"
-              } shadow-xl`}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-700/20">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-xl font-extrabold">{cleanText(evt.title)} Pass</h3>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 uppercase">
-                      {roleBadgeText}
-                    </span>
-                  </div>
-                  <p className="text-xs opacity-70">
-                    Custom pass and features configured for {role.toUpperCase()} role
-                  </p>
-                </div>
-
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-blue-600 dark:text-blue-400">
-                    {roleTicketPrice === 0 ? "FREE" : `₹${roleTicketPrice}`}
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">
+                  {roleTicketPrice === 0 ? "FREE" : `₹${roleTicketPrice}`}
+                </span>
+                {roleOriginalPrice > roleTicketPrice && (
+                  <span className="text-sm text-slate-400 line-through">
+                    ₹{roleOriginalPrice}
                   </span>
-                  {roleOriginalPrice > roleTicketPrice && (
-                    <span className="text-sm opacity-50 line-through">
-                      ₹{roleOriginalPrice}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Bundle Items */}
-              {Array.isArray(evt.bundleItems) && evt.bundleItems.length > 0 && (
-                <div className="space-y-3 mb-6">
-                  {evt.bundleItems.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className={`p-3.5 rounded-xl flex items-center justify-between gap-3 border ${
-                        isDark ? "bg-slate-800/40 border-slate-700/30" : "bg-white border-slate-100"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-indigo-600/10 flex items-center justify-center text-indigo-500 flex-shrink-0">
-                          {renderIcon(item.icon, IoTicketOutline, { size: 16 })}
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold">{item.name}</div>
-                          {item.sub && <div className="text-[11px] opacity-60">{item.sub}</div>}
-                        </div>
-                      </div>
-                      {item.val && (
-                        <span className="text-xs font-bold text-indigo-400 flex-shrink-0">
-                          {item.val}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Remaining Seats & Booking Action Button */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-                {evt.showRemainingSeats && activeTicket?.remainingSeats !== null && !userTicket && (
-                  <div className="text-xs font-semibold text-amber-500 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    Limited passes remaining for {role.toUpperCase()}!
-                  </div>
-                )}
-
-                {userTicket ? (
-                  <button
-                    type="button"
-                    onClick={() => setDigitalTicket(userTicket)}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/30 transition-all cursor-pointer"
-                  >
-                    <IoCheckmarkCircle size={20} />
-                    <span>Pass Booked (View Pass)</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleBookEvent(evt)}
-                    disabled={isLoading || !isBookingAllowed || isSoldOut || !isRoleActive || isExpired}
-                    className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer ${
-                      !isBookingAllowed || isSoldOut || !isRoleActive || isExpired
-                        ? "bg-slate-700 text-slate-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/25"
-                    }`}
-                  >
-                    {isLoading ? (
-                      <span>Processing…</span>
-                    ) : isExpired ? (
-                      <span>Registration Expired</span>
-                    ) : isSoldOut ? (
-                      <span>Passes Sold Out</span>
-                    ) : !isRoleActive ? (
-                      <span>Unavailable for {role.toUpperCase()}</span>
-                    ) : !isBookingAllowed ? (
-                      <span>Registration Closed</span>
-                    ) : (
-                      <>
-                        <span>{roleTicketPrice === 0 ? "Claim Free Pass" : `Get Pass for ₹${roleTicketPrice}`}</span>
-                        <IoArrowForward size={16} />
-                      </>
-                    )}
-                  </button>
                 )}
               </div>
             </div>
 
-            {/* FREQUENTLY ASKED QUESTIONS (FAQS) */}
-            {Array.isArray(evt.faqs) && evt.faqs.length > 0 && (
-              <div className="space-y-3 pt-2">
-                <h3 className="text-base font-bold px-1">Frequently Asked Questions</h3>
-
-                <div className="space-y-2">
-                  {evt.faqs.map((faq, faqIdx) => {
-                    const isFaqOpen = Boolean(expandedFaqs[`${evt.id}_${faqIdx}`]);
-                    return (
-                      <div
-                        key={faqIdx}
-                        className={`rounded-2xl border transition-all ${
-                          isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => toggleFaq(evt.id, faqIdx)}
-                          className="w-full p-4 flex items-center justify-between text-left font-semibold text-sm cursor-pointer"
-                        >
-                          <span>{faq.q}</span>
-                          {isFaqOpen ? (
-                            <IoChevronUp size={18} className="text-indigo-500 flex-shrink-0" />
-                          ) : (
-                            <IoChevronDown size={18} className="text-slate-400 flex-shrink-0" />
-                          )}
-                        </button>
-
-                        {isFaqOpen && (
-                          <div className="px-4 pb-4 text-xs opacity-75 leading-relaxed border-t border-slate-700/10 pt-3">
-                            {faq.a}
-                          </div>
-                        )}
+            {/* Bundle Items */}
+            {Array.isArray(evt.bundleItems) && evt.bundleItems.length > 0 && (
+              <div className="space-y-2.5">
+                {evt.bundleItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-xl flex items-center justify-between gap-3 border border-slate-200/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0">
+                        {renderIcon(item.icon, IoTicketOutline, { size: 16 })}
                       </div>
-                    );
-                  })}
-                </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-900 dark:text-white">{item.name}</div>
+                        {item.sub && <div className="text-[11px] text-slate-500 dark:text-slate-400">{item.sub}</div>}
+                      </div>
+                    </div>
+                    {item.val && (
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex-shrink-0">
+                        {item.val}
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
+
+            {/* Remaining Seats & Booking Action Button */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+              {evt.showRemainingSeats && activeTicket?.remainingSeats !== null && !userTicket && (
+                <div className="text-xs font-semibold text-amber-500 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  Limited passes remaining for {role.toUpperCase()}!
+                </div>
+              )}
+
+              {userTicket ? (
+                <button
+                  type="button"
+                  onClick={() => setDigitalTicket(userTicket)}
+                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-600/30 transition-all cursor-pointer"
+                >
+                  <IoCheckmarkCircle size={20} />
+                  <span>Pass Booked (View Pass)</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleBookEvent(evt)}
+                  disabled={isLoading || !isBookingAllowed || isSoldOut || !isRoleActive || isExpired}
+                  className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 cursor-pointer ${
+                    !isBookingAllowed || isSoldOut || !isRoleActive || isExpired
+                      ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/25"
+                  }`}
+                >
+                  {isLoading ? (
+                    <span>Processing…</span>
+                  ) : isExpired ? (
+                    <span>Registration Expired</span>
+                  ) : isSoldOut ? (
+                    <span>Passes Sold Out</span>
+                  ) : !isRoleActive ? (
+                    <span>Unavailable for {role.toUpperCase()}</span>
+                  ) : !isBookingAllowed ? (
+                    <span>Registration Closed</span>
+                  ) : (
+                    <>
+                      <span>{roleTicketPrice === 0 ? "Claim Free Pass" : `Get Pass for ₹${roleTicketPrice}`}</span>
+                      <IoArrowForward size={16} />
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* FREQUENTLY ASKED QUESTIONS (FAQS) */}
+          {Array.isArray(evt.faqs) && evt.faqs.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h3 className="text-base font-bold px-1">Frequently Asked Questions</h3>
+
+              <div className="space-y-2">
+                {evt.faqs.map((faq, faqIdx) => {
+                  const isFaqOpen = Boolean(expandedFaqs[`${evt.id}_${faqIdx}`]);
+                  return (
+                    <div
+                      key={faqIdx}
+                      className={`rounded-2xl border transition-all ${
+                        isDark ? "bg-slate-900/60 border-slate-800" : "bg-white border-slate-200"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleFaq(evt.id, faqIdx)}
+                        className="w-full p-4 flex items-center justify-between text-left font-semibold text-sm cursor-pointer"
+                      >
+                        <span>{faq.q}</span>
+                        {isFaqOpen ? (
+                          <IoChevronUp size={18} className="text-indigo-500 flex-shrink-0" />
+                        ) : (
+                          <IoChevronDown size={18} className="text-slate-400 flex-shrink-0" />
+                        )}
+                      </button>
+
+                      {isFaqOpen && (
+                        <div className="px-4 pb-4 text-xs opacity-75 leading-relaxed border-t border-slate-700/10 pt-3">
+                          {faq.a}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
