@@ -67,6 +67,10 @@ const MyTicketsPage   = lazy(() => import('../modules/event/my-tickets'));
 // Public profile — accessible by guests (no auth required)
 const UserPublicProfile = lazy(() => import('../modules/profile/user-public-profile'));
 
+// Dedicated Claim Profile Flow & LinkedIn Callback
+const ClaimProfile = lazy(() => import('../modules/claim/claim-profile'));
+const ClaimLinkedInCallback = lazy(() => import('../modules/claim/claim-linkedin-callback'));
+
 const Auth = ({ children, fallback = <FullSpinner /> }) => (
   <Suspense fallback={fallback}>{children}</Suspense>
 );
@@ -112,12 +116,19 @@ export default function AppRoutes() {
       </Route>
 
       {/*
-       * ── Public profile page ──────────────────────────────────────────────
-       * Intentionally outside DashboardLayout so guests can view it
-       * without authentication.  Auth users also see this without the
-       * dashboard shell (it has its own layout switching logic).
+       * ── Public profile pages ──────────────────────────────────────────────
+       * Intentionally outside DashboardLayout so guests can view them
+       * without authentication.
        */}
       <Route path="/u/:userId" element={<Auth><UserPublicProfile /></Auth>} />
+      <Route path="/investors/:userId" element={<Auth><UserPublicProfile /></Auth>} />
+
+      {/*
+       * ── Dedicated Profile Claiming Flow ────────────────────────────────────
+       */}
+      <Route path="/claim-profile/:investorId" element={<Auth><ClaimProfile /></Auth>} />
+      <Route path="/claim-profile/linkedin-callback" element={<Auth><ClaimLinkedInCallback /></Auth>} />
+
 
       {/*
        * ── Dashboard — DashboardLayout wraps ALL authenticated pages ────────

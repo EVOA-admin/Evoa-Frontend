@@ -7,6 +7,7 @@ import {
     FaYoutube, FaMapMarkerAlt, FaUser, FaHandshake,
     FaRocket, FaChartLine, FaUsers, FaTrophy, FaUserTie,
     FaStar, FaEnvelope, FaCheck, FaTwitter, FaFilePdf,
+    FaShieldAlt, FaLock,
 } from "react-icons/fa";
 import apiClient from "../../services/apiClient";
 import startupService from "../../services/startupService";
@@ -14,6 +15,8 @@ import { getConversationWith } from "../../services/chatService";
 import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import AuthPromptModal from "../../components/shared/AuthPromptModal";
+import ReportCorrectionModal from "../../components/shared/ReportCorrectionModal";
+
 
 /* ─── Guest top bar shown to unauthenticated visitors ─────────────────────── */
 function GuestTopBar({ isDark, navigate }) {
@@ -345,20 +348,27 @@ function StartupProfile({ profile, startup, isDark, currentUser, userRole, navig
 }
 
 // ─────────────────────────────────────── INVESTOR / INCUBATOR PROFILE
-function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate, requireAuth }) {
+function InvestorIncubatorProfile({ profile, isDark, currentUser, userRole, navigate, requireAuth }) {
     const role = profile?.role;
-    const data = role === "investor" ? profile?.investors?.[0] : profile?.incubators?.[0];
+    const data = role === "investor" ? (profile?.investors?.[0] || profile) : profile?.incubators?.[0];
     const isOwnProfile = currentUser?.id === profile?.id;
+    const investorId = data?.id;
+
+    const isEvoaCreated = Boolean(data?.isEvoaCreated || profile?.isEvoaCreated);
+    const claimStatus = data?.claimStatus || profile?.claimStatus || (isEvoaCreated ? 'UNCLAIMED' : 'CLAIMED');
+    const isUnclaimed = isEvoaCreated && (claimStatus === 'UNCLAIMED' || claimStatus === 'PENDING_CLAIM');
 
     const [isConnected, setIsConnected] = useState(false);
     const [connectLoading, setConnectLoading] = useState(true);
     const [connectionCount, setConnectionCount] = useState(profile?.connectionCount ?? 0);
     const [messageLoading, setMessageLoading] = useState(false);
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [claimRoleNotice, setClaimRoleNotice] = useState(false);
 
     // Fetch initial connection status
     useEffect(() => {
-        // Guests have no session — skip the connection-status lookup entirely
-        if (!currentUser || isOwnProfile || !profile?.id) { setConnectLoading(false); return; }
+        // Guests or unclaimed profiles without a real user ID — skip connection-status lookup
+        if (!currentUser || isOwnProfile || !profile?.id || isUnclaimed) { setConnectLoading(false); return; }
         apiClient.get(`/users/${profile.id}/connection-status`)
             .then(res => {
                 const d = res?.data?.data ?? res?.data ?? res ?? {};
@@ -367,7 +377,7 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate, requ
             })
             .catch(() => { })
             .finally(() => setConnectLoading(false));
-    }, [profile?.id, isOwnProfile, currentUser]);
+    }, [profile?.id, isOwnProfile, currentUser, isUnclaimed]);
 
     const handleConnect = async () => {
         if (!requireAuth('follow this profile')) return;
@@ -410,6 +420,15 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate, requ
         }
     };
 
+    const handleClaimClick = () => {
+        if (currentUser && userRole && userRole !== 'investor') {
+            setClaimRoleNotice(true);
+            setTimeout(() => setClaimRoleNotice(false), 5000);
+            return;
+        }
+        navigate(`/claim-profile/${investorId}`);
+    };
+
     const loc = data?.location;
     const socialLinks = data?.socialLinks || {};
 
@@ -427,6 +446,61 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate, requ
 
     return (
         <div className="space-y-5">
+            {/* Unclaimed EVOA Profile Notice Banner */}
+            {role === 'investor' && isUnclaimed && (
+                <div className={`rounded-2xl p-4 border transition-all ${
+                    isDark ? "bg-amber-950/30 border-amber-500/30 text-amber-200" : "bg-amber-50 border-amber-300 text-amber-900"
+                }`}>
+                    <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-xl bg-amber-500/20 text-amber-500 mt-0.5">
+                            <FaShieldAlt size={18} />
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <h4 className="font-bold text-sm">
+                                    {claimStatus === 'PENDING_CLAIM' ? 'Claim in Review' : 'EVOA-Created Investor Profile'}
+                                </h4>
+                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                                    isDark ? "bg-amber-500/20 text-amber-300" : "bg-amber-200 text-amber-800"
+                                }`}>
+                                    {claimStatus === 'PENDING_CLAIM' ? 'Pending Review' : 'Unclaimed'}
+                                </span>
+                            </div>
+                            <p className="text-xs mt-1 leading-relaxed opacity-90">
+                                {claimStatus === 'PENDING_CLAIM' 
+                                    ? 'A claim request for this profile is currently under review by the EVOA team.'
+                                    : 'This investor profile was curated by EVOA to help founders connect with top investors. Are you this investor? Claim this profile to take ownership and manage your portfolio.'}
+                            </p>
+                            
+                            {claimRoleNotice && (
+                                <p className="mt-2 text-xs font-semibold text-rose-500 bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">
+                                    Note: You are logged in as a {userRole}. To claim an investor profile, please sign in with an investor account or claim as a new member.
+                                </p>
+                            )}
+
+                            <div className="flex items-center gap-3 mt-3 flex-wrap">
+                                {claimStatus !== 'PENDING_CLAIM' && (
+                                    <button
+                                        onClick={handleClaimClick}
+                                        className="px-4 py-1.5 rounded-xl text-xs font-bold bg-evoa text-white hover:bg-[#00a098] shadow-md shadow-evoa/20 transition-all"
+                                    >
+                                        Claim this profile
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setReportModalOpen(true)}
+                                    className={`text-xs underline hover:opacity-80 transition-opacity ${
+                                        isDark ? "text-amber-300" : "text-amber-800"
+                                    }`}
+                                >
+                                    Report incorrect information
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Hero card */}
             <div className={`rounded-2xl p-5 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-gray-200 shadow-sm"}`}>
                 <div className="flex items-start gap-4 mb-4">
@@ -443,14 +517,34 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate, requ
                         {data?.designation && <p className={`text-sm ${isDark ? "text-white/60" : "text-gray-500"}`}>{data.designation}</p>}
                         {data?.companyName && <p className={`text-xs mt-0.5 ${isDark ? "text-white/40" : "text-gray-400"}`}>{data.companyName}</p>}
                         {data?.tagline && <p className={`text-xs mt-1 italic ${isDark ? "text-white/50" : "text-gray-400"}`}>{data.tagline}</p>}
-                        {data?.verified && (
-                            <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/20 text-blue-400">
-                                <FaCheck size={8} /> Verified
-                            </span>
-                        )}
+                        
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                            {/* Badges */}
+                            {role === 'investor' && isEvoaCreated && claimStatus === 'UNCLAIMED' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                                    <FaShieldAlt size={8} /> EVOA-Created · Unclaimed
+                                </span>
+                            )}
+                            {role === 'investor' && isEvoaCreated && claimStatus === 'PENDING_CLAIM' && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                                    <FaShieldAlt size={8} /> Claim in Review
+                                </span>
+                            )}
+                            {role === 'investor' && (claimStatus === 'CLAIMED' || claimStatus === 'VERIFIED') && isEvoaCreated && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                    <FaCheck size={8} /> Claimed Profile
+                                </span>
+                            )}
+                            {(data?.verified || claimStatus === 'VERIFIED') && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                    <FaCheck size={8} /> Verified
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    {/* Connect / Connected toggle — hidden on own profile */}
-                    {!isOwnProfile && (
+                    
+                    {/* Connect / Connected toggle — hidden on own profile or unclaimed profiles */}
+                    {!isOwnProfile && !isUnclaimed && (
                         <div className="flex flex-col gap-2 flex-shrink-0">
                             <button
                                 onClick={handleConnect}
@@ -494,6 +588,13 @@ function InvestorIncubatorProfile({ profile, isDark, currentUser, navigate, requ
                     <p className={`mt-3 text-sm leading-relaxed ${isDark ? "text-white/75" : "text-gray-700"}`}>{data.description}</p>
                 )}
             </div>
+
+            <ReportCorrectionModal
+                isOpen={reportModalOpen}
+                onClose={() => setReportModalOpen(false)}
+                investorId={investorId}
+                investorName={data?.name || profile?.fullName}
+            />
 
             {/* Investment / focus details */}
             <div className={`rounded-2xl p-5 ${isDark ? "bg-white/5 border border-white/10" : "bg-white border border-gray-200 shadow-sm"}`}>

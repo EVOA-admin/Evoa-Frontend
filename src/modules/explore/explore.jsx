@@ -335,6 +335,9 @@ export default function Explore() {
                         {searchResults.investors.map((item) => {
                           const avatarSrc = item.logoUrl || item.user?.avatarUrl;
                           const displayName = item.name || item.user?.fullName || 'Investor';
+                          const isEvoaCreated = Boolean(item.isEvoaCreated);
+                          const claimStatus = item.claimStatus || (isEvoaCreated ? 'UNCLAIMED' : 'CLAIMED');
+                          
                           return (
                             <div
                               key={item.id}
@@ -348,7 +351,18 @@ export default function Explore() {
                                 }
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{displayName}</p>
+                                  {isEvoaCreated && claimStatus === 'UNCLAIMED' && (
+                                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-500 border border-amber-500/20">Unclaimed</span>
+                                  )}
+                                  {isEvoaCreated && (claimStatus === 'CLAIMED' || claimStatus === 'VERIFIED') && (
+                                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Claimed</span>
+                                  )}
+                                  {item.verified && (
+                                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-400">Verified</span>
+                                  )}
+                                </div>
                                 {item.companyName && <p className={`text-xs truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}>{item.companyName}</p>}
                               </div>
                             </div>
@@ -594,32 +608,50 @@ export default function Explore() {
                 ) : (
                   <>
                     <div className="grid grid-cols-2 exp-investor-grid-lg gap-3">
-                      {(showAllInvestors ? investorSpotlight : investorSpotlight.slice(0, 4)).map((investor) => (
-                        <div
-                          key={investor.id}
-                          className={`rounded-xl p-4 transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer ${isDark
-                            ? 'bg-white/5 border border-white/10'
-                            : 'bg-white border border-gray-200 shadow-sm'
-                            }`}
-                          onClick={() => goToProfile(investor.userId || investor.id, currentUser, navigate)}
-                        >
-                          <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
-                            {investor.avatarUrl ? (
-                              <img src={investor.avatarUrl} alt={investor.fullName} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-xl">
-                                {(investor.fullName || 'I')[0].toUpperCase()}
+                      {(showAllInvestors ? investorSpotlight : investorSpotlight.slice(0, 4)).map((investor) => {
+                        const isEvoaCreated = Boolean(investor.isEvoaCreated || investor.investorProfile?.isEvoaCreated);
+                        const claimStatus = investor.claimStatus || investor.investorProfile?.claimStatus || (isEvoaCreated ? 'UNCLAIMED' : 'CLAIMED');
+                        
+                        return (
+                          <div
+                            key={investor.id}
+                            className={`rounded-xl p-4 transition-all hover:scale-[1.02] hover:shadow-xl cursor-pointer ${isDark
+                              ? 'bg-white/5 border border-white/10'
+                              : 'bg-white border border-gray-200 shadow-sm'
+                              }`}
+                            onClick={() => goToProfile(investor.userId || investor.id, currentUser, navigate)}
+                          >
+                            <div className="w-14 h-14 rounded-full overflow-hidden mx-auto mb-3">
+                              {investor.avatarUrl || investor.logoUrl ? (
+                                <img src={investor.avatarUrl || investor.logoUrl} alt={investor.fullName || investor.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-evoa to-evoa-hover flex items-center justify-center text-white font-bold text-xl">
+                                  {((investor.fullName || investor.name) || 'I')[0].toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                              {investor.fullName || investor.name}
+                            </h3>
+                            <p className={`text-center text-[10px] ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
+                              {investor.investorProfile?.investorType || investor.type || 'Investor'}
+                            </p>
+                            {isEvoaCreated && (
+                              <div className="flex justify-center mt-2">
+                                {claimStatus === 'UNCLAIMED' ? (
+                                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                                    Unclaimed
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                                    Claimed
+                                  </span>
+                                )}
                               </div>
                             )}
                           </div>
-                          <h3 className={`text-center font-bold text-xs mb-0.5 truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            {investor.fullName}
-                          </h3>
-                          <p className={`text-center text-[10px] ${isDark ? 'text-white/70' : 'text-gray-600'}`}>
-                            {investor.investorProfile?.investorType || 'Investor'}
-                          </p>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     {investorSpotlight.length > 4 && (
                       <div className="mt-4 flex justify-center">
