@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaHeart, FaTrash, FaEdit, FaPlay, FaRegImages, FaSpinner, FaClone } from "react-icons/fa";
+import { FaEye, FaHeart, FaTrash, FaEdit, FaPlay, FaRegImages, FaSpinner, FaClone, FaMagic } from "react-icons/fa";
+import { IoSparkles } from "react-icons/io5";
 import postsService from "../../services/postsService";
 import { reelsService } from "../../services/reelsService";
 import battlegroundService from "../../services/battlegroundService";
+import PitchVideoEditor from "./PitchVideoEditor/PitchVideoEditor";
 
 /**
  * ProfileContentGrid
@@ -36,20 +38,45 @@ export default function ProfileContentGrid({
     const [deleting, setDeleting] = useState(null);
     const [selectingReelId, setSelectingReelId] = useState(null);
     const [localSelectedBattlegroundReelId, setLocalSelectedBattlegroundReelId] = useState(selectedBattlegroundReelId);
+    const [editingReelId, setEditingReelId] = useState(null);
 
     useEffect(() => {
         setLocalSelectedBattlegroundReelId(selectedBattlegroundReelId);
     }, [selectedBattlegroundReelId]);
+
+    const reloadItems = useCallback(() => {
+        const p1 = fetchFn ? fetchFn().then(res => {
+            const data = res?.data?.data || res?.data || res || [];
+            return Array.isArray(data) ? data : [];
+        }).catch(() => []) : Promise.resolve([]);
+
+        const p2 = fetchFn2
+            ? fetchFn2().then(res => {
+                const data = res?.data?.data || res?.data || res || [];
+                const arr = Array.isArray(data) ? data : [];
+                return arr.map(r => ({ ...r, _isReel: true }));
+            }).catch(() => [])
+            : Promise.resolve([]);
+
+        Promise.all([p1, p2])
+            .then(([posts, reels]) => {
+                const merged = [...posts, ...reels].sort((a, b) =>
+                    new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+                );
+                setItems(merged);
+            })
+            .catch(() => {});
+    }, [fetchFn, fetchFn2]);
 
     useEffect(() => {
         let mounted = true;
         setLoading(true);
         setError("");
 
-        const p1 = fetchFn().then(res => {
+        const p1 = fetchFn ? fetchFn().then(res => {
             const data = res?.data?.data || res?.data || res || [];
             return Array.isArray(data) ? data : [];
-        }).catch(() => []);
+        }).catch(() => []) : Promise.resolve([]);
 
         const p2 = fetchFn2
             ? fetchFn2().then(res => {
@@ -133,24 +160,39 @@ export default function ProfileContentGrid({
     );
 
     return (
-        <div className="grid grid-cols-3 gap-0.5">
-            {items.map(item => (
-                <ContentCard
-                    key={item.id}
-                    item={item}
-                    isDark={isDark}
-                    isOwner={isOwner}
-                    deleting={deleting === item.id}
-                    onDelete={() => handleDelete(item)}
-                    onEdit={() => navigate(`/edit-post/${item.id}`)}
-                    fmt={fmt}
-                    showBattlegroundSelection={showBattlegroundSelection}
-                    isSelectedForBattleground={localSelectedBattlegroundReelId === item.id}
-                    selectingForBattleground={selectingReelId === item.id}
-                    onSelectForBattleground={() => handleBattlegroundSelect(item)}
+        <>
+            <div className="grid grid-cols-3 gap-0.5">
+                {items.map(item => (
+                    <ContentCard
+                        key={item.id}
+                        item={item}
+                        isDark={isDark}
+                        isOwner={isOwner}
+                        deleting={deleting === item.id}
+                        onDelete={() => handleDelete(item)}
+                        onEdit={() => navigate(`/edit-post/${item.id}`)}
+                        onEditReel={() => setEditingReelId(item.id)}
+                        fmt={fmt}
+                        showBattlegroundSelection={showBattlegroundSelection}
+                        isSelectedForBattleground={localSelectedBattlegroundReelId === item.id}
+                        selectingForBattleground={selectingReelId === item.id}
+                        onSelectForBattleground={() => handleBattlegroundSelect(item)}
+                    />
+                ))}
+            </div>
+
+            {editingReelId && (
+                <PitchVideoEditor
+                    isOpen={Boolean(editingReelId)}
+                    targetReelId={editingReelId}
+                    onClose={() => setEditingReelId(null)}
+                    onSaved={() => {
+                        setEditingReelId(null);
+                        reloadItems();
+                    }}
                 />
-            ))}
-        </div>
+            )}
+        </>
     );
 }
 
@@ -161,6 +203,7 @@ function ContentCard({
     deleting,
     onDelete,
     onEdit,
+    onEditReel,
     fmt,
     showBattlegroundSelection,
     isSelectedForBattleground,
@@ -287,10 +330,18 @@ function ContentCard({
             {/* Owner action overlay — tap card to reveal */}
             {isOwner && showActions && (
                 <div
-                    className="absolute inset-0 bg-black/65 flex items-center justify-center gap-5"
+                    className="absolute inset-0 bg-black/75 flex items-center justify-center gap-4"
                     onClick={e => e.stopPropagation()}
                 >
-                    {!isReel && (
+                    {isReel ? (
+                        <button
+                            onClick={onEditReel}
+                            className="flex flex-col items-center gap-1 text-evoa hover:text-white active:scale-90 transition-all"
+                        >
+                            <IoSparkles size={18} />
+                            <span className="text-[9px] font-bold">Edit Video</span>
+                        </button>
+                    ) : (
                         <button
                             onClick={onEdit}
                             className="flex flex-col items-center gap-1 text-white active:scale-90 transition-transform"

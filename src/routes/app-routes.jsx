@@ -53,6 +53,7 @@ const Pricing           = lazy(() => import('../modules/pages/pricing'));
 // These pages supply their own AppShell/layout. DashboardLayout only hides the
 // KeepAlive section and renders the page via <Outlet /> without an extra shell.
 const ReelPitch       = lazy(() => import('../modules/pitch/reel-pitch'));
+const PitchVideoEditorPage = lazy(() => import('../modules/pitch/pitch-video-editor-page'));
 const InvestorPayment = lazy(() => import('../modules/pages/investor-payment'));
 const Battlefield     = lazy(() => import('../modules/pages/battlefield'));
 const ViewerProfile   = lazy(() => import('../modules/viewer/viewer-profile'));
@@ -162,6 +163,8 @@ export default function AppRoutes() {
         <Route path="profile"       element={null} />
 
         {/* ── Dynamic pages — rendered via Outlet, supply own layout ───── */}
+        <Route path="pitch/editor"      element={<ProtectedRoute allowedRoles={['startup', 'admin']}><Page><PitchVideoEditorPage /></Page></ProtectedRoute>} />
+        <Route path="pitch-editor"      element={<ProtectedRoute allowedRoles={['startup', 'admin']}><Page><PitchVideoEditorPage /></Page></ProtectedRoute>} />
         <Route path="pitch/hashtag"     element={<Page><ReelPitch /></Page>} />
         <Route path="pitch/:id"         element={<Page><ReelPitch /></Page>} />
         <Route path="battlefield"       element={<Page><Battlefield /></Page>} />

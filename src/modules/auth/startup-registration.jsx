@@ -6,6 +6,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import SearchableSelect from "../../components/shared/SearchableSelect";
 import storageService from "../../services/storageService";
 import startupsService from "../../services/startupsService";
+import reelsService from "../../services/reelsService";
 import { getMyStartup, updateStartup } from "../../services/startupsService";
 import { updateUserProfile } from "../../services/usersService";
 
@@ -936,8 +937,8 @@ export default function StartupRegistration() {
 
   const handleFileUpload = (field, file) => {
     if (!file) return;
-    if (field === "pitchVideo" && file.size > 50 * 1024 * 1024) {
-      setError("Video size must be under 50 MB.");
+    if (field === "pitchVideo" && file.size > 200 * 1024 * 1024) {
+      setError("Video size must be under 200 MB.");
       return;
     }
     if (
@@ -1047,6 +1048,20 @@ export default function StartupRegistration() {
     if (!file) return null;
     // If the value is already a URL string (pre-filled from existing startup), skip re-upload
     if (typeof file === 'string') return file;
+
+    // Automatic compression if pitch video is > 50MB (and <= 200MB)
+    if (path === "pitch_video" || (file.type && file.type.startsWith("video/"))) {
+      if (file.size > 50 * 1024 * 1024) {
+        try {
+          const compRes = await reelsService.compressVideo(file);
+          const compData = compRes?.data?.data || compRes?.data || {};
+          if (compData?.videoUrl) return compData.videoUrl;
+        } catch (err) {
+          console.warn("Auto-compression fallback to standard upload:", err);
+        }
+      }
+    }
+
     try {
       return await storageService.uploadFile(file, "evoa-media", `startups/${Date.now()}_${path}_${file.name}`);
     } catch {
@@ -1596,8 +1611,8 @@ export default function StartupRegistration() {
 
   const handleQuickFileUpload = (field, file) => {
     if (!file) return;
-    if (field === 'pitchVideo' && file.size > 50 * 1024 * 1024) {
-      setError('Video size must be under 50 MB.'); return;
+    if (field === 'pitchVideo' && file.size > 200 * 1024 * 1024) {
+      setError('Video size must be under 200 MB.'); return;
     }
     if (field === 'startupLogo' && file.size > 5 * 1024 * 1024) {
       setError('Logo must be under 5 MB.'); return;

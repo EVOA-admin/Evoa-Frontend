@@ -71,6 +71,30 @@ export const reelsService = {
 
   // Get a single reel by ID (used for direct deep-links from explore)
   getReelById: async (reelId) => apiClient.get(`/reels/${reelId}`),
+
+  // Process and save edited pitch video using FFmpeg engine
+  processVideo: async (processPayload) => {
+    return await apiClient.post('/reels/process-video', processPayload);
+  },
+
+  // Automatically compress video (if 50-200MB) and upload to storage
+  compressVideo: async (fileOrPayload, onUploadProgress) => {
+    if (fileOrPayload instanceof File || fileOrPayload instanceof Blob) {
+      const formData = new FormData();
+      formData.append('video', fileOrPayload);
+      return await apiClient.post('/reels/compress-video', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress,
+      });
+    } else {
+      return await apiClient.post('/reels/compress-video', fileOrPayload);
+    }
+  },
+
+  // Get edit details for existing reel
+  getEditDetails: async (reelId) => {
+    return await apiClient.get(`/reels/${reelId}/edit-details`);
+  },
 };
 
 export default reelsService;

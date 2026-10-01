@@ -109,12 +109,24 @@ const refreshToken = async () => {
   return null;
 };
 
-const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = true, isRetry = false) => {
+const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = true, isRetry = false, opts = {}) => {
   if (!API_URL) {
     throw { error: true, message: 'API URL not configured. Set VITE_API_BASE_URL in .env' };
   }
 
-  const headers = { 'Content-Type': 'application/json' };
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  const headers = {};
+
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  if (opts.headers) {
+    Object.assign(headers, opts.headers);
+    if (isFormData && headers['Content-Type']?.includes('multipart/form-data')) {
+      delete headers['Content-Type'];
+    }
+  }
 
   if (needsAuth) {
     const token = await getAuthToken();
@@ -128,9 +140,87 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
     }
   }
 
+  if (opts.onUploadProgress && typeof XMLHttpRequest !== 'undefined') {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(method, `${API_URL}${endpoint}`);
+
+      Object.entries(headers).forEach(([key, val]) => {
+        xhr.setRequestHeader(key, val);
+      });
+
+      if (xhr.upload) {
+        xhr.upload.onprogress = (evt) => {
+          opts.onUploadProgress(evt);
+        };
+      }
+
+      xhr.onload = () => {
+        let data;
+        try {
+          data = JSON.parse(xhr.responseText);
+        } catch {
+          data = { message: xhr.responseText };
+        }
+
+        if (xhr.status === 401 && needsAuth && !isRetry) {
+          syncStoredToken(null);
+          refreshToken().then((newToken) => {
+            if (newToken) {
+              makeRequest(endpoint, method, body, needsAuth, true, opts).then(resolve).catch(reject);
+            } else {
+              reject({
+                error: true,
+                status: xhr.status,
+                message: data.message || data.error?.message || 'Request failed',
+                data,
+              });
+            }
+          }).catch(() => {
+            reject({
+              error: true,
+              status: xhr.status,
+              message: data.message || data.error?.message || 'Request failed',
+              data,
+            });
+          });
+          return;
+        }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({ error: false, status: xhr.status, data });
+        } else {
+          reject({
+            error: true,
+            status: xhr.status,
+            message: data.message || data.error?.message || 'Request failed',
+            data,
+          });
+        }
+      };
+
+      xhr.onerror = () => {
+        reject({
+          error: true,
+          status: 0,
+          message: 'Network error during upload. Check your connection.',
+          data: null,
+        });
+      };
+
+      if (isFormData) {
+        xhr.send(body);
+      } else if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+        xhr.send(typeof body === 'string' ? body : JSON.stringify(body));
+      } else {
+        xhr.send();
+      }
+    });
+  }
+
   const config = { method, headers };
   if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
-    config.body = JSON.stringify(body);
+    config.body = isFormData ? body : (typeof body === 'string' ? body : JSON.stringify(body));
   }
 
   try {
@@ -149,7 +239,7 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
       console.warn('apiClient: 401 received, attempting token refresh...');
       const newToken = await refreshToken();
       if (newToken) {
-        return makeRequest(endpoint, method, body, needsAuth, true /* isRetry */);
+        return makeRequest(endpoint, method, body, needsAuth, true /* isRetry */, opts);
       }
     }
 
@@ -175,11 +265,11 @@ const makeRequest = async (endpoint, method = 'GET', body = null, needsAuth = tr
 };
 
 export const apiClient = {
-  get: (endpoint, opts = {}) => makeRequest(endpoint, 'GET', null, opts.requiresAuth !== false),
-  post: (endpoint, body, opts = {}) => makeRequest(endpoint, 'POST', body, opts.requiresAuth !== false),
-  put: (endpoint, body, opts = {}) => makeRequest(endpoint, 'PUT', body, opts.requiresAuth !== false),
-  patch: (endpoint, body, opts = {}) => makeRequest(endpoint, 'PATCH', body, opts.requiresAuth !== false),
-  delete: (endpoint, opts = {}) => makeRequest(endpoint, 'DELETE', null, opts.requiresAuth !== false),
+  get: (endpoint, opts = {}) => makeRequest(endpoint, 'GET', null, opts.requiresAuth !== false, false, opts),
+  post: (endpoint, body, opts = {}) => makeRequest(endpoint, 'POST', body, opts.requiresAuth !== false, false, opts),
+  put: (endpoint, body, opts = {}) => makeRequest(endpoint, 'PUT', body, opts.requiresAuth !== false, false, opts),
+  patch: (endpoint, body, opts = {}) => makeRequest(endpoint, 'PATCH', body, opts.requiresAuth !== false, false, opts),
+  delete: (endpoint, opts = {}) => makeRequest(endpoint, 'DELETE', null, opts.requiresAuth !== false, false, opts),
 };
 
 export default apiClient;

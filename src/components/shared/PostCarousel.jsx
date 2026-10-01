@@ -10,12 +10,14 @@ import { FaImages } from "react-icons/fa";
  *   aspectRatio – string     CSS aspect-ratio value, default "4/3"
  *   isDark      – bool
  *   className   – string     Extra classes on the outer wrapper
+ *   imageFit    – string     'cover' | 'contain', default 'contain'
  */
 export default function PostCarousel({
     images = [],
     aspectRatio = "4/3",
     isDark = false,
     className = "",
+    imageFit = "contain",
 }) {
     const trackRef = useRef(null);
     const [current, setCurrent] = useState(0);
@@ -81,12 +83,12 @@ export default function PostCarousel({
                 {images.map((src, i) => (
                     <div
                         key={i}
-                        className="flex-shrink-0 w-full h-full snap-start overflow-hidden"
+                        className="flex-shrink-0 w-full h-full snap-start overflow-hidden flex items-center justify-center bg-black"
                     >
                         <img
                             src={src}
                             alt={`Photo ${i + 1}`}
-                            className="w-full h-full object-cover"
+                            className={`w-full h-full ${imageFit === "cover" ? "object-cover" : "object-contain"}`}
                             draggable={false}
                             onError={(e) => { e.currentTarget.style.display = "none"; }}
                         />

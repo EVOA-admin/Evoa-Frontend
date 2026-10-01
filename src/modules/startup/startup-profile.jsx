@@ -12,7 +12,7 @@ import {
     IoLocationOutline, IoLinkOutline, IoLogoLinkedin, IoLogoInstagram, IoLogoYoutube,
     IoPeopleOutline, IoRocketOutline, IoDocumentTextOutline, IoPlayCircleOutline,
     IoAddCircleOutline, IoTrashOutline, IoLogOutOutline, IoEllipsisVertical, IoShieldCheckmarkOutline,
-    IoCalendarOutline,
+    IoCalendarOutline, IoSparkles,
 } from "react-icons/io5";
 import { FiUser } from "react-icons/fi";
 import { HiSun, HiMoon } from "react-icons/hi";
@@ -22,6 +22,7 @@ import AppShell from "../../components/layout/AppShell";
 import AppHeader from "../../components/layout/AppHeader";
 import ProfileContentGrid from "../../components/shared/ProfileContentGrid";
 import DeleteAccountDialog from "../../components/shared/DeleteAccountDialog";
+import PitchVideoEditor from "../../components/shared/PitchVideoEditor/PitchVideoEditor";
 
 const AmbassadorDashboard = lazy(() => import("../ambassador/AmbassadorDashboard"));
 
@@ -49,6 +50,7 @@ export default function StartupProfile() {
     const [activeTab, setActiveTab] = useState("posts");
     const [unreadCount, setUnreadCount] = useState(0);
     const [deleteOpen, setDeleteOpen] = useState(false);
+    const [videoEditorOpen, setVideoEditorOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState("main"); // 'main' | 'ambassador'
     const [toastMsg, setToastMsg] = useState("");
@@ -592,6 +594,12 @@ export default function StartupProfile() {
                                             <video controls className="w-full rounded-xl mt-1 max-h-48 object-cover" src={startup.pitchVideoUrl}>
                                                 Your browser does not support video.
                                             </video>
+                                            <button
+                                                onClick={() => setVideoEditorOpen(true)}
+                                                className="mt-3 w-full py-2.5 rounded-xl text-xs font-bold bg-evoa/15 text-evoa hover:bg-evoa hover:text-white transition-all flex items-center justify-center gap-1.5"
+                                            >
+                                                <IoSparkles size={14} /> Edit Pitch Video in Video Editor
+                                            </button>
                                         </Section>
                                     )}
                                     {startup.pitchDeckUrl && (
@@ -603,7 +611,15 @@ export default function StartupProfile() {
                                         </Section>
                                     )}
                                     {!startup.pitchVideoUrl && !startup.pitchDeckUrl && (
-                                        <EmptyTabState message="No pitch materials added yet" isDark={isDark} />
+                                        <div className="text-center py-10 space-y-3">
+                                            <EmptyTabState message="No pitch materials added yet" isDark={isDark} />
+                                            <button
+                                                onClick={() => navigate("/pitch-editor")}
+                                                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-evoa text-white hover:bg-[#00a098] shadow-md shadow-evoa/20 inline-flex items-center gap-2"
+                                            >
+                                                <IoSparkles size={14} /> Create Pitch in Video Editor
+                                            </button>
+                                        </div>
                                     )}
                                 </>
                             )}
@@ -726,6 +742,22 @@ export default function StartupProfile() {
                 )}
             </AppShell>
             <DeleteAccountDialog isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} />
+
+            {videoEditorOpen && (
+                <PitchVideoEditor
+                    isOpen={videoEditorOpen}
+                    onClose={() => setVideoEditorOpen(false)}
+                    videoUrl={startup?.pitchVideoUrl}
+                    startupInfo={startup}
+                    onSaved={(result) => {
+                        setVideoEditorOpen(false);
+                        if (result?.videoUrl) {
+                            setStartup(s => ({ ...s, pitchVideoUrl: result.videoUrl }));
+                        }
+                        showToast("Pitch video updated successfully!");
+                    }}
+                />
+            )}
         </>
     );
 }

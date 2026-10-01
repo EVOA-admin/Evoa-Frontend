@@ -231,16 +231,16 @@ export default function UserPostCard({
 
         {/* Media Container — Edge-to-edge matching PitchCard */}
         {images.length > 0 && (
-          <div className="relative w-full aspect-square bg-gray-900 overflow-hidden group">
+          <div className="relative w-full aspect-square bg-black overflow-hidden group flex items-center justify-center">
             {images.length === 1 ? (
               <img
                 src={images[0]}
                 alt={post.authorName}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 onError={(e) => { e.currentTarget.style.display = "none"; }}
               />
             ) : (
-              <PostCarousel images={images} aspectRatio="1/1" isDark={isDark} />
+              <PostCarousel images={images} aspectRatio="1/1" imageFit="contain" isDark={isDark} />
             )}
           </div>
         )}
