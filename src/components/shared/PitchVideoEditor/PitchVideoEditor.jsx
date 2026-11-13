@@ -113,6 +113,10 @@ export default function PitchVideoEditor({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // Ref-based guard: prevents duplicate export submissions from rapid double-clicks
+  // (useState updates are async and can't block concurrent calls in the same render cycle)
+  const isExportingRef = useRef(false);
+
   const videoRef = useRef(null);
   const timelineRef = useRef(null);
   const isDraggingRef = useRef(null); // 'start' | 'end' | 'scrub' | null
@@ -365,6 +369,11 @@ export default function PitchVideoEditor({
 
   // ── Save / Export logic ──────────────────────────────────────────────────
   const handleExport = async () => {
+    // Synchronous ref guard: blocks concurrent export calls that slip through
+    // before React re-renders the button's disabled={isProcessing} state.
+    if (isExportingRef.current) return;
+    isExportingRef.current = true;
+
     setIsProcessing(true);
     setErrorMessage("");
     setSuccessMessage("");
@@ -470,12 +479,14 @@ export default function PitchVideoEditor({
 
       setTimeout(() => {
         setIsProcessing(false);
+        isExportingRef.current = false;
         onSaved?.(resultData);
         onClose();
       }, 1200);
     } catch (err) {
       console.error("Video export failed:", err);
       setIsProcessing(false);
+      isExportingRef.current = false;
       setErrorMessage(
         err?.response?.data?.message || err?.message || "Failed to process video. Please try again."
       );

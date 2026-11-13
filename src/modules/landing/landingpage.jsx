@@ -439,12 +439,6 @@ const STYLES = `
 .seg-card:hover { background:rgba(255,255,255,.17);transform:translateY(-5px);box-shadow:0 16px 44px rgba(0,0,0,.16); }
 [data-theme="dark"] .seg-card { background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.20); }
 [data-theme="dark"] .seg-card:hover { background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.35); }
-.seg-icon {
-  width:50px;height:50px;border-radius:13px;
-  background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;
-  margin-bottom:18px;font-size:22px;
-}
-[data-theme="dark"] .seg-icon { background:rgba(59,130,246,.15); }
 .seg-role { font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:7px; }
 [data-theme="dark"] .seg-role { color:var(--text-mute); }
 .seg-headline { font-size:24px;font-weight:800;color:#FFF;line-height:1.15;margin-bottom:10px; }
@@ -1128,7 +1122,6 @@ function Segments() {
         <div className="seg-grid">
           {SEGMENTS_DATA.map((s, i) => (
             <div key={i} className="seg-card reveal" style={{ transitionDelay: `${i * .1}s` }}>
-              <div className="seg-icon">{s.icon}</div>
               <div className="seg-role">{s.role}</div>
               <div className="seg-headline">{s.headline}</div>
               <p className="seg-desc">{s.desc}</p>

@@ -763,7 +763,7 @@ export default function StartupRegistration() {
   const mode = searchParams.get('mode') || 'quick';
   const isQuickMode = mode === 'quick';
   const isCompleteMode = mode === 'complete';
-  const { completeRegistration } = useAuth();
+  const { completeRegistration, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -937,6 +937,10 @@ export default function StartupRegistration() {
 
   const handleFileUpload = (field, file) => {
     if (!file) return;
+    if (field === "pitchVideo" && !file.type.startsWith("video/")) {
+      setError("Only video files are accepted for pitch uploads. Please select an MP4, MOV, or WebM file.");
+      return;
+    }
     if (field === "pitchVideo" && file.size > 200 * 1024 * 1024) {
       setError("Video size must be under 200 MB.");
       return;
@@ -1049,8 +1053,10 @@ export default function StartupRegistration() {
     // If the value is already a URL string (pre-filled from existing startup), skip re-upload
     if (typeof file === 'string') return file;
 
+    const isVideo = path === "pitch_video" || (file.type && file.type.startsWith("video/"));
+
     // Automatic compression if pitch video is > 50MB (and <= 200MB)
-    if (path === "pitch_video" || (file.type && file.type.startsWith("video/"))) {
+    if (isVideo) {
       if (file.size > 50 * 1024 * 1024) {
         try {
           const compRes = await reelsService.compressVideo(file);
@@ -1062,10 +1068,15 @@ export default function StartupRegistration() {
       }
     }
 
+    const cleanFileName = file.name ? file.name.replace(/[^a-zA-Z0-9._-]/g, '_') : 'pitch.mp4';
+    const storagePath = isVideo
+      ? (user?.id ? `reels/${user.id}/${Date.now()}_pitch_${cleanFileName}` : `reels/${Date.now()}_pitch_${cleanFileName}`)
+      : `startups/${Date.now()}_${path}_${cleanFileName}`;
+
     try {
-      return await storageService.uploadFile(file, "evoa-media", `startups/${Date.now()}_${path}_${file.name}`);
+      return await storageService.uploadFile(file, "evoa-media", storagePath);
     } catch {
-      return await storageService.uploadFile(file, "public", `startups/${Date.now()}_${path}_${file.name}`);
+      return await storageService.uploadFile(file, "public", storagePath);
     }
   };
 
@@ -1611,6 +1622,9 @@ export default function StartupRegistration() {
 
   const handleQuickFileUpload = (field, file) => {
     if (!file) return;
+    if (field === 'pitchVideo' && !file.type.startsWith('video/')) {
+      setError('Only video files are accepted for pitch uploads. Please select an MP4, MOV, or WebM file.'); return;
+    }
     if (field === 'pitchVideo' && file.size > 200 * 1024 * 1024) {
       setError('Video size must be under 200 MB.'); return;
     }

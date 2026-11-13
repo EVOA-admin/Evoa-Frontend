@@ -502,6 +502,11 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
     const handleVideoFileChange = (e) => {
         const f = e.target.files?.[0];
         if (!f) return;
+        if (!f.type.startsWith("video/")) {
+            setErrorMsg("Only video files are accepted for pitch uploads. Please select an MP4, MOV, or WebM file.");
+            e.target.value = "";
+            return;
+        }
         if (pitchInfo.checked && pitchInfo.pitchCount >= 1 && !pitchInfo.isPremium) {
             setShowUpgradePrompt(true);
             setStep("choose");
@@ -606,14 +611,18 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                 setUploadProgress(40);
                 const ext = reelFile.name.split(".").pop() || "mp4";
                 const path = `reels/${user?.id}/${Date.now()}.${ext}`;
-                videoUrl = await storageService.uploadFile(reelFile, "evoa-media", path);
+                try {
+                    videoUrl = await storageService.uploadFile(reelFile, "evoa-media", path);
+                } catch {
+                    videoUrl = await storageService.uploadFile(reelFile, "public", path);
+                }
                 setUploadProgress(90);
             }
 
             await reelsService.createReel({
                 videoUrl,
                 thumbnailUrl: thumbnailUrl || undefined,
-                title: caption,
+                title: caption?.trim() || undefined,
                 description: caption,
                 hashtags: tagArr,
             });
@@ -1491,6 +1500,7 @@ export default function CreateContentModal({ isOpen, onClose, canUploadReel = fa
                     isOpen={isEditorOpen}
                     onClose={() => setIsEditorOpen(false)}
                     videoFile={reelFile}
+                    startupInfo={user?.startup || (user?.fullName ? { name: user.fullName } : undefined)}
                     onSaved={() => {
                         setIsEditorOpen(false);
                         handleClose();
