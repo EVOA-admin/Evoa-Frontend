@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { FaBell, FaFire, FaDollarSign, FaRocket, FaCog, FaCheck, FaCircle } from "react-icons/fa";
+import {
+  FaBell, FaFire, FaDollarSign, FaRocket, FaCog, FaCheck,
+  FaMobileAlt, FaPaperPlane, FaExclamationTriangle, FaSpinner,
+} from "react-icons/fa";
 import AppHeader from "../../components/layout/AppHeader";
 import {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  sendTestPush,
 } from "../../services/notificationsService";
+import {
+  isPushSupported,
+  getPermissionState,
+  isPushEnabledLocally,
+  subscribeToPushNotifications,
+  unsubscribeFromPushNotifications,
+  subscribeForegroundMessages,
+  autoSyncPushSubscription,
+} from "../../services/pushNotificationService";
 import { useAuth } from "../../contexts/AuthContext";
 import { goToProfile } from "../../utils/profileNavigation";
 
@@ -38,7 +51,7 @@ const NOTIF_CSS = `
   .notif-main-col { 
     flex: 1; 
     min-width: 0; 
-    max-width: 680px; /* limits width to what it was before the right panel was removed from flow */
+    max-width: 680px;
   }
   .notif-right-panel {
     display: flex;
@@ -175,6 +188,129 @@ function groupByDate(notifications) {
   return groups;
 }
 
+/**
+ * Push Notification Control Component
+ */
+function PushNotificationCard({
+  isDark,
+  cls,
+  pushSupported,
+  pushEnabled,
+  pushPermission,
+  pushLoading,
+  pushFeedback,
+  onTogglePush,
+  onTestPush,
+  isMobile = false,
+}) {
+  if (!pushSupported) return null;
+
+  const isBlocked = pushPermission === 'denied';
+
+  return (
+    <div className={`notif-panel-card ${cls} ${isMobile ? 'mb-4 p-3.5' : ''}`}>
+      <div className={`${isMobile ? '' : 'px-4 py-3 border-b'}`} style={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-evoa/15 text-evoa">
+              <FaMobileAlt size={13} />
+            </span>
+            <div>
+              <p className={`text-xs font-bold leading-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                Web Push Alerts
+              </p>
+              <p className={`text-[10px] ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
+                {pushEnabled ? 'Active on this device' : isBlocked ? 'Blocked in browser' : 'Tab closed alerts'}
+              </p>
+            </div>
+          </div>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+            pushEnabled
+              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
+              : isBlocked
+                ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
+                : isDark ? 'bg-white/10 text-white/50' : 'bg-black/5 text-gray-500'
+          }`}>
+            {pushEnabled ? 'ON' : isBlocked ? 'BLOCKED' : 'OFF'}
+          </span>
+        </div>
+      </div>
+
+      <div className={`${isMobile ? 'pt-2.5' : 'p-3.5'} space-y-2.5`}>
+        <p className={`text-[11px] leading-relaxed ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
+          {isBlocked ? (
+            <span className="text-amber-400 flex items-start gap-1.5">
+              <FaExclamationTriangle size={12} className="flex-shrink-0 mt-0.5" />
+              Notifications are blocked. Please allow permissions in your browser's site settings.
+            </span>
+          ) : pushEnabled ? (
+            'You will receive instant alerts for pitch likes, comments, and messages even when EVOA is closed.'
+          ) : (
+            'Enable desktop & mobile notifications to never miss pitch feedback, messages, or deal interests.'
+          )}
+        </p>
+
+        {pushFeedback && (
+          <div className={`p-2 rounded-xl text-[11px] leading-tight border transition-all ${
+            pushFeedback.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
+              : pushFeedback.type === 'error'
+                ? 'bg-rose-500/10 border-rose-500/25 text-rose-400'
+                : isDark ? 'bg-white/5 border-white/10 text-white/80' : 'bg-gray-100 border-gray-200 text-gray-700'
+          }`}>
+            {pushFeedback.text}
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          {!isBlocked ? (
+            <button
+              onClick={onTogglePush}
+              disabled={pushLoading}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all shadow-sm ${
+                pushEnabled
+                  ? isDark
+                    ? 'bg-white/8 text-white/70 hover:bg-white/15 border border-white/10'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  : 'bg-evoa text-white hover:bg-[#009e96] shadow-evoa/20 shadow-md'
+              }`}
+            >
+              {pushLoading ? (
+                <>
+                  <FaSpinner size={11} className="animate-spin" />
+                  Updating...
+                </>
+              ) : pushEnabled ? (
+                'Disable'
+              ) : (
+                <>
+                  <FaBell size={11} />
+                  Enable Push
+                </>
+              )}
+            </button>
+          ) : null}
+
+          {pushEnabled && (
+            <button
+              onClick={onTestPush}
+              disabled={pushLoading}
+              title="Send a sample notification to this device"
+              className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
+                isDark
+                  ? 'text-evoa bg-evoa/10 hover:bg-evoa/20 border border-evoa/25'
+                  : 'text-evoa bg-evoa/8 hover:bg-evoa/15 border border-evoa/20'
+              }`}
+            >
+              <FaPaperPlane size={10} /> Test
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Notifications() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
@@ -186,7 +322,37 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [markingAll, setMarkingAll] = useState(false);
 
-  useEffect(() => { fetchNotifications(); }, [activeTab]);
+  // Push notification state
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushPermission, setPushPermission] = useState('default');
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushFeedback, setPushFeedback] = useState(null);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [activeTab]);
+
+  useEffect(() => {
+    const supported = isPushSupported();
+    setPushSupported(supported);
+    if (supported) {
+      setPushPermission(getPermissionState());
+      setPushEnabled(isPushEnabledLocally());
+      autoSyncPushSubscription();
+    }
+
+    // Subscribe to foreground notifications to update the feed in real-time
+    const unsubscribeForeground = subscribeForegroundMessages(() => {
+      fetchNotifications();
+    });
+
+    return () => {
+      if (typeof unsubscribeForeground === 'function') {
+        unsubscribeForeground();
+      }
+    };
+  }, []);
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -195,10 +361,62 @@ export default function Notifications() {
       const res = await getNotifications({ type });
       const data = res?.data?.data || res?.data || [];
       setNotifications(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch {
       setNotifications([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTogglePush = async () => {
+    if (pushLoading) return;
+    setPushLoading(true);
+    setPushFeedback(null);
+
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPushNotifications();
+        setPushEnabled(false);
+        setPushPermission(getPermissionState());
+        setPushFeedback({ type: 'info', text: 'Push alerts disabled on this device.' });
+      } else {
+        const res = await subscribeToPushNotifications();
+        setPushPermission(getPermissionState());
+        if (res.success) {
+          setPushEnabled(true);
+          setPushFeedback({ type: 'success', text: 'Push alerts enabled! You will now receive background updates.' });
+        } else {
+          setPushFeedback({ type: 'error', text: res.message });
+        }
+      }
+    } catch (err) {
+      setPushFeedback({ type: 'error', text: err.message || 'Failed to update push preferences.' });
+    } finally {
+      setPushLoading(false);
+      setTimeout(() => setPushFeedback(null), 5000);
+    }
+  };
+
+  const handleTestPush = async () => {
+    if (pushLoading) return;
+    setPushLoading(true);
+    setPushFeedback(null);
+
+    try {
+      const res = await sendTestPush();
+      const data = res?.data || res;
+      setPushFeedback({
+        type: data.success ? 'success' : 'info',
+        text: data.message || 'Test push dispatched to your device.',
+      });
+    } catch (err) {
+      setPushFeedback({
+        type: 'error',
+        text: err?.response?.data?.message || err?.message || 'Could not send test notification.',
+      });
+    } finally {
+      setPushLoading(false);
+      setTimeout(() => setPushFeedback(null), 6000);
     }
   };
 
@@ -207,7 +425,9 @@ export default function Notifications() {
       try {
         await markNotificationAsRead(notification.id);
         setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n));
-      } catch (_) {}
+      } catch {
+        // ignore
+      }
     }
     const actorId = notification.actorId
       || (notification.link?.startsWith('/u/') ? notification.link.split('/')[2] : null);
@@ -227,7 +447,9 @@ export default function Notifications() {
     try {
       await markAllNotificationsAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
     finally { setMarkingAll(false); }
   };
 
@@ -312,6 +534,22 @@ export default function Notifications() {
       <div className="notif-desktop-wrap px-3 py-4">
         {/* ── Left: main notification list ── */}
         <div className="notif-main-col">
+          {/* Mobile push notification banner */}
+          <div className="lg:hidden">
+            <PushNotificationCard
+              isDark={isDark}
+              cls={cls}
+              pushSupported={pushSupported}
+              pushEnabled={pushEnabled}
+              pushPermission={pushPermission}
+              pushLoading={pushLoading}
+              pushFeedback={pushFeedback}
+              onTogglePush={handleTogglePush}
+              onTestPush={handleTestPush}
+              isMobile={true}
+            />
+          </div>
+
           {/* Mobile unread + mark all (hidden on desktop via title bar above) */}
           <div className="flex items-center justify-between mb-4 lg:hidden">
             <div className="flex items-center gap-2">
@@ -415,6 +653,20 @@ export default function Notifications() {
 
         {/* ── Right panel (desktop only) ── */}
         <div className="notif-right-panel">
+          {/* Web Push notification card */}
+          <PushNotificationCard
+            isDark={isDark}
+            cls={cls}
+            pushSupported={pushSupported}
+            pushEnabled={pushEnabled}
+            pushPermission={pushPermission}
+            pushLoading={pushLoading}
+            pushFeedback={pushFeedback}
+            onTogglePush={handleTogglePush}
+            onTestPush={handleTestPush}
+            isMobile={false}
+          />
+
           {/* Summary card */}
           <div className={`notif-panel-card ${cls}`}>
             <div className="px-4 py-3 border-b" style={{ borderColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)' }}>
@@ -453,25 +705,28 @@ export default function Notifications() {
               <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Categories</p>
             </div>
             <div className="py-1 px-2">
-              {catCounts.map(({ id, label, icon: Icon, count }) => (
-                <button
-                  key={id}
-                  onClick={() => setActiveTab(id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${activeTab === id
-                    ? (isDark ? 'bg-evoa/12 text-evoa' : 'bg-evoa/10 text-evoa')
-                    : (isDark ? 'text-white/60 hover:bg-white/5' : 'text-gray-600 hover:bg-black/4')
-                  }`}
-                >
-                  <Icon size={13} />
-                  <span className="text-sm font-medium flex-1">{label}</span>
-                  {count > 0 && (
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === id
-                      ? 'bg-evoa text-white'
-                      : (isDark ? 'bg-white/10 text-white/60' : 'bg-black/8 text-gray-500')
-                    }`}>{count}</span>
-                  )}
-                </button>
-              ))}
+              {catCounts.map((catItem) => {
+                const Icon = catItem.icon;
+                return (
+                  <button
+                    key={catItem.id}
+                    onClick={() => setActiveTab(catItem.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${activeTab === catItem.id
+                      ? (isDark ? 'bg-evoa/12 text-evoa' : 'bg-evoa/10 text-evoa')
+                      : (isDark ? 'text-white/60 hover:bg-white/5' : 'text-gray-600 hover:bg-black/4')
+                    }`}
+                  >
+                    <Icon size={13} />
+                    <span className="text-sm font-medium flex-1">{catItem.label}</span>
+                    {catItem.count > 0 && (
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === catItem.id
+                        ? 'bg-evoa text-white'
+                        : (isDark ? 'bg-white/10 text-white/60' : 'bg-black/8 text-gray-500')
+                      }`}>{catItem.count}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

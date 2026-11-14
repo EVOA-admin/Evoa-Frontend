@@ -11,6 +11,7 @@ export { default as meetingsService } from './meetingsService';
 export { default as startupsService } from './startupsService';
 export { default as exploreService } from './exploreService';
 export { default as notificationsService } from './notificationsService';
+export { default as pushNotificationService } from './pushNotificationService';
 export { default as usersService } from './usersService';
 export { default as pricingService } from './pricingService';
 export { default as battlegroundService } from './battlegroundService';

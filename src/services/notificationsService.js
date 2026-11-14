@@ -14,8 +14,34 @@ export const markAllNotificationsAsRead = async () => {
   return await apiClient.post('/notifications/read-all');
 };
 
+// ── Web Push Notification API Methods ────────────────────────────────────────
+
+export const registerPushToken = async ({ token, deviceType = 'web', userAgent }) => {
+  return await apiClient.post('/notifications/push/register', {
+    token,
+    deviceType,
+    userAgent: userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : undefined),
+  });
+};
+
+export const unregisterPushToken = async (token) => {
+  return await apiClient.post('/notifications/push/unregister', { token });
+};
+
+export const getPushStatus = async () => {
+  return await apiClient.get('/notifications/push/status');
+};
+
+export const sendTestPush = async () => {
+  return await apiClient.post('/notifications/push/test');
+};
+
 export default {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  registerPushToken,
+  unregisterPushToken,
+  getPushStatus,
+  sendTestPush,
 };
