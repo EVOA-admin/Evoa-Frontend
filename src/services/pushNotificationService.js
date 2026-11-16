@@ -52,16 +52,23 @@ export const isPushEnabledLocally = () => {
 };
 
 /**
- * Register Service Worker for FCM background handling
+ * Register Service Worker for FCM background handling.
+ * Waits until the SW is fully ACTIVE before returning to prevent
+ * "no active Service Worker" errors from PushManager.subscribe().
  */
 export const registerServiceWorker = async () => {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-      scope: '/',
-    });
-    console.log('[PushService] Service worker registered with scope:', registration.scope);
-    return registration;
+    // navigator.serviceWorker.ready always resolves to the active SW registration.
+    // We first trigger registration (idempotent if already registered), then
+    // await .ready so we are guaranteed the SW is in 'activated' state before
+    // any getToken() / PushManager.subscribe() call is made.
+    await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+
+    // .ready waits until a SW is active and controlling the page.
+    const readyRegistration = await navigator.serviceWorker.ready;
+    console.log('[PushService] Service worker active, scope:', readyRegistration.scope);
+    return readyRegistration;
   } catch (err) {
     console.warn('[PushService] Service worker registration failed:', err);
     return null;
@@ -155,10 +162,19 @@ export const subscribeToPushNotifications = async () => {
     };
   } catch (err) {
     console.error('[PushService] Subscription error:', err);
+    // Translate raw browser/FCM error messages into user-friendly strings
+    let friendlyMessage = err.message || 'Failed to enable push notifications.';
+    if (
+      friendlyMessage.includes('no active Service Worker') ||
+      friendlyMessage.includes('registration failed') ||
+      friendlyMessage.includes('push service error')
+    ) {
+      friendlyMessage = 'Your browser is still setting up push support. Please try again in a moment.';
+    }
     return {
       success: false,
       status: 'error',
-      message: err.message || 'Failed to enable push notifications.',
+      message: friendlyMessage,
     };
   }
 };
@@ -222,6 +238,7 @@ export const autoSyncPushSubscription = async () => {
   if (localStorage.getItem('evoa_push_enabled') !== 'true') return;
 
   try {
+    // Use the same ready-based registration for consistency
     const swReg = await registerServiceWorker();
     const messaging = await getMessagingClient();
     if (!messaging || !swReg) return;

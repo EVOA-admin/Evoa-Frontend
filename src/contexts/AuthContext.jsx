@@ -347,6 +347,11 @@ export function AuthProvider({ children }) {
         const uid = currentSupabaseUidRef.current;
         clearAuthState(false);
         clearCachedOnboarding(uid);
+        // Clear push notification state so the next user on this browser
+        // gets a fresh token registration (prevents "registration failed" errors
+        // when a different account logs in on the same device).
+        localStorage.removeItem('evoa_push_enabled');
+        localStorage.removeItem('evoa_push_token');
         return await supabase.auth.signOut();
     };
 
