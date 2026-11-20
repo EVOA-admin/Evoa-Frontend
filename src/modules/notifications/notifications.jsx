@@ -14,6 +14,9 @@ import {
 } from "../../services/notificationsService";
 import {
   isPushSupported,
+  isPushCardVisible,
+  isIos,
+  isIosPwa,
   getPermissionState,
   isPushEnabledLocally,
   subscribeToPushNotifications,
@@ -201,11 +204,18 @@ function PushNotificationCard({
   pushFeedback,
   onTogglePush,
   onTestPush,
+  iosContext = null,
   isMobile = false,
 }) {
-  if (!pushSupported) return null;
+  // Always show on iOS (browser or PWA); show on other platforms only when supported
+  const showCard = pushSupported || iosContext !== null;
+  if (!showCard) return null;
 
   const isBlocked = pushPermission === 'denied';
+  // On iOS browser tab (not PWA), push isn't registerable — show guidance instead
+  const isIosBrowserOnly = iosContext === 'browser';
+  // On iOS PWA, push is supported (iOS 16.4+) — treat like any other supported browser
+  const canEnable = pushSupported && !isIosBrowserOnly;
 
   return (
     <div className={`notif-panel-card ${cls} ${isMobile ? 'mb-4 p-3.5' : ''}`}>
@@ -220,7 +230,7 @@ function PushNotificationCard({
                 Web Push Alerts
               </p>
               <p className={`text-[10px] ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
-                {pushEnabled ? 'Active on this device' : isBlocked ? 'Blocked in browser' : 'Tab closed alerts'}
+                {pushEnabled ? 'Active on this device' : isBlocked ? 'Blocked in browser' : isIosBrowserOnly ? 'Requires Home Screen install' : 'Tab closed alerts'}
               </p>
             </div>
           </div>
@@ -229,16 +239,28 @@ function PushNotificationCard({
               ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25'
               : isBlocked
                 ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
-                : isDark ? 'bg-white/10 text-white/50' : 'bg-black/5 text-gray-500'
+                : isIosBrowserOnly
+                  ? 'bg-blue-500/15 text-blue-400 border border-blue-500/25'
+                  : isDark ? 'bg-white/10 text-white/50' : 'bg-black/5 text-gray-500'
           }`}>
-            {pushEnabled ? 'ON' : isBlocked ? 'BLOCKED' : 'OFF'}
+            {pushEnabled ? 'ON' : isBlocked ? 'BLOCKED' : isIosBrowserOnly ? 'iOS' : 'OFF'}
           </span>
         </div>
       </div>
 
       <div className={`${isMobile ? 'pt-2.5' : 'p-3.5'} space-y-2.5`}>
         <p className={`text-[11px] leading-relaxed ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
-          {isBlocked ? (
+          {isIosBrowserOnly ? (
+            <span className="flex items-start gap-1.5">
+              <FaMobileAlt size={12} className="flex-shrink-0 mt-0.5 text-blue-400" />
+              <span>
+                To receive push alerts on iPhone, tap the{' '}
+                <strong className={isDark ? 'text-white/80' : 'text-gray-800'}>Share</strong> button in Safari then{' '}
+                <strong className={isDark ? 'text-white/80' : 'text-gray-800'}>Add to Home Screen</strong>.
+                Open EVOA from your Home Screen to enable notifications.
+              </span>
+            </span>
+          ) : isBlocked ? (
             <span className="text-amber-400 flex items-start gap-1.5">
               <FaExclamationTriangle size={12} className="flex-shrink-0 mt-0.5" />
               Notifications are blocked. Please allow permissions in your browser's site settings.
@@ -262,50 +284,53 @@ function PushNotificationCard({
           </div>
         )}
 
-        <div className="flex gap-2">
-          {!isBlocked ? (
-            <button
-              onClick={onTogglePush}
-              disabled={pushLoading}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all shadow-sm ${
-                pushEnabled
-                  ? isDark
-                    ? 'bg-white/8 text-white/70 hover:bg-white/15 border border-white/10'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  : 'bg-evoa text-white hover:bg-[#009e96] shadow-evoa/20 shadow-md'
-              }`}
-            >
-              {pushLoading ? (
-                <>
-                  <FaSpinner size={11} className="animate-spin" />
-                  Updating...
-                </>
-              ) : pushEnabled ? (
-                'Disable'
-              ) : (
-                <>
-                  <FaBell size={11} />
-                  Enable Push
-                </>
-              )}
-            </button>
-          ) : null}
+        {/* Only show Enable/Disable button when push is actually usable on this device */}
+        {canEnable && (
+          <div className="flex gap-2">
+            {!isBlocked ? (
+              <button
+                onClick={onTogglePush}
+                disabled={pushLoading}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all shadow-sm ${
+                  pushEnabled
+                    ? isDark
+                      ? 'bg-white/8 text-white/70 hover:bg-white/15 border border-white/10'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-evoa text-white hover:bg-[#009e96] shadow-evoa/20 shadow-md'
+                }`}
+              >
+                {pushLoading ? (
+                  <>
+                    <FaSpinner size={11} className="animate-spin" />
+                    Updating...
+                  </>
+                ) : pushEnabled ? (
+                  'Disable'
+                ) : (
+                  <>
+                    <FaBell size={11} />
+                    Enable Push
+                  </>
+                )}
+              </button>
+            ) : null}
 
-          {pushEnabled && (
-            <button
-              onClick={onTestPush}
-              disabled={pushLoading}
-              title="Send a sample notification to this device"
-              className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
-                isDark
-                  ? 'text-evoa bg-evoa/10 hover:bg-evoa/20 border border-evoa/25'
-                  : 'text-evoa bg-evoa/8 hover:bg-evoa/15 border border-evoa/20'
-              }`}
-            >
-              <FaPaperPlane size={10} /> Test
-            </button>
-          )}
-        </div>
+            {pushEnabled && (
+              <button
+                onClick={onTestPush}
+                disabled={pushLoading}
+                title="Send a sample notification to this device"
+                className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold transition-all ${
+                  isDark
+                    ? 'text-evoa bg-evoa/10 hover:bg-evoa/20 border border-evoa/25'
+                    : 'text-evoa bg-evoa/8 hover:bg-evoa/15 border border-evoa/20'
+                }`}
+              >
+                <FaPaperPlane size={10} /> Test
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -328,18 +353,28 @@ export default function Notifications() {
   const [pushPermission, setPushPermission] = useState('default');
   const [pushLoading, setPushLoading] = useState(false);
   const [pushFeedback, setPushFeedback] = useState(null);
+  // iOS-specific context: 'browser' = normal tab (can't subscribe yet),
+  // 'pwa' = Home Screen standalone (can subscribe on iOS 16.4+), null = non-iOS
+  const [iosContext, setIosContext] = useState(null);
 
   useEffect(() => {
     fetchNotifications();
   }, [activeTab]);
 
   useEffect(() => {
+    // Determine iOS context first
+    if (isIos()) {
+      setIosContext(isIosPwa() ? 'pwa' : 'browser');
+    }
+
     const supported = isPushSupported();
     setPushSupported(supported);
-    if (supported) {
+    // isPushCardVisible() is true on iOS even when supported=false,
+    // so we still check permission and local state for iOS PWA users
+    if (supported || isIosPwa()) {
       setPushPermission(getPermissionState());
       setPushEnabled(isPushEnabledLocally());
-      autoSyncPushSubscription();
+      if (supported) autoSyncPushSubscription();
     }
 
     // Subscribe to foreground notifications to update the feed in real-time
@@ -546,6 +581,7 @@ export default function Notifications() {
               pushFeedback={pushFeedback}
               onTogglePush={handleTogglePush}
               onTestPush={handleTestPush}
+              iosContext={iosContext}
               isMobile={true}
             />
           </div>
@@ -664,6 +700,7 @@ export default function Notifications() {
             pushFeedback={pushFeedback}
             onTogglePush={handleTogglePush}
             onTestPush={handleTestPush}
+            iosContext={iosContext}
             isMobile={false}
           />
 

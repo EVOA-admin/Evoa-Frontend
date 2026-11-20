@@ -36,6 +36,42 @@ export const isPushSupported = () => {
   );
 };
 
+/**
+ * Returns true when running on an iOS device (iPhone or iPad).
+ * Used to show iOS-specific guidance even when FCM push isn't natively supported
+ * in a regular browser tab.
+ */
+export const isIos = () => {
+  if (typeof window === 'undefined') return false;
+  return /iP(hone|ad|od)/i.test(navigator.userAgent);
+};
+
+/**
+ * Returns true when EVOA is running as a Home Screen PWA on iOS (standalone mode).
+ * iOS 16.4+ supports Web Push only in this standalone context.
+ */
+export const isIosPwa = () => {
+  if (typeof window === 'undefined') return false;
+  return (
+    isIos() &&
+    (window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches)
+  );
+};
+
+/**
+ * Whether the Web Push Alerts card should be rendered at all.
+ * - Always true on iOS so we can show the "Add to Home Screen" guidance.
+ * - On all other platforms, only true when FCM push is actually supported.
+ */
+export const isPushCardVisible = () => {
+  if (typeof window === 'undefined') return false;
+  // Always show the card on iOS so we can guide users to install the PWA
+  if (isIos()) return true;
+  // On non-iOS, only show the card when push is genuinely supported
+  return isPushSupported();
+};
+
 export const getPermissionState = () => {
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return 'unsupported';
@@ -269,6 +305,9 @@ export const autoSyncPushSubscription = async () => {
 
 export default {
   isPushSupported,
+  isIos,
+  isIosPwa,
+  isPushCardVisible,
   getPermissionState,
   isPushEnabledLocally,
   registerServiceWorker,
